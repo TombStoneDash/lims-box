@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { FlaskConical, ArrowRight } from 'lucide-react';
+import { FlaskConical, ArrowRight, Shield, FileText, Award } from 'lucide-react';
 
 export default function HomePage() {
   return (
@@ -13,12 +13,12 @@ export default function HomePage() {
                 LIMS BOX
               </span>
             </Link>
-            <Link
-              href="/blog"
-              className="text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-lab-teal transition-colors"
-            >
-              Blog
-            </Link>
+            <nav className="flex items-center gap-6 text-sm font-medium text-slate-600 dark:text-slate-300">
+              <Link href="/pricing" className="hover:text-lab-teal transition-colors">Pricing</Link>
+              <Link href="/demo" className="hover:text-lab-teal transition-colors">Demo</Link>
+              <Link href="/blog" className="hover:text-lab-teal transition-colors">Blog</Link>
+              <Link href="/contact" className="hover:text-lab-teal transition-colors">Contact</Link>
+            </nav>
           </div>
         </div>
       </header>
@@ -38,13 +38,41 @@ export default function HomePage() {
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link
-              href="/blog"
+              href="/demo"
               className="inline-flex items-center gap-2 bg-lab-teal hover:bg-lab-teal/90 text-white font-semibold px-6 py-3 rounded-lg transition-colors"
             >
-              Read Our Blog
+              See the Demo
               <ArrowRight className="w-4 h-4" />
             </Link>
+            <Link
+              href="/pricing"
+              className="inline-flex items-center gap-2 bg-white dark:bg-white/10 hover:bg-slate-50 dark:hover:bg-white/20 text-slate-900 dark:text-white font-semibold px-6 py-3 rounded-lg border border-slate-200 dark:border-white/10 transition-colors"
+            >
+              View Pricing
+            </Link>
           </div>
+        </div>
+      </section>
+
+      {/* Trust Signals */}
+      <section className="py-8 px-4 bg-white/50 dark:bg-white/5 border-y border-black/5 dark:border-white/5">
+        <div className="max-w-4xl mx-auto">
+          <div className="flex flex-wrap justify-center gap-8 md:gap-12">
+            <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
+              <Award className="w-5 h-5 text-lab-teal" />
+              <span className="font-medium">ISO 17025 Ready</span>
+            </div>
+            <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
+              <Shield className="w-5 h-5 text-lab-teal" />
+              <span className="font-medium">21 CFR Part 11 Compatible</span>
+            </div>
+            <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
+              <FileText className="w-5 h-5 text-lab-teal" />
+              <span className="font-medium">EPA Reporting Built In</span>
+            </div>
+          </div>
+        </div>
+      </section>
         </div>
       </section>
 
