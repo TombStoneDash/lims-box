@@ -1,0 +1,32 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #F8FAFC;
+  --foreground: #0F172A;
+  --lab-blue: #1E40AF;
+  --lab-teal: #0D9488;
+  --lab-sky: #3B82F6;
+  --lab-green: #059669;
+}
+
+.dark {
+  --background: #0F172A;
+  --foreground: #F8FAFC;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+.theme-background {
+  background: linear-gradient(135deg, #F8FAFC 0%, #E2E8F0 50%, #CBD5E1 100%);
+  min-height: 100vh;
+}
+
+.dark .theme-background {
+  background: linear-gradient(135deg, #0F172A 0%, #1E293B 50%, #334155 100%);
+}
