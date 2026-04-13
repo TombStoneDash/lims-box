@@ -3,5 +3,6 @@ Allow: /
 
 Disallow: /api/
 Disallow: /_next/
+Disallow: /senaite-demo/
 
 Sitemap: https://lims.bot/sitemap.xml
