@@ -83,6 +83,19 @@ export default function ROICalculatorPage() {
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] dark:bg-[#0F172A]">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'BreadcrumbList',
+            itemListElement: [
+              { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://lims.bot' },
+              { '@type': 'ListItem', position: 2, name: 'ROI Calculator', item: 'https://lims.bot/roi-calculator' },
+            ],
+          }),
+        }}
+      />
       {/* Header */}
       <header className="bg-white/80 dark:bg-black/80 backdrop-blur-sm border-b border-black/5 dark:border-white/5">
         <div className="max-w-7xl mx-auto px-4 py-4 md:py-6">
