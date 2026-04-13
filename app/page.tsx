@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { FlaskConical, ArrowRight, Shield, FileText, Award } from 'lucide-react';
+import { WaitlistFooter } from '@/components/WaitlistFooter';
 
 export default function HomePage() {
   return (
@@ -73,14 +74,8 @@ export default function HomePage() {
           </div>
         </div>
       </section>
-        </div>
-      </section>
 
-      <footer className="py-8 px-4 border-t border-black/5 dark:border-white/5">
-        <div className="max-w-7xl mx-auto text-center text-sm text-slate-500 dark:text-slate-400">
-          <p>&copy; {new Date().getFullYear()} LIMS BOX by Tombstone Dash LLC.</p>
-        </div>
-      </footer>
+      <WaitlistFooter />
     </div>
   );
 }
