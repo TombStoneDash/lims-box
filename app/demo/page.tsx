@@ -415,21 +415,114 @@ export default function DemoPage() {
         </div>
       </section>
 
-      {/* CTA */}
-      <section className="py-12 px-4 bg-gradient-to-r from-lab-teal/10 to-lab-blue/10 dark:from-lab-teal/5 dark:to-lab-blue/5">
-        <div className="max-w-2xl mx-auto text-center">
-          <h2 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white mb-4">
-            That's the full workflow
+      {/* Value Props for Lab Directors */}
+      <section className="py-12 px-4 bg-white/50 dark:bg-white/5 border-y border-black/5 dark:border-white/5">
+        <div className="max-w-4xl mx-auto">
+          <h2 className="text-2xl font-bold text-slate-900 dark:text-white text-center mb-8">
+            What lab directors see in a live demo
           </h2>
-          <p className="text-slate-600 dark:text-slate-300 mb-6">
-            Sample entry to compliance report in minutes — not hours. No copy-paste. No manual formatting. No holding time surprises.
-          </p>
-          <Link
-            href="/pricing"
-            className="inline-flex items-center gap-2 bg-lab-teal hover:bg-lab-blue text-white font-semibold px-6 py-3 rounded-lg transition-colors"
-          >
-            See Pricing <ArrowRight className="w-4 h-4" />
-          </Link>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="text-center">
+              <div className="w-12 h-12 bg-lab-teal/10 rounded-xl flex items-center justify-center mx-auto mb-3">
+                <FlaskConical className="w-6 h-6 text-lab-teal" />
+              </div>
+              <h3 className="font-semibold text-slate-900 dark:text-white mb-1 text-sm">Voice-Controlled SENAITE</h3>
+              <p className="text-xs text-slate-600 dark:text-slate-400">
+                Log samples, record results, and query your LIMS hands-free. Built for techs wearing gloves and PPE.
+              </p>
+            </div>
+            <div className="text-center">
+              <div className="w-12 h-12 bg-lab-teal/10 rounded-xl flex items-center justify-center mx-auto mb-3">
+                <Clock className="w-6 h-6 text-lab-teal" />
+              </div>
+              <h3 className="font-semibold text-slate-900 dark:text-white mb-1 text-sm">80% Less Data Entry</h3>
+              <p className="text-xs text-slate-600 dark:text-slate-400">
+                Instrument integration eliminates manual transcription. Results flow from ICP-MS, GC-MS, and IC directly into the LIMS.
+              </p>
+            </div>
+            <div className="text-center">
+              <div className="w-12 h-12 bg-lab-teal/10 rounded-xl flex items-center justify-center mx-auto mb-3">
+                <Shield className="w-6 h-6 text-lab-teal" />
+              </div>
+              <h3 className="font-semibold text-slate-900 dark:text-white mb-1 text-sm">Compliance Automation</h3>
+              <p className="text-xs text-slate-600 dark:text-slate-400">
+                ISO 17025 audit trails, QC enforcement, and report generation happen automatically. Your next assessment just got easier.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Calendly Scheduling Section */}
+      <section id="schedule" className="py-16 px-4">
+        <div className="max-w-4xl mx-auto">
+          <div className="text-center mb-8">
+            <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-3">
+              Schedule a Live Demo
+            </h2>
+            <p className="text-slate-600 dark:text-slate-300 max-w-xl mx-auto">
+              30 minutes with our founder. See your actual workflows demonstrated, ask questions, and decide if LIMS BOX fits your lab.
+            </p>
+          </div>
+
+          {/* Calendly Inline Embed */}
+          <div className="bg-white dark:bg-white/5 border border-black/5 dark:border-white/10 rounded-2xl overflow-hidden">
+            {/* TODO: Replace placeholder URL with actual Calendly link from HT */}
+            <div
+              className="calendly-inline-widget"
+              data-url="https://calendly.com/tombstonedash/lims-demo?hide_gdpr_banner=1&background_color=f8fafc&text_color=0f172a&primary_color=0d9488"
+              style={{ minWidth: '320px', height: '700px' }}
+            />
+            <script
+              type="text/javascript"
+              src="https://assets.calendly.com/assets/external/widget.js"
+              async
+            />
+          </div>
+
+          {/* Contact Fallback */}
+          <div className="mt-8 bg-slate-50 dark:bg-white/5 border border-black/5 dark:border-white/10 rounded-xl p-6 text-center">
+            <p className="text-sm text-slate-600 dark:text-slate-300 mb-3">
+              Prefer to reach out directly? No problem.
+            </p>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 text-sm">
+              <a href="mailto:info@lims.bot" className="text-lab-teal hover:underline font-medium">
+                info@lims.bot
+              </a>
+              <span className="hidden sm:inline text-slate-300">|</span>
+              <a href="tel:+17609604273" className="text-lab-teal hover:underline font-medium">
+                (760) 960-4273
+              </a>
+              <span className="hidden sm:inline text-slate-300">|</span>
+              <Link href="/contact" className="text-lab-teal hover:underline font-medium">
+                Contact Form
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Trust Signals */}
+      <section className="py-8 px-4 bg-gradient-to-r from-lab-teal/10 to-lab-blue/10 dark:from-lab-teal/5 dark:to-lab-blue/5">
+        <div className="max-w-3xl mx-auto">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center text-sm">
+            <div>
+              <p className="font-bold text-slate-900 dark:text-white">ISO 17025</p>
+              <p className="text-xs text-slate-500">Audit-ready</p>
+            </div>
+            <div>
+              <p className="font-bold text-slate-900 dark:text-white">21 CFR Part 11</p>
+              <p className="text-xs text-slate-500">Data integrity</p>
+            </div>
+            <div>
+              <p className="font-bold text-slate-900 dark:text-white">Offline-Capable</p>
+              <p className="text-xs text-slate-500">No internet needed</p>
+            </div>
+            <div>
+              <p className="font-bold text-slate-900 dark:text-white">30-Day Pilot</p>
+              <p className="text-xs text-slate-500">No obligation</p>
+            </div>
+          </div>
         </div>
       </section>
 
