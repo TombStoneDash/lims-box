@@ -4,7 +4,8 @@ import Link from 'next/link';
 import { useState } from 'react';
 import {
   FlaskConical, ArrowRight, ArrowLeft, Check, ClipboardList,
-  FileText, BarChart3, Droplets, Clock, Shield, User
+  FileText, BarChart3, Droplets, Clock, Shield, User,
+  AlertTriangle, DollarSign, Calendar
 } from 'lucide-react';
 
 type Step = 'entry' | 'coc' | 'report';
@@ -338,9 +339,15 @@ export default function DemoPage() {
           <h1 className="text-3xl md:text-5xl font-bold text-slate-900 dark:text-white mb-4 tracking-tight">
             See LIMS BOX in Action
           </h1>
-          <p className="text-lg text-slate-600 dark:text-slate-300">
+          <p className="text-lg text-slate-600 dark:text-slate-300 mb-6">
             Walk through a real workflow: logging a drinking water sample for nitrate testing, tracking chain of custody, and generating a compliance report.
           </p>
+          <a
+            href="#schedule"
+            className="inline-flex items-center gap-2 bg-lab-teal hover:bg-lab-teal/90 text-white font-semibold px-6 py-3 rounded-lg transition-colors"
+          >
+            <Calendar className="w-4 h-4" /> Schedule a Demo
+          </a>
         </div>
       </section>
 
@@ -411,6 +418,106 @@ export default function DemoPage() {
                 Start Your 30-Day Pilot <ArrowRight className="w-4 h-4" />
               </Link>
             )}
+          </div>
+        </div>
+      </section>
+
+      {/* CMS Deficiency Stats */}
+      <section className="py-12 px-4">
+        <div className="max-w-4xl mx-auto">
+          <div className="text-center mb-8">
+            <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">
+              Why labs fail inspections
+            </h2>
+            <p className="text-sm text-slate-500 dark:text-slate-400">
+              Top CMS deficiency categories — the problems LIMS BOX is built to prevent.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="bg-white dark:bg-white/5 border border-black/5 dark:border-white/10 rounded-xl p-5">
+              <div className="flex items-center gap-2 mb-3">
+                <AlertTriangle className="w-5 h-5 text-amber-500" />
+                <span className="text-2xl font-bold text-slate-900 dark:text-white">5.0%</span>
+              </div>
+              <h3 className="text-sm font-semibold text-slate-900 dark:text-white mb-1">Reagent handling & storage</h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                Expired reagents, missing lot numbers, undocumented storage temps. LIMS BOX tracks expiration dates, lot numbers, and storage conditions automatically.
+              </p>
+            </div>
+            <div className="bg-white dark:bg-white/5 border border-black/5 dark:border-white/10 rounded-xl p-5">
+              <div className="flex items-center gap-2 mb-3">
+                <AlertTriangle className="w-5 h-5 text-amber-500" />
+                <span className="text-2xl font-bold text-slate-900 dark:text-white">4.8%</span>
+              </div>
+              <h3 className="text-sm font-semibold text-slate-900 dark:text-white mb-1">Competency assessment</h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                Expired training records, missing competency documentation, untracked certifications. LIMS BOX alerts before any competency expires.
+              </p>
+            </div>
+            <div className="bg-white dark:bg-white/5 border border-black/5 dark:border-white/10 rounded-xl p-5">
+              <div className="flex items-center gap-2 mb-3">
+                <AlertTriangle className="w-5 h-5 text-amber-500" />
+                <span className="text-2xl font-bold text-slate-900 dark:text-white">3.9%</span>
+              </div>
+              <h3 className="text-sm font-semibold text-slate-900 dark:text-white mb-1">Procedure documentation</h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                Outdated SOPs, unsigned procedures, missing revision control. LIMS BOX enforces document control with electronic signatures and version tracking.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Competitor Pricing Comparison */}
+      <section className="py-12 px-4 bg-white/50 dark:bg-white/5 border-y border-black/5 dark:border-white/5">
+        <div className="max-w-4xl mx-auto">
+          <div className="text-center mb-8">
+            <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">
+              How LIMS BOX compares
+            </h2>
+            <p className="text-sm text-slate-500 dark:text-slate-400">Real pricing. Real timelines. No asterisks.</p>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-slate-200 dark:border-white/10">
+                  <th className="text-left py-3 px-4 text-slate-500 font-medium"></th>
+                  <th className="text-center py-3 px-4 bg-lab-teal/10 dark:bg-lab-teal/20 rounded-t-lg">
+                    <span className="text-lab-teal font-bold">LIMS BOX</span>
+                  </th>
+                  <th className="text-center py-3 px-4 text-slate-500 font-medium">LabWare</th>
+                  <th className="text-center py-3 px-4 text-slate-500 font-medium">STARLIMS</th>
+                  <th className="text-center py-3 px-4 text-slate-500 font-medium">Spreadsheets</th>
+                </tr>
+              </thead>
+              <tbody className="text-slate-700 dark:text-slate-300">
+                {[
+                  ['Starting price', '$500/mo', '$100K+', '$150K+', 'Free'],
+                  ['Implementation', 'Days', '12–18 months', '12–24 months', 'N/A'],
+                  ['Users included', '3–10', 'Per-seat', 'Per-seat', 'Unlimited'],
+                  ['Audit trail', 'Built-in', 'Built-in', 'Built-in', 'None'],
+                  ['IT required', 'No', 'Dedicated team', 'Dedicated team', 'No'],
+                  ['Contract', 'Month-to-month', '3–5 years', '3–5 years', 'N/A'],
+                ].map(([label, lims, lw, star, xl]) => (
+                  <tr key={label} className="border-b border-slate-100 dark:border-white/5">
+                    <td className="py-3 px-4 text-slate-600 dark:text-slate-400 font-medium">{label}</td>
+                    <td className="py-3 px-4 text-center bg-lab-teal/5 dark:bg-lab-teal/10 font-semibold text-lab-teal">{lims}</td>
+                    <td className="py-3 px-4 text-center text-slate-500">{lw}</td>
+                    <td className="py-3 px-4 text-center text-slate-500">{star}</td>
+                    <td className="py-3 px-4 text-center text-slate-500">{xl}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="mt-6 flex items-center justify-center gap-2">
+            <DollarSign className="w-4 h-4 text-lab-teal" />
+            <p className="text-sm text-slate-600 dark:text-slate-300">
+              <Link href="/pricing" className="text-lab-teal hover:underline font-medium">See full pricing</Link> — no implementation fee, no long-term contract.
+            </p>
           </div>
         </div>
       </section>
