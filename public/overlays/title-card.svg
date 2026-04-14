@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080" width="1920" height="1080">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0.4" y2="1">
+      <stop offset="0%" stop-color="#1E3A5F"/>
+      <stop offset="100%" stop-color="#0F172A"/>
+    </linearGradient>
+  </defs>
+  <rect width="1920" height="1080" fill="url(#bg)" opacity="0.88"/>
+  <rect x="920" y="393.2" width="80" height="6" rx="3" fill="#2E8B57"/>
+  <text x="960" y="538.6" text-anchor="middle" fill="white" font-family="'Inter',system-ui,sans-serif" font-weight="800" font-size="96" letter-spacing="-2">THE LIMS BOX</text>
+  <text x="960" y="589" text-anchor="middle" fill="#94a3b8" font-family="'Inter',system-ui,sans-serif" font-weight="400" font-size="40" letter-spacing="-0.5">Lab management that fits your lab.</text>
+</svg>

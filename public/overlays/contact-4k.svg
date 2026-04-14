@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 3840 2160" width="3840" height="2160">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0.4" y2="1">
+      <stop offset="0%" stop-color="#1E3A5F"/>
+      <stop offset="100%" stop-color="#0F172A"/>
+    </linearGradient>
+  </defs>
+  <rect width="3840" height="2160" fill="url(#bg)" opacity="0.88"/>
+  <rect x="1840" y="784.8" width="160" height="12" rx="6" fill="#2E8B57"/>
+  <text x="1920" y="1040.4" text-anchor="middle" fill="white" font-family="'Inter',system-ui,sans-serif" font-weight="700" font-size="144" letter-spacing="-1">info@lims.bot</text>
+  <text x="1920" y="1214.8" text-anchor="middle" fill="white" font-family="'Inter',system-ui,sans-serif" font-weight="600" font-size="128" letter-spacing="-0.5">lims.bot</text>
+</svg>
