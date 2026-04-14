@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   FlaskConical, ArrowRight, ArrowLeft, Check, ClipboardList,
   FileText, BarChart3, Droplets, Clock, Shield, User,
@@ -293,6 +293,32 @@ function ReportStep() {
   );
 }
 
+// TODO: Replace placeholder URL with actual Calendly link once created
+const CALENDLY_URL =
+  'https://calendly.com/tombstonedash/lims-demo?hide_gdpr_banner=1&background_color=f8fafc&text_color=0f172a&primary_color=0d9488';
+
+function CalendlyEmbed() {
+  useEffect(() => {
+    const script = document.createElement('script');
+    script.src = 'https://assets.calendly.com/assets/external/widget.js';
+    script.async = true;
+    document.body.appendChild(script);
+    return () => {
+      document.body.removeChild(script);
+    };
+  }, []);
+
+  return (
+    <div className="bg-white dark:bg-white/5 border border-black/5 dark:border-white/10 rounded-2xl overflow-hidden">
+      <div
+        className="calendly-inline-widget"
+        data-url={CALENDLY_URL}
+        style={{ minWidth: '320px', height: '700px' }}
+      />
+    </div>
+  );
+}
+
 export default function DemoPage() {
   const [currentStep, setCurrentStep] = useState<Step>('entry');
   const stepIndex = steps.findIndex(s => s.id === currentStep);
@@ -337,7 +363,7 @@ export default function DemoPage() {
       <section className="py-12 md:py-16 px-4 text-center">
         <div className="max-w-3xl mx-auto">
           <h1 className="text-3xl md:text-5xl font-bold text-slate-900 dark:text-white mb-4 tracking-tight">
-            See LIMS BOX in Action
+            Schedule a LIMS BOX Demo
           </h1>
           <p className="text-lg text-slate-600 dark:text-slate-300 mb-6">
             Walk through a real workflow: logging a drinking water sample for nitrate testing, tracking chain of custody, and generating a compliance report.
@@ -573,19 +599,7 @@ export default function DemoPage() {
           </div>
 
           {/* Calendly Inline Embed */}
-          <div className="bg-white dark:bg-white/5 border border-black/5 dark:border-white/10 rounded-2xl overflow-hidden">
-            {/* TODO: Replace placeholder URL with actual Calendly link from HT */}
-            <div
-              className="calendly-inline-widget"
-              data-url="https://calendly.com/tombstonedash/lims-demo?hide_gdpr_banner=1&background_color=f8fafc&text_color=0f172a&primary_color=0d9488"
-              style={{ minWidth: '320px', height: '700px' }}
-            />
-            <script
-              type="text/javascript"
-              src="https://assets.calendly.com/assets/external/widget.js"
-              async
-            />
-          </div>
+          <CalendlyEmbed />
 
           {/* Contact Fallback */}
           <div className="mt-8 bg-slate-50 dark:bg-white/5 border border-black/5 dark:border-white/10 rounded-xl p-6 text-center">
