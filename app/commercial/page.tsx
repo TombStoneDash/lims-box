@@ -1,11 +1,32 @@
 'use client';
 
 import Link from 'next/link';
-import { FlaskConical, ArrowRight, Play, Shield, Award, FileText } from 'lucide-react';
-import { useState } from 'react';
+import { FlaskConical, ArrowRight, Shield, Award, FileText } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+
+// TODO: Replace with actual YouTube video ID when ready
+const YOUTUBE_VIDEO_ID = 'dQw4w9WgXcQ';
 
 export default function CommercialPage() {
   const [playing, setPlaying] = useState(false);
+  const videoRef = useRef<HTMLDivElement>(null);
+  const playerRef = useRef<HTMLIFrameElement>(null);
+
+  // Autoplay on scroll into view
+  useEffect(() => {
+    const el = videoRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && !playing) {
+          setPlaying(true);
+        }
+      },
+      { threshold: 0.5 },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [playing]);
 
   return (
     <div className="min-h-screen bg-[#0F172A]">
@@ -42,42 +63,29 @@ export default function CommercialPage() {
 
       {/* Video Section */}
       <section className="px-4 pt-8 pb-4">
-        <div className="max-w-4xl mx-auto">
-          {/* Video Player */}
+        <div className="max-w-4xl mx-auto" ref={videoRef}>
           <div className="relative aspect-video bg-[#1E3A5F] rounded-2xl overflow-hidden border border-white/10 shadow-2xl shadow-black/50">
             {!playing ? (
-              <>
-                {/* Placeholder poster */}
-                <div className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-[#1E3A5F] to-[#0F172A]">
-                  <FlaskConical className="w-16 h-16 text-[#2E8B57] mb-4" />
-                  <h2 className="text-2xl md:text-4xl font-bold text-white mb-2 tracking-tight">THE LIMS BOX</h2>
-                  <p className="text-sm text-slate-400 mb-8">Right-sized for regulated labs.</p>
-                  <button
-                    onClick={() => setPlaying(true)}
-                    className="w-20 h-20 rounded-full bg-[#2E8B57] hover:bg-[#2E8B57]/90 flex items-center justify-center transition-all hover:scale-105 shadow-lg shadow-[#2E8B57]/30"
-                  >
-                    <Play className="w-8 h-8 text-white ml-1" />
-                  </button>
-                  <p className="text-xs text-slate-500 mt-4">Coming soon — video in production</p>
+              <button
+                onClick={() => setPlaying(true)}
+                className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-[#1E3A5F] to-[#0F172A] group cursor-pointer"
+              >
+                <FlaskConical className="w-16 h-16 text-[#2E8B57] mb-4" />
+                <h2 className="text-2xl md:text-4xl font-bold text-white mb-2 tracking-tight">THE LIMS BOX</h2>
+                <p className="text-sm text-slate-400 mb-8">Right-sized for regulated labs.</p>
+                <div className="w-20 h-20 rounded-full bg-[#2E8B57] group-hover:bg-[#2E8B57]/90 flex items-center justify-center transition-all group-hover:scale-105 shadow-lg shadow-[#2E8B57]/30">
+                  <svg className="w-8 h-8 text-white ml-1" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
                 </div>
-              </>
+              </button>
             ) : (
-              <>
-                {/* TODO: Replace with actual video embed (Vimeo/YouTube/Mux) */}
-                <div className="absolute inset-0 flex items-center justify-center bg-black">
-                  <div className="text-center">
-                    <FlaskConical className="w-12 h-12 text-[#2E8B57] mx-auto mb-4 animate-pulse" />
-                    <p className="text-white text-lg font-medium">Video placeholder</p>
-                    <p className="text-slate-400 text-sm mt-1">Replace with Vimeo/YouTube/Mux embed URL</p>
-                    <button
-                      onClick={() => setPlaying(false)}
-                      className="mt-4 text-xs text-slate-500 hover:text-white transition-colors"
-                    >
-                      Back to poster
-                    </button>
-                  </div>
-                </div>
-              </>
+              <iframe
+                ref={playerRef}
+                src={`https://www.youtube.com/embed/${YOUTUBE_VIDEO_ID}?autoplay=1&rel=0&modestbranding=1&color=white`}
+                title="THE LIMS BOX Commercial"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+                className="absolute inset-0 w-full h-full"
+              />
             )}
           </div>
         </div>
