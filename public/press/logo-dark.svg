@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 80" width="320" height="80">
+  <rect width="320" height="80" rx="8" fill="#0F172A"/>
+  <circle cx="36" cy="40" r="16" fill="none" stroke="#2E8B57" stroke-width="2"/>
+  <path d="M36 28 L30 48 H42 Z" fill="none" stroke="#2E8B57" stroke-width="2" stroke-linejoin="round"/>
+  <line x1="36" y1="24" x2="36" y2="28" stroke="#2E8B57" stroke-width="2"/>
+  <text x="62" y="46" font-family="Inter,system-ui,sans-serif" font-weight="800" font-size="28" fill="white" letter-spacing="-1">THE LIMS BOX</text>
+</svg>
