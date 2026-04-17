@@ -31,11 +31,10 @@ export default function HomePage() {
       <section className="py-24 md:py-32 px-4">
         <div className="max-w-3xl mx-auto text-center">
           <h1 className="text-4xl md:text-6xl font-bold text-slate-900 dark:text-white mb-6 tracking-tight">
-            Lab management that fits your lab.
+            The only LIMS that keeps running when your internet, your vendor, or your hospital IT department fails you.
           </h1>
           <p className="text-lg md:text-xl text-slate-600 dark:text-slate-300 mb-10 max-w-2xl mx-auto">
-            Modern LIMS for environmental and water testing labs under 50 people.
-            Sample tracking, COC management, and reporting — without the enterprise bloat.
+            Offline-capable. Portable. Audit-ready in minutes.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link
