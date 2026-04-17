@@ -40,14 +40,17 @@ export default function EarlyAdopterPage() {
     e.preventDefault();
     setStatus('loading');
     try {
-      const res = await fetch('/api/waitlist', {
+      const res = await fetch('/api/early-access', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          email: form.email,
           labName: form.labName,
-          source: 'early_adopter',
-          ...form,
+          labType: form.labType,
+          contactName: form.contactName,
+          email: form.email,
+          monthlyVolume: form.testVolume,
+          painPoint: form.painPoint,
+          source: 'lims.bot/early-adopter',
         }),
       });
       if (res.ok) {
