@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import {
-  FlaskConical, ArrowRight, Shield, FileText, Award,
+  FlaskConical, ArrowRight, Shield, FileText, Award, HeartPulse,
   Stethoscope, ClipboardCheck, FileCheck2, WifiOff,
 } from 'lucide-react';
 import { WaitlistFooter } from '@/components/WaitlistFooter';
@@ -137,7 +137,7 @@ export default function HomePage() {
       {/* Trust Signals */}
       <section className="py-8 px-4 bg-white/50 dark:bg-white/5 border-y border-black/5 dark:border-white/5">
         <div className="max-w-4xl mx-auto">
-          <div className="flex flex-wrap justify-center gap-8 md:gap-12">
+          <div className="flex flex-wrap justify-center gap-6 md:gap-10">
             <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
               <Award className="w-5 h-5 text-lab-teal" />
               <span className="font-medium">ISO 17025 Ready</span>
@@ -145,6 +145,10 @@ export default function HomePage() {
             <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
               <Shield className="w-5 h-5 text-lab-teal" />
               <span className="font-medium">21 CFR Part 11 Compatible</span>
+            </div>
+            <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
+              <HeartPulse className="w-5 h-5 text-lab-teal" />
+              <span className="font-medium">CLIA Compliant</span>
             </div>
             <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
               <FileText className="w-5 h-5 text-lab-teal" />
