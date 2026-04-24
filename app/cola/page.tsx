@@ -18,8 +18,9 @@ export const metadata: Metadata = {
   },
 };
 
-const CALENDLY_URL =
+const CALENDLY_BASE =
   process.env.NEXT_PUBLIC_CALENDLY_URL || 'https://calendly.com/hudtaylor/cola-nashville';
+const CALENDLY_URL = `${CALENDLY_BASE}?utm_source=cola2026`;
 const EARLY_ADOPTER_URL = 'https://lims.bot/early-adopter';
 const QR_SRC = `https://api.qrserver.com/v1/create-qr-code/?size=320x320&margin=8&ecc=M&data=${encodeURIComponent(
   EARLY_ADOPTER_URL,
@@ -230,7 +231,7 @@ export default function ColaPage() {
             </div>
             <div className="rounded-xl overflow-hidden border border-white/10 bg-white">
               <iframe
-                src={`${CALENDLY_URL}?hide_gdpr_banner=1&background_color=ffffff&text_color=0f172a&primary_color=2e8b57`}
+                src={`${CALENDLY_URL}&hide_gdpr_banner=1&background_color=ffffff&text_color=0f172a&primary_color=2e8b57`}
                 title="Schedule 15 minutes with LIMS BOX at COLA Forum"
                 loading="lazy"
                 className="w-full h-[720px]"
