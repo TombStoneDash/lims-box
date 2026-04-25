@@ -35,6 +35,12 @@ export default function HomePage() {
 
       <section className="py-24 md:py-32 px-4">
         <div className="max-w-3xl mx-auto text-center">
+          <Link
+            href="/cola"
+            className="inline-flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 hover:text-lab-teal dark:hover:text-lab-teal mb-6 px-3 py-1 rounded-full border border-slate-200 dark:border-white/10 transition-colors"
+          >
+            Meet us at COLA Forum &middot; Nashville &middot; May 6&ndash;8 &rarr;
+          </Link>
           <h1 className="text-4xl md:text-6xl font-bold text-slate-900 dark:text-white mb-6 tracking-tight">
             The LIMS that doesn't need an IT department.
           </h1>
