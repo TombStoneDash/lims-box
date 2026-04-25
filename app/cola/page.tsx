@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 import {
   FlaskConical, MapPin, Calendar, Clock, QrCode,
   Users, Shield, Wrench, ArrowRight, CheckCircle2,
+  ClipboardCheck, FileText, Microscope, BadgeCheck,
 } from 'lucide-react';
 
 export const metadata: Metadata = {
@@ -20,7 +21,8 @@ export const metadata: Metadata = {
 
 const CALENDLY_BASE =
   process.env.NEXT_PUBLIC_CALENDLY_URL || 'https://calendly.com/hudtaylor/cola-nashville';
-const CALENDLY_URL = `${CALENDLY_BASE}?utm_source=cola2026`;
+// utm_source=cola2026 is scoped to /cola — homepage links do not carry it.
+const CALENDLY_URL = `${CALENDLY_BASE}${CALENDLY_BASE.includes('?') ? '&' : '?'}utm_source=cola2026`;
 const EARLY_ADOPTER_URL = 'https://lims.bot/early-adopter';
 const QR_SRC = `https://api.qrserver.com/v1/create-qr-code/?size=320x320&margin=8&ecc=M&data=${encodeURIComponent(
   EARLY_ADOPTER_URL,
@@ -112,6 +114,75 @@ export default function ColaPage() {
               Apply to the pilot
             </Link>
           </div>
+        </div>
+      </section>
+
+      {/* Built for the labs COLA accredits */}
+      <section className="px-4 pb-12">
+        <div className="max-w-5xl mx-auto bg-white/5 border border-white/10 rounded-2xl p-6 md:p-10">
+          <div className="text-center mb-8">
+            <div className="inline-flex items-center gap-2 text-xs font-semibold text-[#2E8B57] uppercase tracking-wider mb-3">
+              <BadgeCheck className="w-4 h-4" /> Why we're at COLA Forum
+            </div>
+            <h2 className="text-2xl md:text-4xl font-bold tracking-tight mb-4">
+              Built for the labs COLA accredits
+            </h2>
+            <p className="text-slate-300 max-w-2xl mx-auto">
+              CLIA-waived clinics, physician office labs, and small reference labs don't need
+              an enterprise LIMS — and most can't run one. LIMS BOX is sized to the labs
+              COLA actually accredits: small staff, real workflows, real inspections.
+            </p>
+          </div>
+          <ul className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <li className="flex items-start gap-3 bg-black/20 border border-white/5 rounded-xl p-5">
+              <div className="w-9 h-9 rounded-lg bg-[#2E8B57]/15 flex items-center justify-center flex-shrink-0">
+                <ClipboardCheck className="w-4 h-4 text-[#2E8B57]" />
+              </div>
+              <div>
+                <p className="font-semibold mb-1">CLIA &amp; COLA inspection-ready</p>
+                <p className="text-sm text-slate-400 leading-relaxed">
+                  Every action timestamped and attributed. Audit trail exports for the
+                  inspector before they finish their coffee.
+                </p>
+              </div>
+            </li>
+            <li className="flex items-start gap-3 bg-black/20 border border-white/5 rounded-xl p-5">
+              <div className="w-9 h-9 rounded-lg bg-[#2E8B57]/15 flex items-center justify-center flex-shrink-0">
+                <Microscope className="w-4 h-4 text-[#2E8B57]" />
+              </div>
+              <div>
+                <p className="font-semibold mb-1">Sized for the lab, not the enterprise</p>
+                <p className="text-sm text-slate-400 leading-relaxed">
+                  Designed for labs under 50 people. No six-figure implementations,
+                  no full-time admin to keep it running.
+                </p>
+              </div>
+            </li>
+            <li className="flex items-start gap-3 bg-black/20 border border-white/5 rounded-xl p-5">
+              <div className="w-9 h-9 rounded-lg bg-[#2E8B57]/15 flex items-center justify-center flex-shrink-0">
+                <Shield className="w-4 h-4 text-[#2E8B57]" />
+              </div>
+              <div>
+                <p className="font-semibold mb-1">Offline when the internet isn't</p>
+                <p className="text-sm text-slate-400 leading-relaxed">
+                  Sample login, QC, and chain-of-custody keep working through outages,
+                  bad hospital VPNs, and surprise IT patches.
+                </p>
+              </div>
+            </li>
+            <li className="flex items-start gap-3 bg-black/20 border border-white/5 rounded-xl p-5">
+              <div className="w-9 h-9 rounded-lg bg-[#2E8B57]/15 flex items-center justify-center flex-shrink-0">
+                <FileText className="w-4 h-4 text-[#2E8B57]" />
+              </div>
+              <div>
+                <p className="font-semibold mb-1">21 CFR Part 11 &amp; ISO 17025 compatible</p>
+                <p className="text-sm text-slate-400 leading-relaxed">
+                  E-signatures, controlled changes, and traceable records — without
+                  hiring a quality consultant to turn them on.
+                </p>
+              </div>
+            </li>
+          </ul>
         </div>
       </section>
 
