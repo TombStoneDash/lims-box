@@ -4,6 +4,9 @@ import {
 } from 'lucide-react';
 import { WaitlistFooter } from '@/components/WaitlistFooter';
 
+// Same video ID as /commercial — swap together when the final cut is uploaded.
+const COMMERCIAL_VIDEO_ID = process.env.NEXT_PUBLIC_COMMERCIAL_VIDEO_ID || 'dQw4w9WgXcQ';
+
 export default function HomePage() {
   return (
     <div className="min-h-screen bg-[#F8FAFC] dark:bg-[#0F172A]">
@@ -53,6 +56,22 @@ export default function HomePage() {
             >
               View Pricing
             </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Commercial */}
+      <section className="py-12 px-4">
+        <div className="max-w-4xl mx-auto">
+          <div className="relative aspect-video bg-slate-900 rounded-2xl overflow-hidden border border-black/5 dark:border-white/10 shadow-2xl shadow-black/20">
+            <iframe
+              src={`https://www.youtube.com/embed/${COMMERCIAL_VIDEO_ID}?rel=0&modestbranding=1&color=white`}
+              title="THE LIMS BOX — 2:45 commercial"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+              loading="lazy"
+              className="absolute inset-0 w-full h-full"
+            />
           </div>
         </div>
       </section>
