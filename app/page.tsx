@@ -3,6 +3,7 @@ import {
   FlaskConical, ArrowRight, Shield, FileText, Award, HeartPulse,
 } from 'lucide-react';
 import { WaitlistFooter } from '@/components/WaitlistFooter';
+import { VideoSection } from '@/components/VideoSection';
 
 // Same video ID as /commercial — swap together when the final cut is uploaded.
 const COMMERCIAL_VIDEO_ID = process.env.NEXT_PUBLIC_COMMERCIAL_VIDEO_ID || '2gZf1RnqDWU';
@@ -67,20 +68,8 @@ export default function HomePage() {
       </section>
 
       {/* Commercial */}
-      <section className="py-12 px-4">
-        <div className="max-w-4xl mx-auto">
-          <div className="relative aspect-video bg-slate-900 rounded-2xl overflow-hidden border border-black/5 dark:border-white/10 shadow-2xl shadow-black/20">
-            <iframe
-              src={`https://www.youtube.com/embed/${COMMERCIAL_VIDEO_ID}?rel=0&modestbranding=1&color=white`}
-              title="THE LIMS BOX — 2:45 commercial"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
-              loading="lazy"
-              className="absolute inset-0 w-full h-full"
-            />
-          </div>
-        </div>
-      </section>
+      <VideoSection videoId={COMMERCIAL_VIDEO_ID} />
+
 
       {/* Trust Signals */}
       <section className="py-8 px-4 bg-white/50 dark:bg-white/5 border-y border-black/5 dark:border-white/5">
