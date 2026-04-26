@@ -3,9 +3,10 @@ import {
   FlaskConical, ArrowRight, Shield, FileText, Award, HeartPulse,
 } from 'lucide-react';
 import { WaitlistFooter } from '@/components/WaitlistFooter';
+import { VideoSection } from '@/components/VideoSection';
 
 // Same video ID as /commercial — swap together when the final cut is uploaded.
-const COMMERCIAL_VIDEO_ID = process.env.NEXT_PUBLIC_COMMERCIAL_VIDEO_ID || 'dQw4w9WgXcQ';
+const COMMERCIAL_VIDEO_ID = process.env.NEXT_PUBLIC_COMMERCIAL_VIDEO_ID || '2gZf1RnqDWU';
 
 export default function HomePage() {
   return (
@@ -67,17 +68,26 @@ export default function HomePage() {
       </section>
 
       {/* Commercial */}
-      <section className="py-12 px-4">
+      <VideoSection videoId={COMMERCIAL_VIDEO_ID} />
+
+      {/* SENAITE / Ramon Bartl credibility callout */}
+      <section className="py-16 px-4">
         <div className="max-w-4xl mx-auto">
-          <div className="relative aspect-video bg-slate-900 rounded-2xl overflow-hidden border border-black/5 dark:border-white/10 shadow-2xl shadow-black/20">
-            <iframe
-              src={`https://www.youtube.com/embed/${COMMERCIAL_VIDEO_ID}?rel=0&modestbranding=1&color=white`}
-              title="THE LIMS BOX — 2:45 commercial"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
-              loading="lazy"
-              className="absolute inset-0 w-full h-full"
-            />
+          <div className="bg-white dark:bg-white/5 border border-black/5 dark:border-white/10 rounded-2xl p-8 md:p-12">
+            <h2 className="text-2xl md:text-3xl font-bold tracking-tight text-slate-900 dark:text-white mb-5">
+              Built on SENAITE.{' '}
+              <span className="text-lab-teal">With its founder.</span>
+            </h2>
+            <p className="text-slate-700 dark:text-slate-300 leading-relaxed">
+              THE LIMS BOX is built on SENAITE, the leading open-source
+              Laboratory Information Management System, in active technical
+              collaboration with its founder Ramon Bartl. We ship hardware,
+              packaging, AI, and go-to-market — SENAITE provides the
+              battle-tested LIMS core that runs labs around the world. The
+              result is enterprise-grade laboratory infrastructure delivered in
+              a rugged case for a fraction of the cost of conventional
+              deployments.
+            </p>
           </div>
         </div>
       </section>
