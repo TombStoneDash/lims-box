@@ -203,7 +203,7 @@ export default function RecordPage() {
       <div className="h-screen bg-[#0F172A] flex items-center justify-center cursor-pointer" onClick={() => setStarted(true)}>
         <div className="text-center">
           <FlaskConical className="w-16 h-16 text-[#2E8B57] mx-auto mb-6" />
-          <h1 className="text-4xl font-bold text-white mb-2 tracking-tight">THE LIMS BOX</h1>
+          <h1 className="text-4xl font-bold text-white mb-2 tracking-tight">LIMS BOX</h1>
           <p className="text-slate-500 mb-8">Recording mode — click anywhere to start</p>
           <div className="text-xs text-slate-600">
             {steps.length} screens &times; {STEP_DURATION}s = {totalTime / 60}:{String(totalTime % 60).padStart(2, '0')} total
@@ -259,7 +259,7 @@ export default function RecordPage() {
 
       {/* Branding — bottom center, subtle */}
       <div className="absolute bottom-4 left-0 right-0 text-center">
-        <span className="text-[10px] text-slate-700">THE LIMS BOX — lims.bot</span>
+        <span className="text-[10px] text-slate-700">LIMS BOX — lims.bot</span>
       </div>
     </div>
   );

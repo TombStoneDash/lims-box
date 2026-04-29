@@ -50,7 +50,7 @@ export default function CommercialPage() {
           <div className="flex items-center justify-between">
             <Link href="/" className="flex items-center gap-2">
               <FlaskConical className="w-6 h-6 text-[#2E8B57]" />
-              <span className="text-xl font-bold text-white">THE LIMS BOX</span>
+              <span className="text-xl font-bold text-white">LIMS BOX</span>
             </Link>
             <nav className="flex items-center gap-6 text-sm font-medium text-slate-400">
               <Link href="/pricing" className="hover:text-white transition-colors">Pricing</Link>
@@ -71,7 +71,7 @@ export default function CommercialPage() {
                 className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-[#1E3A5F] to-[#0F172A] group cursor-pointer"
               >
                 <FlaskConical className="w-16 h-16 text-[#2E8B57] mb-4" />
-                <h2 className="text-2xl md:text-4xl font-bold text-white mb-2 tracking-tight">THE LIMS BOX</h2>
+                <h2 className="text-2xl md:text-4xl font-bold text-white mb-2 tracking-tight">LIMS BOX</h2>
                 <p className="text-sm text-slate-400 mb-8">Right-sized for regulated labs.</p>
                 <div className="w-20 h-20 rounded-full bg-[#2E8B57] group-hover:bg-[#2E8B57]/90 flex items-center justify-center transition-all group-hover:scale-105 shadow-lg shadow-[#2E8B57]/30">
                   <svg className="w-8 h-8 text-white ml-1" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
@@ -81,7 +81,7 @@ export default function CommercialPage() {
               <iframe
                 ref={playerRef}
                 src={`https://www.youtube.com/embed/${YOUTUBE_VIDEO_ID}?autoplay=1&rel=0&modestbranding=1&color=white`}
-                title="THE LIMS BOX Commercial"
+                title="LIMS BOX Commercial"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
                 className="absolute inset-0 w-full h-full"
@@ -154,7 +154,7 @@ export default function CommercialPage() {
       {/* Footer */}
       <footer className="py-8 px-4 border-t border-white/5">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-slate-500">
-          <p>&copy; {new Date().getFullYear()} THE LIMS BOX by Tombstone Dash LLC.</p>
+          <p>&copy; {new Date().getFullYear()} LIMS BOX by Tombstone Dash LLC.</p>
           <div className="flex items-center gap-6">
             <a href="mailto:info@lims.bot" className="hover:text-white transition-colors">info@lims.bot</a>
             <Link href="/" className="hover:text-white transition-colors">lims.bot</Link>

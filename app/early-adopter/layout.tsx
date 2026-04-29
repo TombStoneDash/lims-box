@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Early-Adopter Program — THE LIMS BOX | Structured Pilot for Regulated Labs',
+  title: 'Early-Adopter Program — LIMS BOX | Structured Pilot for Regulated Labs',
   description: 'Apply for the LIMS BOX early-adopter pilot. 5 slots for regulated labs. Dedicated onboarding, direct engineering access, founding-member pricing. Not a free trial.',
   alternates: { canonical: '/early-adopter' },
   openGraph: {

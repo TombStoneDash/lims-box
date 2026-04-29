@@ -89,7 +89,7 @@ export default function EarlyAdopterPage() {
           <div className="flex items-center justify-between">
             <Link href="/" className="flex items-center gap-2">
               <FlaskConical className="w-6 h-6 text-[#2E8B57]" />
-              <span className="text-xl font-bold text-white">THE LIMS BOX</span>
+              <span className="text-xl font-bold text-white">LIMS BOX</span>
             </Link>
             <nav className="flex items-center gap-6 text-sm font-medium text-slate-400">
               <Link href="/commercial" className="hover:text-white transition-colors">Commercial</Link>
@@ -227,7 +227,7 @@ export default function EarlyAdopterPage() {
       {/* Footer */}
       <footer className="py-8 px-4 border-t border-white/5">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-slate-500">
-          <p>&copy; {new Date().getFullYear()} THE LIMS BOX by Tombstone Dash LLC.</p>
+          <p>&copy; {new Date().getFullYear()} LIMS BOX by Tombstone Dash LLC.</p>
           <div className="flex items-center gap-6">
             <a href="mailto:info@lims.bot" className="hover:text-white transition-colors">info@lims.bot</a>
             <Link href="/" className="hover:text-white transition-colors">lims.bot</Link>

@@ -40,7 +40,7 @@ export default function PressPage() {
           <div className="flex items-center justify-between">
             <Link href="/" className="flex items-center gap-2">
               <FlaskConical className="w-6 h-6 text-lab-teal" />
-              <span className="text-xl font-bold text-slate-900 dark:text-white">THE LIMS BOX</span>
+              <span className="text-xl font-bold text-slate-900 dark:text-white">LIMS BOX</span>
             </Link>
             <nav className="flex items-center gap-6 text-sm font-medium text-slate-600 dark:text-slate-300">
               <Link href="/commercial" className="hover:text-lab-teal transition-colors">Commercial</Link>
@@ -76,14 +76,14 @@ export default function PressPage() {
         <section>
           <div className="flex items-center gap-2 mb-4">
             <FileText className="w-5 h-5 text-lab-teal" />
-            <h2 className="text-xl font-bold text-slate-900 dark:text-white">About THE LIMS BOX</h2>
+            <h2 className="text-xl font-bold text-slate-900 dark:text-white">About LIMS BOX</h2>
           </div>
           <div className="bg-white dark:bg-white/5 border border-black/5 dark:border-white/10 rounded-xl p-6 space-y-4 text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
             <p>
-              <strong className="text-slate-900 dark:text-white">THE LIMS BOX</strong> is a laboratory information management system built for regulated labs under 50 people. It delivers enterprise-grade traceability — sample tracking, chain of custody, audit trails, QC management, and compliance reporting — without the enterprise overhead.
+              <strong className="text-slate-900 dark:text-white">LIMS BOX</strong> is a laboratory information management system built for regulated labs under 50 people. It delivers enterprise-grade traceability — sample tracking, chain of custody, audit trails, QC management, and compliance reporting — without the enterprise overhead.
             </p>
             <p>
-              Founded in 2026 by Tombstone Dash LLC, THE LIMS BOX targets environmental testing labs, water quality labs, cannabis testing facilities, and clinical labs that are stuck between spreadsheets they've outgrown and enterprise platforms they can't afford. The system is built on SENAITE, an open-source LIMS framework, extended with voice control, AI-assisted queries, and offline capability.
+              Founded in 2026 by Tombstone Dash LLC, LIMS BOX targets environmental testing labs, water quality labs, cannabis testing facilities, and clinical labs that are stuck between spreadsheets they've outgrown and enterprise platforms they can't afford. The system is built on SENAITE, an open-source LIMS framework, extended with voice control, AI-assisted queries, and offline capability.
             </p>
             <p>
               Pricing starts at $500/month with no implementation fee, no long-term contract, and go-live in days instead of months. The company is currently running a 5-lab early-adopter pilot program with founding-member pricing and direct engineering access.
@@ -112,7 +112,7 @@ export default function PressPage() {
                 <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Hudson Taylor</h3>
                 <p className="text-sm text-lab-teal mb-3">Founder & CEO, Tombstone Dash LLC</p>
                 <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
-                  Hudson Taylor is the founder of Tombstone Dash LLC and creator of THE LIMS BOX. With a background in lab informatics and software engineering, Hudson identified the gap between enterprise LIMS platforms that cost six figures and the spreadsheet chaos that small regulated labs default to. THE LIMS BOX is his answer: audit-ready traceability that deploys in days, not months, at a price point small labs can justify. He is building the company through a network of VC connectors and strategic partnerships with the SENAITE open-source community.
+                  Hudson Taylor is the founder of Tombstone Dash LLC and creator of LIMS BOX. With a background in lab informatics and software engineering, Hudson identified the gap between enterprise LIMS platforms that cost six figures and the spreadsheet chaos that small regulated labs default to. LIMS BOX is his answer: audit-ready traceability that deploys in days, not months, at a price point small labs can justify. He is building the company through a network of VC connectors and strategic partnerships with the SENAITE open-source community.
                 </p>
               </div>
             </div>
@@ -196,7 +196,7 @@ export default function PressPage() {
 
       <footer className="py-8 px-4 border-t border-black/5 dark:border-white/5">
         <div className="max-w-7xl mx-auto text-center text-sm text-slate-500 dark:text-slate-400">
-          <p>&copy; {new Date().getFullYear()} THE LIMS BOX by Tombstone Dash LLC.</p>
+          <p>&copy; {new Date().getFullYear()} LIMS BOX by Tombstone Dash LLC.</p>
         </div>
       </footer>
     </div>

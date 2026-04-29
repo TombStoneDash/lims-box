@@ -284,7 +284,7 @@ export default function WalkthroughPage() {
         <div className="max-w-5xl mx-auto flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
             <FlaskConical className="w-5 h-5 text-[#2E8B57]" />
-            <span className="text-sm font-bold text-white">THE LIMS BOX</span>
+            <span className="text-sm font-bold text-white">LIMS BOX</span>
             <span className="text-[10px] bg-[#2E8B57]/20 text-[#2E8B57] px-2 py-0.5 rounded-full ml-1">WALKTHROUGH</span>
           </Link>
           <div className="flex items-center gap-4">
@@ -377,7 +377,7 @@ export default function WalkthroughPage() {
 
       {/* Footer */}
       <footer className="px-4 py-3 border-t border-white/5 text-center text-xs text-slate-600">
-        Simulated data — THE LIMS BOX by Tombstone Dash LLC
+        Simulated data — LIMS BOX by Tombstone Dash LLC
       </footer>
     </div>
   );

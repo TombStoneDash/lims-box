@@ -14,7 +14,7 @@ type VideoSectionProps = {
 
 export function VideoSection({
   videoId,
-  title = 'THE LIMS BOX — 2:45 commercial',
+  title = 'LIMS BOX — 2:45 commercial',
   posterSrc,
   posterAlt = 'LIMS BOX commercial poster',
   className = '',

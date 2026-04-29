@@ -87,7 +87,7 @@ export default function HomePage() {
               <span className="text-lab-teal">With its founder.</span>
             </h2>
             <p className="text-slate-700 dark:text-slate-300 leading-relaxed">
-              THE LIMS BOX is built on SENAITE, the leading open-source
+              LIMS BOX is built on SENAITE, the leading open-source
               Laboratory Information Management System, in active technical
               collaboration with its founder Ramon Bartl. We ship hardware,
               packaging, AI, and go-to-market — SENAITE provides the
