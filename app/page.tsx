@@ -6,7 +6,7 @@ import { WaitlistFooter } from '@/components/WaitlistFooter';
 import { VideoSection } from '@/components/VideoSection';
 
 // Same video ID as /commercial — swap together when the final cut is uploaded.
-const COMMERCIAL_VIDEO_ID = process.env.NEXT_PUBLIC_COMMERCIAL_VIDEO_ID || '2gZf1RnqDWU';
+const COMMERCIAL_VIDEO_ID = process.env.NEXT_PUBLIC_COMMERCIAL_VIDEO_ID || 'D3cW20SbU3Y';
 
 export default function HomePage() {
   return (
