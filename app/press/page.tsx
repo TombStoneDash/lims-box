@@ -5,6 +5,9 @@ const logos = [
   { name: 'Logo — Dark Background', file: '/press/logo-dark.svg', desc: 'White text on dark. For dark backgrounds.' },
   { name: 'Logo — Light Background', file: '/press/logo-light.svg', desc: 'Dark text on light. For white/light backgrounds.' },
   { name: 'Icon Only', file: '/press/logo-icon.svg', desc: 'Square icon mark. For favicons, social, and small formats.' },
+  { name: 'Primary Badge', file: '/logo-primary.jpg', desc: 'Parachute box logo with wordmark. For marketing materials.' },
+  { name: 'Metallic Badge', file: '/logo-metallic.jpg', desc: '3D metallic finish. For presentations and premium materials.' },
+  { name: '3D Badge', file: '/logo-badge.jpg', desc: 'Embossed badge style. For social media and hero sections.' },
 ];
 
 const screenshots = [

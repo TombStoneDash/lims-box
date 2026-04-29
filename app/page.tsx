@@ -7,6 +7,7 @@ import { VideoSection } from '@/components/VideoSection';
 
 // Same video ID as /commercial — swap together when the final cut is uploaded.
 const COMMERCIAL_VIDEO_ID = process.env.NEXT_PUBLIC_COMMERCIAL_VIDEO_ID || 'D3cW20SbU3Y';
+const DEMO_VIDEO_ID = 'AyR4LYKMUfM';
 
 export default function HomePage() {
   return (
@@ -89,6 +90,16 @@ export default function HomePage() {
               deployments.
             </p>
           </div>
+        </div>
+      </section>
+
+      {/* Product Demo Video */}
+      <section className="py-16 px-4">
+        <div className="max-w-4xl mx-auto text-center">
+          <h2 className="text-2xl md:text-3xl font-bold tracking-tight text-slate-900 dark:text-white mb-8">
+            See It In Action
+          </h2>
+          <VideoSection videoId={DEMO_VIDEO_ID} />
         </div>
       </section>
 
