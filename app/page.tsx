@@ -1,6 +1,7 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import {
-  FlaskConical, ArrowRight, Shield, FileText, Award, HeartPulse,
+  ArrowRight, Shield, FileText, Award, HeartPulse,
 } from 'lucide-react';
 import { WaitlistFooter } from '@/components/WaitlistFooter';
 import { VideoSection } from '@/components/VideoSection';
@@ -16,7 +17,13 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 py-4 md:py-6">
           <div className="flex items-center justify-between">
             <Link href="/" className="flex items-center gap-2">
-              <FlaskConical className="w-6 h-6 text-lab-teal" />
+              <Image
+                src="/logo-icon.png"
+                alt="LIMS BOX"
+                width={32}
+                height={32}
+                className="rounded"
+              />
               <span className="text-xl font-bold text-slate-900 dark:text-white">
                 LIMS BOX
               </span>
