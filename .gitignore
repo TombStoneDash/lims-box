@@ -40,3 +40,9 @@ __pycache__/
 *.pyc
 *.pyo
 voice_command_queue.db
+
+/generated/prisma
+
+# Dual-track site v1
+prisma/dev.db
+prisma/dev.db-journal

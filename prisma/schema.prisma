@@ -1,0 +1,22 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Prospect {
+  id              String   @id @default(cuid())
+  track           String   // "clinical" or "environmental"
+  name            String
+  email           String
+  labName         String
+  labSize         String
+  accreditations  String   // JSON array stringified
+  painPoint       String?
+  source          String?
+  fieldBenchSplit Int?
+  createdAt       DateTime @default(now())
+}
