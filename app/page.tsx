@@ -54,8 +54,8 @@ export default function HomePage() {
             The LIMS that doesn't need an IT department.
           </h1>
           <p className="text-lg md:text-xl text-slate-600 dark:text-slate-300 mb-10 max-w-2xl mx-auto">
-            Lab management for the labs that build and grow on real samples.
-            Offline-capable, audit-ready, AI-powered.
+            Lab management for labs that build and grow on real samples.
+            Offline-capable. Built for survey readiness. Optional AI assistance.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link

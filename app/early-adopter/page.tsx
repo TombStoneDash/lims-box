@@ -111,7 +111,7 @@ export default function EarlyAdopterPage() {
           </h1>
           <p className="text-lg text-slate-400 max-w-2xl mx-auto">
             This isn't a free trial. It's a structured pilot for regulated labs that need
-            audit-ready traceability and are willing to help shape the product.
+            survey-ready traceability and are willing to help shape the product.
           </p>
         </div>
       </section>

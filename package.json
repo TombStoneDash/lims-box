@@ -1,17 +1,20 @@
 {
   "name": "lims-box",
   "version": "1.0.0",
-  "description": "LIMS BOX — Modern lab management for small environmental and water testing labs",
+  "description": "LIMS BOX \u2014 Modern lab management for small environmental and water testing labs",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "postinstall": "prisma generate"
   },
   "dependencies": {
+    "@prisma/client": "^6.19.3",
     "@supabase/supabase-js": "^2.103.3",
     "lucide-react": "^0.294.0",
     "next": "^15.5.7",
+    "prisma": "^6.19.3",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },
@@ -21,6 +24,7 @@
     "autoprefixer": "^10.4.16",
     "postcss": "^8.4.31",
     "tailwindcss": "^3.3.5",
+    "tsx": "^4.22.0",
     "typescript": "5.9.3"
   }
 }
