@@ -1,12 +1,13 @@
 {
   "name": "lims-box",
   "version": "1.0.0",
-  "description": "LIMS BOX — Modern lab management for small environmental and water testing labs",
+  "description": "LIMS BOX \u2014 Modern lab management for small environmental and water testing labs",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "postinstall": "prisma generate"
   },
   "dependencies": {
     "@prisma/client": "^6.19.3",
