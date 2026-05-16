@@ -99,7 +99,7 @@ export default function CommercialPage() {
             <span className="text-[#2E8B57]">No enterprise overhead.</span>
           </h1>
           <p className="text-lg text-slate-400 max-w-2xl mx-auto">
-            Every sample tracked. Every action logged. Every record audit-ready.
+            Every sample tracked. Every action logged. Every record survey-ready.
             Built for labs under 50 people that can't afford to fail an inspection.
           </p>
         </div>

@@ -116,7 +116,7 @@ export default function CompliancePage() {
           </h1>
           <p className="text-lg text-slate-600 dark:text-slate-300 max-w-2xl mx-auto">
             LIMS BOX embeds ISO 17025 and 21 CFR Part 11 requirements into every workflow.
-            Your lab doesn&apos;t prepare for audits &mdash; the system is always audit-ready.
+            Your lab doesn&apos;t prepare for audits &mdash; the system keeps records survey-ready.
           </p>
         </div>
       </section>
