@@ -629,7 +629,7 @@ export default function DemoPage() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center text-sm">
             <div>
               <p className="font-bold text-slate-900 dark:text-white">ISO 17025</p>
-              <p className="text-xs text-slate-500">Audit-ready</p>
+              <p className="text-xs text-slate-500">Survey-ready</p>
             </div>
             <div>
               <p className="font-bold text-slate-900 dark:text-white">21 CFR Part 11</p>

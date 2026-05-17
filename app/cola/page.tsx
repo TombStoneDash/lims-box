@@ -30,7 +30,7 @@ const QR_SRC = `https://api.qrserver.com/v1/create-qr-code/?size=320x320&margin=
 
 const agenda = [
   { icon: FlaskConical, label: 'Live SENAITE-powered demo — sample login, COC, e-sign, QC' },
-  { icon: Shield, label: 'Audit-readiness walkthrough for CLIA & ISO 17025 labs' },
+  { icon: Shield, label: 'Survey-readiness walkthrough for CLIA & ISO 17025 labs' },
   { icon: Wrench, label: 'Talk through your workflows with the founding engineer' },
   { icon: Users, label: 'Early-adopter pilot — 5 slots, founding-member pricing' },
 ];
