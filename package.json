@@ -7,19 +7,26 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "seed": "tsx prisma/seed.ts",
+    "db:reset": "prisma migrate reset --force && tsx prisma/seed.ts"
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
   },
   "dependencies": {
     "@prisma/client": "^6.19.3",
     "@supabase/supabase-js": "^2.103.3",
     "lucide-react": "^0.294.0",
     "next": "^15.5.7",
+    "pdfkit": "^0.18.0",
     "prisma": "^6.19.3",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },
   "devDependencies": {
     "@types/node": "^20.10.0",
+    "@types/pdfkit": "^0.17.6",
     "@types/react": "^18.2.0",
     "autoprefixer": "^10.4.16",
     "postcss": "^8.4.31",

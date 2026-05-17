@@ -20,3 +20,52 @@ model Prospect {
   fieldBenchSplit Int?
   createdAt       DateTime @default(now())
 }
+
+model Person {
+  id              String       @id @default(cuid())
+  name            String
+  role            String
+  cliaCertNumber  String?
+  hireDate        DateTime
+  active          Boolean      @default(true)
+  competencies    Competency[]
+  trainings       Training[]
+  signOffs        SignOff[]
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+}
+
+model Competency {
+  id          String    @id @default(cuid())
+  personId    String
+  person      Person    @relation(fields: [personId], references: [id], onDelete: Cascade)
+  type        String
+  status      String
+  completedAt DateTime?
+  expiresAt   DateTime?
+  notes       String?
+  createdAt   DateTime  @default(now())
+}
+
+model Training {
+  id          String   @id @default(cuid())
+  personId    String
+  person      Person   @relation(fields: [personId], references: [id], onDelete: Cascade)
+  course      String
+  provider    String?
+  completedAt DateTime
+  hours       Float?
+  certificate String?
+  createdAt   DateTime @default(now())
+}
+
+model SignOff {
+  id           String   @id @default(cuid())
+  personId     String
+  person       Person   @relation(fields: [personId], references: [id], onDelete: Cascade)
+  directorName String
+  signedAt     DateTime
+  scope        String
+  notes        String?
+  createdAt    DateTime @default(now())
+}
