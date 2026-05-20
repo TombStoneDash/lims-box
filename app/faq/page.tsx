@@ -85,7 +85,7 @@ const faqs: FAQ[] = [
   {
     category: 'Support',
     question: 'Can we talk to a real person before buying?',
-    answer: 'Absolutely. Schedule a live demo webinar or request a 1-on-1 call. Our founder has 15 years of LIMS implementation experience and personally handles early adopter consultations. Email info@lims.bot or call (760) 960-4273.',
+    answer: 'Absolutely. Schedule a live demo webinar or request a 1-on-1 call. Our founder has 15 years of LIMS implementation experience and personally handles early adopter consultations. Email info@lims.bot or call (858) 305-8744.',
   },
 ];
 

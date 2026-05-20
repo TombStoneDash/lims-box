@@ -611,8 +611,8 @@ export default function DemoPage() {
                 info@lims.bot
               </a>
               <span className="hidden sm:inline text-slate-300">|</span>
-              <a href="tel:+17609604273" className="text-lab-teal hover:underline font-medium">
-                (760) 960-4273
+              <a href="tel:+18583058744" className="text-lab-teal hover:underline font-medium">
+                (858) 305-8744
               </a>
               <span className="hidden sm:inline text-slate-300">|</span>
               <Link href="/contact" className="text-lab-teal hover:underline font-medium">
