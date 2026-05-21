@@ -4,6 +4,7 @@ export const metadata: Metadata = {
   title: 'Contact — LIMS BOX',
   description:
     'Get in touch with the LIMS BOX team. Start a 30-day pilot, ask questions, or learn how LIMS BOX fits your lab — no sales pressure.',
+  alternates: { canonical: '/contact' },
 };
 
 export default function ContactLayout({ children }: { children: React.ReactNode }) {
