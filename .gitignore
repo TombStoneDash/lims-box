@@ -49,3 +49,6 @@ voice_command_queue.db
 !/uploads/.gitkeep
 prisma/dev.db
 prisma/dev.db-journal
+
+# Archived ops docs (gitignored)
+/.archive/
