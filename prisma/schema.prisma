@@ -22,29 +22,31 @@ model Prospect {
 }
 
 model Person {
-  id              String       @id @default(cuid())
-  name            String
-  role            String
-  cliaCertNumber  String?
-  hireDate        DateTime
-  active          Boolean      @default(true)
-  competencies    Competency[]
-  trainings       Training[]
-  signOffs        SignOff[]
-  createdAt       DateTime     @default(now())
-  updatedAt       DateTime     @updatedAt
+  id             String          @id @default(cuid())
+  name           String
+  role           String
+  cliaCertNumber String?
+  hireDate       DateTime
+  active         Boolean         @default(true)
+  competencies   Competency[]
+  trainings      Training[]
+  signOffs       SignOff[]
+  authorizations Authorization[]
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
 }
 
 model Competency {
-  id          String    @id @default(cuid())
-  personId    String
-  person      Person    @relation(fields: [personId], references: [id], onDelete: Cascade)
-  type        String
-  status      String
-  completedAt DateTime?
-  expiresAt   DateTime?
-  notes       String?
-  createdAt   DateTime  @default(now())
+  id           String        @id @default(cuid())
+  personId     String
+  person       Person        @relation(fields: [personId], references: [id], onDelete: Cascade)
+  type         String
+  status       String
+  completedAt  DateTime?
+  expiresAt    DateTime?
+  notes        String?
+  reviewEvents ReviewEvent[]
+  createdAt    DateTime      @default(now())
 }
 
 model Training {
@@ -68,4 +70,86 @@ model SignOff {
   scope        String
   notes        String?
   createdAt    DateTime @default(now())
+}
+
+// ─── Personnel Pack v1.5 — ISO 15189 extension ────────────────────────────────
+
+/// Controlled document (SOP, procedure manual, policy form, etc.)
+model Document {
+  id         String            @id @default(cuid())
+  title      String
+  docType    String            // "SOP" | "procedure_manual" | "policy" | "form"
+  archivedAt DateTime?
+  createdAt  DateTime          @default(now())
+  updatedAt  DateTime          @updatedAt
+  versions   DocumentVersion[]
+}
+
+/// Version history for a controlled document — Feature 1
+model DocumentVersion {
+  id                 String    @id @default(cuid())
+  documentId         String
+  document           Document  @relation(fields: [documentId], references: [id], onDelete: Restrict)
+  versionNumber      String    // format: "1.0", "2.3" (validated in API)
+  effectiveDate      DateTime
+  supersededDate     DateTime?
+  revisionSummary    String
+  approvedBy         String
+  approvedAt         DateTime  @default(now())
+  documentContentUrl String?   // Vercel Blob URL
+  isCurrent          Boolean   @default(true) // managed by application; partial index in migration
+  createdAt          DateTime  @default(now())
+
+  @@index([documentId])
+}
+
+/// Competency review audit log — Feature 2
+model ReviewEvent {
+  id            String     @id @default(cuid())
+  competencyId  String
+  competency    Competency @relation(fields: [competencyId], references: [id], onDelete: Restrict)
+  reviewerName  String
+  reviewerRole  String
+  reviewType    String     // "initial" | "six_month" | "annual" | "corrective_action" | "ad_hoc"
+  reviewOutcome String     // "competent" | "requires_remediation" | "restricted" | "suspended"
+  notes         String?
+  nextReviewDue DateTime?  // calculated from reviewedAt if not provided
+  reviewedAt    DateTime   @default(now())
+  createdAt     DateTime   @default(now())
+
+  @@index([competencyId])
+  @@index([nextReviewDue])
+}
+
+/// Procedure that personnel can be authorized to perform — Feature 3
+model Procedure {
+  id             String          @id @default(cuid())
+  name           String
+  procedureCode  String?         @unique
+  description    String?
+  active         Boolean         @default(true)
+  authorizations Authorization[]
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+}
+
+/// Procedure-specific authorization per person — Feature 3
+/// Partial unique index on (personId, procedureId) WHERE isActive=1 added in migration SQL.
+model Authorization {
+  id               String    @id @default(cuid())
+  personId         String
+  person           Person    @relation(fields: [personId], references: [id], onDelete: Restrict)
+  procedureId      String
+  procedure        Procedure @relation(fields: [procedureId], references: [id], onDelete: Restrict)
+  authorizedAt     DateTime
+  authorizedBy     String    // typed name — lab director attestation
+  scope            String?
+  revokedAt        DateTime?
+  revokedBy        String?
+  revocationReason String?
+  isActive         Boolean   @default(true) // true = not revoked; partial unique index enforces one active per person+procedure
+  createdAt        DateTime  @default(now())
+
+  @@index([personId])
+  @@index([procedureId])
 }
