@@ -4,6 +4,10 @@ const prisma = new PrismaClient();
 
 async function main() {
   // Wipe
+  await prisma.personnelPackAuthorization.deleteMany();
+  await prisma.personnelPackReviewEvent.deleteMany();
+  await prisma.personnelPackDocumentVersion.deleteMany();
+  await prisma.personnelPackDocument.deleteMany();
   await prisma.signOff.deleteMany();
   await prisma.training.deleteMany();
   await prisma.competency.deleteMany();
@@ -137,7 +141,117 @@ async function main() {
     },
   });
 
-  console.log("Seeded 3 people, 6 competencies, 2 trainings, 2 sign-offs.");
+  const hematologyProcedure = await prisma.personnelPackDocument.create({
+    data: {
+      title: "Hematology Analyzer Operation",
+      code: "HEM-SOP-001",
+      kind: "procedure",
+      description: "Primary operating procedure for CBC workflow.",
+    },
+  });
+
+  await prisma.personnelPackDocumentVersion.createMany({
+    data: [
+      {
+        documentId: hematologyProcedure.id,
+        versionNumber: "1.0",
+        effectiveDate: new Date("2025-01-15"),
+        supersededDate: new Date("2026-03-01"),
+        revisionSummary: "Initial release of analyzer startup and QC workflow.",
+        approvedBy: "Dr. Robert Kim, MD",
+        approvedAt: new Date("2025-01-15"),
+        documentContentUrl: "/uploads/hem-sop-001-v1.pdf",
+      },
+      {
+        documentId: hematologyProcedure.id,
+        versionNumber: "1.1",
+        effectiveDate: new Date("2026-03-01"),
+        revisionSummary: "Clarified delta check escalation and maintenance sign-off.",
+        approvedBy: "Dr. Robert Kim, MD",
+        approvedAt: new Date("2026-03-01"),
+        documentContentUrl: "/uploads/hem-sop-001-v1-1.pdf",
+      },
+    ],
+  });
+
+  const competencyForm = await prisma.personnelPackDocument.create({
+    data: {
+      title: "Annual Competency Assessment Form",
+      code: "QA-FRM-014",
+      kind: "form",
+      description: "Controlled competency checklist for annual review packets.",
+    },
+  });
+
+  await prisma.personnelPackDocumentVersion.create({
+    data: {
+      documentId: competencyForm.id,
+      versionNumber: "2.0",
+      effectiveDate: new Date("2026-01-05"),
+      revisionSummary: "Aligned form with ISO 15189 review annotations.",
+      approvedBy: "Carla Nguyen",
+      approvedAt: new Date("2026-01-05"),
+      documentContentUrl: "/uploads/qa-frm-014-v2.pdf",
+    },
+  });
+
+  await prisma.personnelPackAuthorization.createMany({
+    data: [
+      {
+        personId: alice.id,
+        documentId: hematologyProcedure.id,
+        authorizedAt: daysFromNow(-75),
+        authorizedBy: "Dr. Robert Kim, MD",
+        scope: "All shifts",
+      },
+      {
+        personId: ben.id,
+        documentId: hematologyProcedure.id,
+        authorizedAt: daysFromNow(-20),
+        authorizedBy: "Dr. Robert Kim, MD",
+        scope: "Day shift only",
+      },
+    ],
+  });
+
+  const benDueDate = daysFromNow(14);
+  const benReviewDate = new Date(benDueDate);
+  benReviewDate.setDate(benReviewDate.getDate() - 14);
+  const benDirectObservation = await prisma.competency.findFirstOrThrow({
+    where: { personId: ben.id, type: "Direct Observation" },
+  });
+  await prisma.personnelPackReviewEvent.create({
+    data: {
+      competencyRecordId: benDirectObservation.id,
+      reviewerName: "Carla Nguyen",
+      reviewerRole: "section supervisor",
+      reviewType: "six_month",
+      reviewOutcome: "requires_remediation",
+      notes: "Needs repeat observed run on abnormal differential workflow.",
+      correctiveActionRequired: true,
+      correctiveActionSummary: "Schedule supervised repeat competency and document follow-up training.",
+      nextReviewDue: benDueDate,
+      reviewedAt: benReviewDate,
+    },
+  });
+
+  const aliceCompetency = await prisma.competency.findFirstOrThrow({
+    where: { personId: alice.id, type: "Direct Observation" },
+  });
+  await prisma.personnelPackReviewEvent.create({
+    data: {
+      competencyRecordId: aliceCompetency.id,
+      reviewerName: "Carla Nguyen",
+      reviewerRole: "QA officer",
+      reviewType: "annual",
+      reviewOutcome: "competent",
+      notes: "Annual review complete with no gaps.",
+      nextReviewDue: new Date(new Date().setFullYear(new Date().getFullYear() + 1)),
+      reviewedAt: daysFromNow(-30),
+    },
+  });
+
+  console.log("Seeded personnel pack v1 data plus ISO 15189 v1.5 documents, reviews, and authorizations.");
 }
 
 main()

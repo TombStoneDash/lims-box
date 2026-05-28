@@ -1,12 +1,13 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+import { listUpcomingReviews } from "@/lib/personnel-pack-v15/service";
 
 export default async function AdminDashboard() {
   const now = new Date();
   const in30 = new Date(now);
   in30.setDate(in30.getDate() + 30);
 
-  const [peopleCount, overdueCount, dueIn30, upcomingSignOffs] = await Promise.all([
+  const [peopleCount, overdueCount, dueIn30, upcomingSignOffs, upcomingReviews] = await Promise.all([
     prisma.person.count({ where: { active: true } }),
     prisma.competency.count({
       where: { OR: [{ status: "overdue" }, { expiresAt: { lt: now }, status: { not: "completed" } }] },
@@ -15,6 +16,7 @@ export default async function AdminDashboard() {
       where: { expiresAt: { gte: now, lte: in30 }, status: { in: ["due", "overdue"] } },
     }),
     prisma.signOff.count({ where: { signedAt: { gte: now, lte: in30 } } }),
+    listUpcomingReviews(prisma, now, 30),
   ]);
 
   return (
@@ -34,6 +36,20 @@ export default async function AdminDashboard() {
 
       <div className="text-sm text-slate-500">
         Upcoming director sign-offs in next 30 days: <strong className="text-slate-900">{upcomingSignOffs}</strong>
+      </div>
+
+      <div className="rounded-md border border-slate-200 bg-white p-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <div className="text-sm font-medium text-slate-900">ISO 15189 reviews due in next 30 days</div>
+            <div className="text-sm text-slate-500">
+              <strong className="text-slate-900">{upcomingReviews.length}</strong> review events need follow-up.
+            </div>
+          </div>
+          <Link href="/personnel-pack/v15" className="text-sm underline">
+            Open v1.5 dashboard
+          </Link>
+        </div>
       </div>
 
       <div>

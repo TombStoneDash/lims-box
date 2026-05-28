@@ -71,6 +71,24 @@ const cfr11Features = [
   },
 ];
 
+const iso15189ResourcesFeatures = [
+  {
+    icon: FileCheck,
+    title: 'Controlled Competency Documents',
+    description: 'Procedure and competency form revisions are versioned with effective dates, approval metadata, and retained history so superseded copies remain visible for audit reconstruction.',
+  },
+  {
+    icon: Eye,
+    title: 'Internal Competency Audit Trail',
+    description: 'Six-month, annual, ad hoc, and corrective-action competency reviews are logged per record with reviewer identity, outcome, notes, and next-review due dates.',
+  },
+  {
+    icon: UserCheck,
+    title: 'Procedure-Specific Authorization',
+    description: 'Personnel can be explicitly authorized and later revoked per procedure with typed lab-director signature, scope, and revocation reason retained in the record.',
+  },
+];
+
 function FeatureCard({ icon: Icon, title, description }: { icon: React.ElementType; title: string; description: string }) {
   return (
     <div className="bg-white dark:bg-white/5 border border-black/5 dark:border-white/10 rounded-xl p-6">
@@ -151,6 +169,23 @@ export default function CompliancePage() {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {cfr11Features.map((f) => (
+              <FeatureCard key={f.title} {...f} />
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Key Differentiator */}
+      <section className="px-4 pb-16">
+        <div className="max-w-5xl mx-auto">
+          <div className="mb-8">
+            <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">ISO 15189 Section 6 — Resources</h2>
+            <p className="text-sm text-slate-600 dark:text-slate-300 max-w-2xl">
+              Personnel Pack v1.5 extends the existing CLIA personnel workflow with the documentation metadata that ISO 15189 expects for competence and authorization records.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {iso15189ResourcesFeatures.map((f) => (
               <FeatureCard key={f.title} {...f} />
             ))}
           </div>

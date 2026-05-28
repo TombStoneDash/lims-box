@@ -15,9 +15,33 @@ export async function GET() {
       competencies: { orderBy: { expiresAt: "asc" } },
       trainings: { orderBy: { completedAt: "desc" } },
       signOffs: { orderBy: { signedAt: "desc" } },
+      authorizations: {
+        include: {
+          document: true,
+        },
+        orderBy: [{ revokedAt: "asc" }, { authorizedAt: "desc" }],
+      },
     },
     orderBy: [{ role: "asc" }, { name: "asc" }],
   });
+  const reviewEvents = await prisma.personnelPackReviewEvent.findMany({
+    include: {
+      competencyRecord: true,
+    },
+    orderBy: { reviewedAt: "desc" },
+  });
+  const documents = await prisma.personnelPackDocument.findMany({
+    include: {
+      versions: {
+        orderBy: { effectiveDate: "desc" },
+      },
+    },
+    orderBy: { code: "asc" },
+  });
+  const reviewCounts = new Map<string, number>();
+  for (const event of reviewEvents) {
+    reviewCounts.set(event.competencyRecord.personId, (reviewCounts.get(event.competencyRecord.personId) || 0) + 1);
+  }
 
   const doc = new PDFDocument({ size: "LETTER", margin: 54 });
   const chunks: Buffer[] = [];
@@ -34,6 +58,15 @@ export async function GET() {
     .text("Workflow documentation support. Human-reviewed drafting. Confirm completeness before submission.");
   doc.moveDown(1);
   doc.fillColor("#000");
+
+  doc.font("Helvetica-Bold").fontSize(11).text("ISO 15189 controlled documents");
+  doc.font("Helvetica").fontSize(9).fillColor("#222");
+  for (const documentRecord of documents) {
+    const currentVersion = documentRecord.versions.find((version) => version.supersededDate === null);
+    doc.text(`  • ${documentRecord.code} — ${documentRecord.title} (${documentRecord.kind})`);
+    doc.text(`    Current version: ${currentVersion?.versionNumber || "missing"} · Effective ${fmt(currentVersion?.effectiveDate)}`);
+  }
+  doc.moveDown(0.8);
 
   // Group by role
   const byRole = new Map<string, typeof people>();
@@ -87,6 +120,23 @@ export async function GET() {
       } else {
         for (const s of p.signOffs) {
           doc.text(`  • ${s.scope} — ${s.directorName} (${fmt(s.signedAt)})`);
+        }
+      }
+
+      doc.moveDown(0.2);
+      doc.font("Helvetica-Bold").fontSize(9).fillColor("#000").text("ISO review events");
+      doc.font("Helvetica").fontSize(9).fillColor("#222");
+      doc.text(`  • Logged review events: ${reviewCounts.get(p.id) || 0}`);
+
+      doc.moveDown(0.2);
+      doc.font("Helvetica-Bold").fontSize(9).fillColor("#000").text("Procedure authorizations");
+      doc.font("Helvetica").fontSize(9).fillColor("#222");
+      if (p.authorizations.length === 0) {
+        doc.text("  —");
+      } else {
+        for (const authorization of p.authorizations) {
+          const status = authorization.revokedAt ? `revoked ${fmt(authorization.revokedAt)}` : `active ${fmt(authorization.authorizedAt)}`;
+          doc.text(`  • ${authorization.document.code} — ${authorization.document.title} (${status})`);
         }
       }
 

@@ -9,12 +9,12 @@ datasource db {
 
 model Prospect {
   id              String   @id @default(cuid())
-  track           String   // "clinical" or "environmental"
+  track           String // "clinical" or "environmental"
   name            String
   email           String
   labName         String
   labSize         String
-  accreditations  String   // JSON array stringified
+  accreditations  String // JSON array stringified
   painPoint       String?
   source          String?
   fieldBenchSplit Int?
@@ -22,29 +22,31 @@ model Prospect {
 }
 
 model Person {
-  id              String       @id @default(cuid())
-  name            String
-  role            String
-  cliaCertNumber  String?
-  hireDate        DateTime
-  active          Boolean      @default(true)
-  competencies    Competency[]
-  trainings       Training[]
-  signOffs        SignOff[]
-  createdAt       DateTime     @default(now())
-  updatedAt       DateTime     @updatedAt
+  id             String                       @id @default(cuid())
+  name           String
+  role           String
+  cliaCertNumber String?
+  hireDate       DateTime
+  active         Boolean                      @default(true)
+  competencies   Competency[]
+  trainings      Training[]
+  signOffs       SignOff[]
+  authorizations PersonnelPackAuthorization[]
+  createdAt      DateTime                     @default(now())
+  updatedAt      DateTime                     @updatedAt
 }
 
 model Competency {
-  id          String    @id @default(cuid())
-  personId    String
-  person      Person    @relation(fields: [personId], references: [id], onDelete: Cascade)
-  type        String
-  status      String
-  completedAt DateTime?
-  expiresAt   DateTime?
-  notes       String?
-  createdAt   DateTime  @default(now())
+  id           String                     @id @default(cuid())
+  personId     String
+  person       Person                     @relation(fields: [personId], references: [id], onDelete: Cascade)
+  type         String
+  status       String
+  completedAt  DateTime?
+  expiresAt    DateTime?
+  notes        String?
+  reviewEvents PersonnelPackReviewEvent[]
+  createdAt    DateTime                   @default(now())
 }
 
 model Training {
@@ -68,4 +70,96 @@ model SignOff {
   scope        String
   notes        String?
   createdAt    DateTime @default(now())
+}
+
+enum PersonnelPackDocumentKind {
+  procedure
+  form
+}
+
+enum PersonnelPackReviewType {
+  initial
+  six_month
+  annual
+  corrective_action
+  ad_hoc
+}
+
+enum PersonnelPackReviewOutcome {
+  competent
+  requires_remediation
+  restricted
+  suspended
+}
+
+model PersonnelPackDocument {
+  id             String                         @id @default(cuid())
+  title          String
+  code           String                         @unique
+  kind           PersonnelPackDocumentKind
+  description    String?
+  versions       PersonnelPackDocumentVersion[]
+  authorizations PersonnelPackAuthorization[]
+  createdAt      DateTime                       @default(now())
+  updatedAt      DateTime                       @updatedAt
+
+  @@map("personnel_pack_documents")
+}
+
+model PersonnelPackDocumentVersion {
+  id                 String                @id @default(cuid())
+  documentId         String
+  document           PersonnelPackDocument @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  versionNumber      String
+  effectiveDate      DateTime
+  supersededDate     DateTime?
+  revisionSummary    String
+  approvedBy         String
+  approvedAt         DateTime              @default(now())
+  documentContentUrl String?
+  createdAt          DateTime              @default(now())
+
+  @@unique([documentId, versionNumber])
+  @@index([documentId, effectiveDate(sort: Desc)])
+  @@map("personnel_pack_document_versions")
+}
+
+model PersonnelPackReviewEvent {
+  id                       String                     @id @default(cuid())
+  competencyRecordId       String
+  competencyRecord         Competency                 @relation(fields: [competencyRecordId], references: [id], onDelete: Cascade)
+  reviewerName             String
+  reviewerRole             String
+  reviewType               PersonnelPackReviewType
+  reviewOutcome            PersonnelPackReviewOutcome
+  notes                    String?
+  correctiveActionRequired Boolean                    @default(false)
+  correctiveActionSummary  String?
+  nextReviewDue            DateTime?
+  reviewedAt               DateTime                   @default(now())
+  createdAt                DateTime                   @default(now())
+
+  @@index([competencyRecordId, reviewedAt(sort: Desc)])
+  @@index([nextReviewDue])
+  @@map("personnel_pack_review_events")
+}
+
+model PersonnelPackAuthorization {
+  id               String                @id @default(cuid())
+  personId         String
+  person           Person                @relation(fields: [personId], references: [id], onDelete: Cascade)
+  documentId       String
+  document         PersonnelPackDocument @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  authorizedAt     DateTime
+  authorizedBy     String
+  scope            String?
+  revokedAt        DateTime?
+  revokedBy        String?
+  revocationReason String?
+  createdAt        DateTime              @default(now())
+
+  @@unique([personId, documentId, authorizedAt])
+  @@index([personId])
+  @@index([documentId])
+  @@map("personnel_pack_authorizations")
 }

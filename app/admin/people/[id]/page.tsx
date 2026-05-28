@@ -29,6 +29,12 @@ export default async function PersonDetailPage({ params }: { params: Promise<{ i
         </div>
         <div className="flex gap-2">
           <Link
+            href={`/personnel-pack/v15/personnel/${person.id}`}
+            className="rounded-md border border-slate-300 px-3 py-1.5 text-sm hover:bg-slate-50"
+          >
+            ISO 15189
+          </Link>
+          <Link
             href={`/admin/people/${person.id}/edit`}
             className="rounded-md border border-slate-300 px-3 py-1.5 text-sm hover:bg-slate-50"
           >

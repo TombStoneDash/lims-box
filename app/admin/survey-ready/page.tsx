@@ -9,9 +9,32 @@ export default async function SurveyReadyPage() {
       competencies: { orderBy: { expiresAt: "asc" } },
       trainings: { orderBy: { completedAt: "desc" } },
       signOffs: { orderBy: { signedAt: "desc" } },
+      authorizations: {
+        include: {
+          document: true,
+        },
+        orderBy: [{ revokedAt: "asc" }, { authorizedAt: "desc" }],
+      },
     },
     orderBy: [{ role: "asc" }, { name: "asc" }],
   });
+  const reviewEvents = await prisma.personnelPackReviewEvent.findMany({
+    include: {
+      competencyRecord: true,
+    },
+    orderBy: { reviewedAt: "desc" },
+  });
+  const documents = await prisma.personnelPackDocument.findMany({
+    include: {
+      versions: true,
+    },
+    orderBy: { code: "asc" },
+  });
+  const reviewCounts = new Map<string, number>();
+  for (const event of reviewEvents) {
+    const current = reviewCounts.get(event.competencyRecord.personId) || 0;
+    reviewCounts.set(event.competencyRecord.personId, current + 1);
+  }
 
   const byRole = new Map<string, typeof people>();
   for (const p of people) {
@@ -26,7 +49,7 @@ export default async function SurveyReadyPage() {
         <div>
           <h1 className="text-2xl font-semibold">Survey-ready bundle</h1>
           <p className="text-sm text-slate-600 mt-1">
-            Active personnel · competencies · sign-offs · grouped by role.
+            Active personnel · competencies · sign-offs · ISO 15189 addenda grouped by role.
           </p>
         </div>
         <a
@@ -41,6 +64,23 @@ export default async function SurveyReadyPage() {
         Workflow documentation support. Human-reviewed drafting. This export reflects the records currently in the local
         database. Confirm completeness before any CMS or accreditation submission.
       </p>
+
+      <section className="rounded-md border border-slate-200 bg-white p-4 text-sm">
+        <div className="font-semibold">ISO 15189 controlled documents</div>
+        <div className="mt-2 grid gap-2 md:grid-cols-2">
+          {documents.map((document) => {
+            const currentVersion = document.versions.find((version) => version.supersededDate === null);
+            return (
+              <div key={document.id} className="rounded-md border border-slate-100 p-3">
+                <div className="font-medium">{document.code} · {document.title}</div>
+                <div className="text-slate-500">
+                  {document.kind} · Current version {currentVersion?.versionNumber || "missing"}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </section>
 
       {Array.from(byRole.entries()).map(([role, group]) => (
         <section key={role} className="space-y-3">
@@ -58,7 +98,7 @@ export default async function SurveyReadyPage() {
                   Open record
                 </Link>
               </div>
-              <div className="mt-3 grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="mt-3 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-4">
                 <div>
                   <div className="text-xs uppercase tracking-wide text-slate-500 mb-1">Competencies</div>
                   <ul className="space-y-1">
@@ -97,6 +137,28 @@ export default async function SurveyReadyPage() {
                       p.signOffs.map((s) => (
                         <li key={s.id}>
                           {s.scope} <span className="text-slate-400">· {formatDate(s.signedAt)}</span>
+                        </li>
+                      ))
+                    )}
+                  </ul>
+                </div>
+                <div>
+                  <div className="text-xs uppercase tracking-wide text-slate-500 mb-1">ISO review events</div>
+                  <div className="text-slate-700">{reviewCounts.get(p.id) || 0} logged</div>
+                </div>
+                <div>
+                  <div className="text-xs uppercase tracking-wide text-slate-500 mb-1">Procedure authorizations</div>
+                  <ul className="space-y-1">
+                    {p.authorizations.length === 0 ? (
+                      <li className="text-slate-400">—</li>
+                    ) : (
+                      p.authorizations.map((authorization) => (
+                        <li key={authorization.id}>
+                          {authorization.document.code}
+                          <span className="text-slate-400">
+                            {" · "}
+                            {authorization.revokedAt ? `revoked ${formatDate(authorization.revokedAt)}` : `active ${formatDate(authorization.authorizedAt)}`}
+                          </span>
                         </li>
                       ))
                     )}
