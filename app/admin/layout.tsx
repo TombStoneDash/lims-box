@@ -21,10 +21,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <nav className="text-sm text-slate-600 flex gap-4">
               <Link href="/admin" className="hover:text-slate-900">Dashboard</Link>
               <Link href="/admin/people" className="hover:text-slate-900">People</Link>
+              <Link href="/admin/documents" className="hover:text-slate-900">Documents</Link>
+              <Link href="/admin/procedures" className="hover:text-slate-900">Procedures</Link>
               <Link href="/admin/survey-ready" className="hover:text-slate-900">Survey-ready bundle</Link>
             </nav>
           </div>
-          <span className="text-xs text-slate-400 uppercase tracking-wide">v1 · local</span>
+          <span className="text-xs text-slate-400 uppercase tracking-wide">v1.5 · local · ISO 15189</span>
         </div>
       </header>
       <main className="max-w-6xl mx-auto px-6 py-8">{children}</main>
