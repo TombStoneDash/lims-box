@@ -293,7 +293,6 @@ function ReportStep() {
   );
 }
 
-// TODO: Replace placeholder URL with actual Calendly link once created
 const CALENDLY_URL =
   'https://calendly.com/tombstonedash/lims-demo?hide_gdpr_banner=1&background_color=f8fafc&text_color=0f172a&primary_color=0d9488';
 
