@@ -1,7 +1,7 @@
 {
   "name": "lims-box",
   "version": "1.0.0",
-  "description": "LIMS BOX \u2014 Modern lab management for small environmental and water testing labs",
+  "description": "LIMS BOX — Modern lab management for small environmental and water testing labs",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -9,7 +9,8 @@
     "lint": "next lint",
     "postinstall": "prisma generate",
     "seed": "tsx prisma/seed.ts",
-    "db:reset": "prisma migrate reset --force && tsx prisma/seed.ts"
+    "db:reset": "prisma migrate reset --force && tsx prisma/seed.ts",
+    "vercel-build": "prisma generate && prisma db push --skip-generate && next build"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
