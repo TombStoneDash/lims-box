@@ -3,18 +3,18 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
 model Prospect {
   id              String   @id @default(cuid())
-  track           String   // "clinical" or "environmental"
+  track           String // "clinical" or "environmental"
   name            String
   email           String
   labName         String
   labSize         String
-  accreditations  String   // JSON array stringified
+  accreditations  String // JSON array stringified
   painPoint       String?
   source          String?
   fieldBenchSplit Int?
@@ -78,7 +78,7 @@ model SignOff {
 model Document {
   id         String            @id @default(cuid())
   title      String
-  docType    String            // "SOP" | "procedure_manual" | "policy" | "form"
+  docType    String // "SOP" | "procedure_manual" | "policy" | "form"
   archivedAt DateTime?
   createdAt  DateTime          @default(now())
   updatedAt  DateTime          @updatedAt
@@ -90,13 +90,13 @@ model DocumentVersion {
   id                 String    @id @default(cuid())
   documentId         String
   document           Document  @relation(fields: [documentId], references: [id], onDelete: Restrict)
-  versionNumber      String    // format: "1.0", "2.3" (validated in API)
+  versionNumber      String // format: "1.0", "2.3" (validated in API)
   effectiveDate      DateTime
   supersededDate     DateTime?
   revisionSummary    String
   approvedBy         String
   approvedAt         DateTime  @default(now())
-  documentContentUrl String?   // Vercel Blob URL
+  documentContentUrl String? // Vercel Blob URL
   isCurrent          Boolean   @default(true) // managed by application; partial index in migration
   createdAt          DateTime  @default(now())
 
@@ -110,10 +110,10 @@ model ReviewEvent {
   competency    Competency @relation(fields: [competencyId], references: [id], onDelete: Restrict)
   reviewerName  String
   reviewerRole  String
-  reviewType    String     // "initial" | "six_month" | "annual" | "corrective_action" | "ad_hoc"
-  reviewOutcome String     // "competent" | "requires_remediation" | "restricted" | "suspended"
+  reviewType    String // "initial" | "six_month" | "annual" | "corrective_action" | "ad_hoc"
+  reviewOutcome String // "competent" | "requires_remediation" | "restricted" | "suspended"
   notes         String?
-  nextReviewDue DateTime?  // calculated from reviewedAt if not provided
+  nextReviewDue DateTime? // calculated from reviewedAt if not provided
   reviewedAt    DateTime   @default(now())
   createdAt     DateTime   @default(now())
 
@@ -142,7 +142,7 @@ model Authorization {
   procedureId      String
   procedure        Procedure @relation(fields: [procedureId], references: [id], onDelete: Restrict)
   authorizedAt     DateTime
-  authorizedBy     String    // typed name — lab director attestation
+  authorizedBy     String // typed name — lab director attestation
   scope            String?
   revokedAt        DateTime?
   revokedBy        String?
