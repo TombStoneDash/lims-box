@@ -127,7 +127,7 @@ export default function HomePage() {
               No additional cost. No new module to buy. Personnel Pack already covered 80% of the overlap. Version 1.5 closes the remaining 20%.
             </p>
             <Link
-              href="/pricing"
+              href="/personnel-pack"
               className="inline-flex items-center gap-2 bg-lab-teal hover:bg-lab-teal/90 text-white font-semibold px-6 py-3 rounded-lg transition-colors"
             >
               See Personnel Pack
