@@ -65,7 +65,7 @@ type Instrument = {
   lastCalibration: string;
   nextCalibration: string;
   lastMaintenance: string;
-  maintenanceLog: Array<{ date: string; action: string; technician: string }>;
+  maintenanceLog: Array<{ date: string; type: string; performedBy: string; notes: string; result: string }>;
 };
 
 export const instruments: Instrument[] = [
@@ -79,9 +79,9 @@ export const instruments: Instrument[] = [
     nextCalibration: '2026-04-28',
     lastMaintenance: '2026-03-01',
     maintenanceLog: [
-      { date: '2026-03-28', action: 'Daily performance check — passed', technician: 'J. Martinez' },
-      { date: '2026-03-01', action: 'Nebulizer replaced, cones cleaned', technician: 'J. Martinez' },
-      { date: '2026-02-02', action: 'Quarterly PM — passed', technician: 'Vendor (Agilent)' },
+      { date: '2026-03-28', type: 'Verification', performedBy: 'J. Martinez', notes: 'Daily performance check — passed', result: 'Pass' },
+      { date: '2026-03-01', type: 'Preventive Maintenance', performedBy: 'J. Martinez', notes: 'Nebulizer replaced, cones cleaned', result: 'Pass' },
+      { date: '2026-02-02', type: 'Preventive Maintenance', performedBy: 'Vendor (Agilent)', notes: 'Quarterly PM — passed', result: 'Pass' },
     ],
   },
   {
@@ -94,8 +94,8 @@ export const instruments: Instrument[] = [
     nextCalibration: '2026-04-25',
     lastMaintenance: '2026-02-14',
     maintenanceLog: [
-      { date: '2026-03-25', action: 'BFB tune passed', technician: 'K. Chen' },
-      { date: '2026-02-14', action: 'Source cleaned, column trimmed', technician: 'K. Chen' },
+      { date: '2026-03-25', type: 'Calibration', performedBy: 'K. Chen', notes: 'BFB tune passed', result: 'Pass' },
+      { date: '2026-02-14', type: 'Preventive Maintenance', performedBy: 'K. Chen', notes: 'Source cleaned, column trimmed', result: 'Pass' },
     ],
   },
   {
@@ -108,8 +108,8 @@ export const instruments: Instrument[] = [
     nextCalibration: '2026-05-02',
     lastMaintenance: '2026-01-20',
     maintenanceLog: [
-      { date: '2026-04-02', action: '5-level calibration — all R² > 0.999', technician: 'R. Nguyen' },
-      { date: '2026-01-20', action: 'Suppressor regenerated, eluent replaced', technician: 'R. Nguyen' },
+      { date: '2026-04-02', type: 'Calibration', performedBy: 'R. Nguyen', notes: '5-level calibration — all R² > 0.999', result: 'Pass' },
+      { date: '2026-01-20', type: 'Preventive Maintenance', performedBy: 'R. Nguyen', notes: 'Suppressor regenerated, eluent replaced', result: 'Pass' },
     ],
   },
   {
@@ -122,8 +122,8 @@ export const instruments: Instrument[] = [
     nextCalibration: '2026-04-20',
     lastMaintenance: '2026-04-01',
     maintenanceLog: [
-      { date: '2026-04-13', action: '3-point calibration (pH 4, 7, 10)', technician: 'S. Lee' },
-      { date: '2026-04-01', action: 'Electrode replaced', technician: 'S. Lee' },
+      { date: '2026-04-13', type: 'Calibration', performedBy: 'S. Lee', notes: '3-point calibration (pH 4, 7, 10)', result: 'Pass' },
+      { date: '2026-04-01', type: 'Preventive Maintenance', performedBy: 'S. Lee', notes: 'Electrode replaced', result: 'Pass' },
     ],
   },
   {
@@ -136,8 +136,8 @@ export const instruments: Instrument[] = [
     nextCalibration: '2026-05-05',
     lastMaintenance: '2026-03-15',
     maintenanceLog: [
-      { date: '2026-04-05', action: 'Wavelength verification with didymium filter — passed', technician: 'S. Lee' },
-      { date: '2026-03-15', action: 'Lamp replaced', technician: 'S. Lee' },
+      { date: '2026-04-05', type: 'Verification', performedBy: 'S. Lee', notes: 'Wavelength verification with didymium filter — passed', result: 'Pass' },
+      { date: '2026-03-15', type: 'Preventive Maintenance', performedBy: 'S. Lee', notes: 'Lamp replaced', result: 'Pass' },
     ],
   },
 ];
