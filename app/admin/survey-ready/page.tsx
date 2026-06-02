@@ -29,12 +29,20 @@ export default async function SurveyReadyPage() {
             Active personnel · competencies · sign-offs · grouped by role.
           </p>
         </div>
-        <a
-          href="/admin/survey-ready/pdf"
-          className="inline-flex items-center rounded-md bg-slate-900 text-white px-4 py-2 text-sm font-medium hover:bg-slate-800"
-        >
-          Download PDF
-        </a>
+        <div className="flex items-center gap-2">
+          <a
+            href="/admin/survey-ready/pdf"
+            className="inline-flex items-center rounded-md border border-slate-300 bg-white text-slate-800 px-4 py-2 text-sm font-medium hover:bg-slate-50"
+          >
+            Download PDF
+          </a>
+          <a
+            href="/api/admin/personnel-pack/survey-export"
+            className="inline-flex items-center rounded-md bg-slate-900 text-white px-4 py-2 text-sm font-medium hover:bg-slate-800"
+          >
+            Survey-Ready Export (ZIP)
+          </a>
+        </div>
       </div>
 
       <p className="text-xs text-slate-500">
