@@ -14,6 +14,31 @@ import { zipSync, strToU8 } from "fflate";
 
 export const dynamic = "force-dynamic";
 
+// --- Rate limit (in-memory, v1) -----------------------------------------
+// Max MAX_EXPORTS_PER_HOUR ZIP exports per IP per rolling 1-hour window.
+// v1: single-process in-memory Map — resets on cold start.
+// Acceptable for a low-traffic admin endpoint on a single Vercel instance.
+// Upgrade path: swap _rateMap for Redis INCR+EXPIRE or Vercel KV to handle
+//   multi-region / multi-instance deployments without per-instance state.
+const _rateMap = new Map<string, { count: number; resetAt: number }>();
+const MAX_EXPORTS_PER_HOUR = 5;
+const RATE_WINDOW_MS = 60 * 60 * 1000; // 1 hour
+
+function checkRateLimit(ip: string): { allowed: boolean; remaining: number } {
+  const now = Date.now();
+  const entry = _rateMap.get(ip);
+  if (!entry || now > entry.resetAt) {
+    _rateMap.set(ip, { count: 1, resetAt: now + RATE_WINDOW_MS });
+    return { allowed: true, remaining: MAX_EXPORTS_PER_HOUR - 1 };
+  }
+  if (entry.count >= MAX_EXPORTS_PER_HOUR) {
+    return { allowed: false, remaining: 0 };
+  }
+  entry.count += 1;
+  return { allowed: true, remaining: MAX_EXPORTS_PER_HOUR - entry.count };
+}
+
+
 // ─── helpers ─────────────────────────────────────────────────────────────────
 
 function fmt(d: Date | null | undefined): string {
@@ -261,11 +286,45 @@ function buildPersonPdf(p: PersonWithRelations, generatedAt: string): Promise<Ui
 
 // ─── Route handler ────────────────────────────────────────────────────────────
 
-export async function GET() {
+export async function GET(request: Request) {
+  // --- Input validation ---------------------------------------------------
+  // This endpoint accepts NO query parameters. Any params indicate a
+  // malformed or probing request — reject before touching the DB.
+  const _url = new URL(request.url);
+  const _badParams = [..._url.searchParams.keys()];
+  if (_badParams.length > 0) {
+    const _ip0 = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+    console.warn(`[survey-export] REJECTED unexpected params: ${_badParams.join(", ")} ip=${_ip0}`);
+    return new Response("Bad Request: unexpected query parameters", { status: 400 });
+  }
+
+  // --- Rate limit ---------------------------------------------------------
+  const clientIp = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+  const { allowed, remaining } = checkRateLimit(clientIp);
+  if (!allowed) {
+    console.warn(`[survey-export] RATE LIMITED ip=${clientIp}`);
+    return new Response("Too Many Requests: max 5 ZIP exports per hour", {
+      status: 429,
+      headers: { "Retry-After": "3600", "X-RateLimit-Limit": String(MAX_EXPORTS_PER_HOUR) },
+    });
+  }
+
+  // Decode Basic Auth username for audit log.
+  // Middleware has already verified credentials — this is best-effort labeling only.
+  const _authRaw = request.headers.get("authorization") ?? "";
+  const authUser = _authRaw.startsWith("Basic ")
+    ? Buffer.from(_authRaw.slice(6), "base64").toString().split(":")[0]
+    : "unknown";
+
   const generatedAt = new Date().toLocaleString("en-US", { timeZoneName: "short" });
   const dateSlug = new Date().toISOString().slice(0, 10);
 
   const people = await fetchPeople();
+
+  // --- Audit log ----------------------------------------------------------
+  console.warn(
+    `[survey-export] AUDIT ts=${new Date().toISOString()} user=${authUser} ip=${clientIp} records=${people.length} quota_remaining=${remaining}`
+  );
 
   // Build all PDFs in parallel
   const [indexPdf, ...personPdfs] = await Promise.all([
