@@ -7,8 +7,41 @@ export const metadata: Metadata = {
 };
 
 export default function AboutPage() {
+  const personJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Person',
+    name: 'Hud Taylor',
+    alternateName: 'John Hudson Taylor',
+    jobTitle: 'Founder, LIMS BOX',
+    description:
+      'MS Biochemistry (UCSD / Salk). Certified Water Specialist (California). 15+ years building LIMS for public health and environmental laboratories.',
+    url: 'https://lims.bot/about',
+    worksFor: {
+      '@type': 'Organization',
+      name: 'LIMS BOX',
+      url: 'https://lims.bot',
+    },
+    address: {
+      '@type': 'PostalAddress',
+      addressLocality: 'San Diego',
+      addressRegion: 'CA',
+      addressCountry: 'US',
+    },
+  };
+
+  const breadcrumbJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://lims.bot' },
+      { '@type': 'ListItem', position: 2, name: 'About', item: 'https://lims.bot/about' },
+    ],
+  };
+
   return (
     <main className="min-h-screen bg-white text-slate-900">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(personJsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }} />
       <header className="border-b border-slate-200">
         <div className="max-w-2xl mx-auto px-6 py-4 flex items-center justify-between">
           <Link href="/start" className="text-sm font-semibold">LIMS BOX</Link>
