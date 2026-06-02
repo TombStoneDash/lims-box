@@ -1,5 +1,15 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  async redirects() {
+    return [
+      // Precautionary: old short slug → full slug (backward compat for external bookmarks/shares)
+      {
+        source: '/blog/clia-tracker',
+        destination: '/blog/clia-tracker-three-times-with-ai',
+        permanent: true,
+      },
+    ];
+  },
   reactStrictMode: true,
   serverExternalPackages: ['pdfkit'],
   typescript: {
