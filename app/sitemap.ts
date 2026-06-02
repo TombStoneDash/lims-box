@@ -16,6 +16,20 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: '/for/cannabis-labs', priority: 0.9, changeFrequency: 'weekly' as const },
     { url: '/case-study', priority: 0.8, changeFrequency: 'monthly' as const },
     { url: '/roi-calculator', priority: 0.8, changeFrequency: 'monthly' as const },
+    // Added 2026-06-02 — sitemap completeness audit (fix/sitemap-completeness-2026-06-02)
+    { url: '/compliance', priority: 0.8, changeFrequency: 'monthly' as const },
+    { url: '/cola', priority: 0.9, changeFrequency: 'monthly' as const },
+    { url: '/clinical', priority: 0.8, changeFrequency: 'monthly' as const },
+    { url: '/commercial', priority: 0.8, changeFrequency: 'monthly' as const },
+    { url: '/compare', priority: 0.8, changeFrequency: 'monthly' as const },
+    { url: '/environmental', priority: 0.8, changeFrequency: 'monthly' as const },
+    { url: '/about', priority: 0.7, changeFrequency: 'monthly' as const },
+    { url: '/press', priority: 0.7, changeFrequency: 'monthly' as const },
+    { url: '/faq', priority: 0.7, changeFrequency: 'monthly' as const },
+    { url: '/partners', priority: 0.7, changeFrequency: 'monthly' as const },
+    { url: '/webinar', priority: 0.7, changeFrequency: 'monthly' as const },
+    { url: '/early-adopter', priority: 0.6, changeFrequency: 'monthly' as const },
+    { url: '/start', priority: 0.6, changeFrequency: 'monthly' as const },
   ]
 
   const blogPosts = getAllPosts().map((post) => ({
