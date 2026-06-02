@@ -96,6 +96,8 @@ export function WaitlistFooter() {
               <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">Product</p>
               <ul className="space-y-2 text-sm">
                 <li><Link href="/pricing" className="text-slate-600 dark:text-slate-300 hover:text-lab-teal transition-colors">Pricing</Link></li>
+                <li><Link href="/personnel-pack" className="text-slate-600 dark:text-slate-300 hover:text-lab-teal transition-colors">Personnel Pack</Link></li>
+                <li><Link href="/compare" className="text-slate-600 dark:text-slate-300 hover:text-lab-teal transition-colors">Compare LIMS</Link></li>
                 <li><Link href="/demo" className="text-slate-600 dark:text-slate-300 hover:text-lab-teal transition-colors">Demo</Link></li>
                 <li><Link href="/roi-calculator" className="text-slate-600 dark:text-slate-300 hover:text-lab-teal transition-colors">ROI Calculator</Link></li>
                 <li><Link href="/case-study" className="text-slate-600 dark:text-slate-300 hover:text-lab-teal transition-colors">Case Study</Link></li>
@@ -106,6 +108,7 @@ export function WaitlistFooter() {
               <ul className="space-y-2 text-sm">
                 <li><Link href="/for/environmental-labs" className="text-slate-600 dark:text-slate-300 hover:text-lab-teal transition-colors">Environmental Labs</Link></li>
                 <li><Link href="/for/cannabis-labs" className="text-slate-600 dark:text-slate-300 hover:text-lab-teal transition-colors">Cannabis Labs</Link></li>
+                <li><Link href="/clinical" className="text-slate-600 dark:text-slate-300 hover:text-lab-teal transition-colors">Clinical Labs</Link></li>
               </ul>
             </div>
             <div>
