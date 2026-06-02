@@ -2,6 +2,8 @@ import Link from 'next/link';
 import { FlaskConical, ArrowRight, Clock, BarChart3, Users, Quote, CheckCircle2 } from 'lucide-react';
 import type { Metadata } from 'next';
 
+export const dynamic = 'force-static';
+
 export const metadata: Metadata = {
   title: 'Case Study: 4-Person Water Lab Cut Reporting Time by 70% | LIMS BOX',
   description: 'How a small water testing lab replaced Excel with LIMS BOX and reduced batch reporting from 3 hours to 15 minutes. Real results for real labs.',
