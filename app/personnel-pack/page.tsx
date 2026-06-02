@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import type { Metadata } from 'next';
 import {
   FlaskConical,
@@ -129,6 +130,73 @@ export default function PersonnelPackPage() {
             >
               View pricing
             </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Product screenshots — swap in real PNGs after running capture instructions */}
+      <section className="px-4 pb-12">
+        <div className="max-w-5xl mx-auto">
+          <div className="text-center mb-8">
+            <p className="text-xs font-semibold text-[#2E8B57] uppercase tracking-wider mb-2">
+              Inside the admin
+            </p>
+            <h2 className="text-2xl md:text-3xl font-bold tracking-tight mb-3">
+              Built for survey day.
+            </h2>
+            <p className="text-slate-300 max-w-xl mx-auto text-sm">
+              Real admin screens — personnel list, competency status tracking, and one-click
+              survey export. What your inspector asks for, ready before they arrive.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="rounded-xl overflow-hidden border border-white/10 bg-white/5">
+              <Image
+                src="/screenshots/admin-personnel-pack.png"
+                alt="Personnel Pack admin — list of active lab personnel with competency status badges"
+                width={800}
+                height={500}
+                className="w-full h-auto"
+              />
+              <div className="p-3 border-t border-white/5">
+                <p className="text-xs font-semibold text-slate-200">Personnel list</p>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  All active personnel, competency status, and CLIA cert numbers at a glance.
+                </p>
+              </div>
+            </div>
+            <div className="rounded-xl overflow-hidden border border-white/10 bg-white/5">
+              <Image
+                src="/screenshots/admin-survey-ready.png"
+                alt="Survey-Ready Export dashboard — one-click ZIP bundle download"
+                width={800}
+                height={500}
+                className="w-full h-auto"
+              />
+              <div className="p-3 border-t border-white/5">
+                <p className="text-xs font-semibold text-slate-200">Survey-Ready Export</p>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  One-click ZIP — index PDF + one detail PDF per person. Hand it to the
+                  inspector before they ask.
+                </p>
+              </div>
+            </div>
+            <div className="md:col-span-2 rounded-xl overflow-hidden border border-white/10 bg-white/5">
+              <Image
+                src="/screenshots/admin-personnel-detail.png"
+                alt="Personnel detail — competency evaluations, training log, procedure authorizations, director sign-offs"
+                width={1200}
+                height={600}
+                className="w-full h-auto"
+              />
+              <div className="p-3 border-t border-white/5">
+                <p className="text-xs font-semibold text-slate-200">Personnel detail</p>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Per-person audit trail: competency evaluations, training events, procedure
+                  authorizations, and director sign-offs — timestamped and version-controlled.
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       </section>
