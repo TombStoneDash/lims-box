@@ -2,8 +2,9 @@ import Link from "next/link";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "About LIMS BOX",
-  description: "A local-first continuity layer for labs that can't afford to stop. Built by Hud Taylor.",
+  title: "About LIMS BOX — Built by a 15-Year LIMS Veteran",
+  description: "LIMS BOX is built by Hud Taylor — MS Biochem (UCSD/Salk), Certified Water Specialist, and 15+ years building LIMS for public health and environmental labs.",
+  alternates: { canonical: 'https://lims.bot/about' },
 };
 
 export default function AboutPage() {

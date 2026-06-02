@@ -5,8 +5,9 @@ import { NewsletterSignup } from '@/components/blog/NewsletterSignup';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'LIMS Blog — Small Lab Software, Environmental Testing & Lab Management Tips | LIMS BOX',
-  description: 'Free guides for small environmental and water testing labs: choosing the right LIMS, streamlining sample tracking, meeting compliance without enterprise software.',
+  title: 'LIMS BOX Blog — Lab Software Tips for Small Labs',
+  description: 'Free guides for small environmental and water testing labs: choosing the right LIMS, streamlining sample tracking, and meeting compliance requirements.',
+  alternates: { canonical: 'https://lims.bot/blog' },
   openGraph: {
     title: 'LIMS Blog — Small Lab Software, Environmental Testing & Lab Management Tips',
     description: 'Free guides for small environmental and water testing labs: choosing the right LIMS, streamlining sample tracking, meeting compliance without enterprise software.',
