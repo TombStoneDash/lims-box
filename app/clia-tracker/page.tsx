@@ -50,7 +50,7 @@ const painPoints = [
     icon: Clock,
     title: 'Rules moved twice in 18 months',
     description:
-      'CLIA personnel rules got their first major overhaul since 1992 (Dec 28, 2024), then CMS issued enforcement-discretion guidance in June 2025. A static spreadsheet can't track a moving target.',
+      "CLIA personnel rules got their first major overhaul since 1992 (Dec 28, 2024), then CMS issued enforcement-discretion guidance in June 2025. A static spreadsheet can't track a moving target.",
   },
 ];
 
