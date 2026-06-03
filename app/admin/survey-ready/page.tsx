@@ -28,6 +28,9 @@ export default async function SurveyReadyPage() {
           <p className="text-sm text-slate-600 mt-1">
             Active personnel · competencies · sign-offs · grouped by role.
           </p>
+          <p className="text-xs text-slate-500 mt-1">
+            Generates the CLIA §493.1407 + ISO 15189 6.2.2 personnel pack — ready for survey submission.
+          </p>
         </div>
         <div className="flex items-center gap-2">
           <a
