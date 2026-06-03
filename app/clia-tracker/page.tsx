@@ -32,7 +32,7 @@ const painPoints = [
     icon: AlertTriangle,
     title: 'Version drift',
     description:
-      'The copy on the manager's laptop and the copy on the shared drive disagree. By inspection day you can't say which sign-off date is real.',
+      "The copy on the manager's laptop and the copy on the shared drive disagree. By inspection day you can't say which sign-off date is real.",
   },
   {
     icon: Users,
@@ -44,7 +44,7 @@ const painPoints = [
     icon: Search,
     title: 'No audit trail',
     description:
-      'Inspectors ask "who changed this and when." Spreadsheets show the current state — not the history. That's the gap that writes citations.',
+      "Inspectors ask 'who changed this and when.' Spreadsheets show the current state — not the history. That's the gap that writes citations.",
   },
   {
     icon: Clock,
