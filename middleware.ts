@@ -27,7 +27,11 @@ function isPublicPath(pathname: string): boolean {
 }
 
 function isProtectedPath(pathname: string): boolean {
-  return pathname.startsWith('/admin') || pathname.startsWith('/senaite-demo');
+  return (
+    pathname.startsWith('/admin') ||
+    pathname.startsWith('/senaite-demo') ||
+    pathname.startsWith('/api/admin')
+  );
 }
 
 export function middleware(request: NextRequest) {
