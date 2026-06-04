@@ -67,5 +67,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/admin/:path*', '/senaite-demo/:path*'],
+  matcher: ['/admin/:path*', '/senaite-demo/:path*', '/api/admin/:path*'],
 };
