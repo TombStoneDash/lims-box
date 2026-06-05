@@ -4,10 +4,12 @@ import { createClient } from '@supabase/supabase-js';
 import * as fs from 'fs';
 import * as path from 'path';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL || '',
-  process.env.SUPABASE_SERVICE_KEY || ''
-);
+function getSupabase() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_KEY!
+  );
+}
 
 export const runtime = 'nodejs';
 
@@ -31,7 +33,7 @@ export async function GET(req: NextRequest) {
 
   try {
     // 1. Find the record in sensor_waitlist
-    const { data: rows, error: fetchErr } = await supabase
+    const { data: rows, error: fetchErr } = await getSupabase()
       .from('sensor_waitlist')
       .select('id, email, unsubscribed')
       .eq('email', email)
@@ -63,7 +65,7 @@ export async function GET(req: NextRequest) {
     }
 
     // 3. Persist unsubscribe to sensor_waitlist
-    const { error: updateErr } = await supabase
+    const { error: updateErr } = await getSupabase()
       .from('sensor_waitlist')
       .update({
         unsubscribed: true,
@@ -81,7 +83,7 @@ export async function GET(req: NextRequest) {
 
     // 4. Optionally write to audit log table (non-fatal if it fails)
     try {
-      await supabase.from('email_audit_log').insert({
+      await getSupabase().from('email_audit_log').insert({
         event: 'unsubscribe',
         email: email,
         list: list,
