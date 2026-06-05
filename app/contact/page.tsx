@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
-import { FlaskConical, Send, CheckCircle2, Mail, Building2, Users } from 'lucide-react';
+import { FlaskConical, Send, CheckCircle2, Mail, Building2, Users, Phone, Calendar } from 'lucide-react';
 
 export default function ContactPage() {
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
@@ -107,6 +107,24 @@ export default function ContactPage() {
                   <p className="text-sm text-slate-600 dark:text-slate-300">Labs under 50 people</p>
                 </div>
               </div>
+              <div className="flex items-start gap-3">
+                <Phone className="w-5 h-5 text-lab-teal mt-0.5" />
+                <div>
+                  <p className="text-sm font-medium text-slate-900 dark:text-white">Phone</p>
+                  <a href="tel:+18583058744" className="text-sm text-slate-600 dark:text-slate-300 hover:text-lab-teal transition-colors">(858) 305-8744</a>
+                </div>
+              </div>
+            </div>
+            <div className="mt-6 pt-6 border-t border-slate-200 dark:border-white/10">
+              <a
+                href="https://calendly.com/hudtaylor/30min"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-4 py-2.5 bg-lab-teal/10 hover:bg-lab-teal/20 text-lab-teal font-medium rounded-lg text-sm transition-colors"
+              >
+                <Calendar className="w-4 h-4" />
+                Book a 30-min call
+              </a>
             </div>
           </div>
 
