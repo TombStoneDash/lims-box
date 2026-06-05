@@ -7,7 +7,7 @@ export const runtime = 'nodejs';
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { name, labName, email, labSize, currentSystem, message } = body ?? {};
+    const { name, labName, email, labSize, currentSystem, message, phone, instruments } = body ?? {};
 
     if (!name || !email || !labName) {
       return NextResponse.json(
@@ -23,6 +23,8 @@ export async function POST(request: NextRequest) {
       labSize: labSize ? String(labSize).trim() : null,
       currentSystem: currentSystem ? String(currentSystem).trim() : null,
       message: message ? String(message).trim() : null,
+      phone: phone ? String(phone).trim() : null,
+      instruments: instruments ? String(instruments).trim() : null,
       timestamp: new Date().toISOString(),
     };
 
@@ -36,13 +38,19 @@ export async function POST(request: NextRequest) {
     try {
       const supabase = getSupabase();
       if (supabase) {
-        const { error: dbError } = await supabase.from('contact_leads').insert({
+        // Target: public.limsbox_early_access (live in prod Supabase since 49d).
+        // Column mapping: currentSystem → current_lims, message → pain_point.
+        // PR #37 initially targeted 'contact_leads' which does not exist — every
+        // signup would have silently failed the DB save. Corrected W212-followup.
+        const { error: dbError } = await supabase.from('limsbox_early_access').insert({
           name: record.name,
           lab_name: record.labName,
           email: record.email,
           lab_size: record.labSize ?? null,
-          current_system: record.currentSystem ?? null,
-          message: record.message ?? null,
+          current_lims: record.currentSystem ?? null,
+          pain_point: record.message ?? null,
+          phone: record.phone ?? null,
+          instruments: record.instruments ?? null,
           source: 'contact_form',
         });
         if (dbError) {
