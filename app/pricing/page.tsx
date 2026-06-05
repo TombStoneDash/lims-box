@@ -113,6 +113,27 @@ const faqs = [
 ];
 
 export default function PricingPage() {
+  const productJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'SoftwareApplication',
+    name: 'LIMS BOX',
+    applicationCategory: 'BusinessApplication',
+    operatingSystem: 'Web, Windows, macOS, Linux',
+    offers: tiers
+      .filter(t => t.price !== 'Custom')
+      .map(t => ({
+        '@type': 'Offer',
+        name: t.name,
+        price: t.price.replace(/[$,]/g, ''),
+        priceCurrency: 'USD',
+        description: t.description,
+        priceSpecification: {
+          '@type': 'UnitPriceSpecification',
+          billingDuration: 'P1M',
+        },
+      })),
+  };
+
   const faqJsonLd = {
     '@context': 'https://schema.org',
     '@type': 'FAQPage',
@@ -134,6 +155,7 @@ export default function PricingPage() {
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] dark:bg-[#0F172A]">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }} />
 
