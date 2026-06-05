@@ -14,6 +14,20 @@ const nextConfig = {
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
     minimumCacheTTL: 60,
   },
+  async redirects() {
+    return [
+      {
+        source: '/blog/clia-tracker',
+        destination: '/blog/clia-tracker-three-times-with-ai',
+        permanent: true,
+      },
+      {
+        source: '/survey-export',
+        destination: '/survey-ready-export',
+        permanent: true,
+      },
+    ];
+  },
 };
 
 module.exports = nextConfig;
