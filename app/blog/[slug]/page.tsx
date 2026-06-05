@@ -27,8 +27,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 
   return {
-    title: `${post.title} | LIMS BOX Blog`,
-    description: post.description,
+    title: post.title.length > 43
+      ? `${post.title.slice(0, 43).trimEnd()}\u2026 | LIMS BOX`
+      : `${post.title} | LIMS BOX Blog`,
+    description: post.description.length > 155
+      ? `${post.description.slice(0, 152).trimEnd()}\u2026`
+      : post.description,
     authors: [{ name: post.author }],
     keywords: post.tags,
     alternates: {
