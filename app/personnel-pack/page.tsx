@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
+import { EmailGateForm } from './EmailGateForm';
 import {
   FlaskConical,
   Users,
@@ -72,6 +73,27 @@ const regulatory = [
   },
 ];
 
+function BuiltByExpert() {
+  return (
+    <section className="px-4 pb-8">
+      <div className="max-w-4xl mx-auto border-l-4 border-[#2E8B57]/40 pl-5 py-1">
+        <p className="text-sm text-slate-400 leading-relaxed">
+          <span className="font-semibold text-slate-200">Built by Hudson Taylor</span> —
+          MS Biochemistry (UCSD&nbsp;/&nbsp;Salk Institute), Certified Water Specialist
+          (California), 15+ years of LIMS development including senior LIMS architect at
+          the State of Alaska Department of Health public health lab (5M+ test results/year,
+          CLIA + ISO&nbsp;15189 environment). Personnel Pack was built because these exact
+          forms didn&apos;t exist in a survey-ready format for labs without a compliance
+          coordinator.{' '}
+          <a href="/about" className="underline text-slate-300 hover:text-white transition-colors">
+            About the builder →
+          </a>
+        </p>
+      </div>
+    </section>
+  );
+}
+
 export default function PersonnelPackPage() {
   return (
     <div className="min-h-screen bg-[#0F172A] text-white">
@@ -132,6 +154,12 @@ export default function PersonnelPackPage() {
           </div>
         </div>
       </section>
+
+      {/* Email-gated PDF lead capture — primary low-friction CTA */}
+      <EmailGateForm />
+
+      {/* Builder credentials trust block */}
+      <BuiltByExpert />
 
       {/* Feature grid */}
       <section className="px-4 pb-12">
