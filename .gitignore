@@ -52,3 +52,9 @@ prisma/dev.db-journal
 
 # Archived ops docs (gitignored)
 /.archive/
+
+# W634 — block env backup/pulled files from accidental commit (2026-06-06)
+.env.pulled
+.env.*.pulled
+.env.bak
+.env.local.backup
