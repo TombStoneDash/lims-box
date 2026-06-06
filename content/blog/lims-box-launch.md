@@ -134,3 +134,7 @@ Let's find out.
 - **Early adopter calendar**: [calendly.com/hudtaylor/30min](https://calendly.com/hudtaylor/30min)
 - **Direct phone**: (858) 305-8744
 - **Email**: hudson@lims.bot
+
+---
+
+*LIMS BOX is laboratory workflow software. It is not a medical device and is not FDA-cleared or FDA-approved. Compliance tracking tools are designed to support lab workflows; they are not a substitute for legal or regulatory counsel.*
