@@ -437,7 +437,7 @@ export default function DemoPage() {
               </button>
             ) : (
               <Link
-                href="/contact"
+                href="#schedule"
                 className="flex items-center gap-2 px-4 py-2 bg-lab-teal hover:bg-lab-teal/90 text-white text-sm font-semibold rounded-lg transition-colors"
               >
                 Start Your 30-Day Pilot <ArrowRight className="w-4 h-4" />
