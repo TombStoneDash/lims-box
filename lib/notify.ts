@@ -18,6 +18,63 @@ function escape(s: string) {
   return s.replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]!));
 }
 
+export async function sendApplicantConfirmation(email: string, name: string): Promise<void> {
+  const apiKey = process.env.RESEND_API_KEY;
+  if (!apiKey) {
+    console.warn('[notify] RESEND_API_KEY not set — skipping applicant confirmation for:', email);
+    return;
+  }
+
+  const html = `
+<div style="font-family:system-ui,sans-serif;max-width:560px;color:#0f172a;">
+  <p style="font-size:15px;margin-bottom:16px;">Hi ${escape(name)},</p>
+  <p style="font-size:15px;margin-bottom:16px;">
+    Thanks for applying to the <strong>LIMS Box Early-Adopter Pilot Program</strong>.
+    We received your application and will review it personally &mdash; expect a response within 2 business days.
+  </p>
+  <h3 style="font-size:14px;color:#2E8B57;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.05em;">What happens next</h3>
+  <ul style="font-size:14px;color:#334155;padding-left:20px;line-height:1.7;">
+    <li>Hudson reviews your application (usually same business day)</li>
+    <li>If it&rsquo;s a good fit, we&rsquo;ll schedule a 30-minute discovery call</li>
+    <li>Pilot slots are limited &mdash; we&rsquo;ll let you know either way</li>
+  </ul>
+  <p style="font-size:14px;margin-top:16px;">
+    In the meantime, you can
+    <a href="https://lims.bot/commercial" style="color:#2E8B57;">see what LIMS Box covers</a>
+    or reply to this email with any questions.
+  </p>
+  <hr style="border:none;border-top:1px solid #e2e8f0;margin:24px 0;" />
+  <p style="font-size:13px;color:#64748b;">
+    &mdash; Hudson Taylor<br/>
+    Founder, LIMS Box &middot; <a href="mailto:info@lims.bot" style="color:#2E8B57;">info@lims.bot</a>
+  </p>
+</div>`;
+
+  try {
+    const res = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        from: NOTIFY_FROM,
+        to: [email],
+        subject: 'We got your LIMS Box application',
+        html,
+      }),
+    });
+    if (!res.ok) {
+      const body = await res.text();
+      console.error('[notify] Resend applicant confirmation error', res.status, body);
+    } else {
+      console.log('[notify] Applicant confirmation sent to', email);
+    }
+  } catch (err) {
+    console.error('[notify] Resend applicant confirmation threw', err);
+  }
+}
+
 export async function sendSubmissionNotice(payload: NotifyPayload): Promise<void> {
   const apiKey = process.env.RESEND_API_KEY;
   if (!apiKey) {
