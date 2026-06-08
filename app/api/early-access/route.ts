@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabase } from '@/lib/supabase';
-import { sendSubmissionNotice } from '@/lib/notify';
+import { sendSubmissionNotice, sendApplicantConfirmation } from '@/lib/notify';
 
 export const runtime = 'nodejs';
 
@@ -49,6 +49,7 @@ export async function POST(request: NextRequest) {
     }
 
     await sendSubmissionNotice({
+      // Notify HT
       subject: `New early-adopter application — ${record.lab_name}`,
       lines: [
         ['Lab name', record.lab_name],
@@ -61,6 +62,13 @@ export async function POST(request: NextRequest) {
         ['Received', new Date().toISOString()],
       ],
     });
+
+    // Applicant confirmation — non-blocking; failure does NOT affect form response
+    try {
+      await sendApplicantConfirmation(record.email, record.contact_name);
+    } catch (err) {
+      console.error('[early-access] Applicant confirmation failed (non-fatal)', err);
+    }
 
     return NextResponse.json({ success: true });
   } catch (err) {
