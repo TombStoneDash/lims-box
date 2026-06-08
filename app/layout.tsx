@@ -18,13 +18,20 @@ export const metadata: Metadata = {
     siteName: 'LIMS BOX',
     locale: 'en_US',
     type: 'website',
-    images: [{ url: '/logo-primary.jpg', width: 1200, height: 630, alt: 'LIMS BOX — Simple Lab Management' }],
+    images: [
+      {
+        url: 'https://lims.bot/og-default.png',
+        width: 1200,
+        height: 630,
+        alt: 'LIMS BOX — Lab Management for Small Testing Labs',
+      },
+    ],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'LIMS BOX — Simple Lab Management for Small Testing Labs',
     description: 'Modern LIMS built for environmental and water testing labs under 50 people. No enterprise bloat.',
-    images: ['/logo-primary.jpg'],
+    images: ['https://lims.bot/og-default.png'],
   },
   robots: {
     index: true,
