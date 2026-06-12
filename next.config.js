@@ -26,6 +26,11 @@ const nextConfig = {
         destination: '/survey-ready-export',
         permanent: true,
       },
+      {
+        source: '/early-access',
+        destination: '/early-adopter',
+        permanent: false,
+      },
     ];
   },
 };
