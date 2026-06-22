@@ -20,6 +20,17 @@ export function NewsletterSignup() {
       if (res.ok) {
         setStatus('success');
         setEmail('');
+      } else if (res.status === 503) {
+        // Server returned 503 with deferred:true — subscription was logged but
+        // email service (RESEND_API_KEY) is not yet configured. Treat as success
+        // so the user sees confirmation rather than a confusing error.
+        const data = await res.json().catch(() => ({}));
+        if (data?.deferred) {
+          setStatus('success');
+          setEmail('');
+        } else {
+          setStatus('error');
+        }
       } else {
         setStatus('error');
       }
