@@ -68,11 +68,17 @@ export default function HomePage() {
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link
-              href="/demo"
+              href="/early-adopter"
               className="inline-flex items-center gap-2 bg-lab-teal hover:bg-lab-teal/90 text-white font-semibold px-6 py-3 rounded-lg transition-colors"
             >
-              See the Demo
+              Apply for Early Access
               <ArrowRight className="w-4 h-4" />
+            </Link>
+            <Link
+              href="/demo"
+              className="inline-flex items-center gap-2 bg-white dark:bg-white/10 hover:bg-slate-50 dark:hover:bg-white/20 text-slate-900 dark:text-white font-semibold px-6 py-3 rounded-lg border border-slate-200 dark:border-white/10 transition-colors"
+            >
+              See the Demo
             </Link>
             <Link
               href="/pricing"
