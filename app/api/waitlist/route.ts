@@ -4,13 +4,15 @@ import { sendSubmissionNotice } from '@/lib/notify';
 
 export const runtime = 'nodejs';
 
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const { email, labName, name, organization, role, source } = body ?? {};
 
-    if (!email || typeof email !== 'string') {
-      return NextResponse.json({ error: 'Email is required' }, { status: 400 });
+    if (!email || typeof email !== 'string' || !EMAIL_REGEX.test(email.trim())) {
+      return NextResponse.json({ error: 'Valid email is required' }, { status: 400 });
     }
 
     const normalizedEmail = String(email).trim().toLowerCase();
