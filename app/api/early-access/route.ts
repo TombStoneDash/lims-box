@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getSupabase } from '@/lib/supabase';
+import { prisma } from '@/lib/prisma';
 import { sendSubmissionNotice, sendApplicantConfirmation } from '@/lib/notify';
 
 export const runtime = 'nodejs';
@@ -26,38 +26,31 @@ export async function POST(request: NextRequest) {
     }
 
     const record = {
-      lab_name: String(labName).trim(),
-      lab_type: labType ? String(labType).trim() : null,
-      contact_name: String(contactName).trim(),
+      track: 'clinical',
+      name: String(contactName).trim(),
       email: String(email).trim().toLowerCase(),
-      monthly_volume: monthlyVolume
+      labName: String(labName).trim(),
+      labSize: monthlyVolume
         ? String(monthlyVolume).trim()
-        : (testVolume ? String(testVolume).trim() : null),
-      pain_point: painPoint ? String(painPoint).trim() : null,
+        : (testVolume ? String(testVolume).trim() : 'unknown'),
+      accreditations: JSON.stringify(labType ? [String(labType).trim()] : []),
+      painPoint: painPoint ? String(painPoint).trim() : null,
       source: source ? String(source).trim() : 'lims.bot/early-adopter',
+      fieldBenchSplit: null,
     };
 
-    const supabase = getSupabase();
-    if (supabase) {
-      const { error } = await supabase.from('early_access_applications').insert(record);
-      if (error) {
-        console.error('[early-access] Supabase insert failed', error);
-        return NextResponse.json({ error: 'Could not save your application' }, { status: 500 });
-      }
-    } else {
-      console.warn('[early-access] Supabase not configured — application received but not persisted:', record);
-    }
+    await prisma.prospect.create({ data: record });
 
     await sendSubmissionNotice({
       // Notify HT
-      subject: `New early-adopter application — ${record.lab_name}`,
+      subject: `New early-adopter application — ${record.labName}`,
       lines: [
-        ['Lab name', record.lab_name],
-        ['Lab type', record.lab_type],
-        ['Contact name', record.contact_name],
+        ['Lab name', record.labName],
+        ['Lab type', labType ? String(labType).trim() : null],
+        ['Contact name', record.name],
         ['Email', record.email],
-        ['Monthly volume', record.monthly_volume],
-        ['Pain point', record.pain_point],
+        ['Monthly volume', record.labSize],
+        ['Pain point', record.painPoint],
         ['Source', record.source],
         ['Received', new Date().toISOString()],
       ],
@@ -65,7 +58,7 @@ export async function POST(request: NextRequest) {
 
     // Applicant confirmation — non-blocking; failure does NOT affect form response
     try {
-      await sendApplicantConfirmation(record.email, record.contact_name);
+      await sendApplicantConfirmation(record.email, record.name);
     } catch (err) {
       console.error('[early-access] Applicant confirmation failed (non-fatal)', err);
     }

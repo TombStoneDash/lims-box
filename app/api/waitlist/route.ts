@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getSupabase } from '@/lib/supabase';
+import { prisma } from '@/lib/prisma';
 import { sendSubmissionNotice } from '@/lib/notify';
 
 export const runtime = 'nodejs';
@@ -15,33 +15,27 @@ export async function POST(request: NextRequest) {
 
     const normalizedEmail = String(email).trim().toLowerCase();
     const record = {
-      email: normalizedEmail,
+      track: 'clinical',
       name: (name && String(name).trim())
         || (labName && String(labName).trim())
         || normalizedEmail.split('@')[0],
-      organization: organization ? String(organization).trim() : (labName ? String(labName).trim() : null),
-      role: role ? String(role).trim() : null,
+      email: normalizedEmail,
+      labName: (labName && String(labName).trim()) || (organization ? String(organization).trim() : 'Waitlist'),
+      labSize: 'unknown',
+      accreditations: JSON.stringify([]),
+      painPoint: null,
       source: source ? String(source).trim() : 'lims.bot',
+      fieldBenchSplit: null,
     };
 
-    const supabase = getSupabase();
-    if (supabase) {
-      const { error } = await supabase.from('waitlist').insert(record);
-      if (error) {
-        console.error('[waitlist] Supabase insert failed', error);
-        return NextResponse.json({ error: 'Could not save your signup' }, { status: 500 });
-      }
-    } else {
-      console.warn('[waitlist] Supabase not configured — signup received but not persisted:', record);
-    }
+    await prisma.prospect.create({ data: record });
 
     await sendSubmissionNotice({
       subject: `New waitlist signup — ${record.email}`,
       lines: [
         ['Email', record.email],
         ['Name', record.name],
-        ['Organization', record.organization],
-        ['Role', record.role],
+        ['Lab name', record.labName],
         ['Source', record.source],
         ['Received', new Date().toISOString()],
       ],
