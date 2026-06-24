@@ -7,12 +7,13 @@ export const metadata: Metadata = {
 };
 
 interface Props {
-  searchParams: { email?: string; list?: string };
+  searchParams: Promise<{ email?: string; list?: string }>;
 }
 
-export default function UnsubscribePage({ searchParams }: Props) {
-  const email = searchParams.email ? decodeURIComponent(searchParams.email) : '';
-  const list = searchParams.list ? decodeURIComponent(searchParams.list) : 'newsletter';
+export default async function UnsubscribePage({ searchParams }: Props) {
+  const resolvedSearchParams = await searchParams;
+  const email = resolvedSearchParams.email ? decodeURIComponent(resolvedSearchParams.email) : '';
+  const list = resolvedSearchParams.list ? decodeURIComponent(resolvedSearchParams.list) : 'newsletter';
 
   return (
     <main className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4">
