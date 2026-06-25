@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { sendSubmissionNotice, sendApplicantConfirmation } from '@/lib/notify';
+import { normalizeEmail } from '@/lib/emailValidation';
 
 export const runtime = 'nodejs';
 
@@ -18,9 +19,10 @@ export async function POST(request: NextRequest) {
       source,
     } = body ?? {};
 
-    if (!labName || !contactName || !email) {
+    const normalizedEmail = normalizeEmail(email);
+    if (!labName || !contactName || !normalizedEmail) {
       return NextResponse.json(
-        { error: 'labName, contactName, and email are required' },
+        { error: 'labName, contactName, and valid email are required' },
         { status: 400 },
       );
     }
@@ -28,7 +30,7 @@ export async function POST(request: NextRequest) {
     const record = {
       track: 'clinical',
       name: String(contactName).trim(),
-      email: String(email).trim().toLowerCase(),
+      email: normalizedEmail,
       labName: String(labName).trim(),
       labSize: monthlyVolume
         ? String(monthlyVolume).trim()

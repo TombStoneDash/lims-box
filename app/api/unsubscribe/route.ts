@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import * as fs from 'fs';
 import * as path from 'path';
+import { normalizeEmail } from '@/lib/emailValidation';
 
 function getSupabase() {
   return createClient(
@@ -20,12 +21,13 @@ export const runtime = 'nodejs';
  */
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
-  const email = searchParams.get('email')?.trim().toLowerCase();
+  const rawEmail = searchParams.get('email');
+  const email = normalizeEmail(rawEmail);
   const list = searchParams.get('list') ?? 'newsletter';
 
   // Validate email
-  if (!email || !email.includes('@')) {
-    return new NextResponse(unsubscribePage(email || '', 'error'), {
+  if (!email) {
+    return new NextResponse(unsubscribePage(rawEmail || '', 'error'), {
       status: 400,
       headers: { 'Content-Type': 'text/html' }
     });

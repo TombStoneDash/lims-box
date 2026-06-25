@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { sendSubmissionNotice } from '@/lib/notify';
 import { getSupabase } from '@/lib/supabase';
+import { normalizeEmail } from '@/lib/emailValidation';
 
 export const runtime = 'nodejs';
 
@@ -9,9 +10,10 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { name, labName, email, labSize, currentSystem, message, phone, instruments } = body ?? {};
 
-    if (!name || !email || !labName) {
+    const normalizedEmail = normalizeEmail(email);
+    if (!name || !labName || !normalizedEmail) {
       return NextResponse.json(
-        { error: 'Name, email, and lab name are required' },
+        { error: 'Name, valid email, and lab name are required' },
         { status: 400 },
       );
     }
@@ -19,7 +21,7 @@ export async function POST(request: NextRequest) {
     const record = {
       name: String(name).trim(),
       labName: String(labName).trim(),
-      email: String(email).trim().toLowerCase(),
+      email: normalizedEmail,
       labSize: labSize ? String(labSize).trim() : null,
       currentSystem: currentSystem ? String(currentSystem).trim() : null,
       message: message ? String(message).trim() : null,
