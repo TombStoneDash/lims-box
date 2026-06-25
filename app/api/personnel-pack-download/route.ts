@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabase } from '@/lib/supabase';
 import { sendSubmissionNotice } from '@/lib/notify';
+import { normalizeEmail } from '@/lib/emailValidation';
 
 export const runtime = 'nodejs';
 
@@ -15,11 +16,10 @@ export async function POST(req: NextRequest) {
     const body = (await req.json()) ?? {};
     const { email, accredType } = body;
 
-    if (!email || typeof email !== 'string' || !email.includes('@')) {
+    const normalizedEmail = normalizeEmail(email);
+    if (!normalizedEmail) {
       return NextResponse.json({ error: 'Valid email is required' }, { status: 400 });
     }
-
-    const normalizedEmail = email.trim().toLowerCase();
 
     const record = {
       email: normalizedEmail,

@@ -1,21 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { sendSubmissionNotice } from '@/lib/notify';
+import { normalizeEmail } from '@/lib/emailValidation';
 
 export const runtime = 'nodejs';
-
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const { email, labName, name, organization, role, source } = body ?? {};
 
-    if (!email || typeof email !== 'string' || !EMAIL_REGEX.test(email.trim())) {
+    const normalizedEmail = normalizeEmail(email);
+    if (!normalizedEmail) {
       return NextResponse.json({ error: 'Valid email is required' }, { status: 400 });
     }
 
-    const normalizedEmail = String(email).trim().toLowerCase();
     const record = {
       track: 'clinical',
       name: (name && String(name).trim())
