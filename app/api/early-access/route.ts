@@ -41,22 +41,34 @@ export async function POST(request: NextRequest) {
       fieldBenchSplit: null,
     };
 
-    await prisma.prospect.create({ data: record });
+    let dbSaved = false;
+    try {
+      await prisma.prospect.create({ data: record });
+      dbSaved = true;
+    } catch (dbErr) {
+      console.error('[early-access] DB save failed (non-fatal):', dbErr);
+    }
 
-    await sendSubmissionNotice({
-      // Notify HT
-      subject: `New early-adopter application — ${record.labName}`,
-      lines: [
-        ['Lab name', record.labName],
-        ['Lab type', labType ? String(labType).trim() : null],
-        ['Contact name', record.name],
-        ['Email', record.email],
-        ['Monthly volume', record.labSize],
-        ['Pain point', record.painPoint],
-        ['Source', record.source],
-        ['Received', new Date().toISOString()],
-      ],
-    });
+    let noticeSent = false;
+    try {
+      await sendSubmissionNotice({
+        // Notify HT
+        subject: `New early-adopter application — ${record.labName}`,
+        lines: [
+          ['Lab name', record.labName],
+          ['Lab type', labType ? String(labType).trim() : null],
+          ['Contact name', record.name],
+          ['Email', record.email],
+          ['Monthly volume', record.labSize],
+          ['Pain point', record.painPoint],
+          ['Source', record.source],
+          ['Received', new Date().toISOString()],
+        ],
+      });
+      noticeSent = true;
+    } catch (notifyErr) {
+      console.error('[early-access] notification failed (non-fatal)', notifyErr);
+    }
 
     // Applicant confirmation — non-blocking; failure does NOT affect form response
     try {
@@ -65,7 +77,14 @@ export async function POST(request: NextRequest) {
       console.error('[early-access] Applicant confirmation failed (non-fatal)', err);
     }
 
-    return NextResponse.json({ success: true });
+    if (!dbSaved && !noticeSent) {
+      return NextResponse.json(
+        { error: 'Failed to process application' },
+        { status: 500 },
+      );
+    }
+
+    return NextResponse.json({ success: true, saved: dbSaved });
   } catch (err) {
     console.error('[early-access] handler threw', err);
     return NextResponse.json({ error: 'Invalid request' }, { status: 400 });

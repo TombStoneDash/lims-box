@@ -29,20 +29,36 @@ export async function POST(request: NextRequest) {
       fieldBenchSplit: null,
     };
 
-    await prisma.prospect.create({ data: record });
+    let dbSaved = false;
+    try {
+      await prisma.prospect.create({ data: record });
+      dbSaved = true;
+    } catch (dbErr) {
+      console.error('[waitlist] DB save failed (non-fatal):', dbErr);
+    }
 
-    await sendSubmissionNotice({
-      subject: `New waitlist signup — ${record.email}`,
-      lines: [
-        ['Email', record.email],
-        ['Name', record.name],
-        ['Lab name', record.labName],
-        ['Source', record.source],
-        ['Received', new Date().toISOString()],
-      ],
-    });
+    let noticeSent = false;
+    try {
+      await sendSubmissionNotice({
+        subject: `New waitlist signup — ${record.email}`,
+        lines: [
+          ['Email', record.email],
+          ['Name', record.name],
+          ['Lab name', record.labName],
+          ['Source', record.source],
+          ['Received', new Date().toISOString()],
+        ],
+      });
+      noticeSent = true;
+    } catch (notifyErr) {
+      console.error('[waitlist] notification failed (non-fatal):', notifyErr);
+    }
 
-    return NextResponse.json({ success: true });
+    if (!dbSaved && !noticeSent) {
+      return NextResponse.json({ error: 'Failed to process signup' }, { status: 500 });
+    }
+
+    return NextResponse.json({ success: true, saved: dbSaved });
   } catch (err) {
     console.error('[waitlist] handler threw', err);
     return NextResponse.json({ error: 'Invalid request' }, { status: 400 });
