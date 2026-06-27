@@ -58,3 +58,8 @@ prisma/dev.db-journal
 .env.*.pulled
 .env.bak
 .env.local.backup
+
+# Local OAuth credential files
+config/youtube-client-secret.json
+config/youtube-oauth-token.json
+config/youtube-*.json
