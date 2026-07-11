@@ -1,5 +1,17 @@
-const NOTIFY_TO = process.env.NOTIFY_EMAIL || 'hudtaylor@gmail.com';
-const NOTIFY_FROM = process.env.NOTIFY_FROM_EMAIL || 'LIMS BOX <notifications@lims.bot>';
+// Env values copied through some shells arrive with a trailing literal "\n"
+// (backslash-n) or stray whitespace baked in. Resend rejects a `from`/`to`
+// containing those with HTTP 422 "Invalid `from` field" — which silently kills
+// every early-adopter notification + applicant confirmation. Strip defensively
+// and fall back to a known-good literal if the sanitized value is empty or
+// clearly not an address (must contain "@"). Mirrors lib/supabase.ts sanitize.
+function sanitizeAddr(v: string | undefined, fallback: string): string {
+  const cleaned = v?.replace(/\\[rnt]/g, '').replace(/[\r\n\t]+/g, '').trim();
+  if (!cleaned || !cleaned.includes('@')) return fallback;
+  return cleaned;
+}
+
+const NOTIFY_TO = sanitizeAddr(process.env.NOTIFY_EMAIL, 'hudtaylor@gmail.com');
+const NOTIFY_FROM = sanitizeAddr(process.env.NOTIFY_FROM_EMAIL, 'LIMS BOX <notifications@lims.bot>');
 
 type NotifyPayload = {
   subject: string;
