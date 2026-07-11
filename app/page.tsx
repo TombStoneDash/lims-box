@@ -166,7 +166,7 @@ export default function HomePage() {
             </div>
             <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
               <HeartPulse className="w-5 h-5 text-lab-teal" />
-              <span className="font-medium">CLIA Compliant</span>
+              <span className="font-medium">Supports CLIA Workflows</span>
             </div>
             <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
               <FileText className="w-5 h-5 text-lab-teal" />
