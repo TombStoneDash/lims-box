@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "next lint",
     "test:bot": "node --import tsx --test tests/bot/engine.test.ts",
+    "test:notify": "node --import tsx --test tests/notify/fallback.test.ts",
     "postinstall": "prisma generate",
     "seed": "tsx prisma/seed.ts",
     "db:reset": "prisma migrate reset --force && tsx prisma/seed.ts",

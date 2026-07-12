@@ -13,6 +13,19 @@ function sanitizeAddr(v: string | undefined, fallback: string): string {
 const NOTIFY_TO = sanitizeAddr(process.env.NOTIFY_EMAIL, 'hudtaylor@gmail.com');
 const NOTIFY_FROM = sanitizeAddr(process.env.NOTIFY_FROM_EMAIL, 'LIMS BOX <notifications@lims.bot>');
 
+// Resend free tier: until the lims.bot domain is verified in Resend, sends
+// from notifications@lims.bot are rejected (403 "domain is not verified").
+// Fallback: deliver HT's submission notice from Resend's shared test sender
+// to the Resend account owner's address so lead alerts are not silently lost.
+// Applicant-facing mail cannot use this path (the test sender only delivers
+// to the account owner) — those remain blocked until the domain is verified.
+const FALLBACK_FROM = 'LIMS BOX (fallback) <onboarding@resend.dev>';
+const FALLBACK_TO = sanitizeAddr(process.env.NOTIFY_FALLBACK_EMAIL, 'tombstonedash@gmail.com');
+
+export function shouldDomainFallback(status: number, body: string): boolean {
+  return status === 403 && /domain is not verified/i.test(body);
+}
+
 type NotifyPayload = {
   subject: string;
   lines: Array<[string, string | null | undefined]>;
@@ -79,6 +92,9 @@ export async function sendApplicantConfirmation(email: string, name: string): Pr
     if (!res.ok) {
       const body = await res.text();
       console.error('[notify] Resend applicant confirmation error', res.status, body);
+      if (shouldDomainFallback(res.status, body)) {
+        console.error('[notify] applicant confirmation blocked: lims.bot domain not verified in Resend — no fallback possible for external recipients');
+      }
     } else {
       console.log('[notify] Applicant confirmation sent to', email);
     }
@@ -111,6 +127,26 @@ export async function sendSubmissionNotice(payload: NotifyPayload): Promise<void
     if (!res.ok) {
       const body = await res.text();
       console.error('[notify] Resend error', res.status, body);
+      if (shouldDomainFallback(res.status, body)) {
+        const retry = await fetch('https://api.resend.com/emails', {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${apiKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            from: FALLBACK_FROM,
+            to: [FALLBACK_TO],
+            subject: `[FALLBACK DELIVERY] ${payload.subject}`,
+            html: renderBody(payload),
+          }),
+        });
+        if (retry.ok) {
+          console.log('[notify] domain-unverified fallback delivered submission notice to', FALLBACK_TO);
+        } else {
+          console.error('[notify] fallback send failed', retry.status, await retry.text());
+        }
+      }
     }
   } catch (err) {
     console.error('[notify] Resend threw', err);
