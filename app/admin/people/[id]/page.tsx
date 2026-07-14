@@ -232,9 +232,6 @@ export default async function PersonDetailPage({ params }: { params: Promise<{ i
                         <button
                           type="submit"
                           className="text-xs text-red-600 underline hover:text-red-800"
-                          onClick={(e) => {
-                            // Note: server action, confirmation handled by browser
-                          }}
                         >
                           Revoke
                         </button>
