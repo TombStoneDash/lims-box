@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { sendSubmissionNotice, sendApplicantConfirmation } from '@/lib/notify';
 import { normalizeEmail } from '@/lib/emailValidation';
+import { resolveEarlyAdopterSource } from '@/lib/leadAttribution';
 
 export const runtime = 'nodejs';
 
@@ -37,7 +38,7 @@ export async function POST(request: NextRequest) {
         : (testVolume ? String(testVolume).trim() : 'unknown'),
       accreditations: JSON.stringify(labType ? [String(labType).trim()] : []),
       painPoint: painPoint ? String(painPoint).trim() : null,
-      source: source ? String(source).trim() : 'lims.bot/early-adopter',
+      source: resolveEarlyAdopterSource(source, request.headers.get('referer')),
       fieldBenchSplit: null,
     };
 
