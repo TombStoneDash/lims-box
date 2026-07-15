@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import type { Metadata } from 'next';
 import { EmailGateForm } from './EmailGateForm';
 import {
@@ -160,6 +161,71 @@ export default function PersonnelPackPage() {
 
       {/* Builder credentials trust block */}
       <BuiltByExpert />
+
+      {/* Product screenshots — seeded fictional demo only */}
+      <section className="px-4 pb-12">
+        <div className="max-w-5xl mx-auto">
+          <div className="text-center mb-8">
+            <p className="text-xs font-semibold text-[#2E8B57] uppercase tracking-wider mb-2">
+              Inside the admin
+            </p>
+            <h2 className="text-2xl md:text-3xl font-bold tracking-tight mb-3">
+              Built for survey day.
+            </h2>
+            <p className="text-slate-300 max-w-xl mx-auto text-sm">
+              Personnel list, competency status tracking, and a survey-ready export — shown with
+              fictional demonstration data.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="rounded-xl overflow-hidden border border-white/10 bg-white/5">
+              <Image
+                src="/screenshots/admin-personnel-pack.png"
+                alt="Personnel Pack admin with fictional personnel and competency status badges"
+                width={800}
+                height={500}
+                className="w-full h-auto"
+              />
+              <div className="p-3 border-t border-white/5">
+                <p className="text-xs font-semibold text-slate-200">Personnel list</p>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Active personnel, competency status, and credentials at a glance.
+                </p>
+              </div>
+            </div>
+            <div className="rounded-xl overflow-hidden border border-white/10 bg-white/5">
+              <Image
+                src="/screenshots/admin-survey-ready.png"
+                alt="Survey-Ready Export dashboard with a one-click ZIP bundle download"
+                width={800}
+                height={500}
+                className="w-full h-auto"
+              />
+              <div className="p-3 border-t border-white/5">
+                <p className="text-xs font-semibold text-slate-200">Survey-Ready Export</p>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  One ZIP with an index and a detail PDF for each person.
+                </p>
+              </div>
+            </div>
+            <div className="md:col-span-2 rounded-xl overflow-hidden border border-white/10 bg-white/5">
+              <Image
+                src="/screenshots/admin-personnel-detail.png"
+                alt="Fictional personnel detail showing competency, training, authorizations, and sign-offs"
+                width={1200}
+                height={600}
+                className="w-full h-auto"
+              />
+              <div className="p-3 border-t border-white/5">
+                <p className="text-xs font-semibold text-slate-200">Personnel detail</p>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Competency evaluations, training, procedure authorizations, and director sign-offs.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
 
       {/* Feature grid */}
       <section className="px-4 pb-12">
