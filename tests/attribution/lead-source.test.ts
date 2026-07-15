@@ -16,7 +16,10 @@ import {
 
 test('direct early-adopter traffic keeps the stable default source', () => {
   assert.equal(buildEarlyAdopterSource(new URLSearchParams()), DEFAULT_EARLY_ADOPTER_SOURCE);
-  assert.equal(resolveEarlyAdopterSource(undefined, null), DEFAULT_EARLY_ADOPTER_SOURCE);
+  assert.equal(
+    resolveEarlyAdopterSource(undefined, null, 'https://lims.bot'),
+    DEFAULT_EARLY_ADOPTER_SOURCE,
+  );
 });
 
 test('COLA CTA and QR attribution are deterministic and queryable', () => {
@@ -96,16 +99,32 @@ test('submitted source strings are canonicalized and arbitrary source text is re
   );
 });
 
-test('same-origin Referer attribution takes precedence over generic or forged submitted source', () => {
+test('same-origin Referer attribution takes precedence over generic submitted source', () => {
   assert.equal(
     resolveEarlyAdopterSource(
       'custom-untrusted-source',
       'https://lims.bot/early-adopter?utm_source=cola2026&utm_medium=qr&utm_campaign=cola_forum_2026',
+      'https://lims.bot',
     ),
     'lims.bot/early-adopter;utm_source=cola2026;utm_medium=qr;utm_campaign=cola_forum_2026',
   );
+});
+
+test('cross-origin or invalid Referer attribution is ignored', () => {
   assert.equal(
-    resolveEarlyAdopterSource('custom-untrusted-source', 'not a valid URL'),
+    resolveEarlyAdopterSource(
+      'custom-untrusted-source',
+      'https://external.invalid/early-adopter?utm_source=spoofed&utm_medium=qr',
+      'https://lims.bot',
+    ),
+    DEFAULT_EARLY_ADOPTER_SOURCE,
+  );
+  assert.equal(
+    resolveEarlyAdopterSource(
+      'custom-untrusted-source',
+      'not a valid URL',
+      'https://lims.bot',
+    ),
     DEFAULT_EARLY_ADOPTER_SOURCE,
   );
 });
@@ -144,7 +163,10 @@ test('route and COLA page are wired to the shared helper without raw source pass
   const route = fs.readFileSync(path.join(process.cwd(), 'app/api/early-access/route.ts'), 'utf8');
   const cola = fs.readFileSync(path.join(process.cwd(), 'app/cola/page.tsx'), 'utf8');
 
-  assert.match(route, /resolveEarlyAdopterSource\(source, request\.headers\.get\('referer'\)\)/);
+  assert.match(
+    route,
+    /resolveEarlyAdopterSource\([\s\S]*request\.headers\.get\('referer'\)[\s\S]*request\.nextUrl\.origin/,
+  );
   assert.doesNotMatch(route, /source:\s*source\s*\?/);
   assert.match(cola, /utm_medium:\s*'cta'/);
   assert.match(cola, /utm_medium:\s*'qr'/);
