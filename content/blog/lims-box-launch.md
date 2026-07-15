@@ -53,7 +53,7 @@ Our hypothesis: if we ship real, specific features based on how labs actually op
 
 **What this actually means:**
 
-A lab manager can now prove to an auditor that Sarah's phlebotomy certification is current, when she completed bloodborne pathogen training, and that the lab maintains a record of competency assessments. In PDFs that auditors can read, not spreadsheet tabs that get lost.
+For example, a lab manager can now prove to an auditor that a staff member's phlebotomy certification is current, when they completed bloodborne pathogen training, and that the lab maintains a record of competency assessments. In PDFs that auditors can read, not spreadsheet tabs that get lost.
 
 An environmental testing lab can export 500 samples to their reporting API without manually copying values between systems.
 
@@ -67,7 +67,7 @@ None of this is revolutionary. It's just the stuff that should have existed at $
 
 Personnel Pack is the first concrete receipt.
 
-We built it because we watched a lab's training coordinator spend 8 hours a week managing certifications across three spreadsheets, three email inboxes, and a physical binder.
+We built it because we've heard from training coordinators who spend upwards of 8 hours a week managing certifications across multiple spreadsheets, email inboxes, and a physical binder.
 
 **What it does:**
 
@@ -77,11 +77,11 @@ We built it because we watched a lab's training coordinator spend 8 hours a week
 - **PDF export**: Generate audit-ready documentation. "Here are all certifications as of [date]" in a single PDF.
 
 We shipped this because:
-1. Every small lab we talked to needed it.
+1. Small labs we talked to consistently told us they needed it.
 2. No enterprise LIMS included it (or charged $100k+ as an add-on).
 3. We could build it without rebuilding the entire LIMS system.
 
-The beta got used by three clinical labs and one environmental testing firm over the last 4 months. We fixed bugs, added the PDF export pipeline, and now it's live.
+We ran a private beta with a small group of clinical and environmental labs over 4 months, fixed bugs, added the PDF export pipeline, and now it's live.
 
 ---
 

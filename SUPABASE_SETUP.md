@@ -132,11 +132,11 @@ curl -X POST http://localhost:3000/api/waitlist \
 
 curl -X POST http://localhost:3000/api/early-access \
   -H 'Content-Type: application/json' \
-  -d '{"labName":"Clear Creek","labType":"Environmental","contactName":"R. Moreno","email":"r@clearcreek.test","monthlyVolume":"100-500","painPoint":"audit readiness"}'
+  -d '{"labName":"Test Lab","labType":"Environmental","contactName":"Test User","email":"test@example.com","monthlyVolume":"100-500","painPoint":"audit readiness"}'
 
 curl -X POST http://localhost:3000/api/contact \
   -H 'Content-Type: application/json' \
-  -d '{"name":"R. Moreno","labName":"Clear Creek","email":"r@clearcreek.test","labSize":"10-50","currentSystem":"spreadsheets","message":"audit readiness"}'
+  -d '{"name":"Test User","labName":"Test Lab","email":"test@example.com","labSize":"10-50","currentSystem":"spreadsheets","message":"audit readiness"}'
 ```
 
 All three should return `{"success":true}`. Without Supabase env vars they warn

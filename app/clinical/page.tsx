@@ -36,10 +36,10 @@ export default function ClinicalLandingPage() {
 
       <section className="bg-slate-50 border-y border-slate-200">
         <div className="max-w-3xl mx-auto px-6 py-12">
-          <blockquote className="text-lg italic text-slate-800 leading-relaxed">
+          <p className="text-lg italic text-slate-800 leading-relaxed">
             &ldquo;Downtime isn&apos;t theoretical. We just had three days last quarter.&rdquo;
-          </blockquote>
-          <p className="mt-3 text-sm text-slate-600">— Lab Quality Coordinator, multi-site clinical health system</p>
+          </p>
+          <p className="mt-3 text-sm text-slate-600">An illustrative example of a story we hear often from clinical lab quality coordinators — not an attributed customer quote.</p>
           <hr className="my-6 border-slate-200" />
           <p className="text-sm text-slate-700">
             <strong className="font-medium">Built by Hud Taylor.</strong> MS Biochem UCSD/Salk · 15+ years in LIMS · Former Senior LIMS Developer at the State of Alaska Department of Health public health lab (5M+ test results/year).

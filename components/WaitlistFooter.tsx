@@ -100,7 +100,7 @@ export function WaitlistFooter() {
                 <li><Link href="/compare" className="text-slate-600 dark:text-slate-300 hover:text-lab-teal transition-colors">Compare LIMS</Link></li>
                 <li><Link href="/demo" className="text-slate-600 dark:text-slate-300 hover:text-lab-teal transition-colors">Demo</Link></li>
                 <li><Link href="/roi-calculator" className="text-slate-600 dark:text-slate-300 hover:text-lab-teal transition-colors">ROI Calculator</Link></li>
-                <li><Link href="/case-study" className="text-slate-600 dark:text-slate-300 hover:text-lab-teal transition-colors">Case Study</Link></li>
+                <li><Link href="/case-study" className="text-slate-600 dark:text-slate-300 hover:text-lab-teal transition-colors">Illustrative Scenario</Link></li>
                 <li><Link href="/partners" className="text-slate-600 dark:text-slate-300 hover:text-lab-teal transition-colors">Technology Partners</Link></li>
                 <li><Link href="/early-adopter" className="text-slate-600 dark:text-slate-300 hover:text-lab-teal transition-colors">Early Adopter Program</Link></li>
               </ul>
@@ -119,6 +119,7 @@ export function WaitlistFooter() {
                 <li><Link href="/blog" className="text-slate-600 dark:text-slate-300 hover:text-lab-teal transition-colors">Blog</Link></li>
                 <li><Link href="/contact" className="text-slate-600 dark:text-slate-300 hover:text-lab-teal transition-colors">Contact</Link></li>
                 <li><Link href="/press" className="text-slate-600 dark:text-slate-300 hover:text-lab-teal transition-colors">Press</Link></li>
+                <li><Link href="/evidence" className="text-slate-600 dark:text-slate-300 hover:text-lab-teal transition-colors">Evidence Matrix</Link></li>
                 <li><Link href="/webinar" className="text-slate-600 dark:text-slate-300 hover:text-lab-teal transition-colors">Webinars</Link></li>
                 <li><Link href="/commercial" className="text-slate-600 dark:text-slate-300 hover:text-lab-teal transition-colors">Commercial Labs</Link></li>
                 <li><Link href="/cola" className="text-slate-600 dark:text-slate-300 hover:text-lab-teal transition-colors">COLA Forum 2026</Link></li>
