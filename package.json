@@ -7,14 +7,16 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "typecheck": "tsc --noEmit",
     "test:bot": "node --import tsx --test tests/bot/engine.test.ts",
     "test:notify": "node --import tsx --test tests/notify/fallback.test.ts",
     "test:person-detail": "node --import tsx --test tests/admin/person-detail-server-boundary.test.ts",
     "test:commercial-claims": "node --import tsx --test tests/content/commercial-claims.test.ts",
+    "test:unsubscribe": "node --import tsx --test tests/unsubscribe/contract.test.ts",
     "postinstall": "prisma generate",
     "seed": "tsx prisma/seed.ts",
     "db:reset": "prisma migrate reset --force && tsx prisma/seed.ts",
-    "vercel-build": "prisma generate && prisma db push --skip-generate && next build"
+    "vercel-build": "npm run test:unsubscribe && npm run typecheck && prisma generate && prisma db push --skip-generate && next build"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
