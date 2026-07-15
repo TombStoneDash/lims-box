@@ -1,0 +1,58 @@
+name: Attribution CI
+
+on:
+  pull_request:
+    paths:
+      - "app/cola/page.tsx"
+      - "app/api/early-access/route.ts"
+      - "lib/leadAttribution.ts"
+      - "tests/attribution/**"
+      - "docs/campaign-attribution-verification.md"
+      - "package.json"
+      - "package-lock.json"
+      - ".github/workflows/attribution-ci.yml"
+  push:
+    branches:
+      - main
+    paths:
+      - "app/cola/page.tsx"
+      - "app/api/early-access/route.ts"
+      - "lib/leadAttribution.ts"
+      - "tests/attribution/**"
+      - "docs/campaign-attribution-verification.md"
+      - "package.json"
+      - "package-lock.json"
+      - ".github/workflows/attribution-ci.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: lims-box-attribution-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run attribution contract tests
+        run: npm run test:attribution
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Build application
+        run: npm run build

@@ -5,6 +5,7 @@ import {
   Users, Shield, Wrench, ArrowRight, CheckCircle2,
   ClipboardCheck, FileText, Microscope, BadgeCheck,
 } from 'lucide-react';
+import { withCampaignAttribution } from '@/lib/leadAttribution';
 
 export const metadata: Metadata = {
   title: 'Meet LIMS BOX at COLA Forum Nashville — May 6–8, 2026',
@@ -21,11 +22,24 @@ export const metadata: Metadata = {
 
 const CALENDLY_BASE =
   process.env.NEXT_PUBLIC_CALENDLY_URL || 'https://calendly.com/hudtaylor/cola-nashville';
-// utm_source=cola2026 is scoped to /cola — homepage links do not carry it.
-const CALENDLY_URL = `${CALENDLY_BASE}${CALENDLY_BASE.includes('?') ? '&' : '?'}utm_source=cola2026`;
-const EARLY_ADOPTER_URL = 'https://lims.bot/early-adopter';
+const COLA_ATTRIBUTION = {
+  utm_source: 'cola2026',
+  utm_campaign: 'cola_forum_2026',
+} as const;
+const CALENDLY_URL = withCampaignAttribution(CALENDLY_BASE, {
+  ...COLA_ATTRIBUTION,
+  utm_medium: 'calendar',
+});
+const EARLY_ADOPTER_CTA_URL = withCampaignAttribution('/early-adopter', {
+  ...COLA_ATTRIBUTION,
+  utm_medium: 'cta',
+});
+const EARLY_ADOPTER_QR_URL = withCampaignAttribution('https://lims.bot/early-adopter', {
+  ...COLA_ATTRIBUTION,
+  utm_medium: 'qr',
+});
 const QR_SRC = `https://api.qrserver.com/v1/create-qr-code/?size=320x320&margin=8&ecc=M&data=${encodeURIComponent(
-  EARLY_ADOPTER_URL,
+  EARLY_ADOPTER_QR_URL,
 )}`;
 
 const agenda = [
@@ -78,7 +92,7 @@ export default function ColaPage() {
               <Link href="/pricing" className="hover:text-white transition-colors">Pricing</Link>
               <Link href="/demo" className="hover:text-white transition-colors">Demo</Link>
               <Link href="/compare" className="hover:text-white transition-colors">Compare</Link>
-              <Link href="/early-adopter" className="hover:text-white transition-colors">Early Adopter</Link>
+              <Link href={EARLY_ADOPTER_CTA_URL} className="hover:text-white transition-colors">Early Adopter</Link>
             </nav>
           </div>
         </div>
@@ -108,7 +122,7 @@ export default function ColaPage() {
               <ArrowRight className="w-4 h-4" />
             </a>
             <Link
-              href="/early-adopter"
+              href={EARLY_ADOPTER_CTA_URL}
               className="inline-flex items-center justify-center gap-2 bg-white/10 hover:bg-white/15 text-white font-semibold px-6 py-3 rounded-lg border border-white/10 transition-colors"
             >
               Apply to the pilot
@@ -242,7 +256,7 @@ export default function ColaPage() {
             <div className="bg-white rounded-xl p-4 mb-4">
               <img
                 src={QR_SRC}
-                alt={`QR code linking to ${EARLY_ADOPTER_URL}`}
+                alt={`QR code linking to ${EARLY_ADOPTER_QR_URL}`}
                 width={240}
                 height={240}
                 loading="lazy"
@@ -250,12 +264,12 @@ export default function ColaPage() {
               />
             </div>
             <a
-              href={EARLY_ADOPTER_URL}
+              href={EARLY_ADOPTER_QR_URL}
               target="_blank"
               rel="noopener noreferrer"
               className="text-xs text-slate-400 hover:text-white transition-colors break-all"
             >
-              {EARLY_ADOPTER_URL}
+              lims.bot/early-adopter
             </a>
           </div>
         </div>
@@ -327,7 +341,7 @@ export default function ColaPage() {
             The early-adopter application is open online — we review every submission personally.
           </p>
           <Link
-            href="/early-adopter"
+            href={EARLY_ADOPTER_CTA_URL}
             className="inline-flex items-center gap-2 bg-[#2E8B57] hover:bg-[#2E8B57]/90 text-white font-semibold px-6 py-3 rounded-lg transition-colors"
           >
             Apply online <ArrowRight className="w-4 h-4" />
