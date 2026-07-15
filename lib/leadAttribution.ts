@@ -75,14 +75,20 @@ export function normalizeSubmittedEarlyAdopterSource(value: unknown): string {
 export function resolveEarlyAdopterSource(
   submittedSource: unknown,
   referer: string | null | undefined,
+  requestOrigin: string | null | undefined,
 ): string {
-  if (referer) {
+  if (referer && requestOrigin) {
     try {
-      const fromReferer = buildEarlyAdopterSource(new URL(referer).searchParams);
-      if (fromReferer !== DEFAULT_EARLY_ADOPTER_SOURCE) return fromReferer;
+      const refererUrl = new URL(referer);
+      const expectedOrigin = new URL(requestOrigin).origin;
+      if (refererUrl.origin === expectedOrigin) {
+        const fromReferer = buildEarlyAdopterSource(refererUrl.searchParams);
+        if (fromReferer !== DEFAULT_EARLY_ADOPTER_SOURCE) return fromReferer;
+      }
     } catch {
-      // Invalid or relative Referer values are ignored. The submitted source is
-      // still normalized below; arbitrary header text never reaches storage.
+      // Invalid or relative Referer/origin values are ignored. The submitted
+      // source is still normalized below; arbitrary header text never reaches
+      // storage.
     }
   }
 
