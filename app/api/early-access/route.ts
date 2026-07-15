@@ -38,7 +38,11 @@ export async function POST(request: NextRequest) {
         : (testVolume ? String(testVolume).trim() : 'unknown'),
       accreditations: JSON.stringify(labType ? [String(labType).trim()] : []),
       painPoint: painPoint ? String(painPoint).trim() : null,
-      source: resolveEarlyAdopterSource(source, request.headers.get('referer')),
+      source: resolveEarlyAdopterSource(
+        source,
+        request.headers.get('referer'),
+        request.nextUrl.origin,
+      ),
       fieldBenchSplit: null,
     };
 
