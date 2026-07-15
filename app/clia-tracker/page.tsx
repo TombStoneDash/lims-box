@@ -114,7 +114,7 @@ export default function CliaTrackerPage() {
       <section className="py-12 md:py-20 px-4">
         <div className="max-w-4xl mx-auto text-center">
           <div className="inline-flex items-center gap-2 bg-[#2E8B57]/20 text-[#2E8B57] text-sm font-medium px-3 py-1 rounded-full mb-6 border border-[#2E8B57]/30">
-            <BadgeCheck className="w-4 h-4" /> CLIA §493.1407 Compliance
+            <BadgeCheck className="w-4 h-4" /> Built for CLIA §493.1407
           </div>
           <h1 className="text-3xl md:text-5xl lg:text-6xl font-bold tracking-tight mb-5">
             The Inspector Picks One Technologist.<br className="hidden md:block" />

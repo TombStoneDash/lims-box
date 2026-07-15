@@ -50,7 +50,7 @@ const faqs: FAQ[] = [
   {
     category: 'Compliance',
     question: 'Does LIMS BOX meet 21 CFR Part 11 requirements?',
-    answer: 'Yes. Immutable audit trails, electronic signatures with password authentication, role-based access controls, and data integrity enforcement (ALCOA+) are built into the system. We also provide validation documentation templates to support your IQ/OQ/PQ effort.',
+    answer: 'LIMS BOX provides the technical controls 21 CFR Part 11 requires: immutable audit trails, electronic signatures with password authentication, role-based access controls, and data integrity enforcement (ALCOA+). We also provide validation documentation templates to support your IQ/OQ/PQ effort — but Part 11 compliance itself is your lab\'s own validation determination, not a certification LIMS BOX holds.',
   },
   {
     category: 'Compliance',

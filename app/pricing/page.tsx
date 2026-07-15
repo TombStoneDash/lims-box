@@ -53,7 +53,7 @@ const tiers = [
       'Priority email & chat support',
       'Data migration assistance',
       'Personnel competency records designed to support both CLIA §493.1407 and ISO 15189 clause 6.2.2',
-      'Personnel authorization records per procedure — ISO 15189 §6.2.4 compliant, PDF export, duplicate-proof at the DB layer',
+      'Personnel authorization records per procedure — designed for ISO 15189 §6.2.4, PDF export, duplicate-proof at the DB layer',
     ],
     cta: 'Start Your 30-Day Pilot',
     href: '/contact',
@@ -77,7 +77,7 @@ const tiers = [
       'SLA-backed uptime guarantee',
       'SSO / LDAP authentication',
       'Personnel competency records designed to support both CLIA §493.1407 and ISO 15189 clause 6.2.2',
-      'Personnel authorization records per procedure — ISO 15189 §6.2.4 compliant, PDF export, duplicate-proof at the DB layer',
+      'Personnel authorization records per procedure — designed for ISO 15189 §6.2.4, PDF export, duplicate-proof at the DB layer',
     ],
     cta: 'Contact Sales',
     href: '/contact',
@@ -108,7 +108,7 @@ const faqs = [
   },
   {
     q: 'Is my data secure?',
-    a: 'Yes. LIMS BOX is hosted on SOC 2 compliant infrastructure with encryption at rest and in transit. All data is backed up daily with point-in-time recovery.',
+    a: 'Yes. LIMS BOX is hosted on cloud infrastructure with SOC 2 Type II attestation, with encryption at rest and in transit. All data is backed up daily with point-in-time recovery.',
   },
 ];
 

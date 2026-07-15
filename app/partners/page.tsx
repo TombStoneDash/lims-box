@@ -4,12 +4,12 @@ import { WaitlistFooter } from '@/components/WaitlistFooter';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Partners — LIMS BOX | Built on SENAITE with RidingBytes',
-  description: 'LIMS BOX is built on SENAITE, the open-source LIMS by RidingBytes. Our partnership brings enterprise-grade lab management to small environmental and water testing labs.',
+  title: 'Partners — LIMS BOX | Built on SENAITE',
+  description: 'LIMS BOX is built on SENAITE, the open-source LIMS created by RidingBytes, bringing enterprise-grade lab management to small environmental and water testing labs.',
   alternates: { canonical: '/partners' },
   openGraph: {
     title: 'Partners — LIMS BOX',
-    description: 'Built on SENAITE open-source LIMS. Partnered with RidingBytes to bring enterprise lab management to small labs.',
+    description: 'Built on SENAITE, the open-source LIMS created by RidingBytes, to bring enterprise lab management to small labs.',
     url: 'https://lims.bot/partners',
   },
 };
@@ -113,10 +113,6 @@ export default function PartnersPage() {
                   <Heart className="w-4 h-4 text-lab-teal mt-0.5 shrink-0" />
                   <span><strong>LIMS BOX is the delivery layer.</strong> We package SENAITE into a turnkey deployment &mdash; the Pelican case hardware, voice interface, pre-configured methods, and simplified onboarding.</span>
                 </li>
-                <li className="flex gap-2">
-                  <Heart className="w-4 h-4 text-lab-teal mt-0.5 shrink-0" />
-                  <span><strong>We contribute upstream.</strong> Bug fixes, environmental testing workflows, and EPA method templates flow back into the SENAITE project.</span>
-                </li>
               </ul>
             </div>
           </div>
@@ -125,7 +121,7 @@ export default function PartnersPage() {
           <div className="bg-white dark:bg-white/5 border border-black/5 dark:border-white/10 rounded-2xl p-8 md:p-12">
             <div className="flex items-start justify-between mb-6">
               <div>
-                <span className="text-xs font-medium text-lab-blue uppercase tracking-wider">Development Partner</span>
+                <span className="text-xs font-medium text-lab-blue uppercase tracking-wider">Upstream Open-Source Project</span>
                 <h2 className="text-3xl font-bold text-slate-900 dark:text-white mt-2">RidingBytes</h2>
                 <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Bonn, Germany</p>
               </div>
@@ -147,9 +143,9 @@ export default function PartnersPage() {
             </p>
 
             <p className="text-slate-700 dark:text-slate-300 leading-relaxed">
-              LIMS BOX partners with RidingBytes for ongoing SENAITE development, custom environmental
-              testing integrations, and technical consultation on ISO 17025 compliance. When you use LIMS BOX,
-              you&apos;re backed by the people who built the LIMS engine your data runs on.
+              SENAITE is released under the GPL license, so the LIMS engine LIMS BOX runs on is open source
+              from top to bottom &mdash; you can read the code RidingBytes maintains yourself rather than take
+              a vendor&apos;s word for it.
             </p>
           </div>
         </div>

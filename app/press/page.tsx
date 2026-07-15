@@ -86,7 +86,7 @@ export default function PressPage() {
               Founded in 2026 by Tombstone Dash LLC, LIMS BOX targets environmental testing labs, water quality labs, cannabis testing facilities, and clinical labs that are stuck between spreadsheets they've outgrown and enterprise platforms they can't afford. The system is built on SENAITE, an open-source LIMS framework, extended with voice control, AI-assisted queries, and offline capability.
             </p>
             <p>
-              Pricing starts at $500/month with no implementation fee, no long-term contract, and go-live in days instead of months. The company is currently running a 5-lab early-adopter pilot program with founding-member pricing and direct engineering access.
+              Pricing starts at $500/month with no implementation fee, no long-term contract, and go-live in days instead of months. The company is opening a 5-lab early-adopter pilot program with founding-member pricing and direct engineering access.
             </p>
             <div className="pt-2 border-t border-black/5 dark:border-white/5 grid grid-cols-2 md:grid-cols-4 gap-4 text-xs">
               <div><p className="text-slate-500">Founded</p><p className="font-medium text-slate-900 dark:text-white">2026</p></div>
@@ -112,7 +112,7 @@ export default function PressPage() {
                 <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Hudson Taylor</h3>
                 <p className="text-sm text-lab-teal mb-3">Founder & CEO, Tombstone Dash LLC</p>
                 <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
-                  Hudson Taylor is the founder of Tombstone Dash LLC and creator of LIMS BOX. With a background in lab informatics and software engineering, Hudson identified the gap between enterprise LIMS platforms that cost six figures and the spreadsheet chaos that small regulated labs default to. LIMS BOX is his answer: audit-ready traceability that deploys in days, not months, at a price point small labs can justify. He is building the company through a network of VC connectors and strategic partnerships with the SENAITE open-source community.
+                  Hudson Taylor is the founder of Tombstone Dash LLC and creator of LIMS BOX. With a background in lab informatics and software engineering, Hudson identified the gap between enterprise LIMS platforms that cost six figures and the spreadsheet chaos that small regulated labs default to. LIMS BOX is his answer: audit-ready traceability that deploys in days, not months, at a price point small labs can justify. He is building the company independently, using SENAITE, the open-source LIMS engine, as the technical foundation.
                 </p>
               </div>
             </div>

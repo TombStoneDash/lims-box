@@ -37,10 +37,10 @@ export default function EnvironmentalLandingPage() {
 
       <section className="bg-slate-50 border-y border-slate-200">
         <div className="max-w-3xl mx-auto px-6 py-12">
-          <blockquote className="text-lg italic text-slate-800 leading-relaxed">
+          <p className="text-lg italic text-slate-800 leading-relaxed">
             &ldquo;We had a NELAP audit last month and spent 18 hours pulling calibration records out of three different binders.&rdquo;
-          </blockquote>
-          <p className="mt-3 text-sm text-slate-600">— Environmental Lab Manager</p>
+          </p>
+          <p className="mt-3 text-sm text-slate-600">An illustrative example of a story we hear often from environmental lab managers — not an attributed customer quote.</p>
           <hr className="my-6 border-slate-200" />
           <p className="text-sm text-slate-700">
             <strong className="font-medium">Built by Hud Taylor.</strong> Certified Water Specialist (California) · MS Biochem UCSD/Salk · Former Lab Manager at CalEnergy Operating Corporation (geothermal, environmental compliance).

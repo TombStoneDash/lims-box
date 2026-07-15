@@ -5,12 +5,12 @@ import type { Metadata } from 'next';
 export const dynamic = 'force-static';
 
 export const metadata: Metadata = {
-  title: 'Case Study: 4-Person Water Lab Cut Reporting Time by 70% | LIMS BOX',
-  description: 'How a small water testing lab replaced Excel with LIMS BOX and reduced batch reporting from 3 hours to 15 minutes. Real results for real labs.',
+  title: 'Illustrative Scenario: How a Small Water Lab Could Cut Reporting Time by 70% | LIMS BOX',
+  description: 'A hypothetical, illustrative walkthrough of how a small water testing lab could replace Excel with LIMS BOX and reduce batch reporting from 3 hours to 15 minutes. Not an actual customer.',
   alternates: { canonical: '/case-study' },
   openGraph: {
-    title: 'Case Study: 70% Faster Reporting with LIMS BOX',
-    description: 'A 4-person water lab cut batch reporting from 3 hours to 15 minutes after switching from Excel to LIMS BOX.',
+    title: 'Illustrative Scenario: 70% Faster Reporting with LIMS BOX',
+    description: 'A hypothetical scenario — a small water lab cutting batch reporting from 3 hours to 15 minutes after switching from Excel to LIMS BOX.',
     url: 'https://lims.bot/case-study',
   },
 };
@@ -28,7 +28,7 @@ export default function CaseStudyPage() {
     '@type': 'BreadcrumbList',
     itemListElement: [
       { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://lims.bot' },
-      { '@type': 'ListItem', position: 2, name: 'Case Study', item: 'https://lims.bot/case-study' },
+      { '@type': 'ListItem', position: 2, name: 'Illustrative Scenario', item: 'https://lims.bot/case-study' },
     ],
   };
 
@@ -60,14 +60,19 @@ export default function CaseStudyPage() {
       {/* Hero */}
       <section className="py-16 md:py-20 px-4">
         <div className="max-w-3xl mx-auto">
-          <div className="text-sm font-medium text-lab-teal uppercase tracking-wider mb-4">Case Study</div>
+          <div className="text-sm font-medium text-lab-teal uppercase tracking-wider mb-4">Illustrative Scenario</div>
           <h1 className="text-3xl md:text-5xl font-bold text-slate-900 dark:text-white mb-6 tracking-tight leading-tight">
-            How a 4-Person Water Lab Cut Reporting Time by 70%
+            How a Small Water Lab Could Cut Reporting Time by 70%
           </h1>
+          <div className="bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 rounded-xl px-5 py-4 mb-6 text-sm text-amber-900 dark:text-amber-200 leading-relaxed">
+            This is a hypothetical, illustrative scenario built from patterns we commonly hear from small labs
+            evaluating LIMS BOX &mdash; it does not describe an actual LIMS BOX customer, and the lab, people, and
+            quotes below are fictional.
+          </div>
           <div className="flex flex-wrap items-center gap-4 text-sm text-slate-500 dark:text-slate-400">
             <span className="flex items-center gap-1"><Users className="w-4 h-4" /> 4 employees</span>
             <span className="flex items-center gap-1"><BarChart3 className="w-4 h-4" /> 300 samples/month</span>
-            <span className="flex items-center gap-1"><Clock className="w-4 h-4" /> Went live in 4 days</span>
+            <span className="flex items-center gap-1"><Clock className="w-4 h-4" /> Live in 4 days (illustrative)</span>
           </div>
         </div>
       </section>
@@ -92,7 +97,7 @@ export default function CaseStudyPage() {
           <div>
             <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-4">The Lab</h2>
             <p className="text-slate-600 dark:text-slate-300 leading-relaxed mb-4">
-              Clear Creek Environmental Testing is a 4-person water and wastewater testing lab in northern Colorado. They serve municipal water districts, construction firms, and environmental consultancies — processing roughly 300 samples per month across drinking water, stormwater, and wastewater matrices.
+              In this scenario, picture a 4-person water and wastewater testing lab in a small city — the kind that serves municipal water districts, construction firms, and environmental consultancies, processing roughly 300 samples per month across drinking water, stormwater, and wastewater matrices.
             </p>
             <p className="text-slate-600 dark:text-slate-300 leading-relaxed">
               The team: one lab director, two analysts, and one sample coordinator. Everyone wears multiple hats. There's no IT department — the lab director handles tech along with everything else.
@@ -103,7 +108,7 @@ export default function CaseStudyPage() {
           <div>
             <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-4">The Problem</h2>
             <p className="text-slate-600 dark:text-slate-300 leading-relaxed mb-4">
-              Clear Creek ran on Excel. Sample login, result entry, QC tracking, and client reporting — all in a network of interconnected spreadsheets built over six years. The system worked, in the sense that it produced reports. But it was slow, fragile, and getting worse.
+              The lab ran on Excel. Sample login, result entry, QC tracking, and client reporting — all in a network of interconnected spreadsheets built over six years. The system worked, in the sense that it produced reports. But it was slow, fragile, and getting worse.
             </p>
 
             <div className="bg-white dark:bg-white/5 rounded-xl border border-black/5 dark:border-white/10 p-6 my-6">
@@ -123,14 +128,14 @@ export default function CaseStudyPage() {
               </ul>
             </div>
 
-            {/* Quote */}
+            {/* Illustrative narrative — not an attributed customer quote */}
             <div className="bg-lab-teal/5 dark:bg-lab-teal/10 rounded-xl p-6 border border-lab-teal/20">
               <Quote className="w-8 h-8 text-lab-teal/40 mb-3" />
               <p className="text-slate-700 dark:text-slate-200 italic leading-relaxed mb-3">
                 "We knew the spreadsheets were a problem, but we didn't have time to fix them. That's the trap — the system is slow enough to waste your time but not broken enough to force a change. It took a holding time violation on a drinking water compliance sample to finally push us."
               </p>
               <p className="text-sm font-medium text-slate-900 dark:text-white">
-                — Rachel Moreno, Lab Director, Clear Creek Environmental Testing
+                Illustrative — the kind of thing lab directors in this position tell us
               </p>
             </div>
           </div>
@@ -139,7 +144,7 @@ export default function CaseStudyPage() {
           <div>
             <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-4">The Switch</h2>
             <p className="text-slate-600 dark:text-slate-300 leading-relaxed mb-4">
-              Clear Creek evaluated three LIMS options. Two were enterprise platforms with 6-month implementation timelines and costs that exceeded their annual software budget. LIMS BOX was up and running in four days.
+              In this scenario, the lab evaluated three LIMS options. Two were enterprise platforms with 6-month implementation timelines and costs that exceeded their annual software budget. LIMS BOX was up and running in four days.
             </p>
 
             <div className="bg-white dark:bg-white/5 rounded-xl border border-black/5 dark:border-white/10 p-6 my-6">
@@ -182,26 +187,26 @@ export default function CaseStudyPage() {
               </ul>
             </div>
 
-            {/* Quote */}
+            {/* Illustrative narrative — not an attributed customer quote */}
             <div className="bg-lab-teal/5 dark:bg-lab-teal/10 rounded-xl p-6 border border-lab-teal/20">
               <Quote className="w-8 h-8 text-lab-teal/40 mb-3" />
               <p className="text-slate-700 dark:text-slate-200 italic leading-relaxed mb-3">
-                "The biggest surprise wasn't the time savings on reporting — it was how much less stressful audit week became. Our assessor spent half the time on-site because everything was already organized and traceable. She actually said it was one of the cleanest audits she'd done for a lab our size."
+                "The biggest surprise wasn't the time savings on reporting — it was how much less stressful audit week became. The assessor spent half the time on-site because everything was already organized and traceable."
               </p>
               <p className="text-sm font-medium text-slate-900 dark:text-white">
-                — Rachel Moreno, Lab Director, Clear Creek Environmental Testing
+                Illustrative — the kind of thing lab directors in this position tell us
               </p>
             </div>
           </div>
 
-          {/* Quote 3 */}
+          {/* Illustrative narrative — not an attributed customer quote */}
           <div className="bg-slate-50 dark:bg-white/5 rounded-xl p-6 border border-slate-200 dark:border-white/10">
             <Quote className="w-8 h-8 text-slate-300 mb-3" />
             <p className="text-slate-700 dark:text-slate-200 italic leading-relaxed mb-3">
               "I was skeptical about switching because we'd been on spreadsheets for six years. But the learning curve was basically nothing. By day three I was faster in LIMS BOX than I ever was in Excel, and I didn't have to worry about breaking a formula every time I entered results."
             </p>
             <p className="text-sm font-medium text-slate-900 dark:text-white">
-              — David Park, Senior Analyst, Clear Creek Environmental Testing
+              Illustrative — the kind of thing lab analysts in this position tell us
             </p>
           </div>
         </div>
@@ -214,7 +219,7 @@ export default function CaseStudyPage() {
             Ready to see similar results?
           </h2>
           <p className="text-slate-600 dark:text-slate-300 mb-8">
-            Clear Creek went from spreadsheets to a running LIMS in 4 days. No consultants. No IT project. Just software that works the way a small lab needs it to.
+            In this scenario, the lab went from spreadsheets to a running LIMS in 4 days. No consultants. No IT project. Just software that works the way a small lab needs it to.
           </p>
           <Link
             href="/contact"

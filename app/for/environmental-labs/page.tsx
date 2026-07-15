@@ -190,7 +190,7 @@ export default function EnvironmentalLabsPage() {
             <span className="text-slate-300">|</span>
             <span>EPA Method Library</span>
             <span className="text-slate-300">|</span>
-            <span>40 CFR Part 136 Compliant</span>
+            <span>40 CFR Part 136 Ready</span>
             <span className="text-slate-300">|</span>
             <span>State Agency Formats</span>
           </div>

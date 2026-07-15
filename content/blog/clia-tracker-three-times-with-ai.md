@@ -110,7 +110,7 @@ People always ask, so here are real 2026 numbers.
 
 **Buy comparable SaaS:** the clinical-lab compliance market — MediaLab Compass, StaffReady, MyInspection and friends — is almost entirely quote-based. Notice that none of them put a price on the public page. That's a tell. When pricing is "contact sales," it means "it depends on how much we think you'll pay."
 
-**Where I landed:** the tool in these screenshots is the seed of what I'm building into **LIMS BOX** — a small, offline-capable lab system built on SENAITE (the leading open-source LIMS), in collaboration with its founder. Survey-readiness is the whole design goal. It runs from **$500/mo** for small labs, with on-prem deployment, SSO, and the heavier compliance machinery at the top tier. No implementation fee, month-to-month, cancel anytime — because the 18-month enterprise contract is exactly the kind of thing I built this to kill.
+**Where I landed:** the tool in these screenshots is the seed of what I'm building into **LIMS BOX** — a small, offline-capable lab system built on SENAITE (the leading open-source LIMS, originally created by RidingBytes GmbH). Survey-readiness is the whole design goal. It runs from **$500/mo** for small labs, with on-prem deployment, SSO, and the heavier compliance machinery at the top tier. No implementation fee, month-to-month, cancel anytime — because the 18-month enterprise contract is exactly the kind of thing I built this to kill.
 
 *(Figures current as of May 2026 and meant as ballpark, not gospel. SaaS comparables are quote-based, so treat those as illustrative.)*
 

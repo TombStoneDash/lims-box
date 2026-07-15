@@ -159,7 +159,7 @@ export default function EarlyAdopterPage() {
                   <label htmlFor="labName" className="block text-sm font-medium text-slate-300 mb-1">Lab name *</label>
                   <input id="labName" type="text" required value={form.labName} onChange={update('labName')}
                     className="w-full px-3 py-2.5 rounded-lg border border-white/10 bg-white/5 text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#2E8B57]/50 placeholder:text-slate-600"
-                    placeholder="Clear Creek Environmental Testing" />
+                    placeholder="Riverside Water Testing" />
                 </div>
                 <div>
                   <label htmlFor="labType" className="block text-sm font-medium text-slate-300 mb-1">Lab type *</label>
@@ -176,7 +176,7 @@ export default function EarlyAdopterPage() {
                   <label htmlFor="contactName" className="block text-sm font-medium text-slate-300 mb-1">Contact name *</label>
                   <input id="contactName" type="text" required value={form.contactName} onChange={update('contactName')}
                     className="w-full px-3 py-2.5 rounded-lg border border-white/10 bg-white/5 text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#2E8B57]/50 placeholder:text-slate-600"
-                    placeholder="Rachel Moreno" />
+                    placeholder="Jane Smith" />
                 </div>
                 <div>
                   <label htmlFor="email" className="block text-sm font-medium text-slate-300 mb-1">Email *</label>
