@@ -1,5 +1,5 @@
 import { createHash } from 'crypto';
-import { normalizeEmail } from '@/lib/emailValidation';
+import { normalizeEmail } from './emailValidation';
 
 export type UnsubscribeList = 'newsletter' | 'all';
 
