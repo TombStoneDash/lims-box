@@ -1,5 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { askBot, MAX_QUESTION_LENGTH } from '@/lib/bot/engine';
+import {
+  recordBotTelemetry,
+  telemetryForBotResponse,
+  telemetryForRequestOutcome,
+} from '@/lib/bot/telemetry';
 
 export const runtime = 'nodejs';
 
@@ -23,6 +28,7 @@ export async function POST(request: NextRequest) {
       .split(',')[0]
       .trim();
     if (isRateLimited(ip)) {
+      recordBotTelemetry(telemetryForRequestOutcome('rate_limited'));
       return NextResponse.json(
         { error: 'Too many requests — please slow down.' },
         { status: 429 },
@@ -32,6 +38,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json().catch(() => null);
     const question = body?.question;
     if (typeof question !== 'string' || question.trim().length === 0) {
+      recordBotTelemetry(telemetryForRequestOutcome('invalid_request'));
       return NextResponse.json(
         { error: `Send JSON: {"question":"..."} (max ${MAX_QUESTION_LENGTH} chars)` },
         { status: 400 },
@@ -39,12 +46,14 @@ export async function POST(request: NextRequest) {
     }
 
     // Privacy: questions are answered statelessly. Nothing is persisted and
-    // question content is never logged.
+    // neither question content nor client/network identifiers enter telemetry.
     const result = askBot(question);
+    recordBotTelemetry(telemetryForBotResponse(result));
     return NextResponse.json(result, {
       headers: { 'Cache-Control': 'no-store' },
     });
   } catch {
+    recordBotTelemetry(telemetryForRequestOutcome('internal_error'));
     return NextResponse.json({ error: 'Something went wrong.' }, { status: 500 });
   }
 }
