@@ -7,6 +7,7 @@
     "status": "in_progress",
     "priority": "rush",
     "received_at": "2026-02-01T08:00:00Z",
+    "expected_report_at": "2026-02-02T20:00:00.000Z",
     "test_codes": [
       "CHEM-ALT",
       "CHEM-AST",
@@ -22,6 +23,7 @@
     "status": "in_progress",
     "priority": "routine",
     "received_at": "2026-02-02T09:00:00Z",
+    "expected_report_at": "2026-02-03T03:00:00.000Z",
     "test_codes": [
       "CHEM-ALT",
       "CHEM-GLU"
@@ -36,6 +38,7 @@
     "status": "in_progress",
     "priority": "routine",
     "received_at": "2026-02-03T10:00:00Z",
+    "expected_report_at": "2026-02-04T10:00:00.000Z",
     "test_codes": [
       "MOL-FLU-B",
       "MOL-NG",
@@ -51,6 +54,7 @@
     "status": "in_progress",
     "priority": "routine",
     "received_at": "2026-02-04T11:00:00Z",
+    "expected_report_at": "2026-02-05T05:00:00.000Z",
     "test_codes": [
       "CHEM-K"
     ],
@@ -64,6 +68,7 @@
     "status": "in_progress",
     "priority": "routine",
     "received_at": "2026-02-05T12:00:00Z",
+    "expected_report_at": "2026-02-07T00:00:00.000Z",
     "test_codes": [
       "CHEM-AST",
       "SER-SYPH"
@@ -78,6 +83,7 @@
     "status": "in_progress",
     "priority": "routine",
     "received_at": "2026-02-06T13:00:00Z",
+    "expected_report_at": "2026-02-08T01:00:00.000Z",
     "test_codes": [
       "SER-SYPH"
     ],
@@ -91,6 +97,7 @@
     "status": "in_progress",
     "priority": "routine",
     "received_at": "2026-02-07T14:00:00Z",
+    "expected_report_at": "2026-02-08T14:00:00.000Z",
     "test_codes": [
       "MOL-CT"
     ],
@@ -104,6 +111,7 @@
     "status": "in_progress",
     "priority": "routine",
     "received_at": "2026-02-08T15:00:00Z",
+    "expected_report_at": "2026-02-09T15:00:00.000Z",
     "test_codes": [
       "MOL-CT"
     ],
@@ -117,6 +125,7 @@
     "status": "in_progress",
     "priority": "routine",
     "received_at": "2026-02-09T16:00:00Z",
+    "expected_report_at": "2026-02-10T10:00:00.000Z",
     "test_codes": [
       "CHEM-ALT",
       "CHEM-K",
@@ -132,6 +141,7 @@
     "status": "in_progress",
     "priority": "routine",
     "received_at": "2026-02-10T08:00:00Z",
+    "expected_report_at": "2026-02-11T02:00:00.000Z",
     "test_codes": [
       "CHEM-NA"
     ],
@@ -145,6 +155,7 @@
     "status": "in_progress",
     "priority": "routine",
     "received_at": "2026-02-11T09:00:00Z",
+    "expected_report_at": "2026-02-12T09:00:00.000Z",
     "test_codes": [
       "MOL-FLU-A",
       "MOL-FLU-B"
@@ -159,6 +170,7 @@
     "status": "in_progress",
     "priority": "routine",
     "received_at": "2026-02-12T10:00:00Z",
+    "expected_report_at": "2026-02-13T10:00:00.000Z",
     "test_codes": [
       "CHEM-CREA",
       "CHEM-NA",
@@ -174,6 +186,7 @@
     "status": "received",
     "priority": "routine",
     "received_at": "2026-02-13T11:00:00Z",
+    "expected_report_at": "2026-02-14T05:00:00.000Z",
     "test_codes": [
       "CHEM-NA"
     ],
@@ -187,6 +200,7 @@
     "status": "received",
     "priority": "rush",
     "received_at": "2026-02-14T12:00:00Z",
+    "expected_report_at": "2026-02-16T00:00:00.000Z",
     "test_codes": [
       "SER-AB-HCV",
       "SER-AG-HBV"
@@ -201,6 +215,7 @@
     "status": "received",
     "priority": "routine",
     "received_at": "2026-02-15T13:00:00Z",
+    "expected_report_at": "2026-02-16T13:00:00.000Z",
     "test_codes": [
       "MOL-FLU-A",
       "MOL-FLU-B"
@@ -215,6 +230,7 @@
     "status": "pending_review",
     "priority": "routine",
     "received_at": "2026-02-16T14:00:00Z",
+    "expected_report_at": "2026-02-17T08:00:00.000Z",
     "test_codes": [
       "CHEM-GLU"
     ],
@@ -228,6 +244,7 @@
     "status": "pending_review",
     "priority": "routine",
     "received_at": "2026-02-17T15:00:00Z",
+    "expected_report_at": "2026-02-19T03:00:00.000Z",
     "test_codes": [
       "SER-AB-HBV"
     ],
@@ -241,6 +258,7 @@
     "status": "completed",
     "priority": "routine",
     "received_at": "2026-02-18T16:00:00Z",
+    "expected_report_at": "2026-02-19T10:00:00.000Z",
     "test_codes": [
       "CHEM-BILI"
     ],
@@ -254,6 +272,7 @@
     "status": "completed",
     "priority": "routine",
     "received_at": "2026-02-19T08:00:00Z",
+    "expected_report_at": "2026-02-20T08:00:00.000Z",
     "test_codes": [
       "MOL-COV2",
       "MOL-FLU-B"
@@ -268,6 +287,7 @@
     "status": "completed",
     "priority": "routine",
     "received_at": "2026-02-20T09:00:00Z",
+    "expected_report_at": "2026-02-21T03:00:00.000Z",
     "test_codes": [
       "CHEM-GLU"
     ],
@@ -281,6 +301,7 @@
     "status": "in_progress",
     "priority": "routine",
     "received_at": "2026-02-21T10:00:00Z",
+    "expected_report_at": "2026-02-22T22:00:00.000Z",
     "test_codes": [
       "CHEM-K",
       "CHEM-NA",
@@ -296,6 +317,7 @@
     "status": "in_progress",
     "priority": "routine",
     "received_at": "2026-02-22T11:00:00Z",
+    "expected_report_at": "2026-02-24T11:00:00.000Z",
     "test_codes": [
       "SER-AG-HIV",
       "TB-IGRA-B"
@@ -310,6 +332,7 @@
     "status": "in_progress",
     "priority": "routine",
     "received_at": "2026-02-23T12:00:00Z",
+    "expected_report_at": "2026-02-24T12:00:00.000Z",
     "test_codes": [
       "MOL-CT"
     ],
@@ -323,6 +346,7 @@
     "status": "in_progress",
     "priority": "routine",
     "received_at": "2026-02-24T13:00:00Z",
+    "expected_report_at": "2026-02-25T13:00:00.000Z",
     "test_codes": [
       "CHEM-GLU",
       "MOL-CT",
@@ -338,6 +362,7 @@
     "status": "in_progress",
     "priority": "routine",
     "received_at": "2026-02-01T14:00:00Z",
+    "expected_report_at": "2026-02-02T08:00:00.000Z",
     "test_codes": [
       "CHEM-AST",
       "CHEM-NA"
@@ -352,6 +377,7 @@
     "status": "in_progress",
     "priority": "routine",
     "received_at": "2026-02-02T15:00:00Z",
+    "expected_report_at": "2026-02-04T15:00:00.000Z",
     "test_codes": [
       "CHEM-ALT",
       "TB-IGRA-A"
@@ -366,6 +392,7 @@
     "status": "in_progress",
     "priority": "rush",
     "received_at": "2026-02-03T16:00:00Z",
+    "expected_report_at": "2026-02-04T16:00:00.000Z",
     "test_codes": [
       "MOL-NG"
     ],
@@ -379,6 +406,7 @@
     "status": "in_progress",
     "priority": "routine",
     "received_at": "2026-02-04T08:00:00Z",
+    "expected_report_at": "2026-02-05T02:00:00.000Z",
     "test_codes": [
       "CHEM-CREA",
       "CHEM-K"
@@ -393,6 +421,7 @@
     "status": "in_progress",
     "priority": "routine",
     "received_at": "2026-02-05T09:00:00Z",
+    "expected_report_at": "2026-02-06T21:00:00.000Z",
     "test_codes": [
       "CHEM-AST",
       "SER-AG-HBV"
@@ -407,6 +436,7 @@
     "status": "in_progress",
     "priority": "routine",
     "received_at": "2026-02-06T10:00:00Z",
+    "expected_report_at": "2026-02-07T22:00:00.000Z",
     "test_codes": [
       "CHEM-GLU",
       "SER-SYPH"
@@ -421,6 +451,7 @@
     "status": "in_progress",
     "priority": "routine",
     "received_at": "2026-02-07T11:00:00Z",
+    "expected_report_at": "2026-02-08T11:00:00.000Z",
     "test_codes": [
       "MOL-FLU-B"
     ],
@@ -434,6 +465,7 @@
     "status": "in_progress",
     "priority": "routine",
     "received_at": "2026-02-08T12:00:00Z",
+    "expected_report_at": "2026-02-09T12:00:00.000Z",
     "test_codes": [
       "CHEM-NA",
       "MOL-CT"
@@ -448,6 +480,7 @@
     "status": "received",
     "priority": "routine",
     "received_at": "2026-02-09T13:00:00Z",
+    "expected_report_at": "2026-02-11T01:00:00.000Z",
     "test_codes": [
       "CHEM-AST",
       "SER-AB-HAV"
@@ -462,6 +495,7 @@
     "status": "received",
     "priority": "routine",
     "received_at": "2026-02-10T14:00:00Z",
+    "expected_report_at": "2026-02-12T14:00:00.000Z",
     "test_codes": [
       "SER-AG-HBV",
       "SER-SYPH",
@@ -477,6 +511,7 @@
     "status": "received",
     "priority": "routine",
     "received_at": "2026-02-11T15:00:00Z",
+    "expected_report_at": "2026-02-12T15:00:00.000Z",
     "test_codes": [
       "MOL-NG"
     ],
@@ -490,6 +525,7 @@
     "status": "pending_review",
     "priority": "routine",
     "received_at": "2026-02-12T16:00:00Z",
+    "expected_report_at": "2026-02-13T10:00:00.000Z",
     "test_codes": [
       "CHEM-GLU",
       "CHEM-K"
@@ -504,6 +540,7 @@
     "status": "pending_review",
     "priority": "routine",
     "received_at": "2026-02-13T08:00:00Z",
+    "expected_report_at": "2026-02-14T20:00:00.000Z",
     "test_codes": [
       "CHEM-CREA",
       "SER-AG-HIV"
@@ -518,6 +555,7 @@
     "status": "completed",
     "priority": "routine",
     "received_at": "2026-02-14T09:00:00Z",
+    "expected_report_at": "2026-02-16T09:00:00.000Z",
     "test_codes": [
       "TB-NIL"
     ],
@@ -531,6 +569,7 @@
     "status": "completed",
     "priority": "routine",
     "received_at": "2026-02-15T10:00:00Z",
+    "expected_report_at": "2026-02-16T10:00:00.000Z",
     "test_codes": [
       "MOL-RSV"
     ],
@@ -544,6 +583,7 @@
     "status": "completed",
     "priority": "rush",
     "received_at": "2026-02-16T11:00:00Z",
+    "expected_report_at": "2026-02-17T05:00:00.000Z",
     "test_codes": [
       "CHEM-K"
     ],
@@ -557,6 +597,7 @@
     "status": "in_progress",
     "priority": "routine",
     "received_at": "2026-02-17T12:00:00Z",
+    "expected_report_at": "2026-02-18T06:00:00.000Z",
     "test_codes": [
       "CHEM-K"
     ],
@@ -570,6 +611,7 @@
     "status": "in_progress",
     "priority": "routine",
     "received_at": "2026-02-18T13:00:00Z",
+    "expected_report_at": "2026-02-20T13:00:00.000Z",
     "test_codes": [
       "TB-MIT"
     ],
@@ -583,6 +625,7 @@
     "status": "in_progress",
     "priority": "routine",
     "received_at": "2026-02-19T14:00:00Z",
+    "expected_report_at": "2026-02-20T14:00:00.000Z",
     "test_codes": [
       "MOL-COV2",
       "MOL-CT"
@@ -597,6 +640,7 @@
     "status": "in_progress",
     "priority": "routine",
     "received_at": "2026-02-20T15:00:00Z",
+    "expected_report_at": "2026-02-21T15:00:00.000Z",
     "test_codes": [
       "CHEM-GLU",
       "MOL-CT"
@@ -611,6 +655,7 @@
     "status": "in_progress",
     "priority": "routine",
     "received_at": "2026-02-21T16:00:00Z",
+    "expected_report_at": "2026-02-23T04:00:00.000Z",
     "test_codes": [
       "CHEM-ALT",
       "CHEM-K",
@@ -626,6 +671,7 @@
     "status": "in_progress",
     "priority": "routine",
     "received_at": "2026-02-22T08:00:00Z",
+    "expected_report_at": "2026-02-24T08:00:00.000Z",
     "test_codes": [
       "TB-IGRA-A"
     ],
@@ -639,6 +685,7 @@
     "status": "in_progress",
     "priority": "routine",
     "received_at": "2026-02-23T09:00:00Z",
+    "expected_report_at": "2026-02-24T09:00:00.000Z",
     "test_codes": [
       "MOL-FLU-A"
     ],
@@ -652,6 +699,7 @@
     "status": "in_progress",
     "priority": "routine",
     "received_at": "2026-02-24T10:00:00Z",
+    "expected_report_at": "2026-02-25T04:00:00.000Z",
     "test_codes": [
       "CHEM-NA"
     ],
@@ -665,6 +713,7 @@
     "status": "in_progress",
     "priority": "routine",
     "received_at": "2026-02-01T11:00:00Z",
+    "expected_report_at": "2026-02-02T05:00:00.000Z",
     "test_codes": [
       "CHEM-ALT",
       "CHEM-CREA",
@@ -680,6 +729,7 @@
     "status": "in_progress",
     "priority": "routine",
     "received_at": "2026-02-02T12:00:00Z",
+    "expected_report_at": "2026-02-04T00:00:00.000Z",
     "test_codes": [
       "SER-AB-HCV"
     ],
@@ -693,6 +743,7 @@
     "status": "in_progress",
     "priority": "routine",
     "received_at": "2026-02-03T13:00:00Z",
+    "expected_report_at": "2026-02-04T13:00:00.000Z",
     "test_codes": [
       "MOL-CT",
       "MOL-FLU-A",
@@ -708,6 +759,7 @@
     "status": "in_progress",
     "priority": "routine",
     "received_at": "2026-02-04T14:00:00Z",
+    "expected_report_at": "2026-02-05T14:00:00.000Z",
     "test_codes": [
       "CHEM-CREA",
       "CHEM-NA",
@@ -723,6 +775,7 @@
     "status": "received",
     "priority": "rush",
     "received_at": "2026-02-05T15:00:00Z",
+    "expected_report_at": "2026-02-07T03:00:00.000Z",
     "test_codes": [
       "SER-SYPH"
     ],
@@ -736,6 +789,7 @@
     "status": "received",
     "priority": "routine",
     "received_at": "2026-02-06T16:00:00Z",
+    "expected_report_at": "2026-02-07T10:00:00.000Z",
     "test_codes": [
       "CHEM-ALB",
       "CHEM-CREA",
@@ -751,6 +805,7 @@
     "status": "received",
     "priority": "routine",
     "received_at": "2026-02-07T08:00:00Z",
+    "expected_report_at": "2026-02-08T08:00:00.000Z",
     "test_codes": [
       "MOL-COV2",
       "MOL-NG"
@@ -765,6 +820,7 @@
     "status": "pending_review",
     "priority": "routine",
     "received_at": "2026-02-08T09:00:00Z",
+    "expected_report_at": "2026-02-09T09:00:00.000Z",
     "test_codes": [
       "CHEM-GLU",
       "MOL-CT"
@@ -779,6 +835,7 @@
     "status": "pending_review",
     "priority": "routine",
     "received_at": "2026-02-09T10:00:00Z",
+    "expected_report_at": "2026-02-10T22:00:00.000Z",
     "test_codes": [
       "CHEM-ALB",
       "SER-AG-HBV"
@@ -793,6 +850,7 @@
     "status": "completed",
     "priority": "routine",
     "received_at": "2026-02-10T11:00:00Z",
+    "expected_report_at": "2026-02-12T11:00:00.000Z",
     "test_codes": [
       "CHEM-NA",
       "TB-NIL"
@@ -807,6 +865,7 @@
     "status": "completed",
     "priority": "routine",
     "received_at": "2026-02-11T12:00:00Z",
+    "expected_report_at": "2026-02-12T12:00:00.000Z",
     "test_codes": [
       "MOL-CT"
     ],
@@ -820,6 +879,7 @@
     "status": "completed",
     "priority": "routine",
     "received_at": "2026-02-12T13:00:00Z",
+    "expected_report_at": "2026-02-13T13:00:00.000Z",
     "test_codes": [
       "CHEM-CREA",
       "CHEM-NA",
@@ -835,6 +895,7 @@
     "status": "in_progress",
     "priority": "routine",
     "received_at": "2026-02-13T14:00:00Z",
+    "expected_report_at": "2026-02-15T02:00:00.000Z",
     "test_codes": [
       "CHEM-AST",
       "CHEM-NA",
@@ -850,6 +911,7 @@
     "status": "in_progress",
     "priority": "routine",
     "received_at": "2026-02-14T15:00:00Z",
+    "expected_report_at": "2026-02-16T15:00:00.000Z",
     "test_codes": [
       "CHEM-CREA",
       "SER-AG-HIV",
@@ -865,6 +927,7 @@
     "status": "in_progress",
     "priority": "routine",
     "received_at": "2026-02-15T16:00:00Z",
+    "expected_report_at": "2026-02-16T16:00:00.000Z",
     "test_codes": [
       "MOL-RSV"
     ],
@@ -878,6 +941,7 @@
     "status": "in_progress",
     "priority": "routine",
     "received_at": "2026-02-16T08:00:00Z",
+    "expected_report_at": "2026-02-17T08:00:00.000Z",
     "test_codes": [
       "CHEM-CREA",
       "CHEM-GLU",
@@ -893,6 +957,7 @@
     "status": "in_progress",
     "priority": "routine",
     "received_at": "2026-02-17T09:00:00Z",
+    "expected_report_at": "2026-02-18T21:00:00.000Z",
     "test_codes": [
       "CHEM-K",
       "CHEM-NA",
@@ -908,6 +973,7 @@
     "status": "in_progress",
     "priority": "rush",
     "received_at": "2026-02-18T10:00:00Z",
+    "expected_report_at": "2026-02-20T10:00:00.000Z",
     "test_codes": [
       "CHEM-ALB",
       "SER-AG-HIV",
@@ -923,6 +989,7 @@
     "status": "in_progress",
     "priority": "routine",
     "received_at": "2026-02-19T11:00:00Z",
+    "expected_report_at": "2026-02-20T11:00:00.000Z",
     "test_codes": [
       "MOL-COV2"
     ],
@@ -936,6 +1003,7 @@
     "status": "in_progress",
     "priority": "routine",
     "received_at": "2026-02-20T12:00:00Z",
+    "expected_report_at": "2026-02-21T12:00:00.000Z",
     "test_codes": [
       "CHEM-CREA",
       "MOL-CT"
@@ -950,6 +1018,7 @@
     "status": "in_progress",
     "priority": "routine",
     "received_at": "2026-02-21T13:00:00Z",
+    "expected_report_at": "2026-02-23T01:00:00.000Z",
     "test_codes": [
       "CHEM-AST",
       "CHEM-GLU",
@@ -965,6 +1034,7 @@
     "status": "in_progress",
     "priority": "routine",
     "received_at": "2026-02-22T14:00:00Z",
+    "expected_report_at": "2026-02-24T02:00:00.000Z",
     "test_codes": [
       "CHEM-ALT",
       "CHEM-NA",
@@ -980,6 +1050,7 @@
     "status": "in_progress",
     "priority": "routine",
     "received_at": "2026-02-23T15:00:00Z",
+    "expected_report_at": "2026-02-24T15:00:00.000Z",
     "test_codes": [
       "MOL-CT"
     ],
@@ -993,6 +1064,7 @@
     "status": "in_progress",
     "priority": "routine",
     "received_at": "2026-02-24T16:00:00Z",
+    "expected_report_at": "2026-02-25T10:00:00.000Z",
     "test_codes": [
       "CHEM-GLU",
       "CHEM-K"
@@ -1007,6 +1079,7 @@
     "status": "received",
     "priority": "routine",
     "received_at": "2026-02-01T08:00:00Z",
+    "expected_report_at": "2026-02-02T20:00:00.000Z",
     "test_codes": [
       "CHEM-K",
       "SER-AB-HCV"
@@ -1021,6 +1094,7 @@
     "status": "received",
     "priority": "routine",
     "received_at": "2026-02-02T09:00:00Z",
+    "expected_report_at": "2026-02-04T09:00:00.000Z",
     "test_codes": [
       "CHEM-CREA",
       "SER-AB-HCV",
@@ -1036,6 +1110,7 @@
     "status": "received",
     "priority": "routine",
     "received_at": "2026-02-03T10:00:00Z",
+    "expected_report_at": "2026-02-04T10:00:00.000Z",
     "test_codes": [
       "MOL-COV2"
     ],
@@ -1049,6 +1124,7 @@
     "status": "pending_review",
     "priority": "routine",
     "received_at": "2026-02-04T11:00:00Z",
+    "expected_report_at": "2026-02-05T05:00:00.000Z",
     "test_codes": [
       "CHEM-GLU",
       "CHEM-K"
@@ -1063,6 +1139,7 @@
     "status": "pending_review",
     "priority": "routine",
     "received_at": "2026-02-05T12:00:00Z",
+    "expected_report_at": "2026-02-07T00:00:00.000Z",
     "test_codes": [
       "CHEM-NA",
       "SER-AG-HBV"
@@ -1077,6 +1154,7 @@
     "status": "completed",
     "priority": "routine",
     "received_at": "2026-02-06T13:00:00Z",
+    "expected_report_at": "2026-02-08T01:00:00.000Z",
     "test_codes": [
       "SER-SYPH"
     ],
@@ -1090,6 +1168,7 @@
     "status": "completed",
     "priority": "rush",
     "received_at": "2026-02-07T14:00:00Z",
+    "expected_report_at": "2026-02-08T14:00:00.000Z",
     "test_codes": [
       "MOL-CT",
       "MOL-FLU-B"
@@ -1104,6 +1183,7 @@
     "status": "completed",
     "priority": "routine",
     "received_at": "2026-02-08T15:00:00Z",
+    "expected_report_at": "2026-02-09T15:00:00.000Z",
     "test_codes": [
       "MOL-CT",
       "MOL-NG"
@@ -1118,6 +1198,7 @@
     "status": "in_progress",
     "priority": "routine",
     "received_at": "2026-02-09T16:00:00Z",
+    "expected_report_at": "2026-02-11T04:00:00.000Z",
     "test_codes": [
       "CHEM-CREA",
       "SER-SYPH"
@@ -1132,6 +1213,7 @@
     "status": "in_progress",
     "priority": "routine",
     "received_at": "2026-02-10T08:00:00Z",
+    "expected_report_at": "2026-02-12T08:00:00.000Z",
     "test_codes": [
       "CHEM-BILI",
       "SER-SYPH",
@@ -1147,6 +1229,7 @@
     "status": "in_progress",
     "priority": "routine",
     "received_at": "2026-02-11T09:00:00Z",
+    "expected_report_at": "2026-02-12T09:00:00.000Z",
     "test_codes": [
       "MOL-FLU-A",
       "MOL-NG",
@@ -1162,6 +1245,7 @@
     "status": "in_progress",
     "priority": "routine",
     "received_at": "2026-02-12T10:00:00Z",
+    "expected_report_at": "2026-02-13T10:00:00.000Z",
     "test_codes": [
       "CHEM-NA",
       "MOL-CT"
@@ -1176,6 +1260,7 @@
     "status": "in_progress",
     "priority": "routine",
     "received_at": "2026-02-13T11:00:00Z",
+    "expected_report_at": "2026-02-14T23:00:00.000Z",
     "test_codes": [
       "SER-AB-HCV"
     ],
@@ -1189,6 +1274,7 @@
     "status": "in_progress",
     "priority": "routine",
     "received_at": "2026-02-14T12:00:00Z",
+    "expected_report_at": "2026-02-15T06:00:00.000Z",
     "test_codes": [
       "CHEM-AST",
       "CHEM-BILI",
@@ -1204,6 +1290,7 @@
     "status": "in_progress",
     "priority": "routine",
     "received_at": "2026-02-15T13:00:00Z",
+    "expected_report_at": "2026-02-16T13:00:00.000Z",
     "test_codes": [
       "MOL-FLU-A"
     ],
@@ -1217,6 +1304,7 @@
     "status": "in_progress",
     "priority": "routine",
     "received_at": "2026-02-16T14:00:00Z",
+    "expected_report_at": "2026-02-17T14:00:00.000Z",
     "test_codes": [
       "CHEM-CREA",
       "MOL-CT",
@@ -1232,6 +1320,7 @@
     "status": "in_progress",
     "priority": "routine",
     "received_at": "2026-02-17T15:00:00Z",
+    "expected_report_at": "2026-02-18T09:00:00.000Z",
     "test_codes": [
       "CHEM-ALB"
     ],
@@ -1245,6 +1334,7 @@
     "status": "in_progress",
     "priority": "routine",
     "received_at": "2026-02-18T16:00:00Z",
+    "expected_report_at": "2026-02-19T10:00:00.000Z",
     "test_codes": [
       "CHEM-K"
     ],
@@ -1258,6 +1348,7 @@
     "status": "in_progress",
     "priority": "routine",
     "received_at": "2026-02-19T08:00:00Z",
+    "expected_report_at": "2026-02-20T08:00:00.000Z",
     "test_codes": [
       "MOL-CT",
       "MOL-FLU-A",
@@ -1273,6 +1364,7 @@
     "status": "in_progress",
     "priority": "rush",
     "received_at": "2026-02-20T09:00:00Z",
+    "expected_report_at": "2026-02-21T03:00:00.000Z",
     "test_codes": [
       "CHEM-NA"
     ],
@@ -1286,6 +1378,7 @@
     "status": "received",
     "priority": "routine",
     "received_at": "2026-02-21T10:00:00Z",
+    "expected_report_at": "2026-02-22T22:00:00.000Z",
     "test_codes": [
       "CHEM-NA",
       "SER-AG-HIV"
@@ -1300,6 +1393,7 @@
     "status": "received",
     "priority": "routine",
     "received_at": "2026-02-22T11:00:00Z",
+    "expected_report_at": "2026-02-23T05:00:00.000Z",
     "test_codes": [
       "CHEM-NA"
     ],
@@ -1313,6 +1407,7 @@
     "status": "received",
     "priority": "routine",
     "received_at": "2026-02-23T12:00:00Z",
+    "expected_report_at": "2026-02-24T12:00:00.000Z",
     "test_codes": [
       "MOL-CT",
       "MOL-RSV"
@@ -1327,6 +1422,7 @@
     "status": "pending_review",
     "priority": "routine",
     "received_at": "2026-02-24T13:00:00Z",
+    "expected_report_at": "2026-02-25T13:00:00.000Z",
     "test_codes": [
       "CHEM-CREA",
       "CHEM-NA",
@@ -1342,6 +1438,7 @@
     "status": "pending_review",
     "priority": "routine",
     "received_at": "2026-02-01T14:00:00Z",
+    "expected_report_at": "2026-02-03T02:00:00.000Z",
     "test_codes": [
       "CHEM-ALB",
       "SER-AB-HCV"
@@ -1356,6 +1453,7 @@
     "status": "completed",
     "priority": "routine",
     "received_at": "2026-02-02T15:00:00Z",
+    "expected_report_at": "2026-02-04T03:00:00.000Z",
     "test_codes": [
       "CHEM-CREA",
       "SER-AB-HCV",
@@ -1371,6 +1469,7 @@
     "status": "completed",
     "priority": "routine",
     "received_at": "2026-02-03T16:00:00Z",
+    "expected_report_at": "2026-02-04T16:00:00.000Z",
     "test_codes": [
       "MOL-FLU-B"
     ],
@@ -1384,6 +1483,7 @@
     "status": "completed",
     "priority": "routine",
     "received_at": "2026-02-04T08:00:00Z",
+    "expected_report_at": "2026-02-05T08:00:00.000Z",
     "test_codes": [
       "CHEM-CREA",
       "CHEM-NA",
@@ -1399,6 +1499,7 @@
     "status": "in_progress",
     "priority": "routine",
     "received_at": "2026-02-05T09:00:00Z",
+    "expected_report_at": "2026-02-06T21:00:00.000Z",
     "test_codes": [
       "CHEM-BILI",
       "CHEM-K",
@@ -1414,6 +1515,7 @@
     "status": "in_progress",
     "priority": "routine",
     "received_at": "2026-02-06T10:00:00Z",
+    "expected_report_at": "2026-02-08T10:00:00.000Z",
     "test_codes": [
       "TB-MIT"
     ],
@@ -1427,6 +1529,7 @@
     "status": "in_progress",
     "priority": "routine",
     "received_at": "2026-02-07T11:00:00Z",
+    "expected_report_at": "2026-02-08T11:00:00.000Z",
     "test_codes": [
       "MOL-COV2",
       "MOL-CT"
@@ -1441,6 +1544,7 @@
     "status": "in_progress",
     "priority": "routine",
     "received_at": "2026-02-08T12:00:00Z",
+    "expected_report_at": "2026-02-09T12:00:00.000Z",
     "test_codes": [
       "CHEM-CREA",
       "MOL-CT"
@@ -1455,6 +1559,7 @@
     "status": "in_progress",
     "priority": "rush",
     "received_at": "2026-02-09T13:00:00Z",
+    "expected_report_at": "2026-02-11T01:00:00.000Z",
     "test_codes": [
       "SER-AB-HAV"
     ],
@@ -1468,6 +1573,7 @@
     "status": "in_progress",
     "priority": "routine",
     "received_at": "2026-02-10T14:00:00Z",
+    "expected_report_at": "2026-02-12T14:00:00.000Z",
     "test_codes": [
       "SER-SYPH",
       "TB-IGRA-B"
@@ -1482,6 +1588,7 @@
     "status": "in_progress",
     "priority": "routine",
     "received_at": "2026-02-11T15:00:00Z",
+    "expected_report_at": "2026-02-12T15:00:00.000Z",
     "test_codes": [
       "MOL-FLU-A",
       "MOL-NG"
@@ -1496,6 +1603,7 @@
     "status": "in_progress",
     "priority": "routine",
     "received_at": "2026-02-12T16:00:00Z",
+    "expected_report_at": "2026-02-13T16:00:00.000Z",
     "test_codes": [
       "CHEM-GLU",
       "MOL-CT",
@@ -1511,6 +1619,7 @@
     "status": "in_progress",
     "priority": "routine",
     "received_at": "2026-02-13T08:00:00Z",
+    "expected_report_at": "2026-02-14T02:00:00.000Z",
     "test_codes": [
       "CHEM-ALB",
       "CHEM-K"
@@ -1525,6 +1634,7 @@
     "status": "in_progress",
     "priority": "routine",
     "received_at": "2026-02-14T09:00:00Z",
+    "expected_report_at": "2026-02-16T09:00:00.000Z",
     "test_codes": [
       "TB-IGRA-B"
     ],
@@ -1538,6 +1648,7 @@
     "status": "in_progress",
     "priority": "routine",
     "received_at": "2026-02-15T10:00:00Z",
+    "expected_report_at": "2026-02-16T10:00:00.000Z",
     "test_codes": [
       "MOL-CT",
       "MOL-RSV"
@@ -1552,6 +1663,7 @@
     "status": "in_progress",
     "priority": "routine",
     "received_at": "2026-02-16T11:00:00Z",
+    "expected_report_at": "2026-02-17T05:00:00.000Z",
     "test_codes": [
       "CHEM-CREA"
     ],
@@ -1565,6 +1677,7 @@
     "status": "received",
     "priority": "routine",
     "received_at": "2026-02-17T12:00:00Z",
+    "expected_report_at": "2026-02-18T06:00:00.000Z",
     "test_codes": [
       "CHEM-ALB"
     ],
@@ -1578,6 +1691,7 @@
     "status": "received",
     "priority": "routine",
     "received_at": "2026-02-18T13:00:00Z",
+    "expected_report_at": "2026-02-20T01:00:00.000Z",
     "test_codes": [
       "CHEM-ALB",
       "SER-AG-HBV",
@@ -1593,6 +1707,7 @@
     "status": "received",
     "priority": "routine",
     "received_at": "2026-02-19T14:00:00Z",
+    "expected_report_at": "2026-02-20T14:00:00.000Z",
     "test_codes": [
       "MOL-CT",
       "MOL-FLU-B",
@@ -1608,6 +1723,7 @@
     "status": "pending_review",
     "priority": "routine",
     "received_at": "2026-02-20T15:00:00Z",
+    "expected_report_at": "2026-02-21T15:00:00.000Z",
     "test_codes": [
       "MOL-CT",
       "MOL-NG"
@@ -1622,6 +1738,7 @@
     "status": "pending_review",
     "priority": "routine",
     "received_at": "2026-02-21T16:00:00Z",
+    "expected_report_at": "2026-02-23T04:00:00.000Z",
     "test_codes": [
       "CHEM-ALB",
       "SER-AB-HBV"
@@ -1636,6 +1753,7 @@
     "status": "completed",
     "priority": "rush",
     "received_at": "2026-02-22T08:00:00Z",
+    "expected_report_at": "2026-02-24T08:00:00.000Z",
     "test_codes": [
       "CHEM-ALT",
       "CHEM-CREA",
@@ -1651,6 +1769,7 @@
     "status": "completed",
     "priority": "routine",
     "received_at": "2026-02-23T09:00:00Z",
+    "expected_report_at": "2026-02-24T09:00:00.000Z",
     "test_codes": [
       "MOL-COV2",
       "MOL-CT",
@@ -1666,6 +1785,7 @@
     "status": "completed",
     "priority": "routine",
     "received_at": "2026-02-24T10:00:00Z",
+    "expected_report_at": "2026-02-25T04:00:00.000Z",
     "test_codes": [
       "CHEM-CREA",
       "CHEM-GLU"
@@ -1680,6 +1800,7 @@
     "status": "in_progress",
     "priority": "routine",
     "received_at": "2026-02-01T11:00:00Z",
+    "expected_report_at": "2026-02-02T23:00:00.000Z",
     "test_codes": [
       "CHEM-GLU",
       "SER-AB-HCV",
@@ -1695,6 +1816,7 @@
     "status": "in_progress",
     "priority": "routine",
     "received_at": "2026-02-02T12:00:00Z",
+    "expected_report_at": "2026-02-03T06:00:00.000Z",
     "test_codes": [
       "CHEM-BILI",
       "CHEM-CREA",
@@ -1710,6 +1832,7 @@
     "status": "in_progress",
     "priority": "routine",
     "received_at": "2026-02-03T13:00:00Z",
+    "expected_report_at": "2026-02-04T13:00:00.000Z",
     "test_codes": [
       "MOL-CT",
       "MOL-NG"
@@ -1724,6 +1847,7 @@
     "status": "in_progress",
     "priority": "routine",
     "received_at": "2026-02-04T14:00:00Z",
+    "expected_report_at": "2026-02-05T14:00:00.000Z",
     "test_codes": [
       "CHEM-K",
       "MOL-NG"
@@ -1738,6 +1862,7 @@
     "status": "in_progress",
     "priority": "routine",
     "received_at": "2026-02-05T15:00:00Z",
+    "expected_report_at": "2026-02-07T03:00:00.000Z",
     "test_codes": [
       "CHEM-K",
       "SER-AB-HBV"
@@ -1752,6 +1877,7 @@
     "status": "in_progress",
     "priority": "routine",
     "received_at": "2026-02-06T16:00:00Z",
+    "expected_report_at": "2026-02-08T16:00:00.000Z",
     "test_codes": [
       "TB-IGRA-A"
     ],
@@ -1765,6 +1891,7 @@
     "status": "in_progress",
     "priority": "routine",
     "received_at": "2026-02-07T08:00:00Z",
+    "expected_report_at": "2026-02-08T08:00:00.000Z",
     "test_codes": [
       "MOL-RSV"
     ],
@@ -1778,6 +1905,7 @@
     "status": "in_progress",
     "priority": "routine",
     "received_at": "2026-02-08T09:00:00Z",
+    "expected_report_at": "2026-02-09T03:00:00.000Z",
     "test_codes": [
       "CHEM-CREA",
       "CHEM-GLU"
@@ -1792,6 +1920,7 @@
     "status": "in_progress",
     "priority": "routine",
     "received_at": "2026-02-09T10:00:00Z",
+    "expected_report_at": "2026-02-10T22:00:00.000Z",
     "test_codes": [
       "CHEM-GLU",
       "SER-AB-HBV",
@@ -1807,6 +1936,7 @@
     "status": "in_progress",
     "priority": "routine",
     "received_at": "2026-02-10T11:00:00Z",
+    "expected_report_at": "2026-02-12T11:00:00.000Z",
     "test_codes": [
       "CHEM-GLU",
       "TB-MIT"
@@ -1821,6 +1951,7 @@
     "status": "in_progress",
     "priority": "rush",
     "received_at": "2026-02-11T12:00:00Z",
+    "expected_report_at": "2026-02-12T12:00:00.000Z",
     "test_codes": [
       "MOL-FLU-B"
     ],
@@ -1834,6 +1965,7 @@
     "status": "in_progress",
     "priority": "routine",
     "received_at": "2026-02-12T13:00:00Z",
+    "expected_report_at": "2026-02-13T13:00:00.000Z",
     "test_codes": [
       "CHEM-CREA",
       "MOL-CT",
@@ -1849,6 +1981,7 @@
     "status": "received",
     "priority": "routine",
     "received_at": "2026-02-13T14:00:00Z",
+    "expected_report_at": "2026-02-15T02:00:00.000Z",
     "test_codes": [
       "CHEM-ALT",
       "CHEM-AST",
@@ -1864,6 +1997,7 @@
     "status": "received",
     "priority": "routine",
     "received_at": "2026-02-14T15:00:00Z",
+    "expected_report_at": "2026-02-15T09:00:00.000Z",
     "test_codes": [
       "CHEM-ALB"
     ],
@@ -1877,6 +2011,7 @@
     "status": "received",
     "priority": "routine",
     "received_at": "2026-02-15T16:00:00Z",
+    "expected_report_at": "2026-02-16T16:00:00.000Z",
     "test_codes": [
       "MOL-COV2",
       "MOL-FLU-B",
@@ -1892,6 +2027,7 @@
     "status": "pending_review",
     "priority": "routine",
     "received_at": "2026-02-16T08:00:00Z",
+    "expected_report_at": "2026-02-17T02:00:00.000Z",
     "test_codes": [
       "CHEM-GLU",
       "CHEM-K",
@@ -1907,6 +2043,7 @@
     "status": "pending_review",
     "priority": "routine",
     "received_at": "2026-02-17T09:00:00Z",
+    "expected_report_at": "2026-02-18T03:00:00.000Z",
     "test_codes": [
       "CHEM-ALB"
     ],
@@ -1920,6 +2057,7 @@
     "status": "completed",
     "priority": "routine",
     "received_at": "2026-02-18T10:00:00Z",
+    "expected_report_at": "2026-02-19T22:00:00.000Z",
     "test_codes": [
       "SER-AG-HBV"
     ],
@@ -1933,6 +2071,7 @@
     "status": "completed",
     "priority": "routine",
     "received_at": "2026-02-19T11:00:00Z",
+    "expected_report_at": "2026-02-20T11:00:00.000Z",
     "test_codes": [
       "MOL-COV2",
       "MOL-NG",
@@ -1948,6 +2087,7 @@
     "status": "completed",
     "priority": "routine",
     "received_at": "2026-02-20T12:00:00Z",
+    "expected_report_at": "2026-02-21T06:00:00.000Z",
     "test_codes": [
       "CHEM-NA"
     ],
@@ -1961,6 +2101,7 @@
     "status": "in_progress",
     "priority": "routine",
     "received_at": "2026-02-21T13:00:00Z",
+    "expected_report_at": "2026-02-23T01:00:00.000Z",
     "test_codes": [
       "SER-AB-HCV"
     ],
@@ -1974,6 +2115,7 @@
     "status": "in_progress",
     "priority": "routine",
     "received_at": "2026-02-22T14:00:00Z",
+    "expected_report_at": "2026-02-24T02:00:00.000Z",
     "test_codes": [
       "CHEM-K",
       "SER-AG-HBV"
@@ -1988,6 +2130,7 @@
     "status": "in_progress",
     "priority": "routine",
     "received_at": "2026-02-23T15:00:00Z",
+    "expected_report_at": "2026-02-24T15:00:00.000Z",
     "test_codes": [
       "MOL-NG"
     ],
@@ -2001,6 +2144,7 @@
     "status": "in_progress",
     "priority": "rush",
     "received_at": "2026-02-24T16:00:00Z",
+    "expected_report_at": "2026-02-25T16:00:00.000Z",
     "test_codes": [
       "CHEM-GLU",
       "CHEM-K",
@@ -2016,6 +2160,7 @@
     "status": "in_progress",
     "priority": "routine",
     "received_at": "2026-02-01T08:00:00Z",
+    "expected_report_at": "2026-02-02T20:00:00.000Z",
     "test_codes": [
       "SER-AB-HBV"
     ],
@@ -2029,6 +2174,7 @@
     "status": "in_progress",
     "priority": "routine",
     "received_at": "2026-02-02T09:00:00Z",
+    "expected_report_at": "2026-02-04T09:00:00.000Z",
     "test_codes": [
       "SER-AB-HCV",
       "TB-IGRA-A"
@@ -2043,6 +2189,7 @@
     "status": "in_progress",
     "priority": "routine",
     "received_at": "2026-02-03T10:00:00Z",
+    "expected_report_at": "2026-02-04T10:00:00.000Z",
     "test_codes": [
       "MOL-CT",
       "MOL-FLU-B"
@@ -2057,6 +2204,7 @@
     "status": "in_progress",
     "priority": "routine",
     "received_at": "2026-02-04T11:00:00Z",
+    "expected_report_at": "2026-02-05T11:00:00.000Z",
     "test_codes": [
       "CHEM-CREA",
       "MOL-CT",
@@ -2072,6 +2220,7 @@
     "status": "in_progress",
     "priority": "routine",
     "received_at": "2026-02-05T12:00:00Z",
+    "expected_report_at": "2026-02-07T00:00:00.000Z",
     "test_codes": [
       "SER-AB-HCV"
     ],
@@ -2085,6 +2234,7 @@
     "status": "in_progress",
     "priority": "routine",
     "received_at": "2026-02-06T13:00:00Z",
+    "expected_report_at": "2026-02-08T01:00:00.000Z",
     "test_codes": [
       "CHEM-BILI",
       "CHEM-CREA",
@@ -2100,6 +2250,7 @@
     "status": "in_progress",
     "priority": "routine",
     "received_at": "2026-02-07T14:00:00Z",
+    "expected_report_at": "2026-02-08T14:00:00.000Z",
     "test_codes": [
       "MOL-CT"
     ],
@@ -2113,6 +2264,7 @@
     "status": "in_progress",
     "priority": "routine",
     "received_at": "2026-02-08T15:00:00Z",
+    "expected_report_at": "2026-02-09T15:00:00.000Z",
     "test_codes": [
       "CHEM-NA",
       "MOL-NG"
@@ -2127,6 +2279,7 @@
     "status": "received",
     "priority": "routine",
     "received_at": "2026-02-09T16:00:00Z",
+    "expected_report_at": "2026-02-11T04:00:00.000Z",
     "test_codes": [
       "SER-AG-HBV"
     ],
@@ -2140,6 +2293,7 @@
     "status": "received",
     "priority": "routine",
     "received_at": "2026-02-10T08:00:00Z",
+    "expected_report_at": "2026-02-12T08:00:00.000Z",
     "test_codes": [
       "CHEM-AST",
       "SER-AG-HIV",
@@ -2155,6 +2309,7 @@
     "status": "received",
     "priority": "routine",
     "received_at": "2026-02-11T09:00:00Z",
+    "expected_report_at": "2026-02-12T09:00:00.000Z",
     "test_codes": [
       "MOL-FLU-B",
       "MOL-NG"
@@ -2169,6 +2324,7 @@
     "status": "pending_review",
     "priority": "routine",
     "received_at": "2026-02-12T10:00:00Z",
+    "expected_report_at": "2026-02-13T10:00:00.000Z",
     "test_codes": [
       "CHEM-GLU",
       "MOL-CT",
@@ -2184,6 +2340,7 @@
     "status": "pending_review",
     "priority": "rush",
     "received_at": "2026-02-13T11:00:00Z",
+    "expected_report_at": "2026-02-14T05:00:00.000Z",
     "test_codes": [
       "CHEM-ALT",
       "CHEM-BILI"
@@ -2198,6 +2355,7 @@
     "status": "completed",
     "priority": "routine",
     "received_at": "2026-02-14T12:00:00Z",
+    "expected_report_at": "2026-02-16T00:00:00.000Z",
     "test_codes": [
       "CHEM-ALB",
       "CHEM-AST",
@@ -2213,6 +2371,7 @@
     "status": "completed",
     "priority": "routine",
     "received_at": "2026-02-15T13:00:00Z",
+    "expected_report_at": "2026-02-16T13:00:00.000Z",
     "test_codes": [
       "MOL-CT",
       "MOL-NG"
@@ -2227,6 +2386,7 @@
     "status": "completed",
     "priority": "routine",
     "received_at": "2026-02-16T14:00:00Z",
+    "expected_report_at": "2026-02-17T08:00:00.000Z",
     "test_codes": [
       "CHEM-CREA",
       "CHEM-GLU",
@@ -2242,6 +2402,7 @@
     "status": "in_progress",
     "priority": "routine",
     "received_at": "2026-02-17T15:00:00Z",
+    "expected_report_at": "2026-02-19T03:00:00.000Z",
     "test_codes": [
       "CHEM-GLU",
       "SER-AB-HBV"
@@ -2256,6 +2417,7 @@
     "status": "in_progress",
     "priority": "routine",
     "received_at": "2026-02-18T16:00:00Z",
+    "expected_report_at": "2026-02-19T10:00:00.000Z",
     "test_codes": [
       "CHEM-ALB",
       "CHEM-AST"
@@ -2270,6 +2432,7 @@
     "status": "in_progress",
     "priority": "routine",
     "received_at": "2026-02-19T08:00:00Z",
+    "expected_report_at": "2026-02-20T08:00:00.000Z",
     "test_codes": [
       "MOL-COV2",
       "MOL-RSV"
@@ -2284,6 +2447,7 @@
     "status": "in_progress",
     "priority": "routine",
     "received_at": "2026-02-20T09:00:00Z",
+    "expected_report_at": "2026-02-21T03:00:00.000Z",
     "test_codes": [
       "CHEM-GLU"
     ],
@@ -2297,6 +2461,7 @@
     "status": "in_progress",
     "priority": "routine",
     "received_at": "2026-02-21T10:00:00Z",
+    "expected_report_at": "2026-02-22T22:00:00.000Z",
     "test_codes": [
       "CHEM-BILI",
       "SER-AB-HCV"
@@ -2311,6 +2476,7 @@
     "status": "in_progress",
     "priority": "routine",
     "received_at": "2026-02-22T11:00:00Z",
+    "expected_report_at": "2026-02-23T05:00:00.000Z",
     "test_codes": [
       "CHEM-AST",
       "CHEM-NA"
@@ -2325,6 +2491,7 @@
     "status": "in_progress",
     "priority": "routine",
     "received_at": "2026-02-23T12:00:00Z",
+    "expected_report_at": "2026-02-24T12:00:00.000Z",
     "test_codes": [
       "MOL-CT",
       "MOL-RSV"
@@ -2339,6 +2506,7 @@
     "status": "in_progress",
     "priority": "routine",
     "received_at": "2026-02-24T13:00:00Z",
+    "expected_report_at": "2026-02-25T13:00:00.000Z",
     "test_codes": [
       "CHEM-CREA",
       "MOL-CT",
@@ -2354,6 +2522,7 @@
     "status": "in_progress",
     "priority": "routine",
     "received_at": "2026-02-01T14:00:00Z",
+    "expected_report_at": "2026-02-03T02:00:00.000Z",
     "test_codes": [
       "CHEM-AST",
       "SER-AB-HBV"
@@ -2368,6 +2537,7 @@
     "status": "in_progress",
     "priority": "rush",
     "received_at": "2026-02-02T15:00:00Z",
+    "expected_report_at": "2026-02-04T03:00:00.000Z",
     "test_codes": [
       "CHEM-BILI",
       "CHEM-GLU",
@@ -2383,6 +2553,7 @@
     "status": "in_progress",
     "priority": "routine",
     "received_at": "2026-02-03T16:00:00Z",
+    "expected_report_at": "2026-02-04T16:00:00.000Z",
     "test_codes": [
       "MOL-FLU-A",
       "MOL-FLU-B",
@@ -2398,6 +2569,7 @@
     "status": "in_progress",
     "priority": "routine",
     "received_at": "2026-02-04T08:00:00Z",
+    "expected_report_at": "2026-02-05T08:00:00.000Z",
     "test_codes": [
       "MOL-NG"
     ],
@@ -2411,6 +2583,7 @@
     "status": "received",
     "priority": "routine",
     "received_at": "2026-02-05T09:00:00Z",
+    "expected_report_at": "2026-02-06T21:00:00.000Z",
     "test_codes": [
       "CHEM-CREA",
       "SER-AG-HBV"
@@ -2425,6 +2598,7 @@
     "status": "received",
     "priority": "routine",
     "received_at": "2026-02-06T10:00:00Z",
+    "expected_report_at": "2026-02-07T04:00:00.000Z",
     "test_codes": [
       "CHEM-AST",
       "CHEM-K"
@@ -2439,6 +2613,7 @@
     "status": "received",
     "priority": "routine",
     "received_at": "2026-02-07T11:00:00Z",
+    "expected_report_at": "2026-02-08T11:00:00.000Z",
     "test_codes": [
       "MOL-CT",
       "MOL-RSV"
@@ -2453,6 +2628,7 @@
     "status": "pending_review",
     "priority": "routine",
     "received_at": "2026-02-08T12:00:00Z",
+    "expected_report_at": "2026-02-09T12:00:00.000Z",
     "test_codes": [
       "CHEM-CREA",
       "MOL-NG"
@@ -2467,6 +2643,7 @@
     "status": "pending_review",
     "priority": "routine",
     "received_at": "2026-02-09T13:00:00Z",
+    "expected_report_at": "2026-02-11T01:00:00.000Z",
     "test_codes": [
       "CHEM-BILI",
       "CHEM-CREA",
@@ -2482,6 +2659,7 @@
     "status": "completed",
     "priority": "routine",
     "received_at": "2026-02-10T14:00:00Z",
+    "expected_report_at": "2026-02-12T02:00:00.000Z",
     "test_codes": [
       "CHEM-ALT",
       "CHEM-NA",
@@ -2497,6 +2675,7 @@
     "status": "completed",
     "priority": "routine",
     "received_at": "2026-02-11T15:00:00Z",
+    "expected_report_at": "2026-02-12T15:00:00.000Z",
     "test_codes": [
       "MOL-FLU-A",
       "MOL-RSV"
@@ -2511,6 +2690,7 @@
     "status": "completed",
     "priority": "routine",
     "received_at": "2026-02-12T16:00:00Z",
+    "expected_report_at": "2026-02-13T16:00:00.000Z",
     "test_codes": [
       "CHEM-GLU",
       "CHEM-K",
@@ -2526,6 +2706,7 @@
     "status": "in_progress",
     "priority": "routine",
     "received_at": "2026-02-13T08:00:00Z",
+    "expected_report_at": "2026-02-14T20:00:00.000Z",
     "test_codes": [
       "CHEM-ALT",
       "CHEM-BILI",
@@ -2541,6 +2722,7 @@
     "status": "in_progress",
     "priority": "routine",
     "received_at": "2026-02-14T09:00:00Z",
+    "expected_report_at": "2026-02-15T21:00:00.000Z",
     "test_codes": [
       "SER-SYPH"
     ],
@@ -2554,6 +2736,7 @@
     "status": "in_progress",
     "priority": "rush",
     "received_at": "2026-02-15T10:00:00Z",
+    "expected_report_at": "2026-02-16T10:00:00.000Z",
     "test_codes": [
       "MOL-CT",
       "MOL-NG"
@@ -2568,6 +2751,7 @@
     "status": "in_progress",
     "priority": "routine",
     "received_at": "2026-02-16T11:00:00Z",
+    "expected_report_at": "2026-02-17T05:00:00.000Z",
     "test_codes": [
       "CHEM-K",
       "CHEM-NA"
@@ -2582,6 +2766,7 @@
     "status": "in_progress",
     "priority": "routine",
     "received_at": "2026-02-17T12:00:00Z",
+    "expected_report_at": "2026-02-19T00:00:00.000Z",
     "test_codes": [
       "CHEM-GLU",
       "SER-AB-HCV",
@@ -2597,6 +2782,7 @@
     "status": "in_progress",
     "priority": "routine",
     "received_at": "2026-02-18T13:00:00Z",
+    "expected_report_at": "2026-02-20T13:00:00.000Z",
     "test_codes": [
       "CHEM-GLU",
       "CHEM-NA",
@@ -2612,6 +2798,7 @@
     "status": "in_progress",
     "priority": "routine",
     "received_at": "2026-02-19T14:00:00Z",
+    "expected_report_at": "2026-02-20T14:00:00.000Z",
     "test_codes": [
       "MOL-FLU-B"
     ],
@@ -2625,6 +2812,7 @@
     "status": "in_progress",
     "priority": "routine",
     "received_at": "2026-02-20T15:00:00Z",
+    "expected_report_at": "2026-02-21T15:00:00.000Z",
     "test_codes": [
       "CHEM-CREA",
       "MOL-CT"
@@ -2639,6 +2827,7 @@
     "status": "in_progress",
     "priority": "routine",
     "received_at": "2026-02-21T16:00:00Z",
+    "expected_report_at": "2026-02-23T04:00:00.000Z",
     "test_codes": [
       "CHEM-ALT",
       "SER-AB-HCV",
@@ -2654,6 +2843,7 @@
     "status": "in_progress",
     "priority": "routine",
     "received_at": "2026-02-22T08:00:00Z",
+    "expected_report_at": "2026-02-24T08:00:00.000Z",
     "test_codes": [
       "CHEM-NA",
       "SER-SYPH",
@@ -2669,6 +2859,7 @@
     "status": "in_progress",
     "priority": "routine",
     "received_at": "2026-02-23T09:00:00Z",
+    "expected_report_at": "2026-02-24T09:00:00.000Z",
     "test_codes": [
       "MOL-COV2",
       "MOL-FLU-A",
@@ -2684,6 +2875,7 @@
     "status": "in_progress",
     "priority": "routine",
     "received_at": "2026-02-24T10:00:00Z",
+    "expected_report_at": "2026-02-25T04:00:00.000Z",
     "test_codes": [
       "CHEM-CREA",
       "CHEM-NA"
@@ -2698,6 +2890,7 @@
     "status": "received",
     "priority": "routine",
     "received_at": "2026-02-01T11:00:00Z",
+    "expected_report_at": "2026-02-02T23:00:00.000Z",
     "test_codes": [
       "SER-AB-HCV"
     ],
@@ -2711,6 +2904,7 @@
     "status": "received",
     "priority": "routine",
     "received_at": "2026-02-02T12:00:00Z",
+    "expected_report_at": "2026-02-04T12:00:00.000Z",
     "test_codes": [
       "CHEM-ALB",
       "TB-IGRA-A",
@@ -2726,6 +2920,7 @@
     "status": "received",
     "priority": "routine",
     "received_at": "2026-02-03T13:00:00Z",
+    "expected_report_at": "2026-02-04T13:00:00.000Z",
     "test_codes": [
       "MOL-COV2",
       "MOL-NG"
@@ -2740,6 +2935,7 @@
     "status": "pending_review",
     "priority": "rush",
     "received_at": "2026-02-04T14:00:00Z",
+    "expected_report_at": "2026-02-05T08:00:00.000Z",
     "test_codes": [
       "CHEM-CREA"
     ],
@@ -2753,6 +2949,7 @@
     "status": "pending_review",
     "priority": "routine",
     "received_at": "2026-02-05T15:00:00Z",
+    "expected_report_at": "2026-02-06T09:00:00.000Z",
     "test_codes": [
       "CHEM-ALT",
       "CHEM-NA"
@@ -2767,6 +2964,7 @@
     "status": "completed",
     "priority": "routine",
     "received_at": "2026-02-06T16:00:00Z",
+    "expected_report_at": "2026-02-08T16:00:00.000Z",
     "test_codes": [
       "SER-AB-HCV",
       "SER-SYPH",
@@ -2782,6 +2980,7 @@
     "status": "completed",
     "priority": "routine",
     "received_at": "2026-02-07T08:00:00Z",
+    "expected_report_at": "2026-02-08T08:00:00.000Z",
     "test_codes": [
       "MOL-CT",
       "MOL-RSV"
@@ -2796,6 +2995,7 @@
     "status": "completed",
     "priority": "routine",
     "received_at": "2026-02-08T09:00:00Z",
+    "expected_report_at": "2026-02-09T09:00:00.000Z",
     "test_codes": [
       "CHEM-CREA",
       "CHEM-NA",

@@ -18,6 +18,7 @@
     ],
     "units": "IU/mL",
     "detection_limit": 0.2,
+    "turnaround_hours": 36,
     "synthetic": true
   },
   {
@@ -39,6 +40,7 @@
     ],
     "units": "mIU/mL",
     "detection_limit": 1,
+    "turnaround_hours": 36,
     "synthetic": true
   },
   {
@@ -66,6 +68,7 @@
     ],
     "units": "index",
     "detection_limit": 0.05,
+    "turnaround_hours": 36,
     "synthetic": true
   },
   {
@@ -93,6 +96,7 @@
     ],
     "units": "index",
     "detection_limit": 0.1,
+    "turnaround_hours": 36,
     "synthetic": true
   },
   {
@@ -120,6 +124,7 @@
     ],
     "units": "index",
     "detection_limit": 0.1,
+    "turnaround_hours": 36,
     "synthetic": true
   },
   {
@@ -147,6 +152,7 @@
     ],
     "units": "index",
     "detection_limit": 0.1,
+    "turnaround_hours": 36,
     "synthetic": true
   },
   {
@@ -168,6 +174,7 @@
     ],
     "units": "copies/mL",
     "detection_limit": 120,
+    "turnaround_hours": 24,
     "synthetic": true
   },
   {
@@ -189,6 +196,7 @@
     ],
     "units": "copies/mL",
     "detection_limit": 120,
+    "turnaround_hours": 24,
     "synthetic": true
   },
   {
@@ -210,6 +218,7 @@
     ],
     "units": "copies/mL",
     "detection_limit": 150,
+    "turnaround_hours": 24,
     "synthetic": true
   },
   {
@@ -231,6 +240,7 @@
     ],
     "units": "copies/mL",
     "detection_limit": 100,
+    "turnaround_hours": 24,
     "synthetic": true
   },
   {
@@ -258,6 +268,7 @@
     ],
     "units": "copies/mL",
     "detection_limit": 90,
+    "turnaround_hours": 24,
     "synthetic": true
   },
   {
@@ -285,6 +296,7 @@
     ],
     "units": "copies/mL",
     "detection_limit": 90,
+    "turnaround_hours": 24,
     "synthetic": true
   },
   {
@@ -318,6 +330,7 @@
     ],
     "units": "mg/dL",
     "detection_limit": 2,
+    "turnaround_hours": 18,
     "synthetic": true
   },
   {
@@ -351,6 +364,7 @@
     ],
     "units": "mg/dL",
     "detection_limit": 0.1,
+    "turnaround_hours": 18,
     "synthetic": true
   },
   {
@@ -378,6 +392,7 @@
     ],
     "units": "U/L",
     "detection_limit": 1,
+    "turnaround_hours": 18,
     "synthetic": true
   },
   {
@@ -405,6 +420,7 @@
     ],
     "units": "U/L",
     "detection_limit": 1,
+    "turnaround_hours": 18,
     "synthetic": true
   },
   {
@@ -432,6 +448,7 @@
     ],
     "units": "mg/dL",
     "detection_limit": 0.1,
+    "turnaround_hours": 18,
     "synthetic": true
   },
   {
@@ -459,6 +476,7 @@
     ],
     "units": "g/dL",
     "detection_limit": 0.1,
+    "turnaround_hours": 18,
     "synthetic": true
   },
   {
@@ -492,6 +510,7 @@
     ],
     "units": "mmol/L",
     "detection_limit": 1,
+    "turnaround_hours": 18,
     "synthetic": true
   },
   {
@@ -525,6 +544,7 @@
     ],
     "units": "mmol/L",
     "detection_limit": 0.1,
+    "turnaround_hours": 18,
     "synthetic": true
   },
   {
@@ -546,6 +566,7 @@
     ],
     "units": "IU/mL",
     "detection_limit": 0.01,
+    "turnaround_hours": 48,
     "synthetic": true
   },
   {
@@ -567,6 +588,7 @@
     ],
     "units": "IU/mL",
     "detection_limit": 0.01,
+    "turnaround_hours": 48,
     "synthetic": true
   },
   {
@@ -588,6 +610,7 @@
     ],
     "units": "IU/mL",
     "detection_limit": 0.01,
+    "turnaround_hours": 48,
     "synthetic": true
   },
   {
@@ -609,6 +632,7 @@
     ],
     "units": "IU/mL",
     "detection_limit": 0.01,
+    "turnaround_hours": 48,
     "synthetic": true
   },
   {
@@ -636,6 +660,7 @@
     ],
     "units": "mg/L",
     "detection_limit": 0.05,
+    "turnaround_hours": 72,
     "synthetic": true
   },
   {
@@ -669,6 +694,7 @@
     ],
     "units": "SU",
     "detection_limit": 0.1,
+    "turnaround_hours": 72,
     "synthetic": true
   },
   {
@@ -696,6 +722,7 @@
     ],
     "units": "uS/cm",
     "detection_limit": 1,
+    "turnaround_hours": 72,
     "synthetic": true
   },
   {
@@ -724,6 +751,7 @@
     ],
     "units": "ug/L",
     "detection_limit": 0.5,
+    "turnaround_hours": 72,
     "synthetic": true
   },
   {
@@ -752,6 +780,7 @@
     ],
     "units": "ug/L",
     "detection_limit": 0.5,
+    "turnaround_hours": 72,
     "synthetic": true
   },
   {
@@ -779,6 +808,7 @@
     ],
     "units": "ug/L",
     "detection_limit": 0.2,
+    "turnaround_hours": 72,
     "synthetic": true
   }
 ]
