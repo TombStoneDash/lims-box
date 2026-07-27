@@ -5,6 +5,8 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "generate:synthetic": "node scripts/gen-synthetic-lims.mjs",
+    "test:synthetic": "node --test tests/synthetic/shape.test.mjs",
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
