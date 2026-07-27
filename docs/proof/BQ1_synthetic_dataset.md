@@ -55,8 +55,8 @@ npm run test:synthetic
 Result:
 
 ```text
-tests 6
-pass 6
+tests 7
+pass 7
 fail 0
 ```
 
@@ -94,8 +94,11 @@ It also verifies:
 - all five HL7 fixtures are ORU_R01 messages and contain an explicit fabricated-data note;
 - every identity-bearing JSON and HL7 field matches the allowlist;
 - every generated artifact is scanned for email, SSN, phone, street-address,
-  medical-identity labels, private keys, bearer tokens, and secret assignments;
-- adversarial fixtures for every prohibited category are detected by the same scanner.
+  medical-identity labels, private keys, bearer/JWT tokens, quoted or unquoted
+  JSON/YAML credential assignments, and high-confidence provider-token shapes;
+- adversarial fixtures for every prohibited category are detected by the same
+  scanner without returning secret values, while safe synthetic/non-credential
+  lookalikes remain allowed.
 
 No production table, client corpus, credential, external service, deployment,
 or database was read or written to produce this dataset.

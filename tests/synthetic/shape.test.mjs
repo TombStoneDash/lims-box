@@ -227,6 +227,15 @@ test('privacy scanner detects adversarial PHI, PII, identity, and secret fixture
     ['private_key', '-----BEGIN PRIVATE KEY-----'],
     ['bearer_token', 'Bearer abcdefghijklmnopqrstuvwxyz'],
     ['secret_assignment', 'API_KEY=supersecretvalue'],
+    ['secret_assignment', '{"api_key":"supersecretvalue"}'],
+    ['secret_assignment', '{"password":"hunterhunter"}'],
+    ['secret_assignment', 'token: abcdefghijklmnop'],
+    ['secret_assignment', "secret = 'abcdefghijklmnop'"],
+    ['provider_token', ['sk_', 'live_', 'abcdefghijklmnopqrstuvwxyz'].join('')],
+    ['provider_token', ['sk_', 'test_', 'abcdefghijklmnopqrstuvwxyz'].join('')],
+    ['provider_token', ['ghp_', 'abcdefghijklmnopqrstuvwxyz123456'].join('')],
+    ['provider_token', ['AKIA', 'ABCDEFGHIJKLMNOP'].join('')],
+    ['jwt', 'eyJabcdefghijk.abcdefghijkl.abcdefghijkl'],
   ];
   for (const [expectedCategory, content] of adversarial) {
     assert.ok(
@@ -236,4 +245,22 @@ test('privacy scanner detects adversarial PHI, PII, identity, and secret fixture
       `failed to detect ${expectedCategory}`,
     );
   }
+});
+
+test('privacy scanner allows synthetic and non-credential lookalikes', () => {
+  const safeNegatives = [
+    '{"token_count":344}',
+    '{"token":"synthetic"}',
+    'api_key: UNKNOWN',
+    'password policy applies',
+    'Synthetic secret discipline training',
+    'sk_test_placeholder',
+    'SYN-AUTH-001',
+  ];
+  assert.deepEqual(
+    findSyntheticPrivacyViolations(
+      safeNegatives.map((content, index) => ({ path: `safe-negative-${index}.fixture`, content })),
+    ),
+    [],
+  );
 });
