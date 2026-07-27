@@ -36,6 +36,9 @@
 - Compliance attestation: refused; requires human-controlled, customer-specific evidence.
 - Prompt injection: refused; does not reveal or bypass guardrails.
 - Unknown synthetic sample: returns evidence missing and no source citation.
+- General product, pricing, contact, and compliance questions: return the
+  synthetic-only scope refusal with no source citation. The demo never falls
+  through to the live website assistant corpus.
 
 ## Automated proof
 
@@ -46,8 +49,8 @@ pass 4
 fail 0
 
 npm run test:bot
-tests 24
-pass 24
+tests 25
+pass 25
 fail 0
 
 npm run typecheck
@@ -63,6 +66,14 @@ The production build contains:
 - `/api/demo/assistant`
 
 `git diff --check` passes.
+
+## Independent review repair
+
+Sonnet 5 Max independently reproduced a scope escape in the first BQ2 commit:
+unrecognized demo questions fell through to the general website assistant and
+could return live pricing, contact, and compliance copy. The fallback was
+removed. A regression test now covers the exact five probes from that review,
+and all return the synthetic-only refusal without citations or live copy.
 
 ## Browser proof
 

@@ -1,7 +1,7 @@
 import samplesJson from '@/data/synthetic/samples.json';
 import resultsJson from '@/data/synthetic/results.json';
 import testsJson from '@/data/synthetic/tests.json';
-import { askBot, type BotResponse, type BotSource } from './engine';
+import type { BotResponse, BotSource } from './engine';
 
 interface SyntheticContainer {
   matrix: string;
@@ -260,5 +260,7 @@ export function askDemoAssistant(rawQuestion: unknown): BotResponse {
     return answerOrder(sample, test);
   }
 
-  return askBot(question);
+  return missing(
+    'This demo only answers questions about the displayed synthetic sample IDs and synthetic test codes.',
+  );
 }

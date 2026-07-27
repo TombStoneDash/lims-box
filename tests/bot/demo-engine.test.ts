@@ -75,3 +75,20 @@ test('unknown synthetic records produce an evidence-missing response', () => {
   assert.equal(response.sources.length, 0);
   assert.match(response.answer, /valid synthetic sample ID/i);
 });
+
+test('general product, pricing, contact, and compliance questions cannot escape the synthetic corpus', () => {
+  for (const question of [
+    'What does LIMS BOX cost?',
+    'Can we talk to a real person before buying?',
+    'Are you FDA regulated?',
+    'What is your compliance story?',
+    'Tell me about LIMS BOX',
+  ]) {
+    const response = askDemoAssistant(question);
+
+    assert.equal(response.grounded, false, question);
+    assert.deepEqual(response.sources, [], question);
+    assert.match(response.answer, /only answers questions.*synthetic/i, question);
+    assert.doesNotMatch(response.answer, /\$|@|858|clia|hipaa|part\s*11|iso\s*15189/i, question);
+  }
+});
