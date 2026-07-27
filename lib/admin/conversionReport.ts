@@ -1,5 +1,4 @@
 import {
-  ALLOWED_UTM_KEYS,
   DEFAULT_EARLY_ADOPTER_SOURCE,
   normalizeAttributionToken,
 } from '../leadAttribution';
@@ -25,6 +24,19 @@ const KNOWN_EXACT_SOURCES = new Set([
   'personnel-pack-download',
 ]);
 
+export const MIN_REPORTABLE_CELL_SIZE = 3;
+
+// Reporting dimensions are deliberately narrower than the intake contract.
+// Intake accepts bounded tokens for durable attribution, while this allowlist
+// contains only campaign values owned by LIMS BOX and safe to expose in an
+// aggregate report.
+const REPORTABLE_DIMENSIONS: Readonly<Record<string, ReadonlySet<string>>> = {
+  utm_source: new Set(['cola2026']),
+  utm_medium: new Set(['calendar', 'cta', 'qr']),
+  utm_campaign: new Set(['cola_forum_2026']),
+  utm_content: new Set(['booth-card.1']),
+} as const;
+
 function safeSourceName(source: string | null): string {
   if (!source) return 'unattributed';
   if (KNOWN_EXACT_SOURCES.has(source)) return source;
@@ -49,10 +61,13 @@ function parseEarlyAdopterSource(source: string): Omit<ConversionCount, 'applica
     if (separator <= 0) continue;
 
     const key = segment.slice(0, separator);
-    if (!ALLOWED_UTM_KEYS.includes(key as (typeof ALLOWED_UTM_KEYS)[number])) continue;
+    const allowlist = REPORTABLE_DIMENSIONS[key];
+    if (!allowlist) continue;
 
     const value = normalizeAttributionToken(segment.slice(separator + 1));
-    if (value && !values.has(key)) values.set(key, value);
+    if (value && allowlist.has(value) && !values.has(key)) {
+      values.set(key, value);
+    }
   }
 
   return {
@@ -87,10 +102,12 @@ export function buildConversionCounts(rows: SourceCountRow[]): ConversionCount[]
     }
   }
 
-  return [...aggregate.values()].sort(
+  return [...aggregate.values()]
+    .filter(group => group.applications >= MIN_REPORTABLE_CELL_SIZE)
+    .sort(
     (left, right) =>
       right.applications - left.applications ||
       left.source.localeCompare(right.source) ||
       (left.campaign ?? '').localeCompare(right.campaign ?? ''),
-  );
+    );
 }
