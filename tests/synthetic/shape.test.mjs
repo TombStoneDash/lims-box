@@ -1,16 +1,19 @@
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { mkdtemp, readFile, readdir, rm } from 'node:fs/promises';
-import os from 'node:os';
+import { mkdtemp, readFile, readdir, rm, symlink, writeFile } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import test from 'node:test';
+import {
+  findSyntheticPrivacyViolations,
+  SYNTHETIC_IDENTITY_ALLOWLIST,
+} from '../../scripts/lib/synthetic-privacy.mjs';
+import { validateSyntheticOutputDirectory } from '../../scripts/gen-synthetic-lims.mjs';
 
 const repoRoot = resolve(import.meta.dirname, '../..');
 const generator = join(repoRoot, 'scripts/gen-synthetic-lims.mjs');
 const committedData = join(repoRoot, 'data/synthetic');
 const expectedMatrices = new Set(['serum', 'plasma', 'swab', 'urine']);
-const realCorpusDenylist = [1684, 449, 589, 646, 945, 1197];
 
 async function readJson(path) {
   return JSON.parse(await readFile(path, 'utf8'));
@@ -24,7 +27,10 @@ async function listFiles(directory) {
       return entry.isDirectory() ? listFiles(path) : [path];
     }),
   );
-  return nested.flat().sort();
+  return nested
+    .flat()
+    .filter((path) => !path.endsWith('/.synthetic-lims-generator-owned'))
+    .sort();
 }
 
 async function digestDirectory(directory) {
@@ -44,9 +50,8 @@ function runGenerator(outDir) {
 }
 
 test('generator is deterministic and committed data is current', async () => {
-  const tempRoot = await mkdtemp(join(os.tmpdir(), 'lims-synthetic-'));
-  const first = join(tempRoot, 'first');
-  const second = join(tempRoot, 'second');
+  const first = await uniqueRepoOutput('first');
+  const second = await uniqueRepoOutput('second');
 
   try {
     runGenerator(first);
@@ -54,7 +59,61 @@ test('generator is deterministic and committed data is current', async () => {
     assert.equal(await digestDirectory(first), await digestDirectory(second));
     assert.equal(await digestDirectory(first), await digestDirectory(committedData));
   } finally {
-    await rm(tempRoot, { recursive: true, force: true });
+    await Promise.all([first, second].map((path) => rm(path, { recursive: true, force: true })));
+  }
+});
+
+async function uniqueRepoOutput(label) {
+  const holder = await mkdtemp(join(repoRoot, `.synthetic-data-${label}-`));
+  await rm(holder, { recursive: true, force: true });
+  return holder;
+}
+
+function runGeneratorExpectFailure(outDir) {
+  assert.throws(
+    () => runGenerator(outDir),
+    /Unsafe synthetic output target/,
+  );
+}
+
+test('generator rejects unsafe recursive-delete targets and preserves sentinels', async () => {
+  const outside = await mkdtemp('/tmp/lims-synthetic-unsafe-');
+  const outsideSentinel = join(outside, 'sentinel.txt');
+  const unsafeNamed = await mkdtemp(join(repoRoot, '.synthetic-data-unowned-'));
+  const unsafeNamedSentinel = join(unsafeNamed, 'sentinel.txt');
+  const symlinkTarget = await mkdtemp('/tmp/lims-synthetic-symlink-target-');
+  const symlinkSentinel = join(symlinkTarget, 'sentinel.txt');
+  const symlinkPath = join(repoRoot, `.synthetic-data-symlink-${process.pid}`);
+
+  await Promise.all([
+    writeFile(outsideSentinel, 'outside-preserved'),
+    writeFile(unsafeNamedSentinel, 'unowned-preserved'),
+    writeFile(symlinkSentinel, 'symlink-target-preserved'),
+  ]);
+  await symlink(symlinkTarget, symlinkPath);
+
+  try {
+    await assert.rejects(
+      validateSyntheticOutputDirectory(repoRoot),
+      /Unsafe synthetic output target/,
+    );
+    await assert.rejects(
+      validateSyntheticOutputDirectory(join(committedData, '..', '..')),
+      /Unsafe synthetic output target/,
+    );
+    runGeneratorExpectFailure(outside);
+    runGeneratorExpectFailure(unsafeNamed);
+    runGeneratorExpectFailure(symlinkPath);
+    assert.equal(await readFile(outsideSentinel, 'utf8'), 'outside-preserved');
+    assert.equal(await readFile(unsafeNamedSentinel, 'utf8'), 'unowned-preserved');
+    assert.equal(await readFile(symlinkSentinel, 'utf8'), 'symlink-target-preserved');
+  } finally {
+    await Promise.all([
+      rm(outside, { recursive: true, force: true }),
+      rm(unsafeNamed, { recursive: true, force: true }),
+      rm(symlinkPath, { force: true }),
+      rm(symlinkTarget, { recursive: true, force: true }),
+    ]);
   }
 });
 
@@ -79,8 +138,8 @@ test('dataset has the required fabricated shape and matrix-valid orders', async 
   const sampleById = new Map(samples.map((sample) => [sample.id, sample]));
 
   for (const sample of samples) {
-    assert.match(sample.id, /^SYN-26\d{3}-\d{4}$/);
-    assert.match(sample.customer_id, /^SYN-CUST-\d{3}$/);
+    assert.match(sample.id, SYNTHETIC_IDENTITY_ALLOWLIST.sampleId);
+    assert.match(sample.customer_id, SYNTHETIC_IDENTITY_ALLOWLIST.customerId);
     assert.ok(expectedMatrices.has(sample.matrix));
     assert.equal(sample.synthetic, true);
     assert.ok(sample.test_codes.length >= 1);
@@ -118,6 +177,16 @@ test('dataset has the required fabricated shape and matrix-valid orders', async 
     assert.equal(result.units, catalogEntry.units);
     assert.equal(result.detection_limit, catalogEntry.detection_limit);
     assert.equal(result.synthetic, true);
+    assert.match(result.id, SYNTHETIC_IDENTITY_ALLOWLIST.resultId);
+    assert.match(result.sample_id, SYNTHETIC_IDENTITY_ALLOWLIST.sampleId);
+  }
+
+  for (const person of personnel) {
+    assert.match(person.id, SYNTHETIC_IDENTITY_ALLOWLIST.personnelId);
+    assert.match(person.display_name, SYNTHETIC_IDENTITY_ALLOWLIST.personnelName);
+    for (const authorization of person.authorizations) {
+      assert.match(authorization, SYNTHETIC_IDENTITY_ALLOWLIST.authorizationId);
+    }
   }
 });
 
@@ -131,15 +200,40 @@ test('HL7 fixtures are explicitly synthetic ORU_R01 messages', async () => {
     assert.match(message, /^MSH\|\^~\\&\|SYNTHETIC_ANALYZER/m);
     assert.match(message, /\|ORU\^R01\|/);
     assert.match(message, /FABRICATED SYNTHETIC DEMO MESSAGE/);
-    assert.doesNotMatch(message, /\b(?:patient|client) name\b/i);
+    const pid = message.split('\n').find((line) => line.startsWith('PID|'));
+    const msh = message.split('\n').find((line) => line.startsWith('MSH|'));
+    assert.ok(pid);
+    assert.ok(msh);
+    assert.match(pid.split('|')[3].split('^')[0], SYNTHETIC_IDENTITY_ALLOWLIST.hl7SubjectId);
+    assert.match(msh.split('|')[9], SYNTHETIC_IDENTITY_ALLOWLIST.hl7MessageId);
   }
 });
 
-test('generated fixtures do not contain known real-corpus operational figures', async () => {
+test('generated artifacts reject common PHI, PII, identity, and secret patterns', async () => {
   const paths = await listFiles(committedData);
-  const combined = (await Promise.all(paths.map((path) => readFile(path, 'utf8')))).join('\n');
+  const artifacts = await Promise.all(
+    paths.map(async (path) => ({ path, content: await readFile(path, 'utf8') })),
+  );
+  assert.deepEqual(findSyntheticPrivacyViolations(artifacts), []);
+});
 
-  for (const value of realCorpusDenylist) {
-    assert.doesNotMatch(combined, new RegExp(`\\b${value}\\b`), `found denylisted real-corpus figure ${value}`);
+test('privacy scanner detects adversarial PHI, PII, identity, and secret fixtures', () => {
+  const adversarial = [
+    ['email', 'contact Jane.Doe@example.org'],
+    ['ssn', 'subject 123-45-6789'],
+    ['phone', 'call (415) 555-0123'],
+    ['street_address', 'location 123 Main Street'],
+    ['medical_identity_label', 'MRN: 849201'],
+    ['private_key', '-----BEGIN PRIVATE KEY-----'],
+    ['bearer_token', 'Bearer abcdefghijklmnopqrstuvwxyz'],
+    ['secret_assignment', 'API_KEY=supersecretvalue'],
+  ];
+  for (const [expectedCategory, content] of adversarial) {
+    assert.ok(
+      findSyntheticPrivacyViolations([{ path: 'adversarial.fixture', content }]).some(
+        ({ category }) => category === expectedCategory,
+      ),
+      `failed to detect ${expectedCategory}`,
+    );
   }
 });
