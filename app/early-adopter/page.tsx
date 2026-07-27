@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   FlaskConical, ArrowRight, CheckCircle2, Shield, Users,
   Wrench, MessageSquare, Send
@@ -27,6 +27,7 @@ const labTypes = [
 
 export default function EarlyAdopterPage() {
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+  const [isWaterLane, setIsWaterLane] = useState(false);
   const [form, setForm] = useState({
     labName: '',
     labType: '',
@@ -35,6 +36,16 @@ export default function EarlyAdopterPage() {
     testVolume: '',
     painPoint: '',
   });
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('utm_campaign') !== 'water_lane') return;
+
+    setIsWaterLane(true);
+    setForm(current => current.labType
+      ? current
+      : { ...current, labType: 'Environmental / Water Testing' });
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -104,14 +115,15 @@ export default function EarlyAdopterPage() {
       <section className="py-12 md:py-16 px-4">
         <div className="max-w-3xl mx-auto text-center">
           <div className="inline-flex items-center gap-2 bg-[#2E8B57]/20 text-[#2E8B57] text-sm font-medium px-3 py-1 rounded-full mb-6 border border-[#2E8B57]/30">
-            <Users className="w-4 h-4" /> 5 pilot slots available
+            <Users className="w-4 h-4" /> {isWaterLane ? 'Water-lab walkthrough' : '5 pilot slots available'}
           </div>
           <h1 className="text-3xl md:text-5xl font-bold text-white mb-4 tracking-tight">
-            Early-Adopter Pilot Program
+            {isWaterLane ? 'Field Scout Water-Lab Pilot' : 'Early-Adopter Pilot Program'}
           </h1>
           <p className="text-lg text-slate-400 max-w-2xl mx-auto">
-            This isn't a free trial. It's a structured pilot for regulated labs that need
-            survey-ready traceability and are willing to help shape the product.
+            {isWaterLane
+              ? 'Tell us how your team moves field equipment and sample context from collection site to laboratory bench.'
+              : "This isn't a free trial. It's a structured pilot for regulated labs that need survey-ready traceability and are willing to help shape the product."}
           </p>
         </div>
       </section>
