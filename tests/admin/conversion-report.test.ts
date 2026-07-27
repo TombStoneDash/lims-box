@@ -4,7 +4,7 @@ import { NextRequest } from 'next/server';
 import { GET } from '../../app/api/admin/conversion-report/route';
 import {
   MIN_REPORTABLE_CELL_SIZE,
-  buildConversionCounts,
+  buildProspectSourceReport,
 } from '../../lib/admin/conversionReport';
 import { prisma } from '../../lib/prisma';
 import { middleware } from '../../middleware';
@@ -32,63 +32,69 @@ async function withMockedGroups<T>(
 }
 
 test('aggregates allowlisted campaign dimensions above the privacy threshold', () => {
-  const result = buildConversionCounts([
+  const result = buildProspectSourceReport([
     {
       source: 'lims.bot/early-adopter;utm_source=cola2026;utm_medium=qr;utm_campaign=cola_forum_2026',
-      applications: 3,
+      prospectRecords: 3,
     },
     {
       source: 'lims.bot/early-adopter;utm_source=cola2026;utm_medium=qr;utm_campaign=cola_forum_2026',
-      applications: 2,
+      prospectRecords: 2,
     },
-    { source: 'contact_form', applications: 4 },
+    { source: 'contact_form', prospectRecords: 4 },
   ]);
 
-  assert.deepEqual(result, [
-    {
-      source: 'cola2026',
-      campaign: 'cola_forum_2026',
-      medium: 'qr',
-      content: null,
-      applications: 5,
-    },
-    {
-      source: 'contact_form',
-      campaign: null,
-      medium: null,
-      content: null,
-      applications: 4,
-    },
-  ]);
+  assert.deepEqual(result, {
+    hasSuppressedCells: false,
+    attribution: [
+      {
+        source: 'cola2026',
+        campaign: 'cola_forum_2026',
+        medium: 'qr',
+        content: null,
+        prospectRecords: 5,
+      },
+      {
+        source: 'contact_form',
+        campaign: null,
+        medium: null,
+        content: null,
+        prospectRecords: 4,
+      },
+    ],
+  });
 });
 
 test('coarsens arbitrary UTM dimensions and omits cells below the minimum', () => {
-  const result = buildConversionCounts([
+  const result = buildProspectSourceReport([
     {
       source: 'lims.bot/early-adopter;utm_source=jane_smith;utm_campaign=private_lab_2026;utm_content=customer_48391',
-      applications: 10,
+      prospectRecords: 10,
     },
-    { source: 'webinar:private-session-id', applications: 1 },
-    { source: null, applications: 2 },
-    { source: 'contact_form', applications: MIN_REPORTABLE_CELL_SIZE },
+    { source: 'webinar:private-session-id', prospectRecords: 1 },
+    { source: null, prospectRecords: 2 },
+    { source: 'contact_form', prospectRecords: MIN_REPORTABLE_CELL_SIZE },
   ]);
 
-  assert.deepEqual(result, [
-    {
-      source: 'lims.bot/early-adopter',
-      campaign: null,
-      medium: null,
-      content: null,
-      applications: 10,
-    },
-    {
-      source: 'contact_form',
-      campaign: null,
-      medium: null,
-      content: null,
-      applications: MIN_REPORTABLE_CELL_SIZE,
-    },
-  ]);
+  assert.deepEqual(result, {
+    hasSuppressedCells: true,
+    attribution: [
+      {
+        source: 'lims.bot/early-adopter',
+        campaign: null,
+        medium: null,
+        content: null,
+        prospectRecords: 10,
+      },
+      {
+        source: 'contact_form',
+        campaign: null,
+        medium: null,
+        content: null,
+        prospectRecords: MIN_REPORTABLE_CELL_SIZE,
+      },
+    ],
+  });
   const serialized = JSON.stringify(result);
   assert.equal(serialized.includes('jane_smith'), false);
   assert.equal(serialized.includes('private_lab_2026'), false);
@@ -97,13 +103,13 @@ test('coarsens arbitrary UTM dimensions and omits cells below the minimum', () =
 });
 
 test('ignores invalid counts instead of corrupting aggregate proof', () => {
-  const result = buildConversionCounts([
-    { source: 'contact_form', applications: -1 },
-    { source: 'contact_form', applications: Number.NaN },
-    { source: 'contact_form', applications: 3 },
+  const result = buildProspectSourceReport([
+    { source: 'contact_form', prospectRecords: -1 },
+    { source: 'contact_form', prospectRecords: Number.NaN },
+    { source: 'contact_form', prospectRecords: 3 },
   ]);
 
-  assert.equal(result[0]?.applications, 3);
+  assert.equal(result.attribution[0]?.prospectRecords, 3);
 });
 
 test('admin middleware fails closed for missing and invalid credentials', () => {
@@ -153,10 +159,9 @@ test('GET returns a truthful Prospect population and privacy-safe aggregates', a
         _count: { _all: 5 },
       },
       {
-        source: 'lims.bot/early-adopter;utm_source=private_lab;utm_content=customer_1',
-        _count: { _all: 1 },
+        source: 'contact_form',
+        _count: { _all: 4 },
       },
-      { source: 'contact_form', _count: { _all: 4 } },
     ],
     async () => {
       const response = await GET();
@@ -170,13 +175,15 @@ test('GET returns a truthful Prospect population and privacy-safe aggregates', a
         scope: 'all_records',
         note: 'Includes every Prospect record, including intake and waitlist records; this is not a conversion denominator.',
       });
-      assert.equal(body.totalProspectRecords, 10);
+      assert.equal(body.totalProspectRecords, 9);
+      assert.equal(body.totalProspectRecordsStatus, 'exact');
       assert.equal('totalApplications' in body, false);
       assert.deepEqual(body.privacy, {
         classification: 'aggregate_counts_only',
         dimensions: 'server_allowlisted',
         minimumReportableCellSize: 3,
         smallCells: 'omitted',
+        exactTotal: 'withheld_when_any_cell_is_omitted',
       });
       assert.deepEqual(body.attribution, [
         {
@@ -184,14 +191,69 @@ test('GET returns a truthful Prospect population and privacy-safe aggregates', a
           campaign: 'cola_forum_2026',
           medium: 'qr',
           content: null,
-          applications: 5,
+          prospectRecords: 5,
         },
         {
           source: 'contact_form',
           campaign: null,
           medium: null,
           content: null,
-          applications: 4,
+          prospectRecords: 4,
+        },
+      ]);
+      assert.equal(JSON.stringify(body).includes('applications'), false);
+    },
+  );
+});
+
+test('GET with one or two Prospect records suppresses both cells and exact total', async () => {
+  for (const total of [1, 2]) {
+    await withMockedGroups(
+      async () => [
+        { source: 'contact_form', _count: { _all: total } },
+      ],
+      async () => {
+        const response = await GET();
+        assert.equal(response.status, 200);
+        const body = await response.json();
+        assert.equal(body.totalProspectRecords, null);
+        assert.equal(
+          body.totalProspectRecordsStatus,
+          'withheld_due_to_suppressed_cells',
+        );
+        assert.deepEqual(body.attribution, []);
+      },
+    );
+  }
+});
+
+test('GET with visible and suppressed cells withholds total to prevent subtraction', async () => {
+  await withMockedGroups(
+    async () => [
+      {
+        source: 'lims.bot/early-adopter;utm_source=cola2026;utm_medium=qr;utm_campaign=cola_forum_2026',
+        _count: { _all: 5 },
+      },
+      {
+        source: 'lims.bot/early-adopter;utm_source=private_lab;utm_content=customer_1',
+        _count: { _all: 1 },
+      },
+    ],
+    async () => {
+      const response = await GET();
+      const body = await response.json();
+      assert.equal(body.totalProspectRecords, null);
+      assert.equal(
+        body.totalProspectRecordsStatus,
+        'withheld_due_to_suppressed_cells',
+      );
+      assert.deepEqual(body.attribution, [
+        {
+          source: 'cola2026',
+          campaign: 'cola_forum_2026',
+          medium: 'qr',
+          content: null,
+          prospectRecords: 5,
         },
       ]);
       assert.equal(JSON.stringify(body).includes('private_lab'), false);

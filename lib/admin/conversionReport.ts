@@ -3,17 +3,22 @@ import {
   normalizeAttributionToken,
 } from '../leadAttribution';
 
-export interface SourceCountRow {
+export interface ProspectSourceRow {
   source: string | null;
-  applications: number;
+  prospectRecords: number;
 }
 
-export interface ConversionCount {
+export interface ProspectSourceCount {
   source: string;
   campaign: string | null;
   medium: string | null;
   content: string | null;
-  applications: number;
+  prospectRecords: number;
+}
+
+export interface ProspectSourceReport {
+  attribution: ProspectSourceCount[];
+  hasSuppressedCells: boolean;
 }
 
 const KNOWN_EXACT_SOURCES = new Set([
@@ -44,7 +49,9 @@ function safeSourceName(source: string | null): string {
   return 'other';
 }
 
-function parseEarlyAdopterSource(source: string): Omit<ConversionCount, 'applications'> {
+function parseEarlyAdopterSource(
+  source: string,
+): Omit<ProspectSourceCount, 'prospectRecords'> {
   const [base, ...segments] = source.split(';');
   if (base !== DEFAULT_EARLY_ADOPTER_SOURCE) {
     return {
@@ -78,11 +85,15 @@ function parseEarlyAdopterSource(source: string): Omit<ConversionCount, 'applica
   };
 }
 
-export function buildConversionCounts(rows: SourceCountRow[]): ConversionCount[] {
-  const aggregate = new Map<string, ConversionCount>();
+export function buildProspectSourceReport(
+  rows: ProspectSourceRow[],
+): ProspectSourceReport {
+  const aggregate = new Map<string, ProspectSourceCount>();
 
   for (const row of rows) {
-    if (!Number.isSafeInteger(row.applications) || row.applications < 0) continue;
+    if (!Number.isSafeInteger(row.prospectRecords) || row.prospectRecords < 0) {
+      continue;
+    }
 
     const dimensions = row.source?.startsWith(`${DEFAULT_EARLY_ADOPTER_SOURCE};`)
       ? parseEarlyAdopterSource(row.source)
@@ -96,18 +107,27 @@ export function buildConversionCounts(rows: SourceCountRow[]): ConversionCount[]
     const existing = aggregate.get(key);
 
     if (existing) {
-      existing.applications += row.applications;
+      existing.prospectRecords += row.prospectRecords;
     } else {
-      aggregate.set(key, { ...dimensions, applications: row.applications });
+      aggregate.set(key, {
+        ...dimensions,
+        prospectRecords: row.prospectRecords,
+      });
     }
   }
 
-  return [...aggregate.values()]
-    .filter(group => group.applications >= MIN_REPORTABLE_CELL_SIZE)
-    .sort(
-    (left, right) =>
-      right.applications - left.applications ||
-      left.source.localeCompare(right.source) ||
-      (left.campaign ?? '').localeCompare(right.campaign ?? ''),
-    );
+  const cells = [...aggregate.values()];
+  return {
+    hasSuppressedCells: cells.some(
+      group => group.prospectRecords < MIN_REPORTABLE_CELL_SIZE,
+    ),
+    attribution: cells
+      .filter(group => group.prospectRecords >= MIN_REPORTABLE_CELL_SIZE)
+      .sort(
+        (left, right) =>
+          right.prospectRecords - left.prospectRecords ||
+          left.source.localeCompare(right.source) ||
+          (left.campaign ?? '').localeCompare(right.campaign ?? ''),
+      ),
+  };
 }

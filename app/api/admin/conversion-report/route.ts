@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { buildConversionCounts } from '@/lib/admin/conversionReport';
+import { buildProspectSourceReport } from '@/lib/admin/conversionReport';
 import { prisma } from '@/lib/prisma';
 
 export const dynamic = 'force-dynamic';
@@ -14,9 +14,13 @@ export async function GET() {
 
     const prospectRows = sourceGroups.map(group => ({
       source: group.source,
-      applications: group._count._all,
+      prospectRecords: group._count._all,
     }));
-    const counts = buildConversionCounts(prospectRows);
+    const sourceReport = buildProspectSourceReport(prospectRows);
+    const exactTotal = prospectRows.reduce(
+      (total, group) => total + group.prospectRecords,
+      0,
+    );
 
     return NextResponse.json(
       {
@@ -32,12 +36,15 @@ export async function GET() {
           dimensions: 'server_allowlisted',
           minimumReportableCellSize: 3,
           smallCells: 'omitted',
+          exactTotal: 'withheld_when_any_cell_is_omitted',
         },
-        totalProspectRecords: prospectRows.reduce(
-          (total, group) => total + group.applications,
-          0,
-        ),
-        attribution: counts,
+        totalProspectRecords: sourceReport.hasSuppressedCells
+          ? null
+          : exactTotal,
+        totalProspectRecordsStatus: sourceReport.hasSuppressedCells
+          ? 'withheld_due_to_suppressed_cells'
+          : 'exact',
+        attribution: sourceReport.attribution,
         botTelemetry: {
           availability: 'runtime_logs_only',
           queryableHere: false,
