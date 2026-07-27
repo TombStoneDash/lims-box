@@ -47,30 +47,34 @@ const sampleById = new Map(samples.map((sample) => [sample.id, sample]));
 const testByCode = new Map(tests.map((test) => [test.code, test]));
 
 export const DEMO_MAX_QUESTION_LENGTH = 500;
+export const DEMO_MAX_QUESTION_BYTES = 2_000;
+export const DEMO_MAX_REQUEST_BYTES = 4_096;
 export const DEMO_SAMPLE_ID = 'SYN-26041-0001';
 
 const PHI_PATTERN =
   /\b(patient|subject|demographic|date of birth|dob|address|phone|email|ssn|social security|medical record|mrn)\b/i;
 const INTERPRETATION_PATTERN =
-  /\b(interpret|diagnos|treat|medical advice|clinical meaning|what does (?:this|the result) mean|is (?:this|the result) (?:bad|normal|positive|negative))\b/i;
+  /\b(interpret(?:ation)?|diagnos(?:e|is|tic)?|treat(?:ment)?|medical advice|clinical(?:ly| meaning)?|prognos(?:is|tic)|what (?:does|do) (?:this|that|these|those|the (?:value|result|finding)s?) mean|(?:is|are|seem|look) (?:this|that|these|those|the (?:value|result|finding)s?) (?:bad|good|normal|abnormal|positive|negative|dangerous|concerning|critical|safe|high|low|serious|worrying|healthy|unhealthy)|(?:dangerously|clinically|abnormally|too) (?:high|low)|within (?:the )?(?:normal|safe|healthy|reference) range|should (?:i|we) (?:worry|be concerned|seek|call)|does (?:this|that|it) (?:indicate|suggest|mean)|(?:indicate|suggest|show|evidence) (?:a |an )?(?:sign of )?(?:disease|condition|infection|problem))\b/i;
 const ATTESTATION_PATTERN =
   /\b(attest|certif(?:y|ied|ication)|guarantee|validate)\b.*\b(compliance|compliant|clia|hipaa|part\s*11|iso)\b|\b(clia|hipaa|part\s*11|iso)\b.*\b(compliant|certified|guaranteed)\b/i;
 const INJECTION_PATTERN =
-  /\b(ignore|bypass|override)\b.{0,40}\b(instruction|guardrail|policy|system)\b|\b(reveal|print|show)\b.{0,30}\b(system prompt|hidden prompt|secret)\b/i;
+  /\b(ignore|disregard|forget|bypass|override|supersede|violate)\b.{0,80}\b(instruction|rule|guardrail|policy|system|developer|prompt)\b|\b(reveal|print|show|expose|repeat|quote|dump|provide)\b.{0,60}\b(system|developer|hidden|initial|secret|internal)\b.{0,30}\b(instruction|message|prompt|policy|rule|secret)\b|\b(system|developer|hidden|internal)\s+(?:prompt|message|instructions?|rules?)\b|\b(jailbreak|prompt injection|developer mode|dan mode)\b|\b(?:act|pretend|roleplay)\b.{0,50}\b(?:without|no|ignore|unrestricted)\b.{0,30}\b(?:rule|guardrail|restriction|policy)\b|\bfollow\b.{0,40}\b(?:my|these|new)\b.{0,20}\binstructions?\b.{0,30}\b(?:instead|only)\b/i;
+const MUTATION_PATTERN =
+  /\b(create|add|append|change|alter|update|upsert|edit|delete|destroy|erase|remove|cancel|void|submit|modify|write|overwrite|save|set|mark|complete|approve|reject|replace|insert|upload|import|correct|amend|assign|reassign|reschedule)\b.{0,100}\b(sample|result|value|status|state|order|test|record|report|container|specimen|request|catalog|entry|data)\b|\b(sample|result|value|status|state|order|test|record|report|container|specimen|request|catalog|entry|data)\b.{0,100}\b(create|add|append|change|alter|update|upsert|edit|delete|destroy|erase|remove|cancel|void|submit|modify|write|overwrite|save|set|mark|complete|approve|reject|replace|insert|upload|import|correct|amend|assign|reassign|reschedule)\b|\b(place|cancel|delete|submit|create|change|update|void)\b.{0,60}\border\b/i;
 
 const SAMPLE_SOURCE = (sampleId: string): BotSource => ({
   title: `Synthetic sample ${sampleId}`,
-  path: '/demo/assistant#synthetic-samples',
+  path: `/demo/assistant#synthetic-sample-${sampleId.toLowerCase()}`,
 });
 
 const RESULT_SOURCE = (sampleId: string): BotSource => ({
   title: `Synthetic results for ${sampleId}`,
-  path: '/demo/assistant#synthetic-results',
+  path: `/demo/assistant#synthetic-results-${sampleId.toLowerCase()}`,
 });
 
 const TEST_SOURCE = (testCode: string): BotSource => ({
   title: `Synthetic test ${testCode}`,
-  path: '/demo/assistant#synthetic-catalog',
+  path: `/demo/assistant#synthetic-test-${testCode.toLowerCase()}`,
 });
 
 function refusal(answer: string): BotResponse {
@@ -209,11 +213,16 @@ export function askDemoAssistant(rawQuestion: unknown): BotResponse {
     return missing('Ask about a synthetic sample ID or synthetic test code shown in this demo.');
   }
 
-  const question = rawQuestion.trim().slice(0, DEMO_MAX_QUESTION_LENGTH);
+  const question = rawQuestion.trim();
 
   if (PHI_PATTERN.test(question)) {
     return refusal(
       'I cannot provide patient or subject demographics. This demo contains fabricated operational records only and no PHI.',
+    );
+  }
+  if (MUTATION_PATTERN.test(question)) {
+    return refusal(
+      'I cannot create, update, delete, submit, or otherwise modify records. This synthetic demo is strictly read-only.',
     );
   }
   if (INTERPRETATION_PATTERN.test(question)) {

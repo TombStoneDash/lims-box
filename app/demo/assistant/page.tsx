@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { DemoAssistantChat } from './demo-assistant-chat';
+import { DemoEvidenceLibrary } from './demo-evidence-library';
 
 export const metadata: Metadata = {
   title: 'Grounded Assistant Demo — LIMS BOX',
@@ -32,26 +33,7 @@ export default function DemoAssistantPage() {
 
         <DemoAssistantChat />
 
-        <section className="mt-8 grid gap-4 sm:grid-cols-3">
-          <div id="synthetic-samples" className="rounded-xl border border-slate-200 bg-white p-4 dark:border-white/10 dark:bg-white/5">
-            <h2 className="font-semibold text-slate-900 dark:text-white">Synthetic samples</h2>
-            <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
-              200 fabricated sample records with status, matrix, receipt time, expected-report time, and test orders.
-            </p>
-          </div>
-          <div id="synthetic-results" className="rounded-xl border border-slate-200 bg-white p-4 dark:border-white/10 dark:bg-white/5">
-            <h2 className="font-semibold text-slate-900 dark:text-white">Synthetic results</h2>
-            <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
-              Fabricated values, units, detection limits, and flags. Results are reported, never interpreted.
-            </p>
-          </div>
-          <div id="synthetic-catalog" className="rounded-xl border border-slate-200 bg-white p-4 dark:border-white/10 dark:bg-white/5">
-            <h2 className="font-semibold text-slate-900 dark:text-white">Synthetic test catalog</h2>
-            <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
-              30 fabricated tests with matrix validity, containers, and deterministic turnaround settings.
-            </p>
-          </div>
-        </section>
+        <DemoEvidenceLibrary />
 
         <p className="mt-6 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
           No patient, client, or production data is used. This route is a product demonstration, not a clinical
