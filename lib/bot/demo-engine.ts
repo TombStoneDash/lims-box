@@ -53,14 +53,48 @@ export const DEMO_SAMPLE_ID = 'SYN-26041-0001';
 
 const PHI_PATTERN =
   /\b(patient|subject|demographic|date of birth|dob|address|phone|email|ssn|social security|medical record|mrn)\b/i;
-const INTERPRETATION_PATTERN =
-  /\b(interpret(?:ation)?|diagnos(?:e|is|tic)?|treat(?:ment)?|medical advice|clinical(?:ly| meaning)?|prognos(?:is|tic)|what (?:does|do) (?:this|that|these|those|the (?:value|result|finding)s?) mean|(?:is|are|seem|look) (?:this|that|these|those|the (?:value|result|finding)s?) (?:bad|good|normal|abnormal|positive|negative|dangerous|concerning|critical|safe|high|low|serious|worrying|healthy|unhealthy)|(?:dangerously|clinically|abnormally|too) (?:high|low)|within (?:the )?(?:normal|safe|healthy|reference) range|should (?:i|we) (?:worry|be concerned|seek|call)|does (?:this|that|it) (?:indicate|suggest|mean)|(?:indicate|suggest|show|evidence) (?:a |an )?(?:sign of )?(?:disease|condition|infection|problem))\b/i;
 const ATTESTATION_PATTERN =
   /\b(attest|certif(?:y|ied|ication)|guarantee|validate)\b.*\b(compliance|compliant|clia|hipaa|part\s*11|iso)\b|\b(clia|hipaa|part\s*11|iso)\b.*\b(compliant|certified|guaranteed)\b/i;
-const INJECTION_PATTERN =
-  /\b(ignore|disregard|forget|bypass|override|supersede|violate)\b.{0,80}\b(instruction|rule|guardrail|policy|system|developer|prompt)\b|\b(reveal|print|show|expose|repeat|quote|dump|provide)\b.{0,60}\b(system|developer|hidden|initial|secret|internal)\b.{0,30}\b(instruction|message|prompt|policy|rule|secret)\b|\b(system|developer|hidden|internal)\s+(?:prompt|message|instructions?|rules?)\b|\b(jailbreak|prompt injection|developer mode|dan mode)\b|\b(?:act|pretend|roleplay)\b.{0,50}\b(?:without|no|ignore|unrestricted)\b.{0,30}\b(?:rule|guardrail|restriction|policy)\b|\bfollow\b.{0,40}\b(?:my|these|new)\b.{0,20}\binstructions?\b.{0,30}\b(?:instead|only)\b/i;
 const MUTATION_PATTERN =
   /\b(create|add|append|change|alter|update|upsert|edit|delete|destroy|erase|remove|cancel|void|submit|modify|write|overwrite|save|set|mark|complete|approve|reject|replace|insert|upload|import|correct|amend|assign|reassign|reschedule)\b.{0,100}\b(sample|result|value|status|state|order|test|record|report|container|specimen|request|catalog|entry|data)\b|\b(sample|result|value|status|state|order|test|record|report|container|specimen|request|catalog|entry|data)\b.{0,100}\b(create|add|append|change|alter|update|upsert|edit|delete|destroy|erase|remove|cancel|void|submit|modify|write|overwrite|save|set|mark|complete|approve|reject|replace|insert|upload|import|correct|amend|assign|reassign|reschedule)\b|\b(place|cancel|delete|submit|create|change|update|void)\b.{0,60}\border\b/i;
+
+const CLINICAL_INTERPRETATION_PATTERNS = [
+  /\binterpret(?:ation|ive)?\b/i,
+  /\bdiagnos(?:e|is|tic|tics)?\b/i,
+  /\btreat(?:ment|able|ing)?\b|\bmedical advice\b|\bprognos(?:is|tic)\b/i,
+  /\b(?:disease|condition|infection|illness|syndrome|cancer|sick)\b/i,
+  /\b(?:elevated|raised|abnormal|dangerous|concerning|critical|serious|worrying|worried|worrisome|unsafe|unhealthy)\b/i,
+  /\b(?:outside|out of|beyond|within|above|below)\b.{0,30}\b(?:normal|safe|healthy|reference|expected)?\s*range\b/i,
+  /\b(?:dangerously|clinically|abnormally|too)\s+(?:high|low)\b/i,
+  /\bshould\b.{0,50}\b(?:worry|worries|concern|concerned|seek|call)\b|\bdo\s+(?:i|we)\s+(?:worry|need to worry|need to be concerned)\b/i,
+  /\b(?:what|which)\s+(?:disease|condition|infection)\b.{0,40}\b(?:point|indicate|suggest|mean|cause)\b/i,
+  /\b(?:point|indicate|suggest|mean|sign|evidence)\b.{0,30}\b(?:disease|condition|infection|problem)\b/i,
+  /\bwhat (?:does|do|could|might)\b.{0,50}\b(?:mean|indicate|suggest|point to)\b/i,
+  /\b(?:could|might|does|do|would)\b.{0,50}\b(?:mean|indicate|suggest|point to)\b/i,
+  /\b(?:is|are|seem|look)\b.{0,40}\b(?:safe|unsafe|healthy|unhealthy|normal|abnormal|bad|good|okay|ok|positive|negative|high|low)\b/i,
+];
+
+const PROMPT_INJECTION_PATTERNS = [
+  /\b(?:ignore|disregard|forget|bypass|override|supersede|violate)\b.{0,100}\b(?:instructions?|rules?|guardrails?|policies|policy|system|developer|prompts?|restrictions?|safety)\b/i,
+  /\b(?:do not|don't|never|stop|refuse to)\b.{0,30}\b(?:obey|follow|respect|use|adhere to)\b.{0,80}\b(?:instructions?|rules?|guardrails?|policies|policy|system|developer|prompts?|restrictions?)\b/i,
+  /\b(?:without|no|remove|disable|suspend|drop|turn off|free of)\b.{0,50}\b(?:safety|restrictions?|guardrails?|policies|policy|rules?|filters?|limits?|constraints?)\b/i,
+  /\b(?:as if|pretend|imagine|suppose|assume)\b.{0,80}\b(?:without|no|unrestricted|unfiltered|rules? (?:do not|don't) apply|safety off)\b/i,
+  /\b(?:instructions?|rules?|guardrails?|policies|policy|restrictions?|constraints?)\b.{0,40}\b(?:do not|don't|no longer|should not)\b.{0,20}\bapply\b/i,
+  /\b(?:reveal|print|show|expose|repeat|quote|dump|provide)\b.{0,80}\b(?:system|developer|hidden|initial|secret|internal)\b.{0,40}\b(?:instruction|message|prompt|policy|rule|secret)\b/i,
+  /\b(?:system|developer|hidden|internal)\s+(?:prompt|message|instructions?|rules?)\b/i,
+  /\b(?:jailbreak|prompt injection|developer mode|dan mode|role switch|switch roles?|change roles?|new role|new persona|switch persona)\b/i,
+  /\b(?:act|behave|respond|answer|roleplay)\b.{0,40}\b(?:as|like)\b.{0,50}\b(?:unrestricted|unfiltered|developer|system|different assistant)\b/i,
+  /\bfollow\b.{0,40}\b(?:my|these|new|latest)\b.{0,20}\binstructions?\b.{0,30}\b(?:instead|only|over|rather)\b/i,
+  /\b(?:prioritize|obey|follow)\b.{0,40}\b(?:my|user)\b.{0,30}\b(?:request|instruction|message)\b.{0,30}\b(?:over|instead of|rather than)\b.{0,30}\b(?:system|developer|policy|rules?|instructions?)\b/i,
+];
+
+function hasClinicalInterpretationIntent(question: string): boolean {
+  return CLINICAL_INTERPRETATION_PATTERNS.some((pattern) => pattern.test(question));
+}
+
+function hasPromptInjectionIntent(question: string): boolean {
+  return PROMPT_INJECTION_PATTERNS.some((pattern) => pattern.test(question));
+}
 
 const SAMPLE_SOURCE = (sampleId: string): BotSource => ({
   title: `Synthetic sample ${sampleId}`,
@@ -225,7 +259,7 @@ export function askDemoAssistant(rawQuestion: unknown): BotResponse {
       'I cannot create, update, delete, submit, or otherwise modify records. This synthetic demo is strictly read-only.',
     );
   }
-  if (INTERPRETATION_PATTERN.test(question)) {
+  if (hasClinicalInterpretationIntent(question)) {
     return refusal(
       'I can report the fabricated value and flag, but I cannot interpret results, diagnose, or provide treatment advice.',
     );
@@ -235,7 +269,7 @@ export function askDemoAssistant(rawQuestion: unknown): BotResponse {
       'I cannot attest that a lab or product is compliant, certified, accredited, or validated. Those determinations require human-controlled, customer-specific evidence.',
     );
   }
-  if (INJECTION_PATTERN.test(question)) {
+  if (hasPromptInjectionIntent(question)) {
     return refusal('I cannot bypass the demo guardrails or reveal hidden instructions.');
   }
 
