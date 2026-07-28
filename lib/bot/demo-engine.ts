@@ -137,11 +137,102 @@ function findTest(question: string): SyntheticTest | undefined {
   return tests.find((test) => lowerQuestion.includes(test.name.toLowerCase()));
 }
 
+const MATRIX_KEYS = ['serum', 'plasma', 'swab', 'urine', 'drinking_water', 'wastewater', 'surface_water'] as const;
+
 function findMatrix(question: string): string | undefined {
   const lowerQuestion = question.toLowerCase().replaceAll('-', '_').replaceAll(' ', '_');
-  return ['serum', 'plasma', 'swab', 'urine', 'drinking_water', 'wastewater', 'surface_water'].find(
-    (matrix) => lowerQuestion.includes(matrix),
-  );
+  return MATRIX_KEYS.find((matrix) => lowerQuestion.includes(matrix));
+}
+
+type NeutralIntent = 'status' | 'results' | 'tat' | 'container' | 'order';
+
+// Fixed sentinels swapped in for recognized parameters before grammar
+// matching. Dispatch still re-derives the sample/test/matrix from the raw
+// question independently, so even a forged sentinel could only ever gate an
+// intent — it can't by itself produce a fabricated record-specific answer.
+const PARAM_TOKEN = {
+  sampleId: 'SAMPLE_ID',
+  testCode: 'TEST_CODE',
+  matrix: 'MATRIX',
+} as const;
+
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function alternation(values: string[]): string {
+  return values
+    .map(escapeRegExp)
+    .sort((a, b) => b.length - a.length)
+    .join('|');
+}
+
+const SAMPLE_ID_PARAM_PATTERN = /\bsyn-26\d{3}-\d{4}\b/g;
+const TEST_CODE_PARAM_PATTERN = new RegExp(`\\b(?:${alternation(tests.map((test) => test.code.toLowerCase()))})\\b`, 'g');
+const TEST_NAME_PARAM_PATTERN = new RegExp(`\\b(?:${alternation(tests.map((test) => test.name.toLowerCase()))})\\b`, 'g');
+const MATRIX_PARAM_PATTERN = new RegExp(`\\b(?:${alternation(MATRIX_KEYS.map((matrix) => matrix.replaceAll('_', ' ')))})\\b`, 'g');
+
+// Normalizes the whole request to lowercase, punctuation-free words, then
+// swaps record identifiers and other known parameters for fixed sentinel
+// tokens so the intent grammar below can match against the complete,
+// parameter-normalized request instead of scanning for isolated keywords.
+function normalizeForGrammar(question: string): string {
+  return question
+    .toLowerCase()
+    .replace(/[?!.,]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .replace(SAMPLE_ID_PARAM_PATTERN, PARAM_TOKEN.sampleId)
+    .replace(TEST_CODE_PARAM_PATTERN, PARAM_TOKEN.testCode)
+    .replace(TEST_NAME_PARAM_PATTERN, PARAM_TOKEN.testCode)
+    .replace(MATRIX_PARAM_PATTERN, PARAM_TOKEN.matrix);
+}
+
+// The only five neutral intents this demo supports. Each pattern is anchored
+// with ^...$ across the *entire* normalized request: an otherwise-recognized
+// request with any unrecognized clause appended (clinical interpretation,
+// advice-seeking, or an instruction override) fails to match and falls
+// through to the fail-closed refusal below, rather than being authorized by
+// a prefix or substring match.
+const NEUTRAL_INTENT_GRAMMAR: Array<{ intent: NeutralIntent; patterns: RegExp[] }> = [
+  {
+    intent: 'status',
+    patterns: [
+      new RegExp(`^what is the status(?: of ${PARAM_TOKEN.sampleId})?$`),
+      new RegExp(`^show the current status(?: for ${PARAM_TOKEN.sampleId})?$`),
+    ],
+  },
+  {
+    intent: 'results',
+    patterns: [
+      new RegExp(`^what results are available(?: for ${PARAM_TOKEN.sampleId})?$`),
+      new RegExp(`^list the fabricated values(?: for ${PARAM_TOKEN.sampleId})?$`),
+    ],
+  },
+  {
+    intent: 'tat',
+    patterns: [
+      new RegExp(`^what is the tat(?: for ${PARAM_TOKEN.sampleId})?$`),
+      new RegExp(`^what is the expected report time(?: for ${PARAM_TOKEN.sampleId})?$`),
+    ],
+  },
+  {
+    intent: 'container',
+    patterns: [
+      new RegExp(`^what container does(?: ${PARAM_TOKEN.testCode})? require(?: for(?: ${PARAM_TOKEN.matrix})?)?$`),
+    ],
+  },
+  {
+    intent: 'order',
+    patterns: [
+      new RegExp(`^how do i order(?: ${PARAM_TOKEN.testCode})?(?: for(?: ${PARAM_TOKEN.sampleId})?)?$`),
+    ],
+  },
+];
+
+function matchNeutralIntent(question: string): NeutralIntent | undefined {
+  const normalized = normalizeForGrammar(question);
+  return NEUTRAL_INTENT_GRAMMAR.find(({ patterns }) => patterns.some((pattern) => pattern.test(normalized)))?.intent;
 }
 
 function humanizeStatus(status: string): string {
@@ -275,35 +366,33 @@ export function askDemoAssistant(rawQuestion: unknown): BotResponse {
 
   const sample = findSample(question);
   const test = findTest(question);
+  const intent = matchNeutralIntent(question);
 
-  if (/\b(status|state|progress)\b/i.test(question)) {
-    return sample
-      ? answerStatus(sample)
-      : missing('Include a valid synthetic sample ID, such as SYN-26041-0001, to check status.');
+  switch (intent) {
+    case 'status':
+      return sample
+        ? answerStatus(sample)
+        : missing('Include a valid synthetic sample ID, such as SYN-26041-0001, to check status.');
+    case 'results':
+      return sample
+        ? answerResults(sample)
+        : missing('Include a valid synthetic sample ID to retrieve fabricated results.');
+    case 'tat':
+      return sample
+        ? answerTat(sample)
+        : missing('Include a valid synthetic sample ID to retrieve its expected-report time.');
+    case 'container':
+      return test
+        ? answerContainer(test, findMatrix(question))
+        : missing('Include a valid synthetic test code to retrieve its matrix-specific container.');
+    case 'order':
+      if (!sample || !test) {
+        return missing('Include both a valid synthetic sample ID and synthetic test code to check ordering.');
+      }
+      return answerOrder(sample, test);
+    default:
+      return missing(
+        'This demo only answers questions about the displayed synthetic sample IDs and synthetic test codes.',
+      );
   }
-  if (/\b(results?|values?|findings?)\b/i.test(question)) {
-    return sample
-      ? answerResults(sample)
-      : missing('Include a valid synthetic sample ID to retrieve fabricated results.');
-  }
-  if (/\b(tat|turnaround|due|expected report|when.*report|report.*when)\b/i.test(question)) {
-    return sample
-      ? answerTat(sample)
-      : missing('Include a valid synthetic sample ID to retrieve its expected-report time.');
-  }
-  if (/\b(container|tube|specimen|collect)\b/i.test(question)) {
-    return test
-      ? answerContainer(test, findMatrix(question))
-      : missing('Include a valid synthetic test code to retrieve its matrix-specific container.');
-  }
-  if (/\b(order|request|add test)\b/i.test(question)) {
-    if (!sample || !test) {
-      return missing('Include both a valid synthetic sample ID and synthetic test code to check ordering.');
-    }
-    return answerOrder(sample, test);
-  }
-
-  return missing(
-    'This demo only answers questions about the displayed synthetic sample IDs and synthetic test codes.',
-  );
 }
