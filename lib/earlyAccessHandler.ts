@@ -61,17 +61,17 @@ export function createEarlyAccessPostHandler(dependencies: EarlyAccessDependenci
         console.error('[early-access] notification failed (non-fatal)', notifyErr);
       }
 
-      try {
-        await dependencies.sendApplicantConfirmation(record.email, record.name);
-      } catch (err) {
-        console.error('[early-access] Applicant confirmation failed (non-fatal)', err);
-      }
-
       if (!dbSaved && !noticeSent) {
         return NextResponse.json(
           { error: 'Failed to process application' },
           { status: 500 },
         );
+      }
+
+      try {
+        await dependencies.sendApplicantConfirmation(record.email, record.name);
+      } catch (err) {
+        console.error('[early-access] Applicant confirmation failed (non-fatal)', err);
       }
 
       return NextResponse.json({ success: true, saved: dbSaved });

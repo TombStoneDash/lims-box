@@ -120,6 +120,57 @@ test('ordinary clinical handler input remains clinical', async () => {
   assert.equal((records[0] as Record<string, unknown>).track, 'clinical');
 });
 
+test('handler fails closed and does not confirm when neither persistence nor notice delivery succeeds', async () => {
+  const confirmations: Array<[string, string]> = [];
+  const handler = createEarlyAccessPostHandler({
+    createProspect: async () => { throw new Error('database unavailable'); },
+    sendSubmissionNotice: async () => { throw new Error('notice unavailable'); },
+    sendApplicantConfirmation: async (email, name) => { confirmations.push([email, name]); },
+  });
+
+  const response = await handler(request(validApplication));
+
+  assert.equal(response.status, 500);
+  assert.deepEqual(await response.json(), { error: 'Failed to process application' });
+  assert.deepEqual(confirmations, []);
+});
+
+test('handler confirms only after one durable processing path succeeds', async () => {
+  const cases = [
+    {
+      name: 'database',
+      createProspect: async () => undefined,
+      sendSubmissionNotice: async () => { throw new Error('notice unavailable'); },
+      expectedSaved: true,
+    },
+    {
+      name: 'operator notice',
+      createProspect: async () => { throw new Error('database unavailable'); },
+      sendSubmissionNotice: async () => undefined,
+      expectedSaved: false,
+    },
+  ];
+
+  for (const scenario of cases) {
+    const confirmations: Array<[string, string]> = [];
+    const handler = createEarlyAccessPostHandler({
+      createProspect: scenario.createProspect,
+      sendSubmissionNotice: scenario.sendSubmissionNotice,
+      sendApplicantConfirmation: async (email, name) => { confirmations.push([email, name]); },
+    });
+
+    const response = await handler(request(validApplication));
+
+    assert.equal(response.status, 200, scenario.name);
+    assert.deepEqual(
+      await response.json(),
+      { success: true, saved: scenario.expectedSaved },
+      scenario.name,
+    );
+    assert.deepEqual(confirmations, [['jane@example.com', 'Jane Smith']], scenario.name);
+  }
+});
+
 test('handler rejects missing required fields, invalid enums, non-strings, oversized text, and missing acknowledgement', async () => {
   const invalidBodies = [
     { ...validApplication, painPoint: '' },
@@ -138,4 +189,11 @@ test('handler rejects missing required fields, invalid enums, non-strings, overs
     assert.equal(notices.length, 0);
     assert.equal(confirmations.length, 0);
   }
+});
+
+test('applicant confirmation copy makes no unproven response-time promise', async () => {
+  const notifySource = await readFile('lib/notify.ts', 'utf8');
+
+  assert.doesNotMatch(notifySource, /within 2 business days/i);
+  assert.doesNotMatch(notifySource, /usually same business day/i);
 });

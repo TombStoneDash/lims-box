@@ -1,6 +1,10 @@
 import { test, beforeEach, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
-import { shouldDomainFallback, sendSubmissionNotice } from '../../lib/notify';
+import {
+  sendApplicantConfirmation,
+  sendSubmissionNotice,
+  shouldDomainFallback,
+} from '../../lib/notify';
 
 // RESEND_API_KEY is read inside sendSubmissionNotice at call time, so setting
 // it after the static import (hoisted) is safe.
@@ -66,6 +70,56 @@ test('no fallback when the primary send succeeds', async () => {
 
 test('no fallback on non-domain errors (e.g. 422)', async () => {
   responses.push({ ok: false, status: 422, body: 'Invalid from field' });
-  await sendSubmissionNotice({ subject: 's', lines: [['a', 'b']] });
+  await assert.rejects(
+    sendSubmissionNotice({ subject: 's', lines: [['a', 'b']] }),
+    /Submission notice delivery failed \(422\)/,
+  );
+  assert.equal(calls.length, 1);
+});
+
+test('fallback failure rejects instead of reporting delivery', async () => {
+  responses.push({ ok: false, status: 403, body: 'The lims.bot domain is not verified' });
+  responses.push({ ok: false, status: 500, body: 'fallback unavailable' });
+
+  await assert.rejects(
+    sendSubmissionNotice({ subject: 's', lines: [['a', 'b']] }),
+    /Submission notice fallback delivery failed \(500\)/,
+  );
+  assert.equal(calls.length, 2);
+});
+
+test('missing delivery configuration rejects instead of silently succeeding', async () => {
+  const previous = process.env.RESEND_API_KEY;
+  delete process.env.RESEND_API_KEY;
+  try {
+    await assert.rejects(
+      sendSubmissionNotice({ subject: 's', lines: [['a', 'b']] }),
+      /Submission notice delivery is not configured/,
+    );
+    assert.equal(calls.length, 0);
+  } finally {
+    process.env.RESEND_API_KEY = previous;
+  }
+});
+
+test('applicant confirmation resolves only after a successful provider response', async () => {
+  responses.push({ ok: true, status: 200, body: '{"id":"confirmation-ok"}' });
+
+  await sendApplicantConfirmation('applicant@example.com', 'Test Applicant');
+
+  assert.equal(calls.length, 1);
+  const body = JSON.parse(String(calls[0].init.body));
+  assert.deepEqual(body.to, ['applicant@example.com']);
+  assert.doesNotMatch(body.html, /within 2 business days/i);
+  assert.doesNotMatch(body.html, /usually same business day/i);
+});
+
+test('applicant confirmation rejects provider failures', async () => {
+  responses.push({ ok: false, status: 422, body: 'Invalid recipient' });
+
+  await assert.rejects(
+    sendApplicantConfirmation('applicant@example.com', 'Test Applicant'),
+    /Applicant confirmation delivery failed \(422\)/,
+  );
   assert.equal(calls.length, 1);
 });
