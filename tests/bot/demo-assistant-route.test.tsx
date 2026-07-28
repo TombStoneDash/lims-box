@@ -146,6 +146,53 @@ test('actual POST route refuses clause-appended paraphrases of supported neutral
   }
 });
 
+test('actual POST route recognizes underscore and hyphen matrix aliases for container requests (LIMS-PR78-MATRIX-ALIASES-20260728-R4)', async () => {
+  const cases = [
+    { question: 'What container does ENV-NIT require for drinking_water?', testCode: 'ENV-NIT' },
+    { question: 'What container does ENV-NIT require for drinking-water?', testCode: 'ENV-NIT' },
+    { question: 'What container does ENV-PH require for surface_water?', testCode: 'ENV-PH' },
+    { question: 'What container does ENV-PH require for surface-water?', testCode: 'ENV-PH' },
+  ];
+
+  for (const { question, testCode } of cases) {
+    const response = await POST(requestWith({ question }));
+    assert.equal(response.status, 200, question);
+    const body = await responseBody(response);
+    assert.equal(body.grounded, true, question);
+    assert.match(String(body.answer), /1 × STERILE_HDPE/, question);
+    assert.deepEqual(
+      body.sources,
+      [{ title: `Synthetic test ${testCode}`, path: `/demo/assistant#synthetic-test-${testCode.toLowerCase()}` }],
+      question,
+    );
+  }
+});
+
+test('actual POST route refuses an appended unsafe clause on an underscore matrix alias', async () => {
+  const response = await POST(
+    requestWith({ question: 'What container does ENV-NIT require for drinking_water and would a doctor be concerned' }),
+  );
+  assert.equal(response.status, 200);
+  const body = await responseBody(response);
+  assert.equal(body.grounded, false);
+  assert.deepEqual(body.sources, []);
+  assert.doesNotMatch(String(body.answer), /STERILE_HDPE/);
+});
+
+test('actual POST route keeps unsupported matrices ungrounded regardless of separator', async () => {
+  for (const question of [
+    'What container does ENV-NIT require for serum?',
+    'What container does ENV-NIT require for surface_water?',
+  ]) {
+    const response = await POST(requestWith({ question }));
+    assert.equal(response.status, 200, question);
+    const body = await responseBody(response);
+    assert.equal(body.grounded, false, question);
+    assert.deepEqual(body.sources, [], question);
+    assert.match(String(body.answer), /not configured for/i, question);
+  }
+});
+
 test('actual POST route reproves read-only order guidance with record-specific sources', async () => {
   const response = await POST(requestWith({ question: `How do I order CHEM-ALT for ${DEMO_SAMPLE_ID}?` }));
   assert.equal(response.status, 200);

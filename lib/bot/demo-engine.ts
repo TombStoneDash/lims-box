@@ -170,7 +170,16 @@ function alternation(values: string[]): string {
 const SAMPLE_ID_PARAM_PATTERN = /\bsyn-26\d{3}-\d{4}\b/g;
 const TEST_CODE_PARAM_PATTERN = new RegExp(`\\b(?:${alternation(tests.map((test) => test.code.toLowerCase()))})\\b`, 'g');
 const TEST_NAME_PARAM_PATTERN = new RegExp(`\\b(?:${alternation(tests.map((test) => test.name.toLowerCase()))})\\b`, 'g');
-const MATRIX_PARAM_PATTERN = new RegExp(`\\b(?:${alternation(MATRIX_KEYS.map((matrix) => matrix.replaceAll('_', ' ')))})\\b`, 'g');
+// Matrix keys are underscore-joined (e.g. "drinking_water"), but the UI and
+// existing data paths also use hyphen- and space-separated spellings, so the
+// separator between words is matched as any of the three interchangeably.
+const MATRIX_WORD_SEPARATOR = '[ _-]+';
+const MATRIX_PARAM_PATTERN = new RegExp(
+  `\\b(?:${MATRIX_KEYS.map((matrix) => matrix.split('_').map(escapeRegExp).join(MATRIX_WORD_SEPARATOR))
+    .sort((a, b) => b.length - a.length)
+    .join('|')})\\b`,
+  'g',
+);
 
 // Normalizes the whole request to lowercase, punctuation-free words, then
 // swaps record identifiers and other known parameters for fixed sentinel

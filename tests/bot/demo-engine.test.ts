@@ -35,6 +35,57 @@ test('answers matrix-specific container requirements', () => {
   assert.match(response.answer, /1 × SST/);
 });
 
+test('recognizes underscore and hyphen matrix aliases for container requests (LIMS-PR78-MATRIX-ALIASES-20260728-R4)', () => {
+  const drinkingWaterUnderscore = askDemoAssistant('What container does ENV-NIT require for drinking_water?');
+  assertGrounded(drinkingWaterUnderscore);
+  assert.match(drinkingWaterUnderscore.answer, /1 × STERILE_HDPE/);
+  assert.deepEqual(drinkingWaterUnderscore.sources, [
+    { title: 'Synthetic test ENV-NIT', path: '/demo/assistant#synthetic-test-env-nit' },
+  ]);
+
+  const drinkingWaterHyphen = askDemoAssistant('What container does ENV-NIT require for drinking-water?');
+  assertGrounded(drinkingWaterHyphen);
+  assert.match(drinkingWaterHyphen.answer, /1 × STERILE_HDPE/);
+  assert.deepEqual(drinkingWaterHyphen.sources, [
+    { title: 'Synthetic test ENV-NIT', path: '/demo/assistant#synthetic-test-env-nit' },
+  ]);
+
+  const surfaceWaterUnderscore = askDemoAssistant('What container does ENV-PH require for surface_water?');
+  assertGrounded(surfaceWaterUnderscore);
+  assert.match(surfaceWaterUnderscore.answer, /1 × STERILE_HDPE/);
+  assert.deepEqual(surfaceWaterUnderscore.sources, [
+    { title: 'Synthetic test ENV-PH', path: '/demo/assistant#synthetic-test-env-ph' },
+  ]);
+
+  const surfaceWaterHyphen = askDemoAssistant('What container does ENV-PH require for surface-water?');
+  assertGrounded(surfaceWaterHyphen);
+  assert.match(surfaceWaterHyphen.answer, /1 × STERILE_HDPE/);
+  assert.deepEqual(surfaceWaterHyphen.sources, [
+    { title: 'Synthetic test ENV-PH', path: '/demo/assistant#synthetic-test-env-ph' },
+  ]);
+});
+
+test('an appended unsafe clause is still refused when the matrix uses an underscore alias', () => {
+  const response = askDemoAssistant(
+    'What container does ENV-NIT require for drinking_water and would a doctor be concerned',
+  );
+  assert.equal(response.grounded, false);
+  assert.deepEqual(response.sources, []);
+  assert.doesNotMatch(response.answer, /STERILE_HDPE/);
+});
+
+test('unsupported matrices remain ungrounded regardless of separator', () => {
+  for (const question of [
+    'What container does ENV-NIT require for serum?',
+    'What container does ENV-NIT require for surface_water?',
+  ]) {
+    const response = askDemoAssistant(question);
+    assert.equal(response.grounded, false, question);
+    assert.deepEqual(response.sources, [], question);
+    assert.match(response.answer, /not configured for/i, question);
+  }
+});
+
 test('refuses an explicit synthetic order creation request', () => {
   const response = askDemoAssistant(`Create an order for CHEM-ALT on ${DEMO_SAMPLE_ID}`);
   assert.equal(response.grounded, false);
