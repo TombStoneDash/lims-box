@@ -1,0 +1,161 @@
+{
+  "fixtureNotice": "Entirely fictional regression data for local testing; no real person, laboratory, certificate, or procedure is represented.",
+  "clockIso": "2025-01-02T03:04:05.000Z",
+  "generatedAt": "Jan 2, 2025, 3:04:05 AM UTC",
+  "people": [
+    {
+      "id": "demo-person-001",
+      "name": "Demo Analyst One",
+      "role": "Testing Personnel",
+      "cliaCertNumber": "NOT-A-REAL-CERT",
+      "hireDate": "2024-01-15T00:00:00.000Z",
+      "active": true,
+      "createdAt": "2024-01-01T00:00:00.000Z",
+      "updatedAt": "2024-01-01T00:00:00.000Z",
+      "competencies": [
+        {
+          "id": "demo-competency-001",
+          "personId": "demo-person-001",
+          "type": "Initial competency",
+          "status": "complete",
+          "completedAt": "2024-02-01T00:00:00.000Z",
+          "expiresAt": "2025-02-01T00:00:00.000Z",
+          "notes": "Fictional competency record",
+          "createdAt": "2024-01-01T00:00:00.000Z"
+        }
+      ],
+      "trainings": [
+        {
+          "id": "demo-training-001",
+          "personId": "demo-person-001",
+          "course": "Example Safety Basics",
+          "provider": "Example Training Provider",
+          "completedAt": "2024-02-02T00:00:00.000Z",
+          "hours": 2,
+          "certificate": null,
+          "createdAt": "2024-01-01T00:00:00.000Z"
+        }
+      ],
+      "signOffs": [
+        {
+          "id": "demo-signoff-001",
+          "personId": "demo-person-001",
+          "directorName": "Demo Director One",
+          "signedAt": "2024-02-03T00:00:00.000Z",
+          "scope": "Example routine testing",
+          "notes": "Fictional sign-off record",
+          "createdAt": "2024-01-01T00:00:00.000Z"
+        }
+      ],
+      "authorizations": [
+        {
+          "id": "demo-authorization-001",
+          "personId": "demo-person-001",
+          "procedureId": "demo-procedure-001",
+          "authorizedAt": "2024-02-04T00:00:00.000Z",
+          "authorizedBy": "Demo Director One",
+          "scope": "Supervised example use",
+          "revokedAt": null,
+          "revokedBy": null,
+          "revocationReason": null,
+          "isActive": true,
+          "createdAt": "2024-01-01T00:00:00.000Z",
+          "procedure": {
+            "id": "demo-procedure-001",
+            "name": "Example Assay",
+            "procedureCode": "DEMO-ASSAY",
+            "description": "Fictional procedure used only by the regression fixture",
+            "active": true,
+            "createdAt": "2024-01-01T00:00:00.000Z",
+            "updatedAt": "2024-01-01T00:00:00.000Z"
+          }
+        }
+      ]
+    }
+  ],
+  "expected": {
+    "status": 200,
+    "contentType": "application/zip",
+    "contentDisposition": "attachment; filename=\"survey-ready-bundle-2025-01-02.zip\"",
+    "cacheControl": "no-store",
+    "entryNames": [
+      "MANIFEST.txt",
+      "index.pdf",
+      "personnel/demo-analyst-one.pdf"
+    ],
+    "manifest": "CLIA Survey-Ready Bundle\nGenerated: Jan 2, 2025, 3:04:05 AM UTC\nPersonnel count: 1\n\nFiles:\n  index.pdf\n  personnel/demo-analyst-one.pdf  (Demo Analyst One — Testing Personnel)\n\nWorkflow documentation support. Human-reviewed drafting.\nConfirm completeness before any CMS or accreditation submission.",
+    "zipSha256": "18bfd3e5123167b0ca4c759f7468f9110605fb4ee958fc3e83ae30b252e2dbff",
+    "pdfText": {
+      "index.pdf": [
+        "CLIA Survey-Ready Bundle — Personnel Index",
+        "Generated Jan 2, 2025, 3:04:05 AM UTC · 1 active personnel",
+        "Workflow documentation support. Human-reviewed drafting. Confirm completeness before any CMS or accreditation",
+        "submission.",
+        "Name",
+        "Name",
+        "Role",
+        "Comp",
+        "Train",
+        "S-off",
+        "Auth",
+        "Demo Analyst One",
+        "Testing Personnel",
+        "1",
+        "1",
+        "1",
+        "1",
+        "Comp =",
+        "active",
+        "competency",
+        "records ·",
+        "Train =",
+        "training",
+        "completions",
+        "· S-off =",
+        "director sign-",
+        "offs · Auth",
+        "= active",
+        "procedure au",
+        "thorizations",
+        "Included",
+        "files in",
+        "this",
+        "bundle:",
+        "index.pdf",
+        "— this",
+        "document",
+        "personnel/",
+        "demo-",
+        "analyst-",
+        "one.pdf —",
+        "Demo",
+        "Analyst",
+        "One",
+        "(Testing",
+        "Personnel)"
+      ],
+      "personnel/demo-analyst-one.pdf": [
+        "Demo Analyst One",
+        "Testing Personnel",
+        "CLIA cert: NOT-A-REAL-CERT · Hired: Jan 15, 2024 · Generated Jan 2, 2025, 3:04:05 AM UTC",
+        "Competencies",
+        "Initial competency",
+        "— complete (expires Feb 1, 2025)",
+        "Completed: Feb 1, 2024",
+        "Notes: Fictional competency record",
+        "Training Log",
+        "Example Safety Basics",
+        "(Example Training Provider) — Feb 2, 2024 · 2 hrs",
+        "Director Sign-offs",
+        "Example routine testing",
+        "— Demo Director One (Feb 3, 2024)",
+        "Notes: Fictional sign-off record",
+        "Procedure Authorizations",
+        "Example Assay [DEMO-ASSAY]",
+        "— Authorized by Demo Director One (Feb 4, 2024) · Supervised example use",
+        "LIMS BOX — Workflow documentation support. Human-reviewed drafting. This document reflects records in the local database at time of export. Confirm",
+        "completeness before any CMS/accreditation submission."
+      ]
+    }
+  }
+}
