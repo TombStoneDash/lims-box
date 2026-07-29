@@ -1,16 +1,20 @@
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { mkdtemp, readFile, readdir, rm } from 'node:fs/promises';
-import os from 'node:os';
-import { join, resolve } from 'node:path';
+import { mkdtemp, readFile, readdir, rm, symlink, writeFile } from 'node:fs/promises';
+import { basename, join, resolve } from 'node:path';
 import test from 'node:test';
+import { fileURLToPath } from 'node:url';
+import {
+  findSyntheticPrivacyViolations,
+  SYNTHETIC_IDENTITY_ALLOWLIST,
+} from '../../scripts/lib/synthetic-privacy.mjs';
+import { validateSyntheticOutputDirectory } from '../../scripts/gen-synthetic-lims.mjs';
 
 const repoRoot = resolve(import.meta.dirname, '../..');
 const generator = join(repoRoot, 'scripts/gen-synthetic-lims.mjs');
 const committedData = join(repoRoot, 'data/synthetic');
 const expectedMatrices = new Set(['serum', 'plasma', 'swab', 'urine']);
-const realCorpusDenylist = [1684, 449, 589, 646, 945, 1197];
 
 async function readJson(path) {
   return JSON.parse(await readFile(path, 'utf8'));
@@ -24,7 +28,10 @@ async function listFiles(directory) {
       return entry.isDirectory() ? listFiles(path) : [path];
     }),
   );
-  return nested.flat().sort();
+  return nested
+    .flat()
+    .filter((path) => basename(path) !== '.synthetic-lims-generator-owned')
+    .sort();
 }
 
 async function digestDirectory(directory) {
@@ -44,9 +51,8 @@ function runGenerator(outDir) {
 }
 
 test('generator is deterministic and committed data is current', async () => {
-  const tempRoot = await mkdtemp(join(os.tmpdir(), 'lims-synthetic-'));
-  const first = join(tempRoot, 'first');
-  const second = join(tempRoot, 'second');
+  const first = await uniqueRepoOutput('first');
+  const second = await uniqueRepoOutput('second');
 
   try {
     runGenerator(first);
@@ -54,7 +60,66 @@ test('generator is deterministic and committed data is current', async () => {
     assert.equal(await digestDirectory(first), await digestDirectory(second));
     assert.equal(await digestDirectory(first), await digestDirectory(committedData));
   } finally {
-    await rm(tempRoot, { recursive: true, force: true });
+    await Promise.all([first, second].map((path) => rm(path, { recursive: true, force: true })));
+  }
+});
+
+async function uniqueRepoOutput(label) {
+  const holder = await mkdtemp(join(repoRoot, `.synthetic-data-${label}-`));
+  await rm(holder, { recursive: true, force: true });
+  return holder;
+}
+
+function runGeneratorExpectFailure(outDir) {
+  assert.throws(
+    () => runGenerator(outDir),
+    /Unsafe synthetic output target/,
+  );
+}
+
+test('generator rejects unsafe recursive-delete targets and preserves sentinels', async () => {
+  let outside;
+  let unsafeNamed;
+  let symlinkTarget;
+  let symlinkPath;
+
+  try {
+    outside = await mkdtemp('/tmp/lims-synthetic-unsafe-');
+    const outsideSentinel = join(outside, 'sentinel.txt');
+    unsafeNamed = await mkdtemp(join(repoRoot, '.synthetic-data-unowned-'));
+    const unsafeNamedSentinel = join(unsafeNamed, 'sentinel.txt');
+    symlinkTarget = await mkdtemp('/tmp/lims-synthetic-symlink-target-');
+    const symlinkSentinel = join(symlinkTarget, 'sentinel.txt');
+    symlinkPath = join(repoRoot, `.synthetic-data-symlink-${process.pid}`);
+
+    await Promise.all([
+      writeFile(outsideSentinel, 'outside-preserved'),
+      writeFile(unsafeNamedSentinel, 'unowned-preserved'),
+      writeFile(symlinkSentinel, 'symlink-target-preserved'),
+    ]);
+    await symlink(symlinkTarget, symlinkPath, process.platform === 'win32' ? 'junction' : 'dir');
+
+    await assert.rejects(
+      validateSyntheticOutputDirectory(repoRoot),
+      /Unsafe synthetic output target/,
+    );
+    await assert.rejects(
+      validateSyntheticOutputDirectory(join(committedData, '..', '..')),
+      /Unsafe synthetic output target/,
+    );
+    runGeneratorExpectFailure(outside);
+    runGeneratorExpectFailure(unsafeNamed);
+    runGeneratorExpectFailure(symlinkPath);
+    assert.equal(await readFile(outsideSentinel, 'utf8'), 'outside-preserved');
+    assert.equal(await readFile(unsafeNamedSentinel, 'utf8'), 'unowned-preserved');
+    assert.equal(await readFile(symlinkSentinel, 'utf8'), 'symlink-target-preserved');
+  } finally {
+    await Promise.all([
+      outside ? rm(outside, { recursive: true, force: true }) : Promise.resolve(),
+      unsafeNamed ? rm(unsafeNamed, { recursive: true, force: true }) : Promise.resolve(),
+      symlinkPath ? rm(symlinkPath, { force: true }) : Promise.resolve(),
+      symlinkTarget ? rm(symlinkTarget, { recursive: true, force: true }) : Promise.resolve(),
+    ]);
   }
 });
 
@@ -79,8 +144,8 @@ test('dataset has the required fabricated shape and matrix-valid orders', async 
   const sampleById = new Map(samples.map((sample) => [sample.id, sample]));
 
   for (const sample of samples) {
-    assert.match(sample.id, /^SYN-26\d{3}-\d{4}$/);
-    assert.match(sample.customer_id, /^SYN-CUST-\d{3}$/);
+    assert.match(sample.id, SYNTHETIC_IDENTITY_ALLOWLIST.sampleId);
+    assert.match(sample.customer_id, SYNTHETIC_IDENTITY_ALLOWLIST.customerId);
     assert.ok(expectedMatrices.has(sample.matrix));
     assert.equal(sample.synthetic, true);
     assert.ok(Date.parse(sample.expected_report_at) > Date.parse(sample.received_at));
@@ -120,6 +185,16 @@ test('dataset has the required fabricated shape and matrix-valid orders', async 
     assert.equal(result.units, catalogEntry.units);
     assert.equal(result.detection_limit, catalogEntry.detection_limit);
     assert.equal(result.synthetic, true);
+    assert.match(result.id, SYNTHETIC_IDENTITY_ALLOWLIST.resultId);
+    assert.match(result.sample_id, SYNTHETIC_IDENTITY_ALLOWLIST.sampleId);
+  }
+
+  for (const person of personnel) {
+    assert.match(person.id, SYNTHETIC_IDENTITY_ALLOWLIST.personnelId);
+    assert.match(person.display_name, SYNTHETIC_IDENTITY_ALLOWLIST.personnelName);
+    for (const authorization of person.authorizations) {
+      assert.match(authorization, SYNTHETIC_IDENTITY_ALLOWLIST.authorizationId);
+    }
   }
 });
 
@@ -133,15 +208,109 @@ test('HL7 fixtures are explicitly synthetic ORU_R01 messages', async () => {
     assert.match(message, /^MSH\|\^~\\&\|SYNTHETIC_ANALYZER/m);
     assert.match(message, /\|ORU\^R01\|/);
     assert.match(message, /FABRICATED SYNTHETIC DEMO MESSAGE/);
-    assert.doesNotMatch(message, /\b(?:patient|client) name\b/i);
+    const pid = message.split('\n').find((line) => line.startsWith('PID|'));
+    const msh = message.split('\n').find((line) => line.startsWith('MSH|'));
+    assert.ok(pid);
+    assert.ok(msh);
+    assert.match(pid.split('|')[3].split('^')[0], SYNTHETIC_IDENTITY_ALLOWLIST.hl7SubjectId);
+    assert.match(msh.split('|')[9], SYNTHETIC_IDENTITY_ALLOWLIST.hl7MessageId);
   }
 });
 
-test('generated fixtures do not contain known real-corpus operational figures', async () => {
+test('generated artifacts reject common PHI, PII, identity, and secret patterns', async () => {
   const paths = await listFiles(committedData);
-  const combined = (await Promise.all(paths.map((path) => readFile(path, 'utf8')))).join('\n');
+  const artifacts = await Promise.all(
+    paths.map(async (path) => ({ path, content: await readFile(path, 'utf8') })),
+  );
+  assert.deepEqual(findSyntheticPrivacyViolations(artifacts), []);
+});
 
-  for (const value of realCorpusDenylist) {
-    assert.doesNotMatch(combined, new RegExp(`\\b${value}\\b`), `found denylisted real-corpus figure ${value}`);
+// Each adversarial fixture is assembled at test runtime by joining fragments
+// that are individually non-secret shaped. JS string-literal punctuation
+// (quotes/commas/brackets) between fragments also breaks the disallowed
+// patterns' required contiguity, so the committed source never contains a
+// complete literal PII/PHI/credential/token shape — only the runtime-joined
+// value does. See the source-scan regression test below for proof.
+const ADVERSARIAL_FIXTURE_FRAGMENTS = [
+  ['email', ['contact ', 'Jane.Doe', '@example', '.org']],
+  ['ssn', ['subject ', '123-45', '-6789']],
+  ['phone', ['call ', '(415) 555', '-0123']],
+  ['street_address', ['location ', '123 Main', ' Street']],
+  ['medical_identity_label', ['MRN', ': 849201']],
+  ['private_key', ['-----BEGIN PRI', 'VATE KEY-----']],
+  ['bearer_token', ['Bearer abcdefgh', 'ijklmnopqrstuvwxyz']],
+  ['secret_assignment', ['API_KEY=supersecret', 'value']],
+  ['secret_assignment', ['{"api_key":"', 'supersecretvalue"}']],
+  ['secret_assignment', ['{"password":"', 'hunterhunter"}']],
+  ['secret_assignment', ['token: abcdefgh', 'ijklmnop']],
+  ['secret_assignment', ["secret = 'abcdefgh", "ijklmnop'"]],
+  ['provider_token', ['sk_', 'live_', 'abcdefghijklmnopqrstuvwxyz']],
+  ['provider_token', ['sk_', 'test_', 'abcdefghijklmnopqrstuvwxyz']],
+  ['provider_token', ['ghp_', 'abcdefghijklmnopqrstuvwxyz123456']],
+  ['provider_token', ['AKIA', 'ABCDEFGHIJKLMNOP']],
+  ['jwt', ['eyJabcdefghijk', 'abcdefghijkl', 'abcdefghijkl']],
+];
+
+function assembleAdversarialFixtures() {
+  return ADVERSARIAL_FIXTURE_FRAGMENTS.map(([category, fragments]) => [
+    category,
+    category === 'jwt' ? fragments.join('.') : fragments.join(''),
+  ]);
+}
+
+test('privacy scanner detects adversarial PHI, PII, identity, and secret fixtures', () => {
+  for (const [expectedCategory, content] of assembleAdversarialFixtures()) {
+    assert.ok(
+      findSyntheticPrivacyViolations([{ path: 'adversarial.fixture', content }]).some(
+        ({ category }) => category === expectedCategory,
+      ),
+      `failed to detect ${expectedCategory}`,
+    );
   }
+});
+
+test('committed test source contains no complete adversarial literal and runtime detections stay redacted', async () => {
+  const selfSource = await readFile(fileURLToPath(import.meta.url), 'utf8');
+  assert.deepEqual(
+    findSyntheticPrivacyViolations([{ path: 'tests/synthetic/shape.test.mjs', content: selfSource }]),
+    [],
+    'committed test source must not contain a complete literal adversarial value',
+  );
+
+  for (const [, fragments] of ADVERSARIAL_FIXTURE_FRAGMENTS) {
+    for (const fragment of fragments) {
+      assert.deepEqual(
+        findSyntheticPrivacyViolations([{ path: 'fragment.fixture', content: fragment }]),
+        [],
+        `fragment must not independently form a complete adversarial shape: ${fragment}`,
+      );
+    }
+  }
+
+  for (const [expectedCategory, content] of assembleAdversarialFixtures()) {
+    const violations = findSyntheticPrivacyViolations([{ path: 'adversarial.fixture', content }]);
+    const violation = violations.find(({ category }) => category === expectedCategory);
+    assert.ok(violation, `runtime-assembled fixture did not trigger ${expectedCategory} detection`);
+    assert.equal(violation.match, '[REDACTED]');
+    assert.equal(violation.path, 'adversarial.fixture');
+    assert.ok(!Object.prototype.hasOwnProperty.call(violation, 'value'));
+  }
+});
+
+test('privacy scanner allows synthetic and non-credential lookalikes', () => {
+  const safeNegatives = [
+    '{"token_count":344}',
+    '{"token":"synthetic"}',
+    'api_key: UNKNOWN',
+    'password policy applies',
+    'Synthetic secret discipline training',
+    'sk_test_placeholder',
+    'SYN-AUTH-001',
+  ];
+  assert.deepEqual(
+    findSyntheticPrivacyViolations(
+      safeNegatives.map((content, index) => ({ path: `safe-negative-${index}.fixture`, content })),
+    ),
+    [],
+  );
 });

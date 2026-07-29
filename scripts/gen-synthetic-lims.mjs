@@ -1,12 +1,17 @@
 #!/usr/bin/env node
 
-import { mkdir, rm, writeFile } from 'node:fs/promises';
-import { dirname, join, resolve } from 'node:path';
+import { access, lstat, mkdir, readFile, realpath, rm, writeFile } from 'node:fs/promises';
+import { basename, dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const DEFAULT_SEED = 20260726;
 const DEFAULT_SAMPLE_COUNT = 200;
 const SAMPLE_MATRICES = ['serum', 'plasma', 'swab', 'urine'];
+const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+const CANONICAL_OUTPUT = join(REPO_ROOT, 'data', 'synthetic');
+const TEMP_OUTPUT_PATTERN = /^\.synthetic-data-[A-Za-z0-9][A-Za-z0-9._-]*$/;
+const OWNER_SENTINEL = '.synthetic-lims-generator-owned';
+const OWNER_SENTINEL_CONTENT = 'LIMS BOX synthetic generator output v1\n';
 
 const MATRIX_CONFIG = {
   serum: { container: 'SST' },
@@ -85,7 +90,7 @@ function shuffle(random, values) {
 
 function parseArgs(argv) {
   const options = {
-    outDir: resolve('data/synthetic'),
+    outDir: CANONICAL_OUTPUT,
     seed: DEFAULT_SEED,
     sampleCount: DEFAULT_SAMPLE_COUNT,
   };
@@ -246,6 +251,71 @@ async function writeJson(path, value) {
   await writeFile(path, `${JSON.stringify(value, null, 2)}\n`);
 }
 
+function isWithin(parent, candidate) {
+  const child = relative(parent, candidate);
+  return child === '' || (!child.startsWith(`..${sep}`) && child !== '..' && !isAbsolute(child));
+}
+
+async function pathExists(path) {
+  try {
+    await access(path);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+async function assertNoSymlinkComponents(path) {
+  const pathFromRoot = relative(REPO_ROOT, path);
+  let current = REPO_ROOT;
+  for (const component of pathFromRoot.split(sep).filter(Boolean)) {
+    current = join(current, component);
+    if (!(await pathExists(current))) break;
+    const stats = await lstat(current);
+    if (stats.isSymbolicLink()) {
+      throw new Error(`Unsafe synthetic output target: symlink component ${current}`);
+    }
+  }
+}
+
+export async function validateSyntheticOutputDirectory(outDir) {
+  const target = resolve(outDir);
+  const repoRootReal = await realpath(REPO_ROOT);
+  const isCanonical = target === CANONICAL_OUTPUT;
+  const isNamedTemporaryOutput =
+    dirname(target) === REPO_ROOT && TEMP_OUTPUT_PATTERN.test(basename(target));
+
+  if (target === REPO_ROOT || !isWithin(REPO_ROOT, target) || (!isCanonical && !isNamedTemporaryOutput)) {
+    throw new Error(
+      `Unsafe synthetic output target: use ${CANONICAL_OUTPUT} or a repo-local .synthetic-data-* directory`,
+    );
+  }
+
+  await assertNoSymlinkComponents(target);
+
+  const nearestExisting = (await pathExists(target)) ? target : dirname(target);
+  const nearestReal = await realpath(nearestExisting);
+  if (!isWithin(repoRootReal, nearestReal)) {
+    throw new Error('Unsafe synthetic output target: resolved path escapes the repository');
+  }
+
+  if (await pathExists(target)) {
+    const stats = await lstat(target);
+    if (!stats.isDirectory() || stats.isSymbolicLink()) {
+      throw new Error('Unsafe synthetic output target: existing target is not a real directory');
+    }
+    if (!isCanonical) {
+      const sentinel = join(target, OWNER_SENTINEL);
+      const sentinelContent = await readFile(sentinel, 'utf8').catch(() => null);
+      if (sentinelContent !== OWNER_SENTINEL_CONTENT) {
+        throw new Error('Unsafe synthetic output target: existing temporary directory is not generator-owned');
+      }
+    }
+  }
+
+  return target;
+}
+
 export async function generateSyntheticLims({ outDir, seed, sampleCount }) {
   const random = mulberry32(seed);
   const catalog = buildCatalog();
@@ -253,13 +323,18 @@ export async function generateSyntheticLims({ outDir, seed, sampleCount }) {
   const results = generateResults(random, samples, catalog);
   const personnel = generatePersonnel();
 
-  await rm(outDir, { recursive: true, force: true });
-  await mkdir(join(outDir, 'hl7/oru_r01_samples'), { recursive: true });
-  await writeJson(join(outDir, 'samples.json'), samples);
-  await writeJson(join(outDir, 'tests.json'), catalog);
-  await writeJson(join(outDir, 'results.json'), results);
-  await writeJson(join(outDir, 'personnel.json'), personnel);
-  await writeJson(join(outDir, 'manifest.json'), {
+  const safeOutDir = await validateSyntheticOutputDirectory(outDir);
+  await rm(safeOutDir, { recursive: true, force: true });
+  await mkdir(safeOutDir, { recursive: true });
+  if (safeOutDir !== CANONICAL_OUTPUT) {
+    await writeFile(join(safeOutDir, OWNER_SENTINEL), OWNER_SENTINEL_CONTENT);
+  }
+  await mkdir(join(safeOutDir, 'hl7/oru_r01_samples'), { recursive: true });
+  await writeJson(join(safeOutDir, 'samples.json'), samples);
+  await writeJson(join(safeOutDir, 'tests.json'), catalog);
+  await writeJson(join(safeOutDir, 'results.json'), results);
+  await writeJson(join(safeOutDir, 'personnel.json'), personnel);
+  await writeJson(join(safeOutDir, 'manifest.json'), {
     dataset: 'LIMS BOX fabricated synthetic demo dataset',
     seed,
     sample_count: samples.length,
@@ -274,7 +349,7 @@ export async function generateSyntheticLims({ outDir, seed, sampleCount }) {
   for (const [index, result] of hl7Candidates.entries()) {
     const sample = samples.find((candidate) => candidate.id === result.sample_id);
     await writeFile(
-      join(outDir, 'hl7/oru_r01_samples', `oru_r01_${String(index + 1).padStart(2, '0')}.hl7`),
+      join(safeOutDir, 'hl7/oru_r01_samples', `oru_r01_${String(index + 1).padStart(2, '0')}.hl7`),
       buildHl7(sample, result, index),
     );
   }

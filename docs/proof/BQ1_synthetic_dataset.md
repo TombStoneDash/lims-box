@@ -55,14 +55,34 @@ npm run test:synthetic
 Result:
 
 ```text
-tests 4
-pass 4
+tests 8
+pass 8
 fail 0
 ```
 
 The test suite generates the complete dataset twice with the fixed seed, hashes
 every output file, and confirms both generated copies match each other and the
 committed fixtures.
+
+Before any recursive replacement, the generator now permits only the canonical
+`data/synthetic` directory or a repo-local `.synthetic-data-*` test directory.
+Existing temporary targets must carry the generator-owned sentinel, and symlink
+components, repository-root aliases, outside paths, and unowned directories fail
+closed. Sentinel-preservation tests prove rejection happens before deletion.
+
+The privacy control uses this documented synthetic identity allowlist:
+
+- sample IDs: `SYN-26DDD-NNNN`;
+- customer IDs: `SYN-CUST-NNN`;
+- result IDs: `SYN-RES-NNNNN`;
+- personnel IDs/names: `SYN-STAFF-NNN` / `Synthetic Staff NN`;
+- authorization IDs: `SYN-AUTH-NNN`;
+- HL7 subject/message IDs: `SYNTHETIC-SUBJECT-NNN` / `SYN-MSG-NNN`.
+
+ISO timestamps, assay names, analytes, units, and explicit `SYNTHETIC_*`
+facility/analyzer labels are allowed because they are generated domain fixtures,
+not identity-bearing input. No real-corpus input path exists: the generator imports
+only Node built-ins and its checked-in fabricated blueprints.
 
 It also verifies:
 
@@ -72,13 +92,17 @@ It also verifies:
 - every catalog entry declares a matrix-specific container, unit, analyte, and detection limit;
 - every result has a recognized flag, unit, detection limit, and valid sample/test link;
 - all five HL7 fixtures are ORU_R01 messages and contain an explicit fabricated-data note;
-- known real-corpus operational figures `1684`, `449`, `589`, `646`, `945`, and `1197` have zero whole-number matches in generated output.
-
-Independent denylist command result:
-
-```text
-DENYLIST_MATCHES=0
-```
+- every identity-bearing JSON and HL7 field matches the allowlist;
+- every generated artifact is scanned for email, SSN, phone, street-address,
+  medical-identity labels, private keys, bearer/JWT tokens, quoted or unquoted
+  JSON/YAML credential assignments, and high-confidence provider-token shapes;
+- adversarial fixtures for every prohibited category are assembled at test
+  runtime from individually non-secret fragments, detected by the same
+  scanner, and returned only as redacted category/path metadata, while safe
+  synthetic/non-credential lookalikes remain allowed;
+- the committed test source itself is scanned to prove no complete literal
+  adversarial value or secret/PII shape is present in the diff, and each
+  fragment is proven incapable of forming a complete shape on its own.
 
 No production table, client corpus, credential, external service, deployment,
 or database was read or written to produce this dataset.
