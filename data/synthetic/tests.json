@@ -1,0 +1,784 @@
+[
+  {
+    "code": "SER-AB-HAV",
+    "name": "Hepatitis A IgM",
+    "discipline": "serology",
+    "valid_matrices": [
+      "serum"
+    ],
+    "analytes": [
+      "HAV IgM"
+    ],
+    "containers_per_test": [
+      {
+        "matrix": "serum",
+        "type": "SST",
+        "quantity": 1
+      }
+    ],
+    "units": "IU/mL",
+    "detection_limit": 0.2,
+    "synthetic": true
+  },
+  {
+    "code": "SER-AB-HBV",
+    "name": "Hepatitis B Surface Antibody",
+    "discipline": "serology",
+    "valid_matrices": [
+      "serum"
+    ],
+    "analytes": [
+      "HBsAb"
+    ],
+    "containers_per_test": [
+      {
+        "matrix": "serum",
+        "type": "SST",
+        "quantity": 1
+      }
+    ],
+    "units": "mIU/mL",
+    "detection_limit": 1,
+    "synthetic": true
+  },
+  {
+    "code": "SER-AG-HBV",
+    "name": "Hepatitis B Surface Antigen",
+    "discipline": "serology",
+    "valid_matrices": [
+      "serum",
+      "plasma"
+    ],
+    "analytes": [
+      "HBsAg"
+    ],
+    "containers_per_test": [
+      {
+        "matrix": "serum",
+        "type": "SST",
+        "quantity": 1
+      },
+      {
+        "matrix": "plasma",
+        "type": "EDTA",
+        "quantity": 1
+      }
+    ],
+    "units": "index",
+    "detection_limit": 0.05,
+    "synthetic": true
+  },
+  {
+    "code": "SER-AB-HCV",
+    "name": "Hepatitis C Antibody",
+    "discipline": "serology",
+    "valid_matrices": [
+      "serum",
+      "plasma"
+    ],
+    "analytes": [
+      "HCV Ab"
+    ],
+    "containers_per_test": [
+      {
+        "matrix": "serum",
+        "type": "SST",
+        "quantity": 1
+      },
+      {
+        "matrix": "plasma",
+        "type": "EDTA",
+        "quantity": 1
+      }
+    ],
+    "units": "index",
+    "detection_limit": 0.1,
+    "synthetic": true
+  },
+  {
+    "code": "SER-AG-HIV",
+    "name": "HIV Antigen Antibody Screen",
+    "discipline": "serology",
+    "valid_matrices": [
+      "serum",
+      "plasma"
+    ],
+    "analytes": [
+      "HIV Ag/Ab"
+    ],
+    "containers_per_test": [
+      {
+        "matrix": "serum",
+        "type": "SST",
+        "quantity": 1
+      },
+      {
+        "matrix": "plasma",
+        "type": "EDTA",
+        "quantity": 1
+      }
+    ],
+    "units": "index",
+    "detection_limit": 0.1,
+    "synthetic": true
+  },
+  {
+    "code": "SER-SYPH",
+    "name": "Syphilis Treponemal Antibody",
+    "discipline": "serology",
+    "valid_matrices": [
+      "serum",
+      "plasma"
+    ],
+    "analytes": [
+      "Treponemal Ab"
+    ],
+    "containers_per_test": [
+      {
+        "matrix": "serum",
+        "type": "SST",
+        "quantity": 1
+      },
+      {
+        "matrix": "plasma",
+        "type": "EDTA",
+        "quantity": 1
+      }
+    ],
+    "units": "index",
+    "detection_limit": 0.1,
+    "synthetic": true
+  },
+  {
+    "code": "MOL-FLU-A",
+    "name": "Influenza A PCR",
+    "discipline": "molecular",
+    "valid_matrices": [
+      "swab"
+    ],
+    "analytes": [
+      "Influenza A"
+    ],
+    "containers_per_test": [
+      {
+        "matrix": "swab",
+        "type": "VTM",
+        "quantity": 1
+      }
+    ],
+    "units": "copies/mL",
+    "detection_limit": 120,
+    "synthetic": true
+  },
+  {
+    "code": "MOL-FLU-B",
+    "name": "Influenza B PCR",
+    "discipline": "molecular",
+    "valid_matrices": [
+      "swab"
+    ],
+    "analytes": [
+      "Influenza B"
+    ],
+    "containers_per_test": [
+      {
+        "matrix": "swab",
+        "type": "VTM",
+        "quantity": 1
+      }
+    ],
+    "units": "copies/mL",
+    "detection_limit": 120,
+    "synthetic": true
+  },
+  {
+    "code": "MOL-RSV",
+    "name": "Respiratory Syncytial Virus PCR",
+    "discipline": "molecular",
+    "valid_matrices": [
+      "swab"
+    ],
+    "analytes": [
+      "RSV"
+    ],
+    "containers_per_test": [
+      {
+        "matrix": "swab",
+        "type": "VTM",
+        "quantity": 1
+      }
+    ],
+    "units": "copies/mL",
+    "detection_limit": 150,
+    "synthetic": true
+  },
+  {
+    "code": "MOL-COV2",
+    "name": "Synthetic Coronavirus Target PCR",
+    "discipline": "molecular",
+    "valid_matrices": [
+      "swab"
+    ],
+    "analytes": [
+      "SCV-2 target"
+    ],
+    "containers_per_test": [
+      {
+        "matrix": "swab",
+        "type": "VTM",
+        "quantity": 1
+      }
+    ],
+    "units": "copies/mL",
+    "detection_limit": 100,
+    "synthetic": true
+  },
+  {
+    "code": "MOL-CT",
+    "name": "Chlamydia trachomatis NAAT",
+    "discipline": "molecular",
+    "valid_matrices": [
+      "swab",
+      "urine"
+    ],
+    "analytes": [
+      "C. trachomatis"
+    ],
+    "containers_per_test": [
+      {
+        "matrix": "swab",
+        "type": "VTM",
+        "quantity": 1
+      },
+      {
+        "matrix": "urine",
+        "type": "STERILE_CUP",
+        "quantity": 1
+      }
+    ],
+    "units": "copies/mL",
+    "detection_limit": 90,
+    "synthetic": true
+  },
+  {
+    "code": "MOL-NG",
+    "name": "Neisseria gonorrhoeae NAAT",
+    "discipline": "molecular",
+    "valid_matrices": [
+      "swab",
+      "urine"
+    ],
+    "analytes": [
+      "N. gonorrhoeae"
+    ],
+    "containers_per_test": [
+      {
+        "matrix": "swab",
+        "type": "VTM",
+        "quantity": 1
+      },
+      {
+        "matrix": "urine",
+        "type": "STERILE_CUP",
+        "quantity": 1
+      }
+    ],
+    "units": "copies/mL",
+    "detection_limit": 90,
+    "synthetic": true
+  },
+  {
+    "code": "CHEM-GLU",
+    "name": "Glucose",
+    "discipline": "chemistry",
+    "valid_matrices": [
+      "serum",
+      "plasma",
+      "urine"
+    ],
+    "analytes": [
+      "Glucose"
+    ],
+    "containers_per_test": [
+      {
+        "matrix": "serum",
+        "type": "SST",
+        "quantity": 1
+      },
+      {
+        "matrix": "plasma",
+        "type": "EDTA",
+        "quantity": 1
+      },
+      {
+        "matrix": "urine",
+        "type": "STERILE_CUP",
+        "quantity": 1
+      }
+    ],
+    "units": "mg/dL",
+    "detection_limit": 2,
+    "synthetic": true
+  },
+  {
+    "code": "CHEM-CREA",
+    "name": "Creatinine",
+    "discipline": "chemistry",
+    "valid_matrices": [
+      "serum",
+      "plasma",
+      "urine"
+    ],
+    "analytes": [
+      "Creatinine"
+    ],
+    "containers_per_test": [
+      {
+        "matrix": "serum",
+        "type": "SST",
+        "quantity": 1
+      },
+      {
+        "matrix": "plasma",
+        "type": "EDTA",
+        "quantity": 1
+      },
+      {
+        "matrix": "urine",
+        "type": "STERILE_CUP",
+        "quantity": 1
+      }
+    ],
+    "units": "mg/dL",
+    "detection_limit": 0.1,
+    "synthetic": true
+  },
+  {
+    "code": "CHEM-ALT",
+    "name": "Alanine Aminotransferase",
+    "discipline": "chemistry",
+    "valid_matrices": [
+      "serum",
+      "plasma"
+    ],
+    "analytes": [
+      "ALT"
+    ],
+    "containers_per_test": [
+      {
+        "matrix": "serum",
+        "type": "SST",
+        "quantity": 1
+      },
+      {
+        "matrix": "plasma",
+        "type": "EDTA",
+        "quantity": 1
+      }
+    ],
+    "units": "U/L",
+    "detection_limit": 1,
+    "synthetic": true
+  },
+  {
+    "code": "CHEM-AST",
+    "name": "Aspartate Aminotransferase",
+    "discipline": "chemistry",
+    "valid_matrices": [
+      "serum",
+      "plasma"
+    ],
+    "analytes": [
+      "AST"
+    ],
+    "containers_per_test": [
+      {
+        "matrix": "serum",
+        "type": "SST",
+        "quantity": 1
+      },
+      {
+        "matrix": "plasma",
+        "type": "EDTA",
+        "quantity": 1
+      }
+    ],
+    "units": "U/L",
+    "detection_limit": 1,
+    "synthetic": true
+  },
+  {
+    "code": "CHEM-BILI",
+    "name": "Total Bilirubin",
+    "discipline": "chemistry",
+    "valid_matrices": [
+      "serum",
+      "plasma"
+    ],
+    "analytes": [
+      "Bilirubin"
+    ],
+    "containers_per_test": [
+      {
+        "matrix": "serum",
+        "type": "SST",
+        "quantity": 1
+      },
+      {
+        "matrix": "plasma",
+        "type": "EDTA",
+        "quantity": 1
+      }
+    ],
+    "units": "mg/dL",
+    "detection_limit": 0.1,
+    "synthetic": true
+  },
+  {
+    "code": "CHEM-ALB",
+    "name": "Albumin",
+    "discipline": "chemistry",
+    "valid_matrices": [
+      "serum",
+      "plasma"
+    ],
+    "analytes": [
+      "Albumin"
+    ],
+    "containers_per_test": [
+      {
+        "matrix": "serum",
+        "type": "SST",
+        "quantity": 1
+      },
+      {
+        "matrix": "plasma",
+        "type": "EDTA",
+        "quantity": 1
+      }
+    ],
+    "units": "g/dL",
+    "detection_limit": 0.1,
+    "synthetic": true
+  },
+  {
+    "code": "CHEM-NA",
+    "name": "Sodium",
+    "discipline": "chemistry",
+    "valid_matrices": [
+      "serum",
+      "plasma",
+      "urine"
+    ],
+    "analytes": [
+      "Sodium"
+    ],
+    "containers_per_test": [
+      {
+        "matrix": "serum",
+        "type": "SST",
+        "quantity": 1
+      },
+      {
+        "matrix": "plasma",
+        "type": "EDTA",
+        "quantity": 1
+      },
+      {
+        "matrix": "urine",
+        "type": "STERILE_CUP",
+        "quantity": 1
+      }
+    ],
+    "units": "mmol/L",
+    "detection_limit": 1,
+    "synthetic": true
+  },
+  {
+    "code": "CHEM-K",
+    "name": "Potassium",
+    "discipline": "chemistry",
+    "valid_matrices": [
+      "serum",
+      "plasma",
+      "urine"
+    ],
+    "analytes": [
+      "Potassium"
+    ],
+    "containers_per_test": [
+      {
+        "matrix": "serum",
+        "type": "SST",
+        "quantity": 1
+      },
+      {
+        "matrix": "plasma",
+        "type": "EDTA",
+        "quantity": 1
+      },
+      {
+        "matrix": "urine",
+        "type": "STERILE_CUP",
+        "quantity": 1
+      }
+    ],
+    "units": "mmol/L",
+    "detection_limit": 0.1,
+    "synthetic": true
+  },
+  {
+    "code": "TB-IGRA-A",
+    "name": "Synthetic TB Antigen A",
+    "discipline": "tb",
+    "valid_matrices": [
+      "plasma"
+    ],
+    "analytes": [
+      "TB Ag A response"
+    ],
+    "containers_per_test": [
+      {
+        "matrix": "plasma",
+        "type": "EDTA",
+        "quantity": 1
+      }
+    ],
+    "units": "IU/mL",
+    "detection_limit": 0.01,
+    "synthetic": true
+  },
+  {
+    "code": "TB-IGRA-B",
+    "name": "Synthetic TB Antigen B",
+    "discipline": "tb",
+    "valid_matrices": [
+      "plasma"
+    ],
+    "analytes": [
+      "TB Ag B response"
+    ],
+    "containers_per_test": [
+      {
+        "matrix": "plasma",
+        "type": "EDTA",
+        "quantity": 1
+      }
+    ],
+    "units": "IU/mL",
+    "detection_limit": 0.01,
+    "synthetic": true
+  },
+  {
+    "code": "TB-NIL",
+    "name": "Synthetic TB Nil Control",
+    "discipline": "tb",
+    "valid_matrices": [
+      "plasma"
+    ],
+    "analytes": [
+      "Nil control"
+    ],
+    "containers_per_test": [
+      {
+        "matrix": "plasma",
+        "type": "EDTA",
+        "quantity": 1
+      }
+    ],
+    "units": "IU/mL",
+    "detection_limit": 0.01,
+    "synthetic": true
+  },
+  {
+    "code": "TB-MIT",
+    "name": "Synthetic TB Mitogen Control",
+    "discipline": "tb",
+    "valid_matrices": [
+      "plasma"
+    ],
+    "analytes": [
+      "Mitogen control"
+    ],
+    "containers_per_test": [
+      {
+        "matrix": "plasma",
+        "type": "EDTA",
+        "quantity": 1
+      }
+    ],
+    "units": "IU/mL",
+    "detection_limit": 0.01,
+    "synthetic": true
+  },
+  {
+    "code": "ENV-NIT",
+    "name": "Synthetic Nitrate Screen",
+    "discipline": "environmental",
+    "valid_matrices": [
+      "drinking_water",
+      "wastewater"
+    ],
+    "analytes": [
+      "Nitrate surrogate"
+    ],
+    "containers_per_test": [
+      {
+        "matrix": "drinking_water",
+        "type": "STERILE_HDPE",
+        "quantity": 1
+      },
+      {
+        "matrix": "wastewater",
+        "type": "STERILE_HDPE",
+        "quantity": 1
+      }
+    ],
+    "units": "mg/L",
+    "detection_limit": 0.05,
+    "synthetic": true
+  },
+  {
+    "code": "ENV-PH",
+    "name": "Synthetic pH Screen",
+    "discipline": "environmental",
+    "valid_matrices": [
+      "drinking_water",
+      "wastewater",
+      "surface_water"
+    ],
+    "analytes": [
+      "pH"
+    ],
+    "containers_per_test": [
+      {
+        "matrix": "drinking_water",
+        "type": "STERILE_HDPE",
+        "quantity": 1
+      },
+      {
+        "matrix": "wastewater",
+        "type": "STERILE_HDPE",
+        "quantity": 1
+      },
+      {
+        "matrix": "surface_water",
+        "type": "STERILE_HDPE",
+        "quantity": 1
+      }
+    ],
+    "units": "SU",
+    "detection_limit": 0.1,
+    "synthetic": true
+  },
+  {
+    "code": "ENV-COND",
+    "name": "Synthetic Conductivity Screen",
+    "discipline": "environmental",
+    "valid_matrices": [
+      "drinking_water",
+      "surface_water"
+    ],
+    "analytes": [
+      "Conductivity"
+    ],
+    "containers_per_test": [
+      {
+        "matrix": "drinking_water",
+        "type": "STERILE_HDPE",
+        "quantity": 1
+      },
+      {
+        "matrix": "surface_water",
+        "type": "STERILE_HDPE",
+        "quantity": 1
+      }
+    ],
+    "units": "uS/cm",
+    "detection_limit": 1,
+    "synthetic": true
+  },
+  {
+    "code": "ENV-MET-A",
+    "name": "Synthetic Metals Panel A",
+    "discipline": "environmental",
+    "valid_matrices": [
+      "drinking_water",
+      "wastewater"
+    ],
+    "analytes": [
+      "Metal A",
+      "Metal B"
+    ],
+    "containers_per_test": [
+      {
+        "matrix": "drinking_water",
+        "type": "STERILE_HDPE",
+        "quantity": 1
+      },
+      {
+        "matrix": "wastewater",
+        "type": "STERILE_HDPE",
+        "quantity": 1
+      }
+    ],
+    "units": "ug/L",
+    "detection_limit": 0.5,
+    "synthetic": true
+  },
+  {
+    "code": "ENV-MET-B",
+    "name": "Synthetic Metals Panel B",
+    "discipline": "environmental",
+    "valid_matrices": [
+      "surface_water",
+      "wastewater"
+    ],
+    "analytes": [
+      "Metal C",
+      "Metal D"
+    ],
+    "containers_per_test": [
+      {
+        "matrix": "surface_water",
+        "type": "STERILE_HDPE",
+        "quantity": 1
+      },
+      {
+        "matrix": "wastewater",
+        "type": "STERILE_HDPE",
+        "quantity": 1
+      }
+    ],
+    "units": "ug/L",
+    "detection_limit": 0.5,
+    "synthetic": true
+  },
+  {
+    "code": "ENV-ORG",
+    "name": "Synthetic Organics Screen",
+    "discipline": "environmental",
+    "valid_matrices": [
+      "drinking_water",
+      "wastewater"
+    ],
+    "analytes": [
+      "Organic surrogate"
+    ],
+    "containers_per_test": [
+      {
+        "matrix": "drinking_water",
+        "type": "AMBER_GLASS",
+        "quantity": 1
+      },
+      {
+        "matrix": "wastewater",
+        "type": "AMBER_GLASS",
+        "quantity": 1
+      }
+    ],
+    "units": "ug/L",
+    "detection_limit": 0.2,
+    "synthetic": true
+  }
+]
