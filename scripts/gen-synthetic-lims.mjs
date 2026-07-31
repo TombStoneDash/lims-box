@@ -23,6 +23,14 @@ const MATRIX_CONFIG = {
   surface_water: { container: 'STERILE_HDPE' },
 };
 
+const TURNAROUND_HOURS_BY_DISCIPLINE = {
+  serology: 36,
+  molecular: 24,
+  chemistry: 18,
+  tb: 48,
+  environmental: 72,
+};
+
 const CATALOG_BLUEPRINT = [
   ['SER-AB-HAV', 'Hepatitis A IgM', 'serology', ['serum'], ['HAV IgM'], 'SST', 'IU/mL', 0.2],
   ['SER-AB-HBV', 'Hepatitis B Surface Antibody', 'serology', ['serum'], ['HBsAb'], 'SST', 'mIU/mL', 1],
@@ -120,6 +128,7 @@ function buildCatalog() {
       })),
       units,
       detection_limit: detectionLimit,
+      turnaround_hours: TURNAROUND_HOURS_BY_DISCIPLINE[discipline],
       synthetic: true,
     }),
   );
@@ -145,6 +154,14 @@ function generateSamples(random, catalog, sampleCount) {
     const sequence = String(index + 1).padStart(4, '0');
     const receivedHour = String(8 + (index % 9)).padStart(2, '0');
 
+    const receivedAt = `2026-02-${String((index % 24) + 1).padStart(2, '0')}T${receivedHour}:00:00Z`;
+    const turnaroundHours = Math.max(
+      ...orderedTests.map((code) => catalog.find((test) => test.code === code).turnaround_hours),
+    );
+    const expectedReportAt = new Date(
+      new Date(receivedAt).getTime() + turnaroundHours * 60 * 60 * 1000,
+    ).toISOString();
+
     return {
       id: `SYN-26${dayOfYear}-${sequence}`,
       customer_id: `SYN-CUST-${String((index % 24) + 1).padStart(3, '0')}`,
@@ -152,7 +169,8 @@ function generateSamples(random, catalog, sampleCount) {
       container: MATRIX_CONFIG[matrix].container,
       status: statusFor(index),
       priority: index % 13 === 0 ? 'rush' : 'routine',
-      received_at: `2026-02-${String((index % 24) + 1).padStart(2, '0')}T${receivedHour}:00:00Z`,
+      received_at: receivedAt,
+      expected_report_at: expectedReportAt,
       test_codes: orderedTests,
       synthetic: true,
     };

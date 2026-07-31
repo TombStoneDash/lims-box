@@ -148,6 +148,7 @@ test('dataset has the required fabricated shape and matrix-valid orders', async 
     assert.match(sample.customer_id, SYNTHETIC_IDENTITY_ALLOWLIST.customerId);
     assert.ok(expectedMatrices.has(sample.matrix));
     assert.equal(sample.synthetic, true);
+    assert.ok(Date.parse(sample.expected_report_at) > Date.parse(sample.received_at));
     assert.ok(sample.test_codes.length >= 1);
     for (const code of sample.test_codes) {
       const catalogEntry = catalogByCode.get(code);
@@ -170,6 +171,7 @@ test('dataset has the required fabricated shape and matrix-valid orders', async 
     assert.ok(entry.analytes.length >= 1);
     assert.ok(entry.units);
     assert.ok(entry.detection_limit > 0);
+    assert.ok(entry.turnaround_hours > 0);
     assert.equal(entry.synthetic, true);
   }
 
