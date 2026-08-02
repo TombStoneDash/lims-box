@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { normalizeEmail } from '@/lib/emailValidation';
 
 export const runtime = 'nodejs';
-
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export async function POST(req: NextRequest) {
   try {
@@ -10,14 +9,13 @@ export async function POST(req: NextRequest) {
     const { email, source } = body;
 
     // ── 1. Validate email format ──────────────────────────────────────────
-    if (!email || typeof email !== 'string' || !EMAIL_REGEX.test(email)) {
+    const normalizedEmail = normalizeEmail(email);
+    if (!normalizedEmail) {
       return NextResponse.json(
         { error: 'Valid email is required' },
         { status: 400 }
       );
     }
-
-    const normalizedEmail = email.trim().toLowerCase();
 
     // ── 2. Check if Resend API key is configured ─────────────────────────
     const apiKey = process.env.RESEND_API_KEY;

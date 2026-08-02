@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { normalizeEmail } from "@/lib/emailValidation";
 
 export const dynamic = "force-dynamic";
 
@@ -29,7 +30,7 @@ export async function POST(req: NextRequest) {
 
   const track = clean(payload.track);
   const name = clean(payload.name);
-  const email = clean(payload.email);
+  const email = normalizeEmail(payload.email);
   const labName = clean(payload.labName);
   const labSize = clean(payload.labSize);
 
