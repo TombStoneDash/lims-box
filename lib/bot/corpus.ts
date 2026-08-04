@@ -26,6 +26,20 @@ export const corpus: CorpusEntry[] = [
     text: "The LIMS that doesn't need an IT department. Lab management for labs that build and grow on real samples. Offline-capable. Built for survey readiness. Optional AI assistance.",
   },
   {
+    id: 'what-is-lims-bot',
+    title: 'What is LIMS BOT?',
+    source: '/bot',
+    keywords: ['bot', 'assistant', 'prototype', 'questions', 'answers', 'documentation'],
+    text: 'LIMS BOT is a prototype. It only answers from published LIMS BOX documentation and never stores your questions.',
+  },
+  {
+    id: 'sample-tracking-overview',
+    title: 'What does LIMS BOX track?',
+    source: '/commercial',
+    keywords: ['sample', 'samples', 'track', 'tracked', 'tracking', 'action', 'actions', 'logged', 'record', 'records'],
+    text: 'Every sample tracked. Every action logged. Every record survey-ready.',
+  },
+  {
     id: 'setup-time',
     title: 'How long does it take to set up LIMS BOX?',
     source: '/faq',

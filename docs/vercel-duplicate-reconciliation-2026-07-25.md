@@ -1,5 +1,53 @@
 # Vercel duplicate-project reconciliation — issue #70 receipt (2026-07-25)
 
+## Current addendum — 2026-08-03 (read-only)
+
+The duplicate-build problem has expanded from two projects to three. A single
+push to `TombStoneDash/lims-box` now starts builds in all of these projects:
+
+| Project | ID | Current role | Latest observed build |
+|---|---|---|---|
+| `lims-box` | `prj_Jxlddo9q4MtWHcM6zd4lE6uK9N26` | Canonical; owns `lims.bot` and `www.lims.bot` | READY |
+| `limsbot` | `prj_x18WjgDIec3NIcPTKFGl56tCvjkf` | Legacy; owns five legacy product domains | READY |
+| `lims-box-pr33` | `prj_TUyxDgwPadx9tZEnPAuj5mVTpyzP` | Stray project; no custom product domains | ERROR |
+
+The three latest builds were created within 118 ms of one another from commit
+`902167f6277f4aad638163eb4372417f15d7a673`. The stray project's build fails
+with Prisma `P1012` because its `DATABASE_URL` is not a PostgreSQL URL. Do not
+repair that environment: the project has no unique product domain and should
+not be building this repository.
+
+Production on both domain-owning projects is still pinned to
+`146bb62ed247d0b9d00c01dd894fc9b5eca167b8`, not current `origin/main`
+`def71b0c8cc6624f91016f3d8745439509452e8c`. Live proof agrees:
+`https://lims.bot/demo/assistant` returns 404 although the route is present at
+`def71b0`. This is a deployment/configuration gap, not a missing merge.
+
+### Exact non-destructive reconciliation sequence
+
+1. In all three projects, compare environment-variable **names and scopes**,
+   deployment protection, integrations, webhooks, root directory, build
+   command, production branch, and Ignored Build Step. Do not read or copy
+   secret values.
+2. If `lims-box-pr33` has no unique dependency, disconnect its Git integration
+   or set an Ignored Build Step that always exits successfully. Preserve the
+   project and deployments as rollback evidence; do not delete it.
+3. In `limsbot`, confirm the five legacy domains have no dependency unique to
+   that project. Move them to canonical `lims-box`, retaining the app-layer 308
+   rules already merged in PR #73.
+4. Disable Git-triggered builds on `limsbot`. Preserve the project and its
+   deployment history.
+5. Trigger no manual production deploy as part of reconciliation. On the next
+   authorized `main` push, verify exactly one production build is created by
+   `lims-box` and neither non-canonical project starts a build.
+6. Verify `lims.bot`, `/bot`, `/demo/assistant`, and `/api/health`; verify all
+   six non-canonical hosts return 308 with path and query preserved.
+7. Stop and request Hudson review if either non-canonical project has a unique
+   environment key, protection rule, integration, webhook, or domain behavior.
+
+Rollback: reconnect the affected Git integration and/or return legacy domains
+to `limsbot`. No project deletion is required.
+
 Machine-safe portion of issue #70, executed read-only via the Vercel MCP
 (project/deployment inspection) plus live HTTP checks. No Vercel setting,
 domain, or deployment was changed. Names only — no secret values were read
