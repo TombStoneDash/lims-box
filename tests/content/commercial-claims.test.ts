@@ -71,13 +71,22 @@ test("case study page is explicitly labeled as an illustrative/hypothetical scen
   const source = read("app/case-study/page.tsx");
   assert.match(source, /hypothetical/i);
   assert.match(source, /illustrative/i);
+  assert.match(source, /composite/i);
   assert.doesNotMatch(source, /real results for real labs/i);
+  assert.doesNotMatch(source, /<Quote/);
+  assert.doesNotMatch(source, /attributed customer quote/i);
 });
 
 test("SENAITE/RidingBytes copy states the open-source technology fact without claiming an active collaboration", () => {
   const homepage = read("app/page.tsx");
-  assert.match(homepage, /originally created by RidingBytes/i);
+  assert.match(
+    homepage,
+    /LIMS BOX uses SENAITE, an open-source Laboratory Information Management System originally created by RidingBytes GmbH\./i,
+  );
   assert.doesNotMatch(homepage, /active technical collaboration/i);
+  assert.doesNotMatch(homepage, /leading open-source/i);
+  assert.doesNotMatch(homepage, /battle-tested/i);
+  assert.doesNotMatch(homepage, /runs labs around the world/i);
 
   const partners = read("app/partners/page.tsx");
   // Truthful, verifiable fact about the open-source project's founders is preserved.
@@ -101,12 +110,11 @@ test("founder credentials remain accurate and present (must not regress while sc
   assert.match(press, /Hudson Taylor is the founder of Tombstone Dash LLC/);
 });
 
-test("illustrative pain-point quotes on vertical pages are not presented as attributed customer testimonials", () => {
-  for (const p of ["app/environmental/page.tsx", "app/clinical/page.tsx"]) {
-    const source = read(p);
-    assert.doesNotMatch(source, /<blockquote/);
-    assert.match(source, /illustrative/i);
-  }
+test("clinical page does not present an invented customer testimonial", () => {
+  const source = read("app/clinical/page.tsx");
+  assert.doesNotMatch(source, /<blockquote/);
+  assert.doesNotMatch(source, /Downtime isn&apos;t theoretical/i);
+  assert.doesNotMatch(source, /illustrative example of a story/i);
 });
 
 test("compliance claims use hedged 'designed for / ready / built for' language instead of unqualified 'compliant'", () => {

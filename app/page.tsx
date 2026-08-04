@@ -93,22 +93,17 @@ export default function HomePage() {
       {/* Commercial */}
       <VideoSection videoId={COMMERCIAL_VIDEO_ID} />
 
-      {/* SENAITE credibility callout — open-source technology fact only, no claimed active collaboration */}
+      {/* SENAITE technology fact only — no partnership or endorsement claim */}
       <section className="py-16 px-4">
         <div className="max-w-4xl mx-auto">
           <div className="bg-white dark:bg-white/5 border border-black/5 dark:border-white/10 rounded-2xl p-8 md:p-12">
             <h2 className="text-2xl md:text-3xl font-bold tracking-tight text-slate-900 dark:text-white mb-5">
               Built on SENAITE.{' '}
-              <span className="text-lab-teal">Open source. Battle-tested.</span>
+              <span className="text-lab-teal">Open source.</span>
             </h2>
             <p className="text-slate-700 dark:text-slate-300 leading-relaxed">
-              LIMS BOX is built on SENAITE, the leading open-source
-              Laboratory Information Management System, originally created by
-              RidingBytes GmbH. We ship hardware, packaging, AI, and
-              go-to-market — SENAITE provides the battle-tested LIMS core that
-              runs labs around the world. The result is enterprise-grade
-              laboratory infrastructure delivered in a rugged case for a
-              fraction of the cost of conventional deployments.
+              LIMS BOX uses SENAITE, an open-source Laboratory Information
+              Management System originally created by RidingBytes GmbH.
             </p>
           </div>
         </div>
