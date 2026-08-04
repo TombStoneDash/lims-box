@@ -39,6 +39,43 @@ test('grounded offline answer with citation', () => {
   assert.ok(res.sources.some((s) => s.path === '/faq'));
 });
 
+test('basic product questions route to published overview copy', () => {
+  for (const question of [
+    'What is LIMS BOX?',
+    'What does it do?',
+    'Who is this for?',
+  ]) {
+    const response = askBot(question);
+    assert.equal(response.grounded, true, question);
+    assert.deepEqual(response.sources, [
+      { title: 'What is LIMS BOX?', path: '/' },
+    ], question);
+    assert.match(response.answer, /doesn't need an IT department/i, question);
+  }
+});
+
+test('LIMS BOT identity question routes to the published prototype description', () => {
+  const response = askBot('Tell me about LIMS BOT');
+  assert.equal(response.grounded, true);
+  assert.deepEqual(response.sources, [
+    { title: 'What is LIMS BOT?', path: '/bot' },
+  ]);
+  assert.match(response.answer, /prototype/i);
+  assert.match(response.answer, /never stores your questions/i);
+});
+
+test('basic sample-tracking question routes to published commercial copy', () => {
+  const response = askBot('Can it track samples?');
+  assert.equal(response.grounded, true);
+  assert.deepEqual(response.sources, [
+    { title: 'What does LIMS BOX track?', path: '/commercial' },
+  ]);
+  assert.equal(
+    response.answer,
+    'Every sample tracked. Every action logged. Every record survey-ready.',
+  );
+});
+
 test('unknown question returns evidence-missing + lead capture routing', () => {
   const res = askBot('Can LIMS BOX order pizza for the night shift?');
   assert.equal(res.grounded, false);

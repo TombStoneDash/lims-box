@@ -45,6 +45,12 @@ const LEAD_INTENT_IDS = new Set([
 ]);
 
 const COMPLIANCE_PATTERN = /clia|hipaa|complian|certif|fda|15189|part\s*11|regulat/i;
+const LIMS_BOX_OVERVIEW_PATTERN =
+  /\b(?:what\s+is|tell\s+me\s+about)\s+(?:the\s+)?lims\s*box\b|\bwhat\s+does\s+(?:lims\s*box|it|this|your\s+product)\s+do\b|\bwho\s+is\s+(?:lims\s*box|it|this)\s+for\b/i;
+const LIMS_BOT_OVERVIEW_PATTERN =
+  /\b(?:what\s+is|tell\s+me\s+about)\s+(?:the\s+)?lims\s*bot\b/i;
+const SAMPLE_TRACKING_PATTERN =
+  /\b(?:can|does)\s+(?:lims\s*box|it|this)\s+(?:track|manage)\s+samples?\b|\bsample\s+(?:tracking|traceability)\b/i;
 
 function tokenize(input: string): string[] {
   return input
@@ -76,10 +82,35 @@ function evidenceMissing(): BotResponse {
   };
 }
 
+function responseForEntry(id: string): BotResponse {
+  const entry = corpus.find((candidate) => candidate.id === id);
+  if (!entry) return evidenceMissing();
+
+  return {
+    answer: entry.text,
+    grounded: true,
+    sources: [{ title: entry.title, path: entry.source }],
+    followUp: LEAD_INTENT_IDS.has(entry.id) ? EARLY_ACCESS_FOLLOW_UP : undefined,
+  };
+}
+
 export function askBot(rawQuestion: unknown): BotResponse {
   if (typeof rawQuestion !== 'string') return evidenceMissing();
   const question = rawQuestion.trim().slice(0, MAX_QUESTION_LENGTH);
   if (!question) return evidenceMissing();
+
+  const isComplianceQuestion = COMPLIANCE_PATTERN.test(question);
+  if (!isComplianceQuestion) {
+    if (LIMS_BOT_OVERVIEW_PATTERN.test(question)) {
+      return responseForEntry('what-is-lims-bot');
+    }
+    if (LIMS_BOX_OVERVIEW_PATTERN.test(question)) {
+      return responseForEntry('what-is-lims-box');
+    }
+    if (SAMPLE_TRACKING_PATTERN.test(question)) {
+      return responseForEntry('sample-tracking-overview');
+    }
+  }
 
   const tokens = tokenize(question);
   if (tokens.length === 0) return evidenceMissing();
@@ -89,8 +120,6 @@ export function askBot(rawQuestion: unknown): BotResponse {
     .sort((a, b) => b.score - a.score);
 
   const top = ranked[0];
-  const isComplianceQuestion = COMPLIANCE_PATTERN.test(question);
-
   if (!top || top.score < MIN_SCORE) {
     // Compliance questions always get the locked positioning, never silence.
     if (isComplianceQuestion) {
