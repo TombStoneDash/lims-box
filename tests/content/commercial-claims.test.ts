@@ -124,11 +124,26 @@ test("compliance claims use hedged 'designed for / ready / built for' language i
 
   const cliaTracker = read("app/clia-tracker/page.tsx");
   assert.doesNotMatch(cliaTracker, /CLIA §493\.1407 Compliance/);
-  assert.match(cliaTracker, /Built for CLIA §493\.1407/);
+  assert.match(cliaTracker, /Personnel documentation for CLIA §493\.1407 workflows/);
 
   const envLabs = read("app/for/environmental-labs/page.tsx");
   assert.doesNotMatch(envLabs, /40 CFR Part 136 Compliant/);
   assert.match(envLabs, /40 CFR Part 136 Ready/);
+});
+
+test("CLIA overview routes to the existing Personnel Pack without stale launch or certification claims", () => {
+  const clia = read("app/clia/page.tsx");
+  const cliaTracker = read("app/clia-tracker/page.tsx");
+
+  assert.match(clia, /Personnel Pack is available now/);
+  assert.match(clia, /href="\/clia-tracker"/);
+  assert.doesNotMatch(clia, /June launch|coming soon/i);
+
+  assert.match(cliaTracker, /href="\/clia"/);
+  for (const source of [clia, cliaTracker]) {
+    assert.doesNotMatch(source, /CLIA compliant|COLA approved|21 CFR Part 11 compliant|HIPAA compliant/i);
+  }
+  assert.doesNotMatch(cliaTracker, /Audit-Ready Compliance|ready for the inspector on day one|covers CLIA §493\.1407 end-to-end|Ready to pass the personnel section/i);
 });
 
 test("public capability evidence matrix exists with all four categories", () => {
