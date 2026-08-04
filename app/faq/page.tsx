@@ -30,7 +30,7 @@ const faqs: FAQ[] = [
   {
     category: 'Pricing & Contracts',
     question: 'What does LIMS BOX cost?',
-    answer: 'Plans start at $500/month for up to 3 users. The Growth plan at $1,200/month supports up to 15 users with instrument integration and advanced reporting. No implementation fee, no long-term contract, cancel anytime. See our pricing page for full details.',
+    answer: 'Plans start at $500/month for up to 3 users. The Growth plan at $1,200/month supports up to 10 users with instrument integration and advanced reporting. No implementation fee, no long-term contract, cancel anytime. See our pricing page for full details.',
   },
   {
     category: 'Pricing & Contracts',
