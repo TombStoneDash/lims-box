@@ -15,14 +15,14 @@ import {
 } from 'lucide-react';
 
 export const metadata: Metadata = {
-  title: 'CLIA Personnel Tracker — Audit-Ready Compliance in One Place | LIMS BOX',
+  title: 'CLIA Personnel Documentation Tracker | LIMS BOX',
   description:
-    'Stop managing CLIA personnel compliance in spreadsheets. LIMS BOX tracks certifications, competency assessments, training logs, and authorizations with a full audit trail — ready for the inspector on day one.',
+    'Organize certifications, competency assessments, training logs, and procedure authorizations with the LIMS BOX Personnel Pack.',
   alternates: { canonical: '/clia-tracker' },
   openGraph: {
-    title: 'CLIA Personnel Tracker — Audit-Ready Compliance in One Place | LIMS BOX',
+    title: 'CLIA Personnel Documentation Tracker | LIMS BOX',
     description:
-      'Centralized CLIA §493.1407 personnel tracking with a full audit log. Know your status before the inspector does.',
+      'Centralized personnel documentation for CLIA §493.1407 workflows, with a documented history of changes.',
     url: 'https://lims.bot/clia-tracker',
   },
 };
@@ -102,6 +102,9 @@ export default function CliaTrackerPage() {
               <Link href="/compare" className="hover:text-white transition-colors">
                 Compare
               </Link>
+              <Link href="/clia" className="hover:text-white transition-colors">
+                CLIA overview
+              </Link>
               <Link href="/early-adopter" className="hover:text-white transition-colors">
                 Early Adopter
               </Link>
@@ -114,14 +117,14 @@ export default function CliaTrackerPage() {
       <section className="py-12 md:py-20 px-4">
         <div className="max-w-4xl mx-auto text-center">
           <div className="inline-flex items-center gap-2 bg-[#2E8B57]/20 text-[#2E8B57] text-sm font-medium px-3 py-1 rounded-full mb-6 border border-[#2E8B57]/30">
-            <BadgeCheck className="w-4 h-4" /> Built for CLIA §493.1407
+            <BadgeCheck className="w-4 h-4" /> Personnel documentation for CLIA §493.1407 workflows
           </div>
           <h1 className="text-3xl md:text-5xl lg:text-6xl font-bold tracking-tight mb-5">
             The Inspector Picks One Technologist.<br className="hidden md:block" />
             Can You Find the Whole File?
           </h1>
           <p className="text-lg md:text-xl text-slate-300 max-w-2xl mx-auto mb-8">
-            LIMS BOX tracks every certification, competency assessment, training event, and
+            LIMS BOX organizes certifications, competency assessments, training events, and
             procedure authorization — with a full audit trail — so you stop doing that inspection
             sprint and start answering confidently.
           </p>
@@ -178,11 +181,11 @@ export default function CliaTrackerPage() {
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-10">
             <h2 className="text-2xl md:text-4xl font-bold tracking-tight mb-4">
-              Everything the inspector asks for. Already in one place.
+              Personnel documentation in one place.
             </h2>
             <p className="text-slate-300 max-w-2xl mx-auto">
-              LIMS BOX Personnel Pack covers CLIA §493.1407 end-to-end — from the first
-              6-month competency through every annual re-evaluation.
+              LIMS BOX Personnel Pack brings competency assessments, training, credentials, and
+              procedure authorizations into one documented workflow.
             </p>
           </div>
           <ul className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -209,15 +212,15 @@ export default function CliaTrackerPage() {
         <div className="max-w-5xl mx-auto bg-white/5 border border-white/10 rounded-2xl p-6 md:p-10">
           <div className="text-center mb-8">
             <div className="inline-flex items-center gap-2 text-xs font-semibold text-[#2E8B57] uppercase tracking-wider mb-3">
-              <Shield className="w-4 h-4" /> Updated for current requirements
+              <Shield className="w-4 h-4" /> Human-reviewed documentation support
             </div>
             <h2 className="text-2xl md:text-3xl font-bold tracking-tight mb-4">
-              CLIA rules changed. Your tracker should too.
+              Organize records around current personnel requirements.
             </h2>
             <p className="text-slate-300 max-w-2xl mx-auto">
-              The CLIA personnel regulations went through their first major overhaul since 1992 —
-              effective December 28, 2024. CMS followed with enforcement-discretion guidance in June 2025.
-              LIMS BOX tracks current requirements, not 1992 ones.
+              The CLIA personnel regulations changed effective December 28, 2024, and CMS issued
+              related guidance in June 2025. Personnel Pack helps organize the records your lab
+              chooses to maintain around those requirements.
             </p>
           </div>
           <div className="bg-black/20 border border-white/5 rounded-xl p-5">
@@ -229,7 +232,8 @@ export default function CliaTrackerPage() {
             </p>
           </div>
           <p className="text-center text-sm text-slate-400 mt-6">
-            Included in every LIMS BOX plan. No separate module. No extra cost.
+            Personnel Pack provides documentation support. Your lab remains responsible for
+            interpreting applicable requirements and reviewing records before submission.
           </p>
         </div>
       </section>
@@ -266,11 +270,11 @@ export default function CliaTrackerPage() {
         <div className="max-w-3xl mx-auto bg-gradient-to-br from-[#2E8B57]/20 to-[#2E8B57]/5 border border-[#2E8B57]/30 rounded-2xl p-8 text-center">
           <CheckCircle2 className="w-10 h-10 text-[#2E8B57] mx-auto mb-3" />
           <h2 className="text-xl md:text-2xl font-bold mb-2">
-            Ready to pass the personnel section?
+            Ready to organize personnel records?
           </h2>
           <p className="text-slate-300 mb-6">
-            LIMS BOX includes full CLIA personnel tracking in every plan. Book a 20-minute demo
-            or see what&apos;s included in each tier.
+            Explore the Personnel Pack workflow in a 20-minute demo or see what&apos;s included in
+            each tier.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link
@@ -299,6 +303,9 @@ export default function CliaTrackerPage() {
             </a>
             <Link href="/" className="hover:text-white transition-colors">
               lims.bot
+            </Link>
+            <Link href="/clia" className="hover:text-white transition-colors">
+              CLIA overview
             </Link>
           </div>
         </div>

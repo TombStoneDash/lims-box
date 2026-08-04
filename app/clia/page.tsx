@@ -1,24 +1,22 @@
 import Link from 'next/link';
-import { FlaskConical, ClipboardCheck, ArrowRight, CheckCircle2, FileText, Bell } from 'lucide-react';
+import { ClipboardCheck, ArrowRight, FileText, BadgeCheck, History } from 'lucide-react';
 import { WaitlistFooter } from '@/components/WaitlistFooter';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'CLIA Tracker — LIMS BOX | Stay Survey-Ready',
-  description: 'CLIA Tracker for clinical labs: monitor certificate status, deadlines, proficiency testing, and personnel competency in one place. Built for COLA-accredited and CLIA-only labs.',
+  title: 'CLIA Workflow Overview — LIMS BOX',
+  description:
+    'Learn how LIMS BOX supports CLIA-related personnel documentation workflows and explore the Personnel Pack capability available today.',
   keywords: [
     'CLIA tracker',
-    'CLIA certificate management',
-    'CLIA proficiency testing',
-    'COLA accreditation tracking',
     'CLIA personnel competency',
-    'clinical lab compliance software',
+    'clinical lab personnel documentation',
   ],
   alternates: { canonical: '/clia' },
   openGraph: {
-    title: 'CLIA Tracker — Stay Survey-Ready | LIMS BOX',
+    title: 'CLIA Workflow Overview | LIMS BOX',
     description:
-      'One place to monitor your CLIA certificate, PT results, personnel competency, and survey deadlines.',
+      'An overview of CLIA-related personnel documentation and the Personnel Pack capability available today.',
     url: 'https://lims.bot/clia',
   },
 };
@@ -31,27 +29,28 @@ export default function CLIATrackerPage() {
       <section className="py-20 md:py-28 px-4">
         <div className="max-w-3xl mx-auto text-center">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-slate-200 dark:border-white/10 text-xs text-slate-600 dark:text-slate-300 mb-6">
-            <Bell className="w-3 h-3 text-lab-teal" /> Coming with the LIMS BOX June launch
+            <BadgeCheck className="w-3 h-3 text-lab-teal" /> Personnel Pack is available now
           </div>
           <h1 className="text-4xl md:text-6xl font-bold tracking-tight mb-6">
-            CLIA Tracker — built for the part nobody likes to think about.
+            CLIA-related personnel documentation, without the spreadsheet sprawl.
           </h1>
           <p className="text-lg md:text-xl text-slate-600 dark:text-slate-300 mb-10 max-w-2xl mx-auto">
-            Certificate status, PT results, personnel competency, survey deadlines. One screen.
-            Designed for COLA-accredited and CLIA-only clinical labs that don&apos;t have a dedicated compliance team.
+            This page is the plain-language overview. The existing Personnel Pack capability helps
+            clinical labs organize competency assessments, training records, credentials, and
+            procedure authorizations with a documented history.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link
-              href="/early-adopter"
+              href="/clia-tracker"
               className="inline-flex items-center justify-center gap-2 bg-lab-teal text-white px-6 py-3 rounded-lg font-medium hover:bg-lab-teal/90 transition-colors"
             >
-              Join the early-adopter list <ArrowRight className="w-4 h-4" />
+              Explore Personnel Pack <ArrowRight className="w-4 h-4" />
             </Link>
             <Link
-              href="/compliance"
+              href="/demo"
               className="inline-flex items-center justify-center gap-2 border border-slate-300 dark:border-white/15 px-6 py-3 rounded-lg font-medium hover:bg-slate-50 dark:hover:bg-white/5 transition-colors"
             >
-              See full compliance scope
+              See the demo
             </Link>
           </div>
         </div>
@@ -60,29 +59,29 @@ export default function CLIATrackerPage() {
       <section className="py-16 px-4 border-t border-slate-100 dark:border-white/10">
         <div className="max-w-5xl mx-auto">
           <h2 className="text-2xl md:text-3xl font-bold text-center mb-12">
-            What CLIA Tracker handles
+            What exists today
           </h2>
           <div className="grid md:grid-cols-2 gap-6">
             {[
               {
                 icon: ClipboardCheck,
-                title: 'Certificate status at a glance',
-                body: 'CLIA number, certificate type (Waiver, PPM, Compliance, Accreditation), expiration date, and renewal window — surfaced before they bite.',
-              },
-              {
-                icon: FlaskConical,
-                title: 'Proficiency testing (PT)',
-                body: 'Track which analytes are enrolled, when shipments are due, when results are submitted, and which results need investigation.',
+                title: 'Competency assessments',
+                body: 'Record initial and recurring competency assessments with dates, reviewers, and sign-off details.',
               },
               {
                 icon: FileText,
-                title: 'Personnel competency',
-                body: 'Per-employee competency assessments mapped to test systems. Six elements per §493.1235. Renewal alerts before they expire.',
+                title: 'Training and credentials',
+                body: 'Keep training events, licenses, certifications, and expiration dates with each personnel record.',
               },
               {
-                icon: CheckCircle2,
-                title: 'Survey readiness',
-                body: 'Inspection checklist mapped to current COLA criteria + CLIA condition-level requirements. Pull a packet at any time.',
+                icon: BadgeCheck,
+                title: 'Procedure authorizations',
+                body: 'Document which personnel are authorized for each procedure and preserve the associated review record.',
+              },
+              {
+                icon: History,
+                title: 'Documented history',
+                body: 'Keep timestamped changes together so reviewers can trace who recorded an update and when.',
               },
             ].map(({ icon: Icon, title, body }) => (
               <div
@@ -102,17 +101,17 @@ export default function CLIATrackerPage() {
 
       <section className="py-16 px-4 border-t border-slate-100 dark:border-white/10">
         <div className="max-w-3xl mx-auto text-center">
-          <h2 className="text-2xl md:text-3xl font-bold mb-4">Built for the labs we actually meet</h2>
+          <h2 className="text-2xl md:text-3xl font-bold mb-4">Overview here. Working capability there.</h2>
           <p className="text-slate-600 dark:text-slate-300 leading-relaxed mb-8">
-            Small clinical labs (1–25 staff). Often one person wearing the lab director, technical
-            consultant, and compliance officer hats. CLIA Tracker is the tool that one person needs
-            so they can stop maintaining their own spreadsheet of expiration dates.
+            This overview explains the personnel-documentation problem. The Personnel Pack page
+            shows the tracker workflow that is available today. LIMS BOX supports recordkeeping;
+            each lab remains responsible for interpreting requirements and reviewing its records.
           </p>
           <Link
-            href="/early-adopter"
+            href="/clia-tracker"
             className="inline-flex items-center gap-2 bg-lab-teal text-white px-6 py-3 rounded-lg font-medium hover:bg-lab-teal/90 transition-colors"
           >
-            Apply for the early-adopter pilot <ArrowRight className="w-4 h-4" />
+            View the Personnel Pack tracker <ArrowRight className="w-4 h-4" />
           </Link>
         </div>
       </section>
