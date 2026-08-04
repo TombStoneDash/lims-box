@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { FlaskConical, ArrowRight, Clock, BarChart3, Users, Quote, CheckCircle2 } from 'lucide-react';
+import { FlaskConical, ArrowRight, Clock, BarChart3, Users, CheckCircle2 } from 'lucide-react';
 import type { Metadata } from 'next';
 
 export const dynamic = 'force-static';
@@ -65,9 +65,8 @@ export default function CaseStudyPage() {
             How a Small Water Lab Could Cut Reporting Time by 70%
           </h1>
           <div className="bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 rounded-xl px-5 py-4 mb-6 text-sm text-amber-900 dark:text-amber-200 leading-relaxed">
-            This is a hypothetical, illustrative scenario built from patterns we commonly hear from small labs
-            evaluating LIMS BOX &mdash; it does not describe an actual LIMS BOX customer, and the lab, people, and
-            quotes below are fictional.
+            This is a hypothetical, illustrative composite scenario. It does not describe an actual LIMS BOX
+            customer; the lab, people, timeline, and results below are fictional examples.
           </div>
           <div className="flex flex-wrap items-center gap-4 text-sm text-slate-500 dark:text-slate-400">
             <span className="flex items-center gap-1"><Users className="w-4 h-4" /> 4 employees</span>
@@ -128,16 +127,6 @@ export default function CaseStudyPage() {
               </ul>
             </div>
 
-            {/* Illustrative narrative — not an attributed customer quote */}
-            <div className="bg-lab-teal/5 dark:bg-lab-teal/10 rounded-xl p-6 border border-lab-teal/20">
-              <Quote className="w-8 h-8 text-lab-teal/40 mb-3" />
-              <p className="text-slate-700 dark:text-slate-200 italic leading-relaxed mb-3">
-                "We knew the spreadsheets were a problem, but we didn't have time to fix them. That's the trap — the system is slow enough to waste your time but not broken enough to force a change. It took a holding time violation on a drinking water compliance sample to finally push us."
-              </p>
-              <p className="text-sm font-medium text-slate-900 dark:text-white">
-                Illustrative — the kind of thing lab directors in this position tell us
-              </p>
-            </div>
           </div>
 
           {/* The Switch */}
@@ -187,27 +176,6 @@ export default function CaseStudyPage() {
               </ul>
             </div>
 
-            {/* Illustrative narrative — not an attributed customer quote */}
-            <div className="bg-lab-teal/5 dark:bg-lab-teal/10 rounded-xl p-6 border border-lab-teal/20">
-              <Quote className="w-8 h-8 text-lab-teal/40 mb-3" />
-              <p className="text-slate-700 dark:text-slate-200 italic leading-relaxed mb-3">
-                "The biggest surprise wasn't the time savings on reporting — it was how much less stressful audit week became. The assessor spent half the time on-site because everything was already organized and traceable."
-              </p>
-              <p className="text-sm font-medium text-slate-900 dark:text-white">
-                Illustrative — the kind of thing lab directors in this position tell us
-              </p>
-            </div>
-          </div>
-
-          {/* Illustrative narrative — not an attributed customer quote */}
-          <div className="bg-slate-50 dark:bg-white/5 rounded-xl p-6 border border-slate-200 dark:border-white/10">
-            <Quote className="w-8 h-8 text-slate-300 mb-3" />
-            <p className="text-slate-700 dark:text-slate-200 italic leading-relaxed mb-3">
-              "I was skeptical about switching because we'd been on spreadsheets for six years. But the learning curve was basically nothing. By day three I was faster in LIMS BOX than I ever was in Excel, and I didn't have to worry about breaking a formula every time I entered results."
-            </p>
-            <p className="text-sm font-medium text-slate-900 dark:text-white">
-              Illustrative — the kind of thing lab analysts in this position tell us
-            </p>
           </div>
         </div>
       </section>
