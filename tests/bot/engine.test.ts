@@ -11,6 +11,7 @@ const FORBIDDEN = [
   /clia\s+certified/i,
   /hipaa\s+compliant/i,
   /part\s*11\s+compliant/i,
+  /part\s*11[\s-]+compatib/i,
   /fda[\s-]+cleared/i,
 ];
 

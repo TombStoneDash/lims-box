@@ -252,7 +252,7 @@ export default function PricingPage() {
       <section className="py-8 px-4 bg-white/50 dark:bg-white/5 border-y border-black/5 dark:border-white/5">
         <div className="max-w-4xl mx-auto flex flex-wrap justify-center gap-8 text-sm text-slate-500 dark:text-slate-400">
           <span className="flex items-center gap-2"><Shield className="w-4 h-4 text-lab-teal" /> ISO 17025 Ready</span>
-          <span className="flex items-center gap-2"><Shield className="w-4 h-4 text-lab-teal" /> 21 CFR Part 11 Compatible</span>
+          <span className="flex items-center gap-2"><Shield className="w-4 h-4 text-lab-teal" /> Supports Part 11 Validation</span>
           <span className="flex items-center gap-2"><Shield className="w-4 h-4 text-lab-teal" /> EPA Reporting Built In</span>
           <span className="flex items-center gap-2"><Shield className="w-4 h-4 text-lab-teal" /> SOC 2 Infrastructure</span>
         </div>
