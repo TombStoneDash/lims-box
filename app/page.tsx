@@ -156,7 +156,7 @@ export default function HomePage() {
             </div>
             <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
               <Shield className="w-5 h-5 text-lab-teal" />
-              <span className="font-medium">21 CFR Part 11 Compatible</span>
+              <span className="font-medium">Supports Part 11 Validation</span>
             </div>
             <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
               <HeartPulse className="w-5 h-5 text-lab-teal" />

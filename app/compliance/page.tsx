@@ -52,7 +52,7 @@ const cfr11Features = [
   {
     icon: UserCheck,
     title: 'Electronic Signatures',
-    description: 'Digital signatures satisfy 21 CFR Part 11 requirements for electronic records. Password-authenticated, legally binding, and permanently tied to the signed data.',
+    description: 'Password-authenticated electronic signatures are tied to the signed record and provide controls a lab can evaluate as part of its own 21 CFR Part 11 validation.',
   },
   {
     icon: Shield,
@@ -115,8 +115,9 @@ export default function CompliancePage() {
             Compliance by design, not by checklist
           </h1>
           <p className="text-lg text-slate-600 dark:text-slate-300 max-w-2xl mx-auto">
-            LIMS BOX embeds ISO 17025 and 21 CFR Part 11 requirements into every workflow.
-            Your lab doesn&apos;t prepare for audits &mdash; the system keeps records survey-ready.
+            LIMS BOX provides configurable controls intended to support ISO 17025 and
+            21 CFR Part 11 workflows. Your lab remains responsible for validation,
+            procedures, training, and its own compliance determination.
           </p>
         </div>
       </section>
@@ -143,7 +144,7 @@ export default function CompliancePage() {
       <section className="px-4 pb-16">
         <div className="max-w-5xl mx-auto">
           <div className="mb-8">
-            <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">21 CFR Part 11 Compatibility</h2>
+            <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">21 CFR Part 11 Validation Support</h2>
             <p className="text-sm text-slate-600 dark:text-slate-300 max-w-2xl">
               FDA regulations for electronic records and electronic signatures. Required for
               pharmaceutical QC, clinical, and drug testing laboratories.
@@ -161,7 +162,7 @@ export default function CompliancePage() {
       <section className="px-4 pb-16">
         <div className="max-w-3xl mx-auto bg-lab-teal/5 dark:bg-lab-teal/10 border border-lab-teal/20 rounded-2xl p-8">
           <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-4">
-            What &ldquo;compliance-ready&rdquo; actually means
+            What software controls can and cannot do
           </h2>
           <div className="space-y-3 text-sm text-slate-700 dark:text-slate-300">
             <div className="flex gap-3">
@@ -170,7 +171,7 @@ export default function CompliancePage() {
             </div>
             <div className="flex gap-3">
               <CheckCircle2 className="w-5 h-5 text-lab-teal mt-0.5 shrink-0" />
-              <span>What it does: provides the <strong>technical controls</strong> that ISO 17025 and 21 CFR Part 11 require &mdash; audit trails, access controls, traceability, electronic signatures, data integrity enforcement.</span>
+              <span>What it does: provides <strong>configurable technical controls</strong> a lab can evaluate in its own ISO 17025 and 21 CFR Part 11 program &mdash; audit trails, access controls, traceability, electronic signatures, and data-integrity enforcement.</span>
             </div>
             <div className="flex gap-3">
               <CheckCircle2 className="w-5 h-5 text-lab-teal mt-0.5 shrink-0" />

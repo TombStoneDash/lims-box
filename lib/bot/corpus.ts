@@ -3,7 +3,8 @@
 // entry mirrors copy that is published on lims.bot (source = site path).
 // Do NOT add claims that are not published on the site.
 // Locked brand rule — forbidden phrasings anywhere in bot output:
-// "CLIA Compliant/Certified", "HIPAA compliant", "Part 11 compliant", "FDA cleared".
+// Never state that the software itself holds regulatory compliance,
+// compatibility, certification, or clearance.
 
 export interface CorpusEntry {
   id: string;
@@ -15,7 +16,7 @@ export interface CorpusEntry {
 
 // Locked compliance positioning (verbatim, never paraphrase):
 export const COMPLIANCE_POSITIONING =
-  'Offline-capable, audit-ready LIMS designed to support CLIA, HIPAA, ISO 15189, and Part 11-compatible workflows — with human-controlled AI assistance and customer-specific validation.';
+  'Offline-capable LIMS designed to support laboratory workflows under CLIA, HIPAA, ISO 15189, and 21 CFR Part 11 — with human-controlled AI assistance and customer-specific validation.';
 
 export const corpus: CorpusEntry[] = [
   {

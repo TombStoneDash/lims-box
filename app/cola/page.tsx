@@ -189,7 +189,7 @@ export default function ColaPage() {
                 <FileText className="w-4 h-4 text-[#2E8B57]" />
               </div>
               <div>
-                <p className="font-semibold mb-1">21 CFR Part 11 &amp; ISO 17025 compatible</p>
+                <p className="font-semibold mb-1">Controls for Part 11 &amp; ISO 17025 workflows</p>
                 <p className="text-sm text-slate-400 leading-relaxed">
                   E-signatures, controlled changes, and traceable records — without
                   hiring a quality consultant to turn them on.

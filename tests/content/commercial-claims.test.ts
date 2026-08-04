@@ -53,6 +53,7 @@ const BANNED_PHRASES: RegExp[] = [
   /we contribute upstream/i,
   /currently running a 5-lab/i,
   /network of vc connectors/i,
+  /part\s*11\s+compatib/i,
 ];
 
 test("no fabricated customer/case-study entities or unsupported collaboration claims remain anywhere in scanned content", () => {
