@@ -166,3 +166,48 @@ test('answers never interpolate user input (fabrication guard)', () => {
     assert.ok(!res.answer.includes('zzqx-nonsense-token'));
   }
 });
+
+test('grounded how-LIMS-BOT-works answer matches published prototype description', () => {
+  const res = askBot('How does LIMS BOT answer questions?');
+  assert.equal(res.grounded, true);
+  assert.ok(res.sources.some((s) => s.path === '/bot'), 'source /bot not found');
+  assert.match(res.answer, /prototype/i);
+  assert.match(res.answer, /published LIMS BOX documentation/i);
+  assert.match(res.answer, /never stores your questions/i);
+});
+
+test('LIMS BOX pricing answer reflects Growth plan 10-user cap not 15', () => {
+  const res = askBot('How many users does the Growth plan support?');
+  assert.equal(res.grounded, true);
+  assert.match(res.answer, /\$1,200\/month/);
+  assert.match(res.answer, /10 users/);
+  assert.ok(
+    !res.answer.includes('15 users'),
+    'Growth plan must not claim 15 users',
+  );
+  assert.ok(res.sources.some((s) => s.path === '/faq'));
+});
+
+test('HIPAA question returns cautious disclaimer not an affirmative compliance claim', () => {
+  const res = askBot('Is LIMS BOX HIPAA compliant?');
+  assert.equal(res.grounded, true);
+  assert.ok(
+    res.answer.startsWith(COMPLIANCE_POSITIONING),
+    'HIPAA answer must start with locked compliance positioning',
+  );
+  assertNoForbidden(res.answer, 'HIPAA answer');
+  assert.ok(res.sources.some((s) => s.path === '/compliance'));
+});
+
+test('SENAITE answer contains no Ramon Bartl collaboration claim', () => {
+  const res = askBot('What is SENAITE and why does LIMS BOX use it?');
+  assert.equal(res.grounded, true);
+  assert.ok(
+    !res.answer.match(/collaborat/i),
+    'SENAITE answer must not claim any collaboration',
+  );
+  assert.ok(
+    !res.answer.match(/ramon\s+bartl/i),
+    'SENAITE answer must not name Ramon Bartl',
+  );
+});
