@@ -11,8 +11,9 @@ import type { NextRequest } from 'next/server';
  *   ADMIN_BASIC_USER  — username for Basic auth
  *   ADMIN_BASIC_PASS  — password for Basic auth
  *
- * When either env var is absent (e.g. local `next dev` without .env.local),
- * the auth check is skipped so local iteration stays frictionless.
+ * Protected paths fail closed when either credential is absent. Local
+ * iteration can use configured development-only credentials; an incomplete
+ * environment must never make an admin route public.
  *
  * To re-enable the old 404 behaviour for /admin in production, replace
  * this file with the previous single-line 404 guard.
@@ -50,9 +51,14 @@ export function middleware(request: NextRequest) {
   const adminUser = process.env.ADMIN_BASIC_USER;
   const adminPass = process.env.ADMIN_BASIC_PASS;
 
-  // No creds configured → skip auth (local dev / preview without env vars)
+  // Missing configuration is a deployment error, not an authorization bypass.
   if (!adminUser || !adminPass) {
-    return NextResponse.next();
+    return new NextResponse('Admin authentication is not configured', {
+      status: 503,
+      headers: {
+        'Cache-Control': 'private, no-store',
+      },
+    });
   }
 
   const authHeader = request.headers.get('authorization') ?? '';
