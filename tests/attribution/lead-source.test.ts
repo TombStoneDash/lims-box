@@ -161,13 +161,15 @@ test('source output remains bounded', () => {
 
 test('route and COLA page are wired to the shared helper without raw source passthrough', () => {
   const route = fs.readFileSync(path.join(process.cwd(), 'app/api/early-access/route.ts'), 'utf8');
+  const handler = fs.readFileSync(path.join(process.cwd(), 'lib/earlyAccessHandler.ts'), 'utf8');
   const cola = fs.readFileSync(path.join(process.cwd(), 'app/cola/page.tsx'), 'utf8');
 
   assert.match(
-    route,
+    handler,
     /resolveEarlyAdopterSource\([\s\S]*request\.headers\.get\('referer'\)[\s\S]*request\.nextUrl\.origin/,
   );
-  assert.doesNotMatch(route, /source:\s*source\s*\?/);
+  assert.match(route, /createEarlyAccessPostHandler/);
+  assert.doesNotMatch(handler, /source:\s*source\s*\?/);
   assert.match(cola, /utm_medium:\s*'cta'/);
   assert.match(cola, /utm_medium:\s*'qr'/);
   assert.match(cola, /EARLY_ADOPTER_CTA_URL/);

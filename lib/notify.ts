@@ -46,8 +46,7 @@ function escape(s: string) {
 export async function sendApplicantConfirmation(email: string, name: string): Promise<void> {
   const apiKey = process.env.RESEND_API_KEY;
   if (!apiKey) {
-    console.warn('[notify] RESEND_API_KEY not set — skipping applicant confirmation for:', email);
-    return;
+    throw new Error('Applicant confirmation delivery is not configured');
   }
 
   const html = `
@@ -55,11 +54,11 @@ export async function sendApplicantConfirmation(email: string, name: string): Pr
   <p style="font-size:15px;margin-bottom:16px;">Hi ${escape(name)},</p>
   <p style="font-size:15px;margin-bottom:16px;">
     Thanks for applying to the <strong>LIMS Box Early-Adopter Pilot Program</strong>.
-    We received your application and will review it personally &mdash; expect a response within 2 business days.
+    We received your application and will review it for the current pilot.
   </p>
   <h3 style="font-size:14px;color:#2E8B57;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.05em;">What happens next</h3>
   <ul style="font-size:14px;color:#334155;padding-left:20px;line-height:1.7;">
-    <li>Hudson reviews your application (usually same business day)</li>
+    <li>Hudson reviews your application against the current pilot criteria</li>
     <li>If it&rsquo;s a good fit, we&rsquo;ll schedule a 30-minute discovery call</li>
     <li>Pilot slots are limited &mdash; we&rsquo;ll let you know either way</li>
   </ul>
@@ -95,19 +94,20 @@ export async function sendApplicantConfirmation(email: string, name: string): Pr
       if (shouldDomainFallback(res.status, body)) {
         console.error('[notify] applicant confirmation blocked: lims.bot domain not verified in Resend — no fallback possible for external recipients');
       }
+      throw new Error(`Applicant confirmation delivery failed (${res.status})`);
     } else {
       console.log('[notify] Applicant confirmation sent to', email);
     }
   } catch (err) {
     console.error('[notify] Resend applicant confirmation threw', err);
+    throw err;
   }
 }
 
 export async function sendSubmissionNotice(payload: NotifyPayload): Promise<void> {
   const apiKey = process.env.RESEND_API_KEY;
   if (!apiKey) {
-    console.warn('[notify] RESEND_API_KEY not set — skipping email. Submission:', payload);
-    return;
+    throw new Error('Submission notice delivery is not configured');
   }
 
   try {
@@ -143,12 +143,17 @@ export async function sendSubmissionNotice(payload: NotifyPayload): Promise<void
         });
         if (retry.ok) {
           console.log('[notify] domain-unverified fallback delivered submission notice to', FALLBACK_TO);
+          return;
         } else {
-          console.error('[notify] fallback send failed', retry.status, await retry.text());
+          const retryBody = await retry.text();
+          console.error('[notify] fallback send failed', retry.status, retryBody);
+          throw new Error(`Submission notice fallback delivery failed (${retry.status})`);
         }
       }
+      throw new Error(`Submission notice delivery failed (${res.status})`);
     }
   } catch (err) {
     console.error('[notify] Resend threw', err);
+    throw err;
   }
 }

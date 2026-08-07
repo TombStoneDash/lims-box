@@ -1,32 +1,27 @@
 'use client';
 
 import Link from 'next/link';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   FlaskConical, ArrowRight, CheckCircle2, Shield, Users,
   Wrench, MessageSquare, Send
 } from 'lucide-react';
+import {
+  EARLY_ACCESS_LAB_TYPES,
+  EARLY_ACCESS_LIMITS,
+  EARLY_ACCESS_VOLUME_OPTIONS,
+} from '@/lib/earlyAccessApplication';
 
 const benefits = [
-  { icon: Wrench, title: 'Dedicated onboarding', desc: 'We configure the system for your workflows, methods, and reporting requirements.' },
-  { icon: MessageSquare, title: 'Direct engineering access', desc: 'Slack channel with the dev team. Your feedback shapes the product.' },
-  { icon: Shield, title: 'Founding-member pricing', desc: 'Locked-in rate for the life of your subscription. Never increases.' },
-  { icon: Users, title: 'Priority support', desc: 'Same-day response. Named account contact. Not a ticket queue.' },
-];
-
-const labTypes = [
-  'Environmental / Water Testing',
-  'Clinical / Medical',
-  'Cannabis Testing',
-  'Food & Beverage',
-  'Forensic',
-  'Pharmaceutical / QC',
-  'Research / Academic',
-  'Other',
+  { icon: Wrench, title: 'Pilot onboarding plan', desc: 'We document the workflows, methods, and reporting requirements included in the pilot.' },
+  { icon: MessageSquare, title: 'Direct product feedback', desc: 'Share structured feedback with the product team during the pilot.' },
+  { icon: Shield, title: 'Written pilot pricing', desc: 'Pricing and pilot duration are confirmed in writing before enrollment.' },
+  { icon: Users, title: 'Defined support plan', desc: 'Support channels and response targets are confirmed before enrollment.' },
 ];
 
 export default function EarlyAdopterPage() {
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+  const [isWaterLane, setIsWaterLane] = useState(false);
   const [form, setForm] = useState({
     labName: '',
     labType: '',
@@ -34,7 +29,18 @@ export default function EarlyAdopterPage() {
     email: '',
     testVolume: '',
     painPoint: '',
+    dataUseAccepted: false,
   });
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('utm_campaign') !== 'water_lane') return;
+
+    setIsWaterLane(true);
+    setForm(current => current.labType
+      ? current
+      : { ...current, labType: 'Environmental / Water Testing' });
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -50,6 +56,7 @@ export default function EarlyAdopterPage() {
           email: form.email,
           monthlyVolume: form.testVolume,
           painPoint: form.painPoint,
+          dataUseAccepted: form.dataUseAccepted,
           source: 'lims.bot/early-adopter',
         }),
       });
@@ -66,6 +73,10 @@ export default function EarlyAdopterPage() {
   const update = (field: string) => (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
   ) => setForm(f => ({ ...f, [field]: e.target.value }));
+
+  const updateDataUse = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setForm(f => ({ ...f, dataUseAccepted: e.target.checked }));
+  };
 
   return (
     <div className="min-h-screen bg-[#0F172A]">
@@ -104,14 +115,15 @@ export default function EarlyAdopterPage() {
       <section className="py-12 md:py-16 px-4">
         <div className="max-w-3xl mx-auto text-center">
           <div className="inline-flex items-center gap-2 bg-[#2E8B57]/20 text-[#2E8B57] text-sm font-medium px-3 py-1 rounded-full mb-6 border border-[#2E8B57]/30">
-            <Users className="w-4 h-4" /> 5 pilot slots available
+            <Users className="w-4 h-4" /> {isWaterLane ? 'Water-lab walkthrough' : '5 pilot slots available'}
           </div>
           <h1 className="text-3xl md:text-5xl font-bold text-white mb-4 tracking-tight">
-            Early-Adopter Pilot Program
+            {isWaterLane ? 'Field Scout Water-Lab Pilot' : 'Early-Adopter Pilot Program'}
           </h1>
           <p className="text-lg text-slate-400 max-w-2xl mx-auto">
-            This isn't a free trial. It's a structured pilot for regulated labs that need
-            survey-ready traceability and are willing to help shape the product.
+            {isWaterLane
+              ? 'Tell us how your team moves field equipment and sample context from collection site to laboratory bench.'
+              : "This isn't a free trial. It's a structured pilot for regulated labs that need survey-ready traceability and are willing to help shape the product."}
           </p>
         </div>
       </section>
@@ -141,7 +153,7 @@ export default function EarlyAdopterPage() {
               <CheckCircle2 className="w-16 h-16 text-[#2E8B57] mx-auto mb-4" />
               <h2 className="text-2xl font-bold text-white mb-2">Application received</h2>
               <p className="text-slate-400 mb-4">
-                We review every application personally. Expect a response within 2 business days.
+                We review every application personally and will contact you after review.
               </p>
               <Link href="/commercial" className="text-[#2E8B57] hover:underline text-sm font-medium">
                 Watch the commercial while you wait
@@ -152,12 +164,20 @@ export default function EarlyAdopterPage() {
               <div className="text-center mb-2">
                 <h2 className="text-xl font-bold text-white">Apply for the pilot</h2>
                 <p className="text-sm text-slate-500 mt-1">All fields required unless marked optional.</p>
+                <p className="text-xs text-slate-500 mt-2">
+                  Review the{' '}
+                  <a href="#application-data-use" className="text-[#2E8B57] hover:underline">
+                    application privacy and data-use notice
+                  </a>{' '}
+                  before submitting.
+                </p>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label htmlFor="labName" className="block text-sm font-medium text-slate-300 mb-1">Lab name *</label>
                   <input id="labName" type="text" required value={form.labName} onChange={update('labName')}
+                    maxLength={EARLY_ACCESS_LIMITS.labName}
                     className="w-full px-3 py-2.5 rounded-lg border border-white/10 bg-white/5 text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#2E8B57]/50 placeholder:text-slate-600"
                     placeholder="Riverside Water Testing" />
                 </div>
@@ -166,7 +186,7 @@ export default function EarlyAdopterPage() {
                   <select id="labType" required value={form.labType} onChange={update('labType')}
                     className="w-full px-3 py-2.5 rounded-lg border border-white/10 bg-white/5 text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#2E8B57]/50">
                     <option value="" className="bg-slate-800">Select...</option>
-                    {labTypes.map(t => <option key={t} value={t} className="bg-slate-800">{t}</option>)}
+                    {EARLY_ACCESS_LAB_TYPES.map(t => <option key={t} value={t} className="bg-slate-800">{t}</option>)}
                   </select>
                 </div>
               </div>
@@ -175,12 +195,14 @@ export default function EarlyAdopterPage() {
                 <div>
                   <label htmlFor="contactName" className="block text-sm font-medium text-slate-300 mb-1">Contact name *</label>
                   <input id="contactName" type="text" required value={form.contactName} onChange={update('contactName')}
+                    maxLength={EARLY_ACCESS_LIMITS.contactName}
                     className="w-full px-3 py-2.5 rounded-lg border border-white/10 bg-white/5 text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#2E8B57]/50 placeholder:text-slate-600"
                     placeholder="Jane Smith" />
                 </div>
                 <div>
                   <label htmlFor="email" className="block text-sm font-medium text-slate-300 mb-1">Email *</label>
                   <input id="email" type="email" required value={form.email} onChange={update('email')}
+                    maxLength={EARLY_ACCESS_LIMITS.email}
                     className="w-full px-3 py-2.5 rounded-lg border border-white/10 bg-white/5 text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#2E8B57]/50 placeholder:text-slate-600"
                     placeholder="rachel@clearcreeklab.com" />
                 </div>
@@ -191,19 +213,45 @@ export default function EarlyAdopterPage() {
                 <select id="testVolume" required value={form.testVolume} onChange={update('testVolume')}
                   className="w-full px-3 py-2.5 rounded-lg border border-white/10 bg-white/5 text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#2E8B57]/50">
                   <option value="" className="bg-slate-800">Select monthly volume...</option>
-                  <option value="under-100" className="bg-slate-800">Under 100 samples/month</option>
-                  <option value="100-500" className="bg-slate-800">100–500 samples/month</option>
-                  <option value="500-1000" className="bg-slate-800">500–1,000 samples/month</option>
-                  <option value="1000-5000" className="bg-slate-800">1,000–5,000 samples/month</option>
-                  <option value="over-5000" className="bg-slate-800">Over 5,000 samples/month</option>
+                  {EARLY_ACCESS_VOLUME_OPTIONS.map(option => (
+                    <option key={option.value} value={option.value} className="bg-slate-800">
+                      {option.label}
+                    </option>
+                  ))}
                 </select>
               </div>
 
               <div>
                 <label htmlFor="painPoint" className="block text-sm font-medium text-slate-300 mb-1">Biggest pain point *</label>
                 <textarea id="painPoint" required rows={3} value={form.painPoint} onChange={update('painPoint')}
+                  maxLength={EARLY_ACCESS_LIMITS.painPoint}
                   className="w-full px-3 py-2.5 rounded-lg border border-white/10 bg-white/5 text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#2E8B57]/50 resize-none placeholder:text-slate-600"
                   placeholder="What's the #1 problem you'd solve with a better LIMS? (audit readiness, holding time tracking, reporting speed, data integrity, etc.)" />
+              </div>
+
+              <div id="application-data-use" className="rounded-lg border border-white/10 bg-black/20 p-4">
+                <p className="text-xs text-slate-400 leading-relaxed">
+                  Application data is stored so the LIMS BOX team can review and respond to your
+                  pilot request. Use this form only for business contact and workflow-fit
+                  information. Do not include patient identifiers, PHI, sample results, customer
+                  records, credentials, or other sensitive or regulated data.
+                </p>
+                <label className="mt-3 flex items-start gap-2 text-xs text-slate-300">
+                  <input
+                    type="checkbox"
+                    required
+                    checked={form.dataUseAccepted}
+                    onChange={updateDataUse}
+                    className="mt-0.5"
+                  />
+                  <span>
+                    I have read the{' '}
+                    <a href="#application-data-use" className="text-[#2E8B57] hover:underline">
+                      application data-use notice
+                    </a>{' '}
+                    and will not submit sensitive or regulated data.
+                  </span>
+                </label>
               </div>
 
               <button type="submit" disabled={status === 'loading'}
@@ -217,7 +265,7 @@ export default function EarlyAdopterPage() {
               )}
 
               <p className="text-xs text-slate-600 text-center">
-                We review every application. This is not an automated signup — we'll respond within 2 business days.
+                We review every application. This is not an automated signup — we'll contact you after review.
               </p>
             </form>
           )}
