@@ -3,12 +3,12 @@ import type { Metadata } from 'next';
 export const metadata: Metadata = {
   title: 'Schedule LIMS BOX Demo | Voice-Controlled Laboratory Information System',
   description:
-    'See LIMS BOX in action — interactive walkthrough plus Calendly scheduling for a live pilot demo. Voice-controlled SENAITE, reduced data entry, compliance automation for lab directors.',
+    'See LIMS BOX in action with a synthetic interactive walkthrough plus Calendly scheduling for a live demo conversation. No customer, patient, or production data appears on this page.',
   keywords: ['LIMS demo', 'lab management demo', 'SENAITE demo', 'voice controlled LIMS', 'schedule LIMS demo', 'lab software trial'],
   alternates: { canonical: '/demo' },
   openGraph: {
     title: 'Schedule LIMS BOX Demo — Voice-Controlled Lab Management',
-    description: 'Interactive walkthrough and Calendly scheduling for live pilot demos. Built for lab directors evaluating LIMS for environmental and water testing labs under 50 people.',
+    description: 'Synthetic interactive walkthrough and Calendly scheduling for a live demo conversation. Built for labs evaluating LIMS BOX without exposing production data.',
     url: 'https://lims.bot/demo',
   },
 };
