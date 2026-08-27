@@ -22,7 +22,6 @@ const REQUIRED_HOSTS = [
 
 const CANONICAL_ORIGIN = "https://lims.bot";
 
-// eslint-disable-next-line @typescript-eslint/no-var-requires
 const nextConfig = require(path.join(__dirname, "..", "..", "next.config.js"));
 
 test("next.config.js 308s every non-canonical host to lims.bot", async () => {

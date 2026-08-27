@@ -100,7 +100,7 @@ export default function CommercialPage() {
           </h1>
           <p className="text-lg text-slate-400 max-w-2xl mx-auto">
             Every sample tracked. Every action logged. Every record survey-ready.
-            Built for labs under 50 people that can't afford to fail an inspection.
+            Built for labs under 50 people that can&apos;t afford to fail an inspection.
           </p>
         </div>
       </section>
@@ -135,7 +135,7 @@ export default function CommercialPage() {
               Apply for the Early-Adopter Program
             </h2>
             <p className="text-slate-300 mb-2 max-w-lg mx-auto">
-              We're selecting 5 regulated labs for a structured pilot. Dedicated onboarding.
+              We&apos;re selecting 5 regulated labs for a structured pilot. Dedicated onboarding.
               Direct line to the engineering team. Founding-member pricing locked in.
             </p>
             <p className="text-sm text-slate-500 mb-6">

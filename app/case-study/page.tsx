@@ -99,7 +99,7 @@ export default function CaseStudyPage() {
               In this scenario, picture a 4-person water and wastewater testing lab in a small city — the kind that serves municipal water districts, construction firms, and environmental consultancies, processing roughly 300 samples per month across drinking water, stormwater, and wastewater matrices.
             </p>
             <p className="text-slate-600 dark:text-slate-300 leading-relaxed">
-              The team: one lab director, two analysts, and one sample coordinator. Everyone wears multiple hats. There's no IT department — the lab director handles tech along with everything else.
+              The team: one lab director, two analysts, and one sample coordinator. Everyone wears multiple hats. There&apos;s no IT department — the lab director handles tech along with everything else.
             </p>
           </div>
 

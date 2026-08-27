@@ -136,14 +136,14 @@ export default function ColaPage() {
         <div className="max-w-5xl mx-auto bg-white/5 border border-white/10 rounded-2xl p-6 md:p-10">
           <div className="text-center mb-8">
             <div className="inline-flex items-center gap-2 text-xs font-semibold text-[#2E8B57] uppercase tracking-wider mb-3">
-              <BadgeCheck className="w-4 h-4" /> Why we're at COLA Forum
+              <BadgeCheck className="w-4 h-4" /> Why we&apos;re at COLA Forum
             </div>
             <h2 className="text-2xl md:text-4xl font-bold tracking-tight mb-4">
               Built for the labs COLA accredits
             </h2>
             <p className="text-slate-300 max-w-2xl mx-auto">
-              CLIA-waived clinics, physician office labs, and small reference labs don't need
-              an enterprise LIMS — and most can't run one. LIMS BOX is sized to the labs
+              CLIA-waived clinics, physician office labs, and small reference labs don&apos;t need
+              an enterprise LIMS — and most can&apos;t run one. LIMS BOX is sized to the labs
               COLA actually accredits: small staff, real workflows, real inspections.
             </p>
           </div>
@@ -177,7 +177,7 @@ export default function ColaPage() {
                 <Shield className="w-4 h-4 text-[#2E8B57]" />
               </div>
               <div>
-                <p className="font-semibold mb-1">Offline when the internet isn't</p>
+                <p className="font-semibold mb-1">Offline when the internet isn&apos;t</p>
                 <p className="text-sm text-slate-400 leading-relaxed">
                   Sample login, QC, and chain-of-custody keep working through outages,
                   bad hospital VPNs, and surprise IT patches.
@@ -237,7 +237,7 @@ export default function ColaPage() {
               <div className="flex gap-3">
                 <Users className="w-4 h-4 text-slate-400 mt-0.5 flex-shrink-0" />
                 <div>
-                  <dt className="text-slate-400">Who you'll meet</dt>
+                  <dt className="text-slate-400">Who you&apos;ll meet</dt>
                   <dd className="text-white font-medium">
                     Hudson Taylor — founder &amp; engineer
                   </dd>
@@ -254,6 +254,7 @@ export default function ColaPage() {
               Scan to open the early-adopter application.
             </p>
             <div className="bg-white rounded-xl p-4 mb-4">
+              {/* eslint-disable-next-line @next/next/no-img-element -- data-URL QR code is already generated at its final dimensions. */}
               <img
                 src={QR_SRC}
                 alt={`QR code linking to ${EARLY_ADOPTER_QR_URL}`}
@@ -279,7 +280,7 @@ export default function ColaPage() {
       <section className="px-4 pb-12">
         <div className="max-w-4xl mx-auto">
           <h2 className="text-xl md:text-2xl font-bold text-center mb-8">
-            What we're showing at the booth
+            What we&apos;re showing at the booth
           </h2>
           <ul className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {agenda.map(item => (

@@ -32,6 +32,7 @@ export function RelatedPosts({
       const sharedTags = post.tags.filter(t => currentTags.includes(t));
       score += sharedTags.length * 2;
       if (post.category === currentCategory) score += 1;
+      // eslint-disable-next-line react-hooks/purity -- related-post recency is intentionally evaluated at render time.
       const daysSince = (Date.now() - new Date(post.publishedAt).getTime()) / (1000 * 60 * 60 * 24);
       if (daysSince < 30) score += 0.5;
       return { ...post, score };

@@ -113,7 +113,7 @@ export default function CannabisLabsPage() {
             Compliance-Ready LIMS for Cannabis Testing Labs
           </h1>
           <p className="text-lg md:text-xl text-slate-600 dark:text-slate-300 mb-8 max-w-2xl mx-auto">
-            Your state regulator doesn't care about your spreadsheet. They care about traceable data, accurate COAs, and compliant workflows. LIMS BOX delivers all three.
+            Your state regulator doesn&apos;t care about your spreadsheet. They care about traceable data, accurate COAs, and compliant workflows. LIMS BOX delivers all three.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link
@@ -204,7 +204,7 @@ export default function CannabisLabsPage() {
             Start your 30-day pilot
           </h2>
           <p className="text-slate-600 dark:text-slate-300 mb-8">
-            No implementation fee. No long-term contract. Set up in days. If it doesn't fit your lab, cancel anytime.
+            No implementation fee. No long-term contract. Set up in days. If it doesn&apos;t fit your lab, cancel anytime.
           </p>
           <Link
             href="/contact"

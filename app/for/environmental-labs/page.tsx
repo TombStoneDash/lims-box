@@ -139,7 +139,7 @@ export default function EnvironmentalLabsPage() {
             Sound familiar?
           </h2>
           <p className="text-slate-600 dark:text-slate-300 text-center mb-12 max-w-2xl mx-auto">
-            Environmental labs face unique challenges that generic LIMS platforms and spreadsheets can't handle.
+            Environmental labs face unique challenges that generic LIMS platforms and spreadsheets can&apos;t handle.
           </p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {painPoints.map(point => (
@@ -204,7 +204,7 @@ export default function EnvironmentalLabsPage() {
             Start your 30-day pilot
           </h2>
           <p className="text-slate-600 dark:text-slate-300 mb-8">
-            No implementation fee. No contract. Set up in days, not months. If it doesn't work for your lab, cancel anytime.
+            No implementation fee. No contract. Set up in days, not months. If it doesn&apos;t work for your lab, cancel anytime.
           </p>
           <Link
             href="/contact"
