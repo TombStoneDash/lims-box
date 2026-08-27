@@ -45,7 +45,7 @@ export function WaitlistFooter() {
           {status === 'success' ? (
             <div className="flex items-center justify-center gap-2 text-green-600">
               <CheckCircle2 className="w-5 h-5" />
-              <span className="font-medium">You're on the list. We'll be in touch.</span>
+              <span className="font-medium">You&apos;re on the list. We&apos;ll be in touch.</span>
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-3 max-w-lg mx-auto">

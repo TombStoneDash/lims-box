@@ -50,7 +50,7 @@ export function NewsletterSignup() {
         </p>
 
         {status === 'success' ? (
-          <p className="text-lab-teal font-medium">You're in! Check your inbox.</p>
+          <p className="text-lab-teal font-medium">You&apos;re in! Check your inbox.</p>
         ) : (
           <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
             <input

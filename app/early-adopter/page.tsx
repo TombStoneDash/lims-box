@@ -36,10 +36,12 @@ export default function EarlyAdopterPage() {
     const params = new URLSearchParams(window.location.search);
     if (params.get('utm_campaign') !== 'water_lane') return;
 
+    /* eslint-disable react-hooks/set-state-in-effect -- URL campaign hydration intentionally initializes client-only state. */
     setIsWaterLane(true);
     setForm(current => current.labType
       ? current
       : { ...current, labType: 'Environmental / Water Testing' });
+    /* eslint-enable react-hooks/set-state-in-effect */
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -265,7 +267,7 @@ export default function EarlyAdopterPage() {
               )}
 
               <p className="text-xs text-slate-600 text-center">
-                We review every application. This is not an automated signup — we'll contact you after review.
+                We review every application. This is not an automated signup — we&apos;ll contact you after review.
               </p>
             </form>
           )}

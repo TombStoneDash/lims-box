@@ -124,10 +124,10 @@ export default function ROICalculatorPage() {
             <Calculator className="w-4 h-4" /> ROI Calculator
           </div>
           <h1 className="text-3xl md:text-5xl font-bold text-slate-900 dark:text-white mb-4 tracking-tight">
-            What's your lab losing to manual work?
+            What&apos;s your lab losing to manual work?
           </h1>
           <p className="text-lg text-slate-600 dark:text-slate-300">
-            Enter your lab's details and see how much time and money you could save with LIMS BOX.
+            Enter your lab&apos;s details and see how much time and money you could save with LIMS BOX.
           </p>
         </div>
       </section>

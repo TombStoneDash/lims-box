@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { FlaskConical, Download, Image, FileText, User } from 'lucide-react';
+import { FlaskConical, Download, Image as ImageIcon, FileText, User } from 'lucide-react';
 
 const logos = [
   { name: 'Logo — Dark Background', file: '/press/logo-dark.svg', desc: 'White text on dark. For dark backgrounds.' },
@@ -83,7 +83,7 @@ export default function PressPage() {
               <strong className="text-slate-900 dark:text-white">LIMS BOX</strong> is a laboratory information management system built for regulated labs under 50 people. It delivers enterprise-grade traceability — sample tracking, chain of custody, audit trails, QC management, and compliance reporting — without the enterprise overhead.
             </p>
             <p>
-              Founded in 2026 by Tombstone Dash LLC, LIMS BOX targets environmental testing labs, water quality labs, cannabis testing facilities, and clinical labs that are stuck between spreadsheets they've outgrown and enterprise platforms they can't afford. The system is built on SENAITE, an open-source LIMS framework, extended with voice control, AI-assisted queries, and offline capability.
+              Founded in 2026 by Tombstone Dash LLC, LIMS BOX targets environmental testing labs, water quality labs, cannabis testing facilities, and clinical labs that are stuck between spreadsheets they&apos;ve outgrown and enterprise platforms they can&apos;t afford. The system is built on SENAITE, an open-source LIMS framework, extended with voice control, AI-assisted queries, and offline capability.
             </p>
             <p>
               Pricing starts at $500/month with no implementation fee, no long-term contract, and go-live in days instead of months. The company is opening a 5-lab early-adopter pilot program with founding-member pricing and direct engineering access.
@@ -148,7 +148,7 @@ export default function PressPage() {
         {/* Screenshots */}
         <section>
           <div className="flex items-center gap-2 mb-4">
-            <Image className="w-5 h-5 text-lab-teal" />
+            <ImageIcon className="w-5 h-5 text-lab-teal" />
             <h2 className="text-xl font-bold text-slate-900 dark:text-white">Product Screenshots</h2>
           </div>
           <p className="text-sm text-slate-500 mb-4">Click to download. Replace placeholders with actual screenshots as they become available.</p>

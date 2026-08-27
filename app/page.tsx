@@ -60,7 +60,7 @@ export default function HomePage() {
             New: CLIA Tracker &middot; coming with the June launch &rarr;
           </Link>
           <h1 className="text-4xl md:text-6xl font-bold text-slate-900 dark:text-white mb-6 tracking-tight">
-            The LIMS that doesn't need an IT department.
+            The LIMS that doesn&apos;t need an IT department.
           </h1>
           <p className="text-lg md:text-xl text-slate-600 dark:text-slate-300 mb-10 max-w-2xl mx-auto">
             Lab management for labs that build and grow on real samples.

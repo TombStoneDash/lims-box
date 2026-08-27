@@ -79,10 +79,10 @@ export default function ContactPage() {
           {/* Left — info */}
           <div className="lg:col-span-2">
             <h1 className="text-3xl md:text-4xl font-bold text-slate-900 dark:text-white mb-4 tracking-tight">
-              Let's talk about your lab
+              Let&apos;s talk about your lab
             </h1>
             <p className="text-slate-600 dark:text-slate-300 mb-8">
-              Whether you're ready to start a pilot or just want to learn more, we'd love to hear from you. No sales pressure — just a conversation about what your lab needs.
+              Whether you&apos;re ready to start a pilot or just want to learn more, we&apos;d love to hear from you. No sales pressure — just a conversation about what your lab needs.
             </p>
 
             <div className="space-y-4">
@@ -134,7 +134,7 @@ export default function ContactPage() {
               <div className="bg-white dark:bg-white/5 rounded-2xl border border-black/5 dark:border-white/10 p-8 text-center">
                 <CheckCircle2 className="w-12 h-12 text-green-500 mx-auto mb-4" />
                 <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Message sent</h2>
-                <p className="text-slate-600 dark:text-slate-300">We'll get back to you within one business day.</p>
+                <p className="text-slate-600 dark:text-slate-300">We&apos;ll get back to you within one business day.</p>
               </div>
             ) : (
               <form onSubmit={handleSubmit} className="bg-white dark:bg-white/5 rounded-2xl border border-black/5 dark:border-white/10 p-6 md:p-8 space-y-5">
