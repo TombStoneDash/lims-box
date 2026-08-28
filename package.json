@@ -18,10 +18,11 @@
     "test:attribution": "node --import tsx --test tests/attribution/lead-source.test.ts",
     "test:field-scout": "node --import tsx --test tests/field-scout/water-funnel.test.ts",
     "test:host-redirects": "node --import tsx --test tests/ops/host-redirects.test.ts",
+    "test:demo-hardening": "node --import tsx --test tests/security/demo-access.test.ts tests/demo/operator-state.test.ts tests/security/vercel-db-gate.test.mjs",
     "postinstall": "prisma generate",
     "seed": "tsx prisma/seed.ts",
     "db:reset": "prisma migrate reset --force && tsx prisma/seed.ts",
-    "vercel-build": "npm run test:bot && npm run test:unsubscribe && npm run test:attribution && npm run test:field-scout && npm run test:host-redirects && npm run typecheck && prisma generate && prisma db push --skip-generate && next build"
+    "vercel-build": "npm run test:bot && npm run test:unsubscribe && npm run test:attribution && npm run test:field-scout && npm run test:host-redirects && npm run test:demo-hardening && npm run typecheck && prisma generate && node scripts/vercel-db-push-gate.mjs && next build"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
