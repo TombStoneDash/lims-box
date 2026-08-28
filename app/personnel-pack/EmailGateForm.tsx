@@ -3,10 +3,16 @@
 import React, { useState } from 'react';
 import { Download } from 'lucide-react';
 
+interface DeliveryState {
+  assetUrl: string;
+  emailed: boolean;
+  label: string;
+}
+
 export function EmailGateForm() {
   const [email, setEmail] = useState('');
   const [accredType, setAccredType] = useState('');
-  const [submitted, setSubmitted] = useState(false);
+  const [delivery, setDelivery] = useState<DeliveryState | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -14,6 +20,7 @@ export function EmailGateForm() {
     e.preventDefault();
     setLoading(true);
     setError('');
+    setDelivery(null);
     try {
       const res = await fetch('/api/personnel-pack-download', {
         method: 'POST',
@@ -21,7 +28,8 @@ export function EmailGateForm() {
         body: JSON.stringify({ email, accredType }),
       });
       if (res.ok) {
-        setSubmitted(true);
+        const data = await res.json();
+        setDelivery((data as { delivery: DeliveryState }).delivery);
       } else {
         const data = await res.json().catch(() => ({}));
         setError((data as { error?: string }).error || 'Something went wrong. Email info@lims.bot directly.');
@@ -48,11 +56,23 @@ export function EmailGateForm() {
           the inspection.
         </p>
 
-        {submitted ? (
+        {delivery ? (
           <div className="bg-[#2E8B57]/10 border border-[#2E8B57]/30 rounded-lg px-4 py-3">
             <p className="text-[#2E8B57] font-medium text-sm">
-              ✓ Check your inbox — the PDF is on its way. (Check spam if it doesn&apos;t arrive
-              within 2&nbsp;minutes.)
+              ✓ Your reviewed pack is ready now.
+            </p>
+            <a
+              href={delivery.assetUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="mt-3 inline-flex items-center gap-2 rounded-lg bg-[#2E8B57] px-4 py-2 text-sm font-semibold text-white hover:bg-[#2E8B57]/90 transition-colors"
+            >
+              Download {delivery.label} →
+            </a>
+            <p className="mt-3 text-xs text-slate-400">
+              {delivery.emailed
+                ? 'A copy was also emailed to you.'
+                : 'Email delivery is unavailable right now, so this page is your fulfillment path.'}
             </p>
           </div>
         ) : (
@@ -68,13 +88,14 @@ export function EmailGateForm() {
                          focus:border-[#2E8B57]/60 w-full"
             />
             <select
+              required
               value={accredType}
               onChange={(e) => setAccredType(e.target.value)}
               className="bg-white/10 border border-white/20 rounded-lg px-4 py-2.5 text-sm
                          text-slate-300 focus:outline-none focus:border-[#2E8B57]/60 w-full
                          appearance-none"
             >
-              <option value="">Accreditation type (optional)</option>
+              <option value="">Select your pack</option>
               <option value="cola">COLA</option>
               <option value="cap">CAP</option>
               <option value="iso15189">ISO 15189 only</option>
@@ -93,6 +114,9 @@ export function EmailGateForm() {
             {error && <p className="text-red-400 text-xs">{error}</p>}
             <p className="text-xs text-slate-500">
               No phone required. No spam. Unsubscribe anytime.
+            </p>
+            <p className="text-xs text-slate-500">
+              Automatic fulfillment is currently available only for the reviewed ISO 15189 pack.
             </p>
           </form>
         )}
