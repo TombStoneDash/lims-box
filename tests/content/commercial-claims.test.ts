@@ -157,3 +157,16 @@ test("public capability evidence matrix exists with all four categories", () => 
   assert.match(evidence, /Clear Creek/);
   assert.match(evidence, /Ramon Bartl/);
 });
+
+test("demo page uses the repaired Calendly destination and keeps the walkthrough explicitly synthetic", () => {
+  const demo = read("app/demo/page.tsx");
+
+  assert.match(demo, /https:\/\/calendly\.com\/hudtaylor\/30min/);
+  assert.doesNotMatch(demo, /https:\/\/calendly\.com\/tombstonedash\/lims-demo/);
+  assert.match(demo, /synthetic demonstration/i);
+  assert.match(demo, /does not process customer, patient, regulated, or production data/i);
+  assert.doesNotMatch(demo, /real pricing\. real timelines\. no asterisks\./i);
+  assert.doesNotMatch(demo, /labware|starlims/i);
+  assert.doesNotMatch(demo, /80%\s+less data entry/i);
+  assert.doesNotMatch(demo, /compliance automation/i);
+});
