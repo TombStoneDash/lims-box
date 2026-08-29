@@ -92,6 +92,7 @@ function Footer() {
       <div className="max-w-3xl mx-auto px-6 py-8 text-xs text-slate-500 flex flex-wrap gap-4">
         <Link href="/start" className="hover:text-slate-900">Choose lab type</Link>
         <Link href="/about" className="hover:text-slate-900">About</Link>
+        <Link href="/field-scout" className="hover:text-slate-900">Field Scout preview</Link>
         <span className="ml-auto">Workflow documentation support · Human-reviewed drafting · Local-first lab records.</span>
       </div>
     </footer>
