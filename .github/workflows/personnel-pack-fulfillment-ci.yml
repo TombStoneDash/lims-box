@@ -5,7 +5,10 @@ on:
     paths:
       - "app/api/personnel-pack-download/route.ts"
       - "app/personnel-pack/EmailGateForm.tsx"
+      - "lib/emailValidation.ts"
+      - "lib/notify.ts"
       - "lib/personnelPackFulfillment.ts"
+      - "lib/supabase.ts"
       - "public/personnel-pack-assets/**"
       - "tests/personnel-pack/**"
       - "docs/personnel-pack-fulfillment-security.md"
@@ -19,7 +22,10 @@ on:
     paths:
       - "app/api/personnel-pack-download/route.ts"
       - "app/personnel-pack/EmailGateForm.tsx"
+      - "lib/emailValidation.ts"
+      - "lib/notify.ts"
       - "lib/personnelPackFulfillment.ts"
+      - "lib/supabase.ts"
       - "public/personnel-pack-assets/**"
       - "tests/personnel-pack/**"
       - "docs/personnel-pack-fulfillment-security.md"
