@@ -1,8 +1,14 @@
 import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
+import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import path from 'node:path';
 import test from 'node:test';
 import { NextRequest } from 'next/server';
-import { createPersonnelPackPostHandler } from '../../lib/personnelPackFulfillment';
+import {
+  createPersonnelPackPostHandler,
+  PERSONNEL_PACK_PUBLIC_ASSETS,
+  resolveBundledAsset,
+} from '../../lib/personnelPackFulfillment';
 
 function request(body: unknown) {
   return new NextRequest('https://lims.bot/api/personnel-pack-download', {
@@ -68,6 +74,42 @@ test('successful ISO 15189 fulfillment returns one usable asset and performs eac
   assert.equal(notices.length, 1);
   assert.equal(deliveries.length, 1);
   assert.equal(diagnostics.length, 0);
+});
+
+test('default fulfillment exercises the reviewed bundled asset and its real hash pin', async () => {
+  const { handler, leads, notices, deliveries, diagnostics } = createHandler({
+    resolveAsset: undefined,
+  });
+
+  const response = await handler(request({
+    email: 'user@example.com',
+    accredType: 'iso15189',
+  }));
+
+  assert.equal(response.status, 200);
+  const body = await response.json();
+  assert.equal(body.delivery.assetUrl, new URL(
+    PERSONNEL_PACK_PUBLIC_ASSETS.iso15189.publicPath,
+    'https://lims.bot',
+  ).toString());
+  assert.equal(leads.length, 1);
+  assert.equal(notices.length, 1);
+  assert.equal(deliveries.length, 1);
+  assert.equal(diagnostics.length, 0);
+});
+
+test('bundled asset hash pin rejects modified bytes before fulfillment', async (t) => {
+  const temporaryRoot = await mkdtemp(path.join(tmpdir(), 'lims-personnel-pack-hash-'));
+  t.after(async () => {
+    await rm(temporaryRoot, { recursive: true, force: true });
+  });
+  const modifiedAsset = path.join(temporaryRoot, 'modified-pack.pdf');
+  await writeFile(modifiedAsset, 'not the reviewed personnel pack');
+
+  await assert.rejects(
+    resolveBundledAsset('iso15189', 'https://lims.bot', modifiedAsset),
+    /asset hash mismatch/i,
+  );
 });
 
 test('unsupported selections fail closed and do not perform side effects', async () => {
@@ -203,5 +245,18 @@ test('browser copy offers direct download and removes the inbox-only promise', a
   assert.match(source, /this page is your fulfillment path/i);
   assert.match(source, /Automatic fulfillment is currently available only for the reviewed ISO 15189 pack\./);
   assert.doesNotMatch(source, /Check your inbox/i);
-  assert.doesNotMatch(source, /within 2\\u00a0minutes/i);
+  assert.doesNotMatch(source, /within 2(?:\u00a0| )minutes/i);
+});
+
+test('public PDF security contract is explicit lead capture, not access control', async () => {
+  const [securityIntent, environmentExample] = await Promise.all([
+    readFile('docs/personnel-pack-fulfillment-security.md', 'utf8'),
+    readFile('.env.example', 'utf8'),
+  ]);
+
+  assert.match(securityIntent, /lead-capture workflow, not an access-control boundary/i);
+  assert.match(securityIntent, /downloaded without submitting the form/i);
+  assert.match(securityIntent, /must not contain customer data, secrets, or private records/i);
+  assert.doesNotMatch(environmentExample, /PERSONNEL_PACK_PDF_URL/);
+  assert.match(PERSONNEL_PACK_PUBLIC_ASSETS.iso15189.publicPath, /^\/personnel-pack-assets\//);
 });

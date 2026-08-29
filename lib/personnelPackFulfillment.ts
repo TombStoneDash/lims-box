@@ -56,12 +56,16 @@ function normalizeAccredType(value: unknown): string | null {
   return normalized.length > 0 ? normalized : null;
 }
 
-async function resolveBundledAsset(accredType: string | null, origin: string) {
+export async function resolveBundledAsset(
+  accredType: string | null,
+  origin: string,
+  assetFile = ISO_15189_PUBLIC_FILE,
+) {
   if (accredType !== 'iso15189') {
     return null;
   }
 
-  const file = await readFile(ISO_15189_PUBLIC_FILE);
+  const file = await readFile(assetFile);
   const hash = createHash('sha256').update(file).digest('hex');
   if (hash !== REVIEWED_ISO_15189_SHA256) {
     throw new Error('Reviewed ISO 15189 personnel-pack asset hash mismatch');

@@ -16,7 +16,7 @@ async function createLead(record: { email: string; accred_type: string | null; s
   }
 }
 
-export async function sendPersonnelPackDelivery(
+async function sendPersonnelPackDelivery(
   email: string,
   delivery: PersonnelPackDelivery,
 ): Promise<void> {

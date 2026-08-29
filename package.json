@@ -13,6 +13,7 @@
     "test:bot": "node --import tsx --test tests/bot/engine.test.ts tests/bot/telemetry.test.ts tests/bot/demo-engine.test.ts tests/bot/demo-assistant-route.test.tsx",
     "test:notify": "node --import tsx --test tests/notify/fallback.test.ts",
     "test:person-detail": "node --import tsx --test tests/admin/person-detail-server-boundary.test.ts",
+    "test:personnel-pack": "node --import tsx --test tests/personnel-pack/fulfillment.test.ts",
     "test:commercial-claims": "node --import tsx --test tests/content/commercial-claims.test.ts",
     "test:unsubscribe": "node --import tsx --test tests/unsubscribe/contract.test.ts",
     "test:attribution": "node --import tsx --test tests/attribution/lead-source.test.ts",
