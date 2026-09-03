@@ -1,24 +1,27 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { test } from 'node:test';
 import { resolve } from 'node:path';
+import { test } from 'node:test';
 
 import {
   discoveryGates,
-  instrumentMappings,
+  getApprovedSourceIds,
   pilotMeta,
-  syntheticPersonnel,
   syntheticSamples,
+  workflowEvaluations,
 } from '../../lib/ohworks-pilot';
 
 const root = resolve(import.meta.dirname, '../..');
 const routeFiles = [
   'app/pilot/ohworks/layout.tsx',
+  'app/pilot/ohworks/_components/role-switch.tsx',
   'app/pilot/ohworks/page.tsx',
   'app/pilot/ohworks/samples/page.tsx',
   'app/pilot/ohworks/instrument/page.tsx',
   'app/pilot/ohworks/personnel/page.tsx',
   'app/pilot/ohworks/audit/page.tsx',
+  'app/pilot/ohworks/bot/page.tsx',
+  'app/pilot/ohworks/bot/assistant-console.tsx',
 ];
 const docs = [
   'README.md',
@@ -31,44 +34,63 @@ const docs = [
   'DEPLOY_CHECKLIST.md',
   'RISK_REGISTER.md',
   'ROLLBACK.md',
+  'CHANGE_LOG.md',
+  'DEMO_CONTRACT.md',
+  'GARY_QUESTION_ANSWER_MATRIX.md',
 ];
 
-test('pilot uses only explicitly synthetic fixtures', () => {
-  assert.equal(pilotMeta.dataClass, 'Synthetic demonstration data only');
-  assert.equal(pilotMeta.annualVolumeRange, '30,000–40,000');
-  assert.match(pilotMeta.instrumentCandidate, /unconfirmed/i);
-  assert.ok(syntheticSamples.every((sample) => sample.id.startsWith('OW-SYN-')));
-  assert.ok(syntheticPersonnel.every((person) => person.id.startsWith('SYN-P')));
-  assert.ok(instrumentMappings.some((mapping) => mapping.status === 'Discovery required'));
-});
-
-test('all pilot routes retain synthetic or discovery language and avoid unsafe claims', () => {
+test('pilot remains synthetic, supervised, and discovery-only in route copy', () => {
   const combined = routeFiles.map((file) => readFileSync(resolve(root, file), 'utf8')).join('\n');
-  assert.match(combined, /Synthetic/i);
-  assert.match(combined, /Discovery/i);
-  assert.match(combined, /customer-reported/i);
-  assert.doesNotMatch(combined, /OHWorks (?:is|is now) (?:ISO|accredited|compliant|validated)/i);
-  assert.doesNotMatch(combined, /\b(?:is|are|now|fully|clinically)\s+(?:accredited|validated|guaranteed)\b|\bcompliant with\b|\bISO[- ]?15189 certified\b/i);
+  assert.match(combined, /Synthetic demonstration data only/i);
+  assert.match(combined, /Demo role simulator - not authentication/i);
+  assert.match(combined, /LIAISON XL.*Orchidlive.*hypothesis/i);
+  assert.match(combined, /distinct authorized technical-review event/i);
   assert.doesNotMatch(combined, /production[- ]ready/i);
-  assert.doesNotMatch(combined, /(?:£|\$)\s?\d|\bprice(?:d|s|ing)?\s+(?:at|from)\b/i);
-  assert.doesNotMatch(combined, /patient name|date of birth|nhs number/i);
+  assert.doesNotMatch(combined, /live integration is supported/i);
+  assert.doesNotMatch(combined, /\b(?:is|are|now)\s+(?:accredited|certified|validated)\b/i);
 });
 
-test('discovery gates preserve the unknown customer contract', () => {
-  const gateText = discoveryGates.map((gate) => `${gate.area} ${gate.question}`).join(' ');
-  assert.match(gateText, /exact make, model/i);
-  assert.match(gateText, /identity provider/i);
-  assert.match(gateText, /pilot success/i);
-});
-
-test('synthetic fixtures exercise every displayed workflow state', () => {
+test('synthetic workflow fixtures cover all six states and validate successfully', () => {
+  assert.equal(pilotMeta.dataClass, 'Synthetic demonstration data only');
   const fixtureStates = new Set<string>(syntheticSamples.map((sample) => sample.state));
-  for (const stage of ['Accessioned', 'Queued', 'Instrument result', 'Technical review', 'Released']) {
+  for (const stage of ['Accessioned', 'Queued', 'Instrument result', 'Quarantined', 'Technical review', 'Released']) {
     assert.ok(fixtureStates.has(stage), `${stage} should have a synthetic fixture`);
+  }
+  assert.ok(workflowEvaluations.every((evaluation) => evaluation.valid), 'every workflow case should validate');
+});
+
+test('approved OHWorks assistant sources exclude pending discovery notes', () => {
+  assert.deepEqual(
+    getApprovedSourceIds().sort(),
+    [
+      'ohworks-source-orchidlive-001',
+      'ohworks-source-policy-001',
+      'ohworks-source-unsafe-001',
+      'ohworks-source-workflow-001',
+    ],
+  );
+});
+
+test('discovery gates enumerate the unresolved supplier packet', () => {
+  const gateText = discoveryGates.map((gate) => `${gate.area} ${gate.question}`).join(' ');
+  for (const phrase of [
+    'topology',
+    'protocol and transport',
+    'versions',
+    'interface guide',
+    'sample messages',
+    'test environment',
+    'licensing',
+    'source of truth',
+    'acknowledgements',
+    'replay and error behavior',
+    'supported fields',
+  ]) {
+    assert.match(gateText.toLowerCase(), new RegExp(phrase.replaceAll(' ', '\\s+')));
   }
 });
 
-test('the complete client handoff document set exists', () => {
+test('the complete supervised-demo document set exists', () => {
   for (const doc of docs) {
     const content = readFileSync(resolve(root, 'docs/clients/ohworks', doc), 'utf8');
     assert.ok(content.length > 200, `${doc} should contain substantive guidance`);

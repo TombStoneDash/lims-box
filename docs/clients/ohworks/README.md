@@ -1,36 +1,47 @@
-# OHWorks controlled client pilot
+# OHWorks supervised demo package
 
-This package is a local, synthetic, discovery-stage client workspace for OHWorks. It demonstrates a bounded specimen lifecycle, a protocol-neutral analyzer workbench, personnel authorization, and an audit/evidence view. It is not a deployed customer system and contains no customer records.
+This package is a local, synthetic, discovery-only OHWorks demo inside the
+existing LIMS BOX repository. It proves a fail-closed workflow reducer, a
+role-filtered view model, a deterministic assistant, and an explicitly
+unverified Orchidlive discovery simulator. It does not prove deployment,
+customer acceptance, clinical validation, accreditation, or live instrument
+compatibility.
 
 ## Demonstrated scope
 
-- Synthetic accession-to-release workflow with explicit human review.
-- Analyzer mapping and exception controls without claiming a confirmed interface.
-- Personnel competence and authorization evidence using invented identities.
-- Audit events, discovery decisions, and a readiness matrix.
-- Local route: `/pilot/ohworks`.
+- Route set under `/pilot/ohworks`, including `/pilot/ohworks/bot`.
+- Synthetic lifecycle coverage for `Accessioned -> Queued -> Instrument result -> Quarantined -> Technical review -> Released`.
+- Role simulator labelled `Demo role simulator - not authentication`.
+- Deterministic assistant using approved fictional sources only, with stable
+  source IDs and corpus metadata.
+- Orchidlive discovery simulator that keeps `LIAISON XL -> Orchidlive -> LIMS BOX`
+  framed as a hypothesis rather than a supported fact.
+- Local proof stored under `docs/clients/ohworks/proof/`.
 
 ## Non-goals
 
-- No production deployment, DNS, paid infrastructure, or customer access.
-- No patient, employee, specimen, or other customer data.
-- No claim of accreditation, regulatory compliance, validation, or clinical fitness.
-- No assumption that a DiaSorin analyzer, ASTM transport, or any exact model is confirmed.
-- No email, outreach, or customer-facing publication.
+- No production deployment, no live integration, no publication, and no
+  external communication.
+- No patient, employee-health, or customer records.
+- No claim that LIMS BOX, OHWorks, Orchidlive, or any supplier is compliant,
+  accredited, certified, validated, deployed, or currently connected.
+- No server-auth, billing, analytics, or global navigation changes.
 
 ## Package map
 
-- `SOURCE_REGISTER.md`: provenance and confidence.
-- `REQUIREMENTS.md`: known requirements and discovery gates.
-- `ARCHITECTURE.md`: bounded target design and trust boundaries.
-- `DATA_DICTIONARY.md`: pilot entities and synthetic fields.
-- `SECURITY_AND_PRIVACY.md`: controls required before real data.
-- `UAT_SCRIPT.md`: synthetic acceptance walkthrough.
-- `DEPLOY_CHECKLIST.md`: stopped gates for any later deployment.
-- `RISK_REGISTER.md`: active risks and mitigations.
-- `ROLLBACK.md`: local rollback and recovery.
-- `CHANGE_LOG.md`: model-run and implementation change history, in the section 7.2 receipt convention.
+- `DEMO_CONTRACT.md`: supervised-demo boundary and truth contract.
+- `GARY_QUESTION_ANSWER_MATRIX.md`: likely demo questions and approved answers.
+- `SOURCE_REGISTER.md`: confirmed facts, customer-reported inputs, assumptions,
+  and discovery-only references.
+- `REQUIREMENTS.md`: implementation rules and fail-closed acceptance boundary.
+- `ARCHITECTURE.md`: current local architecture and future gated shape.
+- `UAT_SCRIPT.md`: desktop and mobile walkthrough.
+- `RISK_REGISTER.md`: current risks and mitigations.
+- `CHANGE_LOG.md`: append-only implementation history.
 
 ## Definition of done for this increment
 
-The routes render from a clean build, the contract tests enforce synthetic and discovery labels, the repository lint/type/build checks pass or any pre-existing failure is separately evidenced, and an independent reviewer records a verdict. Customer discovery remains a legitimate next phase rather than hidden unfinished implementation.
+This slice is complete only when the OHWorks routes, tests, proof artifacts,
+local commit, and sanitized receipt all agree on the same synthetic-only
+boundary. Any missing proof, failed check, or unsupported live claim means the
+increment is not done.

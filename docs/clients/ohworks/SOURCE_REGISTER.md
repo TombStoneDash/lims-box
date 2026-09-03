@@ -1,24 +1,34 @@
-# Source register
+# OHWorks supervised demo source register
 
-> **Internal only:** this file contains local provenance paths and must be redacted before any customer-facing handoff.
+> Internal note: this file contains internal provenance categories and should
+> be redacted before any customer-facing handoff.
 
-No source below is treated as blanket authority. Customer-reported facts are planning inputs pending confirmation; internal artifacts describe earlier work but cannot replace customer acceptance.
+## Confirmed facts used directly in this slice
 
-| Source | What it supports | Confidence and boundary |
+| Source | What it supports | Boundary |
 |---|---|---|
-| Current user direction, 2026-09-01/02 | Build the new LIMS client package and keep Claude-project context primary | Direct authority for local build; not authority to deploy or contact OHWorks |
-| Local Telegram transcript, `/Users/ops/.openclaw/agents/daisy-chief-of-staff/sessions/a0198c37-651a-4190-9a1c-e8404cbddea4.jsonl` | Call reported as successful; cloud may be acceptable; annual volume reported around 30k–40k; an instrument name was uncertain | Customer-call recollection relayed by the user; exact technical facts require written confirmation |
-| `/Users/ops/Hermes/inbox/dispatch/30_WORKER_RESULTS/LIMS_GARY_DEMO_PILOT_READINESS_20260828/` | Prior demo/pilot readiness thinking and bounded next-step framing | Internal derivative material; useful context, not customer acceptance |
-| `/Users/ops/Hermes/planning/LIMS_LEGACY_MINING_20260711/` | Historical interface patterns and candidate ASTM/DiaSorin context | Legacy planning evidence; employer attribution and exact analyzer applicability are unconfirmed |
-| `/Users/ops/Hermes/planning/LIMS_COMMERCIAL_20260713/` | Commercial and pilot packaging context | Internal plan; no authority for claims, pricing, or publication |
-| Connected Claude session visible in the Tombstone browser profile | Fable measurement material and a non-LIMS Claude project were observable | The primary LIMS Claude Project was not accessible in the connected profile, so it was not represented as searched |
-| Local Claude Code project history under `/Users/ops/.claude/projects/` | Eight LIMS-related session files were checked | No OHWorks/Gary match found; does not cover Claude.ai cloud project conversations |
+| Current task packet for `OHWORKS_SUPERVISED_DEMO_S2_EXECUTION_20260903_R3` | Exact scope, allowed paths, required checks, and receipt expectations | Direct authority for this local implementation only |
+| S1 local code in `lib/bot/data-class.ts`, `lib/bot/source-registry.ts`, and `lib/bot/output-claims-filter.ts` | Tenant filtering, source admission, and commercial-claim guardrails | Existing local policy modules only; not live auth or deployment proof |
+| Synthetic OHWorks fixtures under `fixtures/ohworks/` | Workflow states, fictional roles, source IDs, and assistant corpus | Fictional local evidence only |
 
-## Not available in this build
+## Customer-reported or historical planning inputs
 
-- Raw conversations from the primary Claude LIMS Project.
-- Confirmed analyzer make, exact model, software version, protocol, connection mode, or sample messages.
-- Approved test menu, reflex rules, reference ranges, clinical intended use, or regulatory scope.
-- Named pilot users, identity provider, hosting decision, data-processing terms, or acceptance owner.
+| Source | What it suggests | Boundary |
+|---|---|---|
+| Prior OHWorks memory summary and local notes | Annual volume around `30,000-40,000`, cloud may be acceptable, LIAISON XL / Orchidlive may matter | Planning context only; not a validated customer specification |
+| Earlier isolated OHWorks pilot docs under `docs/clients/ohworks/` | Discovery framing and synthetic UX patterns | Historical local work only |
 
-These omissions are represented as discovery gates in the product rather than filled with guesses.
+## Assumptions intentionally kept open
+
+| Assumption | Why it remains open |
+|---|---|
+| `LIAISON XL -> Orchidlive -> LIMS BOX` | No supplier packet or supported topology proof is present |
+| Supplier transport and message format | No approved interface guide or sample messages are available |
+| Production authorization shape | The demo role switch is not authentication and does not prove server policy |
+
+## Explicit gaps
+
+- No supplier-approved topology or live connection proof.
+- No customer or patient data.
+- No validated test menu, reference ranges, or release policy.
+- No production hosting, deployment, or acceptance authority.
