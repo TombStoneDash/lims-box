@@ -35,6 +35,12 @@ const REQUIRED_FIELDS: readonly (keyof ModelRunReceipt)[] = [
   'outputVerdict',
 ];
 
+const ALLOWED_FIELDS = new Set<string>(REQUIRED_FIELDS);
+const OUTPUT_VERDICTS = new Set<OutputVerdict>(['pass', 'blocked', 'fallback']);
+const SAFE_LABEL_PATTERN = /^[a-zA-Z0-9][a-zA-Z0-9._:/ -]{0,119}$/;
+const SAFE_SOURCE_ID_PATTERN = /^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,127}$/;
+const ISO_TIMESTAMP_PATTERN = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,3})?Z$/;
+
 // Bounded, deterministic patterns for common secret shapes. This is a
 // defensive last check on the receipt fields, not a general secret scanner.
 const SECRET_SHAPE_PATTERNS: readonly RegExp[] = [
@@ -42,6 +48,13 @@ const SECRET_SHAPE_PATTERNS: readonly RegExp[] = [
   /\bapi[_-]?key\s*[:=]\s*\S+/i,
   /\bbearer\s+[a-zA-Z0-9._-]{10,}\b/i,
   /\bAKIA[0-9A-Z]{16}\b/,
+];
+
+const PRIVATE_CONTENT_PATTERNS: readonly RegExp[] = [
+  /\b(?:patient|date of birth|dob|medical record|mrn|nhs number|social security|ssn)\b/i,
+  /\b(?:customer[- ]private|client[- ]confidential|confidential customer)\b/i,
+  /\b(?:prompt|question|answer)\s*[:=]/i,
+  /\b[A-Z]{2,4}-\d{5,}\b/, // common patient/sample-record identifier shape
 ];
 
 function containsSecretShape(value: unknown): boolean {
@@ -57,6 +70,39 @@ function containsSecretShape(value: unknown): boolean {
   return false;
 }
 
+function containsPrivateContent(value: unknown): boolean {
+  if (typeof value === 'string') {
+    return value.includes('\n') || PRIVATE_CONTENT_PATTERNS.some((pattern) => pattern.test(value));
+  }
+  if (Array.isArray(value)) return value.some(containsPrivateContent);
+  if (value && typeof value === 'object') return Object.values(value).some(containsPrivateContent);
+  return false;
+}
+
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
+  const prototype = Object.getPrototypeOf(value);
+  return prototype === Object.prototype || prototype === null;
+}
+
+function isIsoTimestamp(value: unknown): value is string {
+  return typeof value === 'string'
+    && ISO_TIMESTAMP_PATTERN.test(value)
+    && Number.isFinite(Date.parse(value));
+}
+
+function isUsage(value: unknown): value is string | Record<string, number> {
+  if (value === 'not-exposed') return true;
+  return isPlainObject(value)
+    && Object.keys(value).length > 0
+    && Object.entries(value).every(([key, amount]) => (
+      SAFE_SOURCE_ID_PATTERN.test(key)
+      && typeof amount === 'number'
+      && Number.isFinite(amount)
+      && amount >= 0
+    ));
+}
+
 export interface RecordReceiptResult {
   ok: boolean;
   receipt?: ModelRunReceipt;
@@ -68,7 +114,12 @@ export interface RecordReceiptResult {
  * secret-shape contracts. Does not accept free-text prompt content: callers
  * must only pass the receipt fields, never the underlying question/answer.
  */
-export function recordModelReceipt(input: Partial<ModelRunReceipt>): RecordReceiptResult {
+export function recordModelReceipt(input: unknown): RecordReceiptResult {
+  if (!isPlainObject(input)) return { ok: false, reason: 'invalid_receipt_object' };
+
+  const unknownField = Object.keys(input).find((field) => !ALLOWED_FIELDS.has(field));
+  if (unknownField) return { ok: false, reason: `unknown_field:${unknownField}` };
+
   for (const field of REQUIRED_FIELDS) {
     if (input[field] === undefined || input[field] === null) {
       return { ok: false, reason: `missing_required_field:${String(field)}` };
@@ -79,7 +130,50 @@ export function recordModelReceipt(input: Partial<ModelRunReceipt>): RecordRecei
     return { ok: false, reason: 'secret_shaped_value_rejected' };
   }
 
-  return { ok: true, receipt: input as ModelRunReceipt };
+  if (containsPrivateContent(input)) {
+    return { ok: false, reason: 'private_or_prompt_content_rejected' };
+  }
+
+  const labelFields: readonly (keyof ModelRunReceipt)[] = [
+    'requestedModel', 'requestedEffort', 'effectiveModel', 'providerId', 'evidenceSource', 'routeId',
+  ];
+  for (const field of labelFields) {
+    if (typeof input[field] !== 'string' || !SAFE_LABEL_PATTERN.test(input[field] as string)) {
+      return { ok: false, reason: `invalid_field:${String(field)}` };
+    }
+  }
+  if (!isIsoTimestamp(input.startedAt) || !isIsoTimestamp(input.endedAt)) {
+    return { ok: false, reason: 'invalid_timestamp' };
+  }
+  if (Date.parse(input.endedAt) < Date.parse(input.startedAt)) {
+    return { ok: false, reason: 'ended_before_started' };
+  }
+  if (!isUsage(input.usage)) return { ok: false, reason: 'invalid_usage' };
+  if (typeof input.fallbackUsed !== 'boolean') return { ok: false, reason: 'invalid_fallback_used' };
+  if (!Array.isArray(input.sourceIdsCited)
+    || !input.sourceIdsCited.every((id) => typeof id === 'string' && SAFE_SOURCE_ID_PATTERN.test(id))) {
+    return { ok: false, reason: 'invalid_source_ids_cited' };
+  }
+  if (typeof input.outputVerdict !== 'string'
+    || !OUTPUT_VERDICTS.has(input.outputVerdict as OutputVerdict)) {
+    return { ok: false, reason: 'invalid_output_verdict' };
+  }
+
+  const receipt: ModelRunReceipt = {
+    requestedModel: input.requestedModel as string,
+    requestedEffort: input.requestedEffort as string,
+    effectiveModel: input.effectiveModel as string,
+    providerId: input.providerId as string,
+    evidenceSource: input.evidenceSource as string,
+    routeId: input.routeId as string,
+    startedAt: input.startedAt,
+    endedAt: input.endedAt,
+    usage: typeof input.usage === 'string' ? input.usage : { ...input.usage },
+    fallbackUsed: input.fallbackUsed,
+    sourceIdsCited: [...input.sourceIdsCited],
+    outputVerdict: input.outputVerdict as OutputVerdict,
+  };
+  return { ok: true, receipt };
 }
 
 export interface ReceiptStore {

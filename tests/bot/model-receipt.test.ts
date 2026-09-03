@@ -44,6 +44,42 @@ test('a receipt containing an obvious secret-shaped string in any field is rejec
   assert.equal(clean.ok, true);
 });
 
+test('runtime schema rejects unknown fields, wrong types, and invalid timestamps or verdicts', () => {
+  assert.deepEqual(
+    recordModelReceipt({ ...validReceipt(), customerPrivateText: 'hidden' }),
+    { ok: false, reason: 'unknown_field:customerPrivateText' },
+  );
+  assert.equal(recordModelReceipt({ ...validReceipt(), fallbackUsed: 'false' }).ok, false);
+  assert.equal(recordModelReceipt({ ...validReceipt(), startedAt: 'yesterday' }).ok, false);
+  assert.equal(recordModelReceipt({ ...validReceipt(), outputVerdict: 'maybe' }).ok, false);
+  assert.equal(recordModelReceipt({ ...validReceipt(), usage: { inputTokens: -1 } }).ok, false);
+});
+
+test('prompt, PHI-like, and customer-private prose are rejected and output is allowlisted', () => {
+  assert.equal(
+    recordModelReceipt(validReceipt({ evidenceSource: 'patient MRN: 123456' })).reason,
+    'private_or_prompt_content_rejected',
+  );
+  assert.equal(
+    recordModelReceipt(validReceipt({ evidenceSource: 'prompt: include the full user question' })).ok,
+    false,
+  );
+  assert.equal(
+    recordModelReceipt(validReceipt({ evidenceSource: 'customer-private clinical narrative' })).ok,
+    false,
+  );
+
+  const candidate = { ...validReceipt(), requestedModel: 'claude-sonnet-5-ultra' };
+  const result = recordModelReceipt(candidate);
+  assert.equal(result.ok, true);
+  assert.deepEqual(Object.keys(result.receipt ?? {}).sort(), [
+    'effectiveModel', 'endedAt', 'evidenceSource', 'fallbackUsed', 'outputVerdict',
+    'providerId', 'requestedEffort', 'requestedModel', 'routeId', 'sourceIdsCited',
+    'startedAt', 'usage',
+  ].sort());
+  assert.notEqual(result.receipt, candidate);
+});
+
 test('fallback_used: true and output_verdict are both queryable on a stored receipt', () => {
   const store = createReceiptStore();
   const fallbackResult = recordModelReceipt(

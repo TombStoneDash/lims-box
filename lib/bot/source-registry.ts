@@ -52,6 +52,23 @@ export interface EvidenceRecord {
 export type EvidenceRegistry = readonly EvidenceRecord[];
 
 const SHA256_HEX_PATTERN = /^[0-9a-f]{64}$/i;
+const SANITIZED_ID_PATTERN = /^[a-z][a-z0-9]*(?:-[a-z0-9]+){2,}$/;
+const REVIEWER_ID_PATTERN = /^[a-zA-Z0-9][a-zA-Z0-9._@-]{0,79}$/;
+const ISO_TIMESTAMP_PATTERN = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,3})?Z$/;
+const VALID_STATUSES = new Set(['pending', 'approved', 'rejected']);
+
+function isSanitizedId(value: unknown): value is string {
+  return typeof value === 'string'
+    && value.length <= 80
+    && SANITIZED_ID_PATTERN.test(value)
+    && !value.includes('..');
+}
+
+function isIsoTimestamp(value: unknown): value is string {
+  return typeof value === 'string'
+    && ISO_TIMESTAMP_PATTERN.test(value)
+    && Number.isFinite(Date.parse(value));
+}
 
 /**
  * Resolves an evidenceRef by exact ID match against the supplied registry.
@@ -63,12 +80,14 @@ export function resolveEvidence(
   evidenceRef: string | undefined,
   registry: EvidenceRegistry,
 ): EvidenceRecord | null {
-  if (!evidenceRef) return null;
+  if (!isSanitizedId(evidenceRef)) return null;
   const found = registry.find((record) => record.id === evidenceRef);
   if (!found) return null;
+  if (!isSanitizedId(found.id)) return null;
   if (found.status !== 'approved') return null;
   if (!SHA256_HEX_PATTERN.test(found.contentHash)) return null;
-  if (!found.reviewer || !found.reviewedAt) return null;
+  if (typeof found.reviewer !== 'string' || !REVIEWER_ID_PATTERN.test(found.reviewer)) return null;
+  if (!isIsoTimestamp(found.reviewedAt)) return null;
   return found;
 }
 
@@ -84,33 +103,47 @@ export interface AdmissionResult {
  * spec 7.3. EMPLOYER_RESTRICTED_EXCLUDED can never reach `approved`.
  */
 export function admitSource(
-  input: Partial<SourceRecord> & { id: string },
+  input: (Partial<SourceRecord> & { id: string }) | Record<string, unknown>,
   registry: EvidenceRegistry,
 ): AdmissionResult {
-  const rightsClass: RightsClass = KNOWN_RIGHTS_CLASSES.includes(input.rightsClass as RightsClass)
+  const knownRights = KNOWN_RIGHTS_CLASSES.includes(input.rightsClass as RightsClass);
+  const rightsClass: RightsClass = knownRights
     ? (input.rightsClass as RightsClass)
     : 'METADATA_ONLY';
 
+  const rawStatus = input.status;
+  const status = knownRights ? (rawStatus ?? 'pending') : 'pending';
+
   const record: SourceRecord = {
-    id: input.id,
+    id: typeof input.id === 'string' ? input.id : '',
     rightsClass,
-    status: input.status ?? 'pending',
-    rightsEvidence: input.rightsEvidence,
-    employerIpAttestation: input.employerIpAttestation,
-    evidenceRef: input.evidenceRef,
-    summaryWordCap: input.summaryWordCap,
+    status: VALID_STATUSES.has(status as string) ? status as SourceRecord['status'] : 'rejected',
+    rightsEvidence: input.rightsEvidence as RightsEvidence | undefined,
+    employerIpAttestation: input.employerIpAttestation as boolean | undefined,
+    evidenceRef: input.evidenceRef as string | undefined,
+    summaryWordCap: input.summaryWordCap as 25 | undefined,
   };
+
+  if (!isSanitizedId(record.id)) {
+    return { ok: false, record: { ...record, status: 'rejected' }, reason: 'invalid_source_id' };
+  }
+  if (knownRights && !VALID_STATUSES.has(rawStatus as string) && rawStatus !== undefined) {
+    return { ok: false, record: { ...record, status: 'rejected' }, reason: 'invalid_status' };
+  }
 
   if (rightsClass === 'EMPLOYER_RESTRICTED_EXCLUDED') {
     return { ok: false, record: { ...record, status: 'rejected' }, reason: 'employer_restricted_excluded_never_approved' };
   }
 
-  if (record.status !== 'approved') {
+  if (!knownRights || record.status !== 'approved') {
     return { ok: true, record };
   }
 
   const evidence = record.rightsEvidence;
-  if (!evidence || !evidence.reference || !evidence.reviewer || !evidence.reviewedAt) {
+  if (!evidence
+    || typeof evidence.reference !== 'string' || evidence.reference.length === 0
+    || typeof evidence.reviewer !== 'string' || !REVIEWER_ID_PATTERN.test(evidence.reviewer)
+    || !isIsoTimestamp(evidence.reviewedAt)) {
     return { ok: false, record: { ...record, status: 'rejected' }, reason: 'approved_without_rights_evidence' };
   }
 
