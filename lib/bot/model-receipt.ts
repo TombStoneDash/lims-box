@@ -86,9 +86,13 @@ function isPlainObject(value: unknown): value is Record<string, unknown> {
 }
 
 function isIsoTimestamp(value: unknown): value is string {
-  return typeof value === 'string'
-    && ISO_TIMESTAMP_PATTERN.test(value)
-    && Number.isFinite(Date.parse(value));
+  if (typeof value !== 'string' || !ISO_TIMESTAMP_PATTERN.test(value)) return false;
+  const parsed = new Date(value);
+  if (!Number.isFinite(parsed.getTime())) return false;
+  const normalized = value.replace(/(?:\.(\d{1,3}))?Z$/, (_match, fraction: string | undefined) => (
+    `.${(fraction ?? '').padEnd(3, '0')}Z`
+  ));
+  return parsed.toISOString() === normalized;
 }
 
 function isUsage(value: unknown): value is string | Record<string, number> {
@@ -177,7 +181,7 @@ export function recordModelReceipt(input: unknown): RecordReceiptResult {
 }
 
 export interface ReceiptStore {
-  add(receipt: ModelRunReceipt): void;
+  add(receipt: unknown): void;
   all(): readonly ModelRunReceipt[];
   findByFallbackUsed(used: boolean): ModelRunReceipt[];
   findByOutputVerdict(verdict: OutputVerdict): ModelRunReceipt[];
@@ -186,9 +190,25 @@ export interface ReceiptStore {
 /** Creates an isolated, in-memory receipt store (no shared module state). */
 export function createReceiptStore(): ReceiptStore {
   const receipts: ModelRunReceipt[] = [];
+
+  function immutableCopy(receipt: ModelRunReceipt): ModelRunReceipt {
+    const usage = typeof receipt.usage === 'string'
+      ? receipt.usage
+      : Object.freeze({ ...receipt.usage }) as Record<string, number>;
+    return Object.freeze({
+      ...receipt,
+      usage,
+      sourceIdsCited: Object.freeze([...receipt.sourceIdsCited]) as unknown as string[],
+    }) as ModelRunReceipt;
+  }
+
   return {
     add(receipt) {
-      receipts.push(receipt);
+      const validated = recordModelReceipt(receipt);
+      if (!validated.ok || !validated.receipt) {
+        throw new TypeError(`invalid_model_receipt:${validated.reason ?? 'unknown'}`);
+      }
+      receipts.push(immutableCopy(validated.receipt));
     },
     all() {
       return receipts.slice();

@@ -51,8 +51,37 @@ test('runtime schema rejects unknown fields, wrong types, and invalid timestamps
   );
   assert.equal(recordModelReceipt({ ...validReceipt(), fallbackUsed: 'false' }).ok, false);
   assert.equal(recordModelReceipt({ ...validReceipt(), startedAt: 'yesterday' }).ok, false);
+  assert.equal(recordModelReceipt({ ...validReceipt(), startedAt: '2026-02-31T00:00:00Z' }).ok, false);
   assert.equal(recordModelReceipt({ ...validReceipt(), outputVerdict: 'maybe' }).ok, false);
   assert.equal(recordModelReceipt({ ...validReceipt(), usage: { inputTokens: -1 } }).ok, false);
+});
+
+test('receipt store revalidates, clones, and freezes persisted values', () => {
+  const store = createReceiptStore();
+  assert.throws(
+    () => store.add({ ...validReceipt(), evidenceSource: 'patient MRN: 123456' }),
+    /invalid_model_receipt:private_or_prompt_content_rejected/,
+  );
+
+  const validated = recordModelReceipt(validReceipt());
+  assert.ok(validated.receipt);
+  const callerReceipt = validated.receipt as ModelRunReceipt;
+  store.add(callerReceipt);
+  callerReceipt.evidenceSource = 'changed-after-insert';
+  callerReceipt.sourceIdsCited.push('changed-after-insert');
+
+  const stored = store.all()[0];
+  assert.equal(stored.evidenceSource, 'canonical Hermes worker receipt');
+  assert.deepEqual(stored.sourceIdsCited, ['src-public-domain-001']);
+  try {
+    stored.evidenceSource = 'mutated-through-read';
+  } catch {
+    // Strict-mode runtimes throw; non-strict runtimes silently ignore the write.
+  }
+  assert.equal(store.all()[0].evidenceSource, 'canonical Hermes worker receipt');
+  assert.throws(() => {
+    stored.sourceIdsCited.push('mutated-through-read');
+  }, TypeError);
 });
 
 test('prompt, PHI-like, and customer-private prose are rejected and output is allowlisted', () => {
