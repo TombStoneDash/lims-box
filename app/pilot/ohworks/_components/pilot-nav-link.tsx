@@ -2,15 +2,25 @@
 
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
-import type { LucideIcon } from 'lucide-react';
+import { Activity, Bot, ClipboardCheck, FlaskConical, Gauge, Users } from 'lucide-react';
+
+const icons = {
+  activity: Activity,
+  bot: Bot,
+  clipboard: ClipboardCheck,
+  flask: FlaskConical,
+  gauge: Gauge,
+  users: Users,
+} as const;
 
 interface PilotNavLinkProps {
   href: string;
   label: string;
-  icon: LucideIcon;
+  icon: keyof typeof icons;
 }
 
-export function PilotNavLink({ href, label, icon: Icon }: PilotNavLinkProps) {
+export function PilotNavLink({ href, label, icon }: PilotNavLinkProps) {
+  const Icon = icons[icon];
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const params = new URLSearchParams(searchParams.toString());

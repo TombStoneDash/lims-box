@@ -305,11 +305,41 @@ export function resolveRoleView(roleId?: string): OHWorksRoleView {
   return currentRoleView(roleId);
 }
 
+const APPROVED_ADAPTER_ACTOR_ID = 'ohworks-actor-adapter-sim-001';
+const APPROVED_REVIEWER_ACTOR_ID = 'ohworks-actor-technical-reviewer-001';
+const approvedIngestEvidence = new Map<string, {
+  sampleId: string;
+  workflowRecordId: string;
+  disposition: 'structured_result' | 'unknown_mapping' | 'malformed_message';
+}>([
+  ['ohworks-message-source-10062', { sampleId: 'OW-SYN-S2-10062', workflowRecordId: 'ohworks-record-sample-003', disposition: 'structured_result' }],
+  ['ohworks-message-source-10063', { sampleId: 'OW-SYN-S2-10063', workflowRecordId: 'ohworks-record-sample-004', disposition: 'unknown_mapping' }],
+  ['ohworks-message-source-10064', { sampleId: 'OW-SYN-S2-10064', workflowRecordId: 'ohworks-record-sample-005', disposition: 'malformed_message' }],
+  ['ohworks-message-source-10065', { sampleId: 'OW-SYN-S2-10065', workflowRecordId: 'ohworks-record-sample-006', disposition: 'structured_result' }],
+]);
+
+function eventTime(event: WorkflowEvent): number {
+  return Date.parse(event.at);
+}
+
+function hasValidEventProvenance(event: WorkflowEvent, history: readonly WorkflowEvent[]): boolean {
+  if (!event.sampleId || !event.workflowRecordId || !Number.isFinite(eventTime(event))) return false;
+  if (history.some((entry) => entry.id === event.id)) return false;
+  if (history.some((entry) => entry.sampleId !== event.sampleId || entry.workflowRecordId !== event.workflowRecordId)) return false;
+  if (new Set(history.map((entry) => entry.id)).size !== history.length) return false;
+  const previous = history.at(-1);
+  return !previous || (Number.isFinite(eventTime(previous)) && eventTime(event) > eventTime(previous));
+}
+
 export function transitionWorkflowState(
   currentState: WorkflowState,
   event: WorkflowEvent,
   history: readonly WorkflowEvent[],
 ): WorkflowTransitionResult {
+  if (!hasValidEventProvenance(event, history)) {
+    return { allowed: false, nextState: currentState, reason: 'event_provenance_invalid' };
+  }
+
   switch (event.kind) {
     case 'queue':
       if (currentState !== 'Accessioned') {
@@ -323,16 +353,29 @@ export function transitionWorkflowState(
       if (!event.messageSourceId || !event.parserVersionId || !event.mappingVersionId || !event.ingestDisposition) {
         return { allowed: false, nextState: currentState, reason: 'ingest_requires_stable_source_and_version_ids' };
       }
-      if (event.ingestDisposition === 'structured_result') {
+      const approvedIngest = approvedIngestEvidence.get(event.messageSourceId);
+      if (
+        event.actorRole !== 'system' ||
+        event.actorId !== APPROVED_ADAPTER_ACTOR_ID ||
+        event.parserVersionId !== OHWORKS_PARSER_VERSION ||
+        event.mappingVersionId !== OHWORKS_MAPPING_VERSION ||
+        !approvedIngest ||
+        approvedIngest.sampleId !== event.sampleId ||
+        approvedIngest.workflowRecordId !== event.workflowRecordId ||
+        approvedIngest.disposition !== event.ingestDisposition
+      ) {
+        return { allowed: true, nextState: 'Quarantined', reason: 'unapproved_ingest_evidence' };
+      }
+      if (approvedIngest.disposition === 'structured_result') {
         return { allowed: true, nextState: 'Instrument result', reason: 'approved_mapping_and_parser' };
       }
-      return { allowed: true, nextState: 'Quarantined', reason: event.ingestDisposition };
+      return { allowed: true, nextState: 'Quarantined', reason: approvedIngest.disposition };
     case 'technical_review':
       if (!['Instrument result', 'Quarantined'].includes(currentState)) {
         return { allowed: false, nextState: currentState, reason: 'technical_review_requires_result_or_quarantine' };
       }
-      if (!['quality', 'admin'].includes(event.actorRole)) {
-        return { allowed: false, nextState: currentState, reason: 'only_quality_or_admin_can_review' };
+      if (event.actorRole !== 'quality' || event.actorId !== APPROVED_REVIEWER_ACTOR_ID) {
+        return { allowed: false, nextState: currentState, reason: 'only_quality_reviewer_can_review' };
       }
       if (!event.authorized) {
         return { allowed: false, nextState: currentState, reason: 'technical_review_requires_authorized_event' };
@@ -342,13 +385,24 @@ export function transitionWorkflowState(
       if (currentState !== 'Technical review') {
         return { allowed: false, nextState: currentState, reason: 'release_requires_technical_review_state' };
       }
-      if (!['quality', 'admin'].includes(event.actorRole)) {
-        return { allowed: false, nextState: currentState, reason: 'only_quality_or_admin_can_release' };
+      if (event.actorRole !== 'quality' || event.actorId !== APPROVED_REVIEWER_ACTOR_ID) {
+        return { allowed: false, nextState: currentState, reason: 'only_quality_reviewer_can_release' };
       }
       if (!event.authorized || !event.reviewReferenceId) {
         return { allowed: false, nextState: currentState, reason: 'release_requires_authorized_review_reference' };
       }
-      if (!history.some((entry) => entry.id === event.reviewReferenceId && entry.kind === 'technical_review' && entry.authorized)) {
+      const review = history.find((entry) => entry.id === event.reviewReferenceId);
+      if (
+        !review ||
+        review.id === event.id ||
+        review.kind !== 'technical_review' ||
+        !review.authorized ||
+        review.actorRole !== 'quality' ||
+        review.actorId !== APPROVED_REVIEWER_ACTOR_ID ||
+        review.sampleId !== event.sampleId ||
+        review.workflowRecordId !== event.workflowRecordId ||
+        eventTime(review) >= eventTime(event)
+      ) {
         return { allowed: false, nextState: currentState, reason: 'release_requires_distinct_prior_authorized_review' };
       }
       return { allowed: true, nextState: 'Released', reason: 'authorized_release_after_review' };
@@ -546,7 +600,7 @@ export function getVisibleWorkflowCards(roleId?: string): VisibleWorkflowCard[] 
       clinicalLines: [],
       adminLines: [],
       visibleDataClasses: [],
-      reviewLocked: !['admin', 'reviewer'].includes(currentRoleView(roleId).id),
+      reviewLocked: currentRoleView(roleId).id !== 'reviewer',
     };
 
     existing.state = record.state;

@@ -42,6 +42,8 @@ test('reviewer results question returns reviewer-visible fabricated values with 
 test('workflow cards keep review controls locked for outcome-only roles', () => {
   const employerCards = getVisibleWorkflowCards('employer');
   const reviewerCards = getVisibleWorkflowCards('reviewer');
+  const adminCards = getVisibleWorkflowCards('admin');
   assert.ok(employerCards.every((card) => card.reviewLocked));
   assert.ok(reviewerCards.every((card) => !card.reviewLocked));
+  assert.ok(adminCards.every((card) => card.reviewLocked));
 });

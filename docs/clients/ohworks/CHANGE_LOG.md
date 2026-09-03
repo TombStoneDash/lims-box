@@ -2,6 +2,22 @@
 
 Entries are append-only and describe only local synthetic implementation work.
 
+## 2026-09-03 - Slice S2 independent-review repair
+
+**Assessment:** Closed all four independent review findings. Ingestion now
+derives acceptance from approved actor/source/parser/mapping/sample evidence;
+release validates same-workflow reviewer provenance and chronology; admin is
+read-only; and assistant evaluation moved behind a server-only route so
+reviewer-only clinical fixtures do not ship in client static chunks.
+
+**Verification:** 29/29 OHWorks tests, 7/7 contract tests, 50/50 bot tests,
+8/8 commercial-claims tests, typecheck, lint, clean diff, production build,
+client-chunk leakage scan, and desktop/mobile browser walkthrough all passed.
+Four screenshots record the live local proof. Browser console errors: zero.
+
+**Boundary:** Local synthetic demo only. No deployment, customer data,
+production connection, publication, email, or external outreach.
+
 ## 2026-09-03 - Slice S2 supervised OHWorks demo
 
 **Request:** Complete the independently reviewed local synthetic OHWorks

@@ -8,14 +8,16 @@ integration.
 
 | Command | Result |
 |---|---|
-| `node --test --import tsx tests/ohworks/*.test.ts` | PASS, 26 tests |
-| `pnpm run test:ohworks` | PASS, 6 tests |
+| `node --test --import tsx tests/ohworks/*.test.ts` | PASS, 29 tests |
+| `pnpm run test:ohworks` | PASS, 7 tests |
 | `pnpm run test:bot` | PASS, 50 tests |
 | `pnpm run test:commercial-claims` | PASS, 8 tests |
 | `pnpm run lint` | PASS |
 | `git diff --check` | PASS |
-| `pnpm run typecheck` | FAIL outside OHWorks allowlist |
-| `pnpm run build` | FAIL outside OHWorks allowlist during unrelated page-data collection |
+| `pnpm run typecheck` | PASS after local `pnpm exec prisma generate` |
+| `pnpm run build` | PASS, 69 routes generated |
+| Client static-chunk clinical-literal scan | PASS, zero reviewer-only analyte matches |
+| Desktop/mobile Playwright walkthrough | PASS, zero browser console errors |
 
 ## Persistent synthetic labeling
 
@@ -23,8 +25,10 @@ integration.
   required across the OHWorks layout, pages, and assistant UI copy.
 - The layout footer and assistant responses both preserve the same synthetic
   label string.
-- Live browser validation of the label at desktop and mobile viewport sizes was
-  blocked by the sandbox, which rejected any local HTTP listener.
+- Live browser validation passed at 1440 x 1000 and 390 x 844 viewport sizes.
+- Screenshots: `2026-09-03-desktop-employer-workflow.png`,
+  `2026-09-03-desktop-reviewer-workflow.png`, and
+  `2026-09-03-mobile-reviewer-workflow.png`.
 
 ## Happy path proof
 
@@ -52,6 +56,10 @@ integration.
   - admin lines with queue, ingest, review, and release event IDs
 - `tests/ohworks/role-filter.test.ts` passed, including the assertion that the
   employer-selected set contains zero `clinical_detail` records.
+- The assistant and role-switch client modules no longer import the
+  data-bearing OHWorks fixture/module. Assistant evaluation runs through the
+  server-only `/pilot/ohworks/bot/api` route.
+- A post-build scan of `.next/static` found zero reviewer-only analyte literals.
 
 ## Assistant citation and refusal proof
 
@@ -74,6 +82,9 @@ integration.
   - disposition `refused`
   - refusal reason `result_release`
   - no approved-source citations
+- The live employer walkthrough showed both a grounded outcome-only response
+  with source/corpus metadata and a clinical-interpretation refusal. Screenshot:
+  `2026-09-03-desktop-assistant-citation-refusal.png`.
 
 ## Commercial-claims filter proof
 
@@ -82,17 +93,16 @@ integration.
 - Final answer was downgraded to the shared safe response plus the synthetic
   label, proving the filter runs immediately before render.
 
-## Browser and build blockers
+## Reviewer repair closure
 
-- `pnpm dev` failed on both `0.0.0.0:3000` and `127.0.0.1:3100` with
-  `listen EPERM: operation not permitted`.
-- Because no local listener could start, a true desktop/mobile browser
-  walkthrough and screenshot capture could not be completed in this sandbox.
-- `pnpm run typecheck` failed in unrelated files outside the allowed OHWorks
-  edit surface:
-  - `app/api/admin/personnel-pack/survey-export/route.ts`
-  - `lib/prisma.ts`
-  - `prisma/seed.ts`
-- `pnpm run build` compiled the OHWorks route bundle, then failed while
-  collecting page data for `/api/competencies/[id]/reviews/export` because
-  `.prisma/client/default` was missing.
+- Structured ingestion now validates exact system actor, message source,
+  parser version, mapping version, sample, workflow record, and disposition;
+  any unapproved combination quarantines.
+- Release now rejects duplicate, cross-sample, cross-workflow,
+  non-chronological, unauthorized-role, and mismatched-review evidence.
+- Admin-observer review and release controls are locked consistently in policy,
+  fixture copy, and UI output.
+- The initial worker sandbox could not bind a listener and lacked generated
+  Prisma artifacts. The controller generated the local Prisma client, passed
+  typecheck/build, and completed the production-server browser walkthrough on
+  `127.0.0.1:3217`. No deployment or external system was used.

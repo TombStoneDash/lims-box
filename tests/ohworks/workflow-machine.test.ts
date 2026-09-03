@@ -39,6 +39,8 @@ test('worker and employer roles cannot record technical review or release', () =
     'Instrument result',
     {
       id: 'ohworks-event-invalid-review-worker-001',
+      sampleId: 'OW-SYN-S2-TEST-001',
+      workflowRecordId: 'ohworks-record-test-001',
       kind: 'technical_review',
       at: '2026-09-03T18:00:00Z',
       actorId: 'ohworks-actor-receiving-worker-001',
@@ -49,12 +51,14 @@ test('worker and employer roles cannot record technical review or release', () =
     [],
   );
   assert.equal(workerReview.allowed, false);
-  assert.equal(workerReview.reason, 'only_quality_or_admin_can_review');
+  assert.equal(workerReview.reason, 'only_quality_reviewer_can_review');
 
   const employerRelease = transitionWorkflowState(
     'Technical review',
     {
       id: 'ohworks-event-invalid-release-employer-001',
+      sampleId: 'OW-SYN-S2-10065',
+      workflowRecordId: 'ohworks-record-sample-006',
       kind: 'release',
       at: '2026-09-03T18:01:00Z',
       actorId: 'ohworks-actor-employer-sponsor-001',
@@ -66,6 +70,8 @@ test('worker and employer roles cannot record technical review or release', () =
     [
       {
         id: 'ohworks-event-review-10065',
+        sampleId: 'OW-SYN-S2-10065',
+        workflowRecordId: 'ohworks-record-sample-006',
         kind: 'technical_review',
         at: '2026-09-03T16:42:00Z',
         actorId: 'ohworks-actor-technical-reviewer-001',
@@ -76,7 +82,7 @@ test('worker and employer roles cannot record technical review or release', () =
     ],
   );
   assert.equal(employerRelease.allowed, false);
-  assert.equal(employerRelease.reason, 'only_quality_or_admin_can_release');
+  assert.equal(employerRelease.reason, 'only_quality_reviewer_can_release');
 });
 
 test('release is blocked from pre-review states even for reviewer roles', () => {
@@ -85,6 +91,8 @@ test('release is blocked from pre-review states even for reviewer roles', () => 
       state,
       {
         id: `ohworks-event-invalid-release-${state.toLowerCase().replaceAll(' ', '-')}`,
+        sampleId: 'OW-SYN-S2-TEST-002',
+        workflowRecordId: 'ohworks-record-test-002',
         kind: 'release',
         at: '2026-09-03T18:02:00Z',
         actorId: 'ohworks-actor-technical-reviewer-001',
@@ -96,6 +104,8 @@ test('release is blocked from pre-review states even for reviewer roles', () => 
       [
         {
           id: 'ohworks-event-review-valid-001',
+          sampleId: 'OW-SYN-S2-TEST-002',
+          workflowRecordId: 'ohworks-record-test-002',
           kind: 'technical_review',
           at: '2026-09-03T17:02:00Z',
           actorId: 'ohworks-actor-technical-reviewer-001',
@@ -124,6 +134,8 @@ test('released sample requires a distinct prior authorized technical-review even
     'Technical review',
     {
       id: 'ohworks-event-release-missing-ref-001',
+      sampleId: 'OW-SYN-S2-10065',
+      workflowRecordId: 'ohworks-record-sample-006',
       kind: 'release',
       at: '2026-09-03T18:03:00Z',
       actorId: 'ohworks-actor-technical-reviewer-001',
@@ -136,4 +148,51 @@ test('released sample requires a distinct prior authorized technical-review even
   );
   assert.equal(invalidRelease.allowed, false);
   assert.equal(invalidRelease.reason, 'release_requires_distinct_prior_authorized_review');
+});
+
+test('structured ingestion quarantines forged parser, mapping, actor, source, and cross-sample evidence', () => {
+  const queued = workflowCases.find((workflowCase) => workflowCase.sampleId === 'OW-SYN-S2-10062');
+  assert.ok(queued);
+  const validEvent = queued.events[1];
+  const history = queued.events.slice(0, 1);
+
+  for (const forged of [
+    { ...validEvent, parserVersionId: 'unapproved-parser' },
+    { ...validEvent, mappingVersionId: 'unapproved-mapping' },
+    { ...validEvent, actorId: 'ohworks-actor-employer-sponsor-001', actorRole: 'employer' as const },
+    { ...validEvent, messageSourceId: 'unapproved-source' },
+    { ...validEvent, sampleId: 'OW-SYN-S2-10065' },
+  ]) {
+    const result = transitionWorkflowState('Queued', forged, history);
+    assert.notEqual(result.nextState, 'Instrument result');
+  }
+});
+
+test('release rejects forged, cross-sample, admin, duplicate, and non-chronological review evidence', () => {
+  const released = workflowCases.find((workflowCase) => workflowCase.sampleId === 'OW-SYN-S2-10065');
+  assert.ok(released);
+  const release = released.events[3];
+  const history = released.events.slice(0, 3);
+
+  const attacks = [
+    history.map((entry) => entry.id === release.reviewReferenceId ? { ...entry, actorRole: 'worker' as const } : entry),
+    history.map((entry) => entry.id === release.reviewReferenceId ? { ...entry, sampleId: 'OW-SYN-S2-OTHER' } : entry),
+    history.map((entry) => entry.id === release.reviewReferenceId ? { ...entry, workflowRecordId: 'other-record' } : entry),
+    history.map((entry) => entry.id === release.reviewReferenceId ? { ...entry, at: '2026-09-03T16:57:00Z' } : entry),
+    [...history, history[2]],
+  ];
+
+  for (const forgedHistory of attacks) {
+    const result = transitionWorkflowState('Technical review', release, forgedHistory);
+    assert.equal(result.allowed, false);
+  }
+
+  const adminReview = transitionWorkflowState('Instrument result', {
+    ...history[2],
+    id: 'ohworks-event-admin-review-10065',
+    actorId: 'ohworks-actor-admin-observer-001',
+    actorRole: 'admin',
+  }, history.slice(0, 2));
+  assert.equal(adminReview.allowed, false);
+  assert.equal(adminReview.reason, 'only_quality_reviewer_can_review');
 });

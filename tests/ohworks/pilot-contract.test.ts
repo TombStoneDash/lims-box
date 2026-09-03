@@ -22,6 +22,7 @@ const routeFiles = [
   'app/pilot/ohworks/audit/page.tsx',
   'app/pilot/ohworks/bot/page.tsx',
   'app/pilot/ohworks/bot/assistant-console.tsx',
+  'app/pilot/ohworks/bot/api/route.ts',
 ];
 const docs = [
   'README.md',
@@ -103,4 +104,15 @@ test('deployment guide keeps external and production gates stopped', () => {
     assert.match(deploy, new RegExp(gate));
   }
   assert.match(deploy, /No item.*authorization to deploy/i);
+});
+
+test('assistant client bundle boundary contains no fixture or server assistant imports', () => {
+  const client = readFileSync(resolve(root, 'app/pilot/ohworks/bot/assistant-console.tsx'), 'utf8');
+  const roleSwitch = readFileSync(resolve(root, 'app/pilot/ohworks/_components/role-switch.tsx'), 'utf8');
+  const route = readFileSync(resolve(root, 'app/pilot/ohworks/bot/api/route.ts'), 'utf8');
+  assert.doesNotMatch(client, /@\/lib\/ohworks-pilot|fixtures\/ohworks|askOHWorksAssistant/);
+  assert.doesNotMatch(roleSwitch, /@\/lib\/ohworks-pilot|fixtures\/ohworks|workflowCases|assistantKnowledge/);
+  assert.match(client, /fetch\('\/pilot\/ohworks\/bot\/api'/);
+  assert.match(route, /import 'server-only'/);
+  assert.match(route, /askOHWorksAssistant/);
 });

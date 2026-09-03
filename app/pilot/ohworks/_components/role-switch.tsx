@@ -3,14 +3,20 @@
 import { useTransition } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { ShieldCheck } from 'lucide-react';
-import { getRoleViews } from '@/lib/ohworks-pilot';
+
+const DEMO_ROLES = [
+  { id: 'worker', label: 'Receiving worker', note: 'Outcome-only operational queue. No review, release, or clinical detail.' },
+  { id: 'employer', label: 'Employer sponsor', note: 'Outcome-only sponsor view. No analyte values, clinical flags, review, or release.' },
+  { id: 'reviewer', label: 'Technical reviewer', note: 'May review synthetic workflow details. Release still requires a distinct authorized event.' },
+  { id: 'admin', label: 'Admin observer', note: 'Read-only synthetic oversight. No review or release.' },
+] as const;
 
 export function RoleSwitch() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
-  const roles = getRoleViews();
+  const roles = DEMO_ROLES;
   const currentRole = searchParams.get('role') ?? roles[0]?.id ?? 'worker';
 
   return (

@@ -36,6 +36,8 @@ export interface WorkflowStageDefinition {
 
 export interface WorkflowEvent {
   id: string;
+  sampleId: string;
+  workflowRecordId: string;
   kind: WorkflowEventKind;
   at: string;
   actorId: string;
@@ -153,7 +155,7 @@ export const roleViews: readonly OHWorksRoleView[] = [
   {
     id: 'admin',
     label: 'Admin observer',
-    note: 'Sees synthetic admin, workflow, and clinical-detail records for the demo tenant only.',
+    note: 'Read-only observer for synthetic admin, workflow, and clinical-detail records. No review or release.',
     principalRole: 'admin',
     subjectId: 'ohworks-actor-admin-observer-001',
     allowedDataClasses: ['outcome_only', 'clinical_detail', 'admin'],
@@ -315,6 +317,8 @@ export const workflowCases: readonly WorkflowCase[] = [
     events: [
       {
         id: 'ohworks-event-queue-10061',
+        sampleId: 'OW-SYN-S2-10061',
+        workflowRecordId: 'ohworks-record-sample-002',
         kind: 'queue',
         at: '2026-09-03T15:52:00Z',
         actorId: 'ohworks-actor-receiving-worker-001',
@@ -355,6 +359,8 @@ export const workflowCases: readonly WorkflowCase[] = [
     events: [
       {
         id: 'ohworks-event-queue-10062',
+        sampleId: 'OW-SYN-S2-10062',
+        workflowRecordId: 'ohworks-record-sample-003',
         kind: 'queue',
         at: '2026-09-03T16:01:00Z',
         actorId: 'ohworks-actor-receiving-worker-001',
@@ -363,6 +369,8 @@ export const workflowCases: readonly WorkflowCase[] = [
       },
       {
         id: 'ohworks-event-ingest-10062',
+        sampleId: 'OW-SYN-S2-10062',
+        workflowRecordId: 'ohworks-record-sample-003',
         kind: 'instrument_ingest',
         at: '2026-09-03T16:08:00Z',
         actorId: 'ohworks-actor-adapter-sim-001',
@@ -392,6 +400,8 @@ export const workflowCases: readonly WorkflowCase[] = [
     events: [
       {
         id: 'ohworks-event-queue-10063',
+        sampleId: 'OW-SYN-S2-10063',
+        workflowRecordId: 'ohworks-record-sample-004',
         kind: 'queue',
         at: '2026-09-03T16:09:00Z',
         actorId: 'ohworks-actor-receiving-worker-001',
@@ -400,6 +410,8 @@ export const workflowCases: readonly WorkflowCase[] = [
       },
       {
         id: 'ohworks-event-ingest-10063',
+        sampleId: 'OW-SYN-S2-10063',
+        workflowRecordId: 'ohworks-record-sample-004',
         kind: 'instrument_ingest',
         at: '2026-09-03T16:17:00Z',
         actorId: 'ohworks-actor-adapter-sim-001',
@@ -437,6 +449,8 @@ export const workflowCases: readonly WorkflowCase[] = [
     events: [
       {
         id: 'ohworks-event-queue-10064',
+        sampleId: 'OW-SYN-S2-10064',
+        workflowRecordId: 'ohworks-record-sample-005',
         kind: 'queue',
         at: '2026-09-03T16:16:00Z',
         actorId: 'ohworks-actor-receiving-worker-001',
@@ -445,6 +459,8 @@ export const workflowCases: readonly WorkflowCase[] = [
       },
       {
         id: 'ohworks-event-ingest-10064',
+        sampleId: 'OW-SYN-S2-10064',
+        workflowRecordId: 'ohworks-record-sample-005',
         kind: 'instrument_ingest',
         at: '2026-09-03T16:25:00Z',
         actorId: 'ohworks-actor-adapter-sim-001',
@@ -457,6 +473,8 @@ export const workflowCases: readonly WorkflowCase[] = [
       },
       {
         id: 'ohworks-event-review-10064',
+        sampleId: 'OW-SYN-S2-10064',
+        workflowRecordId: 'ohworks-record-sample-005',
         kind: 'technical_review',
         at: '2026-09-03T16:37:00Z',
         actorId: 'ohworks-actor-technical-reviewer-001',
@@ -498,6 +516,8 @@ export const workflowCases: readonly WorkflowCase[] = [
     events: [
       {
         id: 'ohworks-event-queue-10065',
+        sampleId: 'OW-SYN-S2-10065',
+        workflowRecordId: 'ohworks-record-sample-006',
         kind: 'queue',
         at: '2026-09-03T16:24:00Z',
         actorId: 'ohworks-actor-receiving-worker-001',
@@ -506,6 +526,8 @@ export const workflowCases: readonly WorkflowCase[] = [
       },
       {
         id: 'ohworks-event-ingest-10065',
+        sampleId: 'OW-SYN-S2-10065',
+        workflowRecordId: 'ohworks-record-sample-006',
         kind: 'instrument_ingest',
         at: '2026-09-03T16:31:00Z',
         actorId: 'ohworks-actor-adapter-sim-001',
@@ -518,6 +540,8 @@ export const workflowCases: readonly WorkflowCase[] = [
       },
       {
         id: 'ohworks-event-review-10065',
+        sampleId: 'OW-SYN-S2-10065',
+        workflowRecordId: 'ohworks-record-sample-006',
         kind: 'technical_review',
         at: '2026-09-03T16:42:00Z',
         actorId: 'ohworks-actor-technical-reviewer-001',
@@ -527,6 +551,8 @@ export const workflowCases: readonly WorkflowCase[] = [
       },
       {
         id: 'ohworks-event-release-10065',
+        sampleId: 'OW-SYN-S2-10065',
+        workflowRecordId: 'ohworks-record-sample-006',
         kind: 'release',
         at: '2026-09-03T16:47:00Z',
         actorId: 'ohworks-actor-technical-reviewer-001',
@@ -675,7 +701,7 @@ export const assistantKnowledge: readonly AssistantKnowledgeRecord[] = [
     mode: 'expert',
     topic: 'release_controls',
     sourceId: 'ohworks-source-policy-001',
-    answer: 'Release control: worker and employer roles cannot review or release. Synthetic demonstration data only. Release succeeds only from Technical review and only when a distinct authorized technical-review event exists.',
+    answer: 'Release control: worker, employer, and admin-observer roles cannot review or release. Synthetic demonstration data only. Release succeeds only from Technical review and only when a distinct authorized technical-review event exists.',
   },
   {
     id: 'ohworks-knowledge-role-visibility-001',

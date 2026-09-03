@@ -2,13 +2,19 @@
 
 import { useState } from 'react';
 import { AlertTriangle, Bot, CircuitBoard, ShieldCheck } from 'lucide-react';
-import {
-  askOHWorksAssistant,
-  getAssistantSuggestions,
-  resolveRoleView,
-  type OHWorksAssistantResponse,
-  type OHWorksRoleViewId,
-} from '@/lib/ohworks-pilot';
+
+type AssistantMode = 'expert' | 'discovery';
+
+interface OHWorksAssistantResponse {
+  answer: string;
+  grounded: boolean;
+  mode: AssistantMode;
+  citations: Array<{ sourceId: string; recordId: string; corpusVersion: string }>;
+  label: string;
+  disposition: 'grounded' | 'refused' | 'evidence_missing' | 'render_blocked';
+  refusalReason?: string;
+  matchedClaimCategory?: string;
+}
 
 interface ChatItem {
   role: 'user' | 'assistant';
@@ -17,29 +23,58 @@ interface ChatItem {
 }
 
 interface AssistantConsoleProps {
-  roleId: OHWorksRoleViewId;
+  roleId: string;
+  roleLabel: string;
+  roleNote: string;
+  expertSuggestions: string[];
+  discoverySuggestions: string[];
 }
 
-export function AssistantConsole({ roleId }: AssistantConsoleProps) {
-  const role = resolveRoleView(roleId);
-  const [mode, setMode] = useState<'expert' | 'discovery'>('expert');
+export function AssistantConsole({
+  roleId,
+  roleLabel,
+  roleNote,
+  expertSuggestions,
+  discoverySuggestions,
+}: AssistantConsoleProps) {
+  const [mode, setMode] = useState<AssistantMode>('expert');
   const [items, setItems] = useState<ChatItem[]>([]);
   const [input, setInput] = useState('');
+  const [pending, setPending] = useState(false);
 
-  function ask(question: string) {
+  async function ask(question: string) {
     const trimmed = question.trim();
-    if (!trimmed) return;
+    if (!trimmed || pending) return;
 
-    const reply = askOHWorksAssistant(trimmed, role.id, mode);
-    setItems((previous) => [
-      ...previous,
-      { role: 'user', text: trimmed },
-      { role: 'assistant', text: reply.answer, response: reply },
-    ]);
+    setPending(true);
     setInput('');
+    try {
+      const result = await fetch('/pilot/ohworks/bot/api', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ question: trimmed, roleId, mode }),
+      });
+      const reply = (await result.json()) as OHWorksAssistantResponse;
+      setItems((previous) => [
+        ...previous,
+        { role: 'user', text: trimmed },
+        { role: 'assistant', text: reply.answer, response: reply },
+      ]);
+    } catch {
+      setItems((previous) => [
+        ...previous,
+        { role: 'user', text: trimmed },
+        {
+          role: 'assistant',
+          text: 'The local synthetic assistant is unavailable. No result or integration action was attempted.',
+        },
+      ]);
+    } finally {
+      setPending(false);
+    }
   }
 
-  const suggestions = getAssistantSuggestions(mode, role.id);
+  const suggestions = mode === 'expert' ? expertSuggestions : discoverySuggestions;
 
   return (
     <div className="space-y-5">
@@ -94,8 +129,8 @@ export function AssistantConsole({ roleId }: AssistantConsoleProps) {
 
           <div className="mt-5 rounded-2xl border border-slate-200 bg-slate-50 p-4">
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Current role view</p>
-            <p className="mt-2 font-semibold text-slate-900">{role.label}</p>
-            <p className="mt-2 text-xs leading-5 text-slate-600">{role.note}</p>
+            <p className="mt-2 font-semibold text-slate-900">{roleLabel}</p>
+            <p className="mt-2 text-xs leading-5 text-slate-600">{roleNote}</p>
           </div>
         </div>
 
@@ -173,10 +208,10 @@ export function AssistantConsole({ roleId }: AssistantConsoleProps) {
             />
             <button
               type="submit"
-              disabled={!input.trim()}
+              disabled={!input.trim() || pending}
               className="rounded-xl bg-teal-700 px-5 py-3 text-sm font-semibold text-white disabled:opacity-40"
             >
-              Ask
+              {pending ? 'Checking...' : 'Ask'}
             </button>
           </form>
         </div>
