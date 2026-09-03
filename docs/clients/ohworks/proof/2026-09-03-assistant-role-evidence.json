@@ -1,0 +1,149 @@
+{
+  "employerCards": [
+    {
+      "sampleId": "OW-SYN-S2-10060",
+      "panel": "Synthetic pre-employment immunity panel",
+      "state": "Accessioned",
+      "receivedAt": "2026-09-03 08:45",
+      "instrumentLabel": "Not yet routed",
+      "summary": "Synthetic accession accepted. Awaiting queue placement.",
+      "clinicalLines": [],
+      "adminLines": [],
+      "visibleDataClasses": ["outcome_only"],
+      "reviewLocked": true
+    },
+    {
+      "sampleId": "OW-SYN-S2-10061",
+      "panel": "Synthetic occupational antibody screen",
+      "state": "Queued",
+      "receivedAt": "2026-09-03 08:52",
+      "instrumentLabel": "Queued for simulator",
+      "summary": "Synthetic order validated and placed into the queue. No result has been ingested.",
+      "clinicalLines": [],
+      "adminLines": [],
+      "visibleDataClasses": ["outcome_only"],
+      "reviewLocked": true
+    },
+    {
+      "sampleId": "OW-SYN-S2-10062",
+      "panel": "Synthetic immunity verification panel",
+      "state": "Instrument result",
+      "receivedAt": "2026-09-03 09:01",
+      "instrumentLabel": "LIAISON XL hypothesis only",
+      "summary": "Synthetic result arrived and remains unreleased pending technical review.",
+      "clinicalLines": [],
+      "adminLines": [],
+      "visibleDataClasses": ["outcome_only"],
+      "reviewLocked": true
+    },
+    {
+      "sampleId": "OW-SYN-S2-10063",
+      "panel": "Synthetic onboarding antibody screen",
+      "state": "Quarantined",
+      "receivedAt": "2026-09-03 09:09",
+      "instrumentLabel": "Orchidlive simulator queue",
+      "summary": "Synthetic result quarantined. No mapping guess was made.",
+      "clinicalLines": [],
+      "adminLines": [],
+      "visibleDataClasses": ["outcome_only"],
+      "reviewLocked": true
+    },
+    {
+      "sampleId": "OW-SYN-S2-10064",
+      "panel": "Synthetic immunity follow-up panel",
+      "state": "Technical review",
+      "receivedAt": "2026-09-03 09:16",
+      "instrumentLabel": "Orchidlive simulator queue",
+      "summary": "Synthetic payload remains under technical review after quarantine handling.",
+      "clinicalLines": [],
+      "adminLines": [],
+      "visibleDataClasses": ["outcome_only"],
+      "reviewLocked": true
+    },
+    {
+      "sampleId": "OW-SYN-S2-10065",
+      "panel": "Synthetic release-ready serology panel",
+      "state": "Released",
+      "receivedAt": "2026-09-03 09:24",
+      "instrumentLabel": "LIAISON XL hypothesis only",
+      "summary": "Synthetic result released after a distinct authorized technical review.",
+      "clinicalLines": [],
+      "adminLines": [],
+      "visibleDataClasses": ["outcome_only"],
+      "reviewLocked": true
+    }
+  ],
+  "reviewerCardReleased": {
+    "sampleId": "OW-SYN-S2-10065",
+    "panel": "Synthetic release-ready serology panel",
+    "state": "Released",
+    "receivedAt": "2026-09-03 09:24",
+    "instrumentLabel": "LIAISON XL hypothesis only",
+    "summary": "Synthetic result released after a distinct authorized technical review.",
+    "clinicalLines": [
+      "Hepatitis B surface antibody: 32 mIU/mL (flag present)",
+      "Mumps IgG: 2.1 AI (flag present)"
+    ],
+    "adminLines": [
+      "ohworks-event-queue-10065 | queue | ohworks-actor-receiving-worker-001 | Queued after synthetic order validation.",
+      "ohworks-event-ingest-10065 | instrument_ingest | ohworks-actor-adapter-sim-001 | Synthetic parser and mapping both approved for the simulated payload. | source=ohworks-message-source-10065 | parser=ow-parser-sim-v1 | mapping=ow-mapping-sim-v1",
+      "ohworks-event-review-10065 | technical_review | ohworks-actor-technical-reviewer-001 | Authorized technical review documented release readiness in the synthetic queue.",
+      "ohworks-event-release-10065 | release | ohworks-actor-technical-reviewer-001 | Release completed after the separate authorized technical review event. | review_ref=ohworks-event-review-10065"
+    ],
+    "visibleDataClasses": ["outcome_only", "clinical_detail", "admin"],
+    "reviewLocked": false
+  },
+  "assistant": {
+    "employer": {
+      "answer": "This demo role is limited to fictional outcome-only data. Synthetic demonstration data only. No analyte values, interpretations, or clinical flags are exposed here.",
+      "grounded": true,
+      "mode": "expert",
+      "citations": [
+        {
+          "sourceId": "ohworks-source-policy-001",
+          "recordId": "ohworks-knowledge-restricted-results-001",
+          "corpusVersion": "ohworks-supervised-demo-corpus-v1"
+        }
+      ],
+      "label": "Synthetic demonstration data only",
+      "disposition": "grounded"
+    },
+    "reviewer": {
+      "answer": "Fabricated analytes for OW-SYN-S2-10065: Hepatitis B surface antibody 32 mIU/mL, flag present; Mumps IgG 2.1 AI, flag present. Synthetic demonstration data only.",
+      "grounded": true,
+      "mode": "expert",
+      "citations": [
+        {
+          "sourceId": "ohworks-source-workflow-001",
+          "recordId": "ohworks-knowledge-results-10065",
+          "corpusVersion": "ohworks-supervised-demo-corpus-v1"
+        }
+      ],
+      "label": "Synthetic demonstration data only",
+      "disposition": "grounded"
+    },
+    "discovery": {
+      "answer": "Open supplier questions: topology, protocol and transport, versions, interface guide, sample messages, test environment, licensing, source of truth, acknowledgements, replay and error behavior, and supported fields. Synthetic demonstration data only.",
+      "grounded": true,
+      "mode": "discovery",
+      "citations": [
+        {
+          "sourceId": "ohworks-source-orchidlive-001",
+          "recordId": "ohworks-knowledge-supplier-questions-001",
+          "corpusVersion": "ohworks-supervised-demo-corpus-v1"
+        }
+      ],
+      "label": "Synthetic demonstration data only",
+      "disposition": "grounded"
+    },
+    "refusal": {
+      "answer": "I cannot release, approve, or authorize any sample or result from this demo. Synthetic demonstration data only.",
+      "grounded": false,
+      "mode": "expert",
+      "citations": [],
+      "label": "Synthetic demonstration data only",
+      "disposition": "refused",
+      "refusalReason": "result_release"
+    }
+  }
+}

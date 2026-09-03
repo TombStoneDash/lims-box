@@ -19,6 +19,7 @@
     "test:attribution": "node --import tsx --test tests/attribution/lead-source.test.ts",
     "test:field-scout": "node --import tsx --test tests/field-scout/water-funnel.test.ts",
     "test:host-redirects": "node --import tsx --test tests/ops/host-redirects.test.ts",
+    "test:ohworks": "node --import tsx --test tests/ohworks/pilot-contract.test.ts",
     "postinstall": "prisma generate",
     "seed": "tsx prisma/seed.ts",
     "db:reset": "prisma migrate reset --force && tsx prisma/seed.ts",
