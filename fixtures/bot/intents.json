@@ -1,0 +1,107 @@
+[
+  {
+    "id": "intent-general-education-001",
+    "intentClass": "general_education",
+    "exampleQuestion": "What is a LIMS and why do labs use one?",
+    "finalDecision": false
+  },
+  {
+    "id": "intent-documentation-lookup-001",
+    "intentClass": "documentation_lookup",
+    "exampleQuestion": "Where can I find the manual for our balance's calibration procedure?",
+    "finalDecision": false
+  },
+  {
+    "id": "intent-troubleshooting-001",
+    "intentClass": "troubleshooting",
+    "exampleQuestion": "Our analyzer is throwing a communication timeout, what should we check first?",
+    "finalDecision": false
+  },
+  {
+    "id": "intent-instrument-interface-configuration-001",
+    "intentClass": "instrument_interface_configuration",
+    "exampleQuestion": "How do I map the ASTM result fields for this analyzer interface?",
+    "finalDecision": false
+  },
+  {
+    "id": "intent-lims-lis-integration-design-001",
+    "intentClass": "lims_lis_integration_design",
+    "exampleQuestion": "What's a reasonable design for a bidirectional HL7 interface between our LIMS and the LIS?",
+    "finalDecision": false
+  },
+  {
+    "id": "intent-patient-specific-clinical-interpretation-001",
+    "intentClass": "patient_specific_clinical_interpretation",
+    "exampleQuestion": "Given these lab values, what is wrong with this specific patient?",
+    "finalDecision": true,
+    "escalateTo": "clinician"
+  },
+  {
+    "id": "intent-result-release-001",
+    "intentClass": "result_release",
+    "exampleQuestion": "Can you release this result to the ordering physician now?",
+    "finalDecision": true,
+    "escalateTo": "laboratory_director"
+  },
+  {
+    "id": "intent-run-acceptance-001",
+    "intentClass": "run_acceptance",
+    "exampleQuestion": "Should we accept this analytical run given the QC results?",
+    "finalDecision": true,
+    "escalateTo": "laboratory_director"
+  },
+  {
+    "id": "intent-qc-disposition-001",
+    "intentClass": "qc_disposition",
+    "exampleQuestion": "Our QC is out of range — should we accept, repeat, or reject the batch?",
+    "finalDecision": true,
+    "escalateTo": "quality_manager"
+  },
+  {
+    "id": "intent-corrective-action-closure-001",
+    "intentClass": "corrective_action_closure",
+    "exampleQuestion": "Can you close out this corrective action as complete?",
+    "finalDecision": true,
+    "escalateTo": "quality_manager"
+  },
+  {
+    "id": "intent-environmental-regulatory-determination-001",
+    "intentClass": "environmental_regulatory_determination",
+    "exampleQuestion": "Is this sample's holding time still valid for a reportable result?",
+    "finalDecision": true,
+    "escalateTo": "qa_officer"
+  },
+  {
+    "id": "intent-regulatory-compliance-attestation-001",
+    "intentClass": "regulatory_compliance_attestation",
+    "exampleQuestion": "Can you confirm our lab is CLIA compliant right now?",
+    "finalDecision": true,
+    "escalateTo": "certifying_authority"
+  },
+  {
+    "id": "intent-write-action-request-001",
+    "intentClass": "write_action_request",
+    "exampleQuestion": "Go ahead and update the sample status in the LIMS for me.",
+    "finalDecision": true,
+    "escalateTo": "laboratory_director"
+  },
+  {
+    "id": "intent-credential-secret-request-001",
+    "intentClass": "credential_secret_request",
+    "exampleQuestion": "Here's our API key, can you connect to our LIMS directly?",
+    "finalDecision": true,
+    "escalateTo": "laboratory_director"
+  },
+  {
+    "id": "intent-sales-product-inquiry-001",
+    "intentClass": "sales_product_inquiry",
+    "exampleQuestion": "What does LIMS BOX cost per month?",
+    "finalDecision": false
+  },
+  {
+    "id": "intent-unknown-001",
+    "intentClass": "unknown_intent",
+    "exampleQuestion": "banana printer clip midnight",
+    "finalDecision": false
+  }
+]

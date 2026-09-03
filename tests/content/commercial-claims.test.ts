@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import path from "node:path";
 import test from "node:test";
+import { matchCommercialClaim } from "../../lib/bot/commercial-claims";
 
 // Regression coverage for issue #64 (commercial proof cleanup): the fabricated
 // "Clear Creek" case study, the unsupported "active technical collaboration
@@ -43,7 +44,11 @@ function read(relPath: string): string {
 }
 
 // Fabricated entities / unsupported claims that must never reappear unlabeled
-// anywhere in public site content, blog posts, or dev docs.
+// anywhere in public site content, blog posts, or dev docs. Unqualified
+// commercial/compliance claims (CLIA, HIPAA, Part 11, FDA, etc.) are owned by
+// lib/bot/commercial-claims.ts and checked separately — a naive substring
+// sweep over lib/**/*.ts would otherwise flag that module's own literal
+// phrase data as a violation of itself.
 const BANNED_PHRASES: RegExp[] = [
   /clear creek/i,
   /rachel moreno/i,
@@ -53,7 +58,6 @@ const BANNED_PHRASES: RegExp[] = [
   /we contribute upstream/i,
   /currently running a 5-lab/i,
   /network of vc connectors/i,
-  /part\s*11\s+compatib/i,
 ];
 
 test("no fabricated customer/case-study entities or unsupported collaboration claims remain anywhere in scanned content", () => {
@@ -142,7 +146,12 @@ test("CLIA overview routes to the existing Personnel Pack without stale launch o
 
   assert.match(cliaTracker, /href="\/clia"/);
   for (const source of [clia, cliaTracker]) {
-    assert.doesNotMatch(source, /CLIA compliant|COLA approved|21 CFR Part 11 compliant|HIPAA compliant/i);
+    assert.equal(
+      matchCommercialClaim(source),
+      null,
+      `unexpected forbidden commercial claim (CLIA/HIPAA/Part 11) in ${source === clia ? "app/clia/page.tsx" : "app/clia-tracker/page.tsx"}`,
+    );
+    assert.doesNotMatch(source, /COLA approved/i);
   }
   assert.doesNotMatch(cliaTracker, /Audit-Ready Compliance|ready for the inspector on day one|covers CLIA §493\.1407 end-to-end|Ready to pass the personnel section/i);
 });

@@ -29,6 +29,7 @@ This package is a local, synthetic, discovery-stage client workspace for OHWorks
 - `DEPLOY_CHECKLIST.md`: stopped gates for any later deployment.
 - `RISK_REGISTER.md`: active risks and mitigations.
 - `ROLLBACK.md`: local rollback and recovery.
+- `CHANGE_LOG.md`: model-run and implementation change history, in the section 7.2 receipt convention.
 
 ## Definition of done for this increment
 

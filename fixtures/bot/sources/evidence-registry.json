@@ -1,0 +1,23 @@
+[
+  {
+    "id": "evidence-original-internal-001",
+    "status": "approved",
+    "contentHash": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+    "reviewer": "hudson.taylor",
+    "reviewedAt": "2026-08-15T12:00:00Z"
+  },
+  {
+    "id": "evidence-rejected-001",
+    "status": "rejected",
+    "contentHash": "fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210",
+    "reviewer": "hudson.taylor",
+    "reviewedAt": "2026-08-15T12:05:00Z"
+  },
+  {
+    "id": "evidence-malformed-hash-001",
+    "status": "approved",
+    "contentHash": "not-a-valid-sha256-hash",
+    "reviewer": "hudson.taylor",
+    "reviewedAt": "2026-08-15T12:10:00Z"
+  }
+]

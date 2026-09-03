@@ -1,0 +1,59 @@
+[
+  {
+    "id": "src-public-domain-001",
+    "rightsClass": "PUBLIC_DOMAIN",
+    "status": "approved",
+    "rightsEvidence": {
+      "reference": "https://www.law.cornell.edu/cfr/text/40/136",
+      "reviewer": "hudson.taylor",
+      "reviewedAt": "2026-08-01T00:00:00Z"
+    }
+  },
+  {
+    "id": "src-open-license-001",
+    "rightsClass": "OPEN_LICENSE",
+    "status": "approved",
+    "rightsEvidence": {
+      "reference": "CC-BY-4.0 terms snapshot hash abc123",
+      "reviewer": "hudson.taylor",
+      "reviewedAt": "2026-08-02T00:00:00Z"
+    }
+  },
+  {
+    "id": "src-public-web-summary-001",
+    "rightsClass": "PUBLIC_WEB_SUMMARY",
+    "status": "approved",
+    "rightsEvidence": {
+      "reference": "https://example-vendor.com/manual-index",
+      "reviewer": "hudson.taylor",
+      "reviewedAt": "2026-08-03T00:00:00Z"
+    },
+    "summaryWordCap": 25
+  },
+  {
+    "id": "src-metadata-only-001",
+    "rightsClass": "METADATA_ONLY",
+    "status": "pending"
+  },
+  {
+    "id": "src-original-internal-001",
+    "rightsClass": "ORIGINAL_INTERNAL",
+    "status": "approved",
+    "rightsEvidence": {
+      "reference": "internal review record",
+      "reviewer": "hudson.taylor",
+      "reviewedAt": "2026-08-05T00:00:00Z"
+    },
+    "employerIpAttestation": true,
+    "evidenceRef": "evidence-original-internal-001"
+  },
+  {
+    "id": "src-customer-licensed-private-001",
+    "rightsClass": "CUSTOMER_LICENSED_PRIVATE",
+    "status": "pending"
+  },
+  {
+    "id": "src-unknown-rights-default-001",
+    "status": "pending"
+  }
+]
