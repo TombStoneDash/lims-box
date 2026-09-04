@@ -63,7 +63,8 @@ test('built customer runtime enforces auth, roles, rendered copy, persistence, a
   const scientist = makeAccount('acct-scientist', 'Dana Wells', 'scientist');
   const reviewer = makeAccount('acct-reviewer', 'Priya North', 'reviewer');
   const approver = makeAccount('acct-approver', 'Avery Hart', 'approver');
-  const accountConfigs = [manager, receiving, scientist, reviewer, approver].map((account) => account.config);
+  const auditor = makeAccount('acct-auditor', 'Cameron Stone', 'auditor');
+  const accountConfigs = [manager, receiving, scientist, reviewer, approver, auditor].map((account) => account.config);
   const serverEnv = {
     ...process.env,
     NODE_ENV: 'production',
@@ -73,7 +74,12 @@ test('built customer runtime enforces auth, roles, rendered copy, persistence, a
     OHWORKS_INTERNAL_PROOF_ENABLED: 'false',
     OHWORKS_PUBLIC_ORIGIN: baseUrl,
   };
-  const launch = () => spawn(process.execPath, [resolve(root, 'node_modules/next/dist/bin/next'), 'start', '-p', String(port), '-H', '127.0.0.1'], { cwd: root, env: serverEnv, stdio: ['ignore', 'pipe', 'pipe'] });
+  const launch = (publicOrigin = baseUrl) => {
+    const env = { ...serverEnv };
+    if (publicOrigin === null) delete env.OHWORKS_PUBLIC_ORIGIN;
+    else env.OHWORKS_PUBLIC_ORIGIN = publicOrigin;
+    return spawn(process.execPath, [resolve(root, 'node_modules/next/dist/bin/next'), 'start', '-p', String(port), '-H', '127.0.0.1'], { cwd: root, env, stdio: ['ignore', 'pipe', 'pipe'] });
+  };
   let child = launch();
   try {
     await waitForServer(baseUrl, child);
@@ -111,6 +117,17 @@ test('built customer runtime enforces auth, roles, rendered copy, persistence, a
       return cookie;
     }
 
+    const failedLogin = await fetch(`${baseUrl}/pilot/ohworks/api/login`, {
+      method: 'POST', redirect: 'manual', headers: {
+        'content-type': 'application/x-www-form-urlencoded',
+        'x-forwarded-host': 'attacker.example:99999',
+        'x-forwarded-proto': 'garbage',
+      },
+      body: new URLSearchParams({ username: manager.username, password: 'not-the-password' }),
+    });
+    assert.equal(failedLogin.status, 303);
+    assert.equal(failedLogin.headers.get('location'), `${baseUrl}/pilot/ohworks/login?error=1`);
+
     async function action(cookie, actionName, sampleId) {
       const response = await fetch(`${baseUrl}/pilot/ohworks/api/actions`, {
         method: 'POST', headers: { cookie, origin: baseUrl, 'content-type': 'application/json' }, body: JSON.stringify({ action: actionName, sampleId }),
@@ -122,12 +139,30 @@ test('built customer runtime enforces auth, roles, rendered copy, persistence, a
     const reviewerCookie = await login(reviewer);
     const approverCookie = await login(approver);
     const receivingCookie = await login(receiving);
+    const scientistCookie = await login(scientist);
+    const auditorCookie = await login(auditor);
+
+    const auditorAudit = await fetch(`${baseUrl}/pilot/ohworks/audit`, { headers: { cookie: auditorCookie } });
+    assert.equal(auditorAudit.status, 200);
+    assert.match(await auditorAudit.text(), /Audit history/);
+
+    const logout = await fetch(`${baseUrl}/pilot/ohworks/api/logout`, {
+      method: 'POST', redirect: 'manual', headers: {
+        cookie: auditorCookie,
+        'x-forwarded-host': 'attacker.example:99999',
+        'x-forwarded-proto': 'garbage',
+      },
+    });
+    assert.equal(logout.status, 303);
+    assert.equal(logout.headers.get('location'), `${baseUrl}/pilot/ohworks/login`);
+    assert.match(logout.headers.get('set-cookie') ?? '', /ohworks_test_session=;/);
 
     const badOrigin = await fetch(`${baseUrl}/pilot/ohworks/api/actions`, {
       method: 'POST', headers: { cookie: managerCookie, origin: 'https://invalid.example', 'content-type': 'application/json' }, body: JSON.stringify({ action: 'queue', sampleId: 'OW-260904-101' }),
     });
     assert.equal(badOrigin.status, 403);
     assert.equal((await action(receivingCookie, 'release', 'OW-260904-107')).response.status, 403);
+    assert.equal((await action(scientistCookie, 'release', 'OW-260904-107')).response.status, 403);
     assert.equal((await action(approverCookie, 'technical_review', 'OW-260904-103')).response.status, 403);
     assert.equal((await action(managerCookie, 'technical_review', 'OW-260904-103')).response.status, 403);
 
@@ -156,6 +191,7 @@ test('built customer runtime enforces auth, roles, rendered copy, persistence, a
       for (const phrase of prohibited) assert.equal(html.toLowerCase().includes(phrase), false, `${route}: ${phrase}`);
     }
     assert.equal((await fetch(`${baseUrl}/pilot/ohworks/bot`)).status, 404);
+    assert.equal((await fetch(`${baseUrl}/pilot/ohworks/bot/api`)).status, 404);
     assert.equal((await fetch(`${baseUrl}/pilot/ohworks/bot/api`, { method: 'POST' })).status, 404);
     assert.equal((await fetch(`${baseUrl}/internal/ohworks-proof`)).status, 404);
 
@@ -170,6 +206,22 @@ test('built customer runtime enforces auth, roles, rendered copy, persistence, a
     assert.match(persistedHtml, new RegExp(reportId));
     assert.match(persistedHtml, /Priya North/);
     assert.match(persistedHtml, /Avery Hart/);
+
+    await stopServer(child);
+    child = launch(null);
+    await waitForServer(baseUrl, child);
+    assert.equal((await fetch(`${baseUrl}/pilot/ohworks/api/health`)).status, 503);
+    assert.equal((await fetch(`${baseUrl}/pilot/ohworks/api/login`, { method: 'POST' })).status, 503);
+    assert.equal((await fetch(`${baseUrl}/pilot/ohworks/api/logout`, { method: 'POST' })).status, 503);
+    assert.match(await (await fetch(`${baseUrl}/pilot/ohworks/login`)).text(), /Account access is temporarily unavailable/);
+
+    await stopServer(child);
+    child = launch('ftp://invalid.example');
+    await waitForServer(baseUrl, child);
+    assert.equal((await fetch(`${baseUrl}/pilot/ohworks/api/health`)).status, 503);
+    assert.equal((await fetch(`${baseUrl}/pilot/ohworks/api/login`, { method: 'POST' })).status, 503);
+    assert.equal((await fetch(`${baseUrl}/pilot/ohworks/api/logout`, { method: 'POST' })).status, 503);
+    assert.match(await (await fetch(`${baseUrl}/pilot/ohworks/login`)).text(), /Account access is temporarily unavailable/);
   } finally {
     await stopServer(child);
     await rm(dataDirectory, { recursive: true, force: true });

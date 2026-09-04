@@ -1,12 +1,13 @@
 import { Activity, LockKeyhole } from 'lucide-react';
 import { redirect } from 'next/navigation';
 import { authenticationConfigured, getPrincipal } from '@/lib/ohworks-tenant/auth';
+import { configuredPublicOrigin } from '@/lib/ohworks-tenant/public-origin';
 import { TestEnvironmentBadge } from '../_components/test-environment-badge';
 
 export default async function LoginPage({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
   if (await getPrincipal()) redirect('/pilot/ohworks');
   const params = await searchParams;
-  const ready = authenticationConfigured();
+  const ready = authenticationConfigured() && Boolean(configuredPublicOrigin());
   return (
     <main className="flex min-h-screen items-center justify-center bg-[#102b36] px-5 py-12 text-slate-900">
       <section className="w-full max-w-md overflow-hidden rounded-3xl bg-white shadow-2xl">

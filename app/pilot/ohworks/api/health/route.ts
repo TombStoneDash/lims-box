@@ -1,9 +1,10 @@
 import { NextResponse } from 'next/server';
 import { authenticationConfigured } from '@/lib/ohworks-tenant/auth';
+import { configuredPublicOrigin } from '@/lib/ohworks-tenant/public-origin';
 import { readTenantStore } from '@/lib/ohworks-tenant/store';
 
 export async function GET() {
-  if (!authenticationConfigured()) return NextResponse.json({ ok: false }, { status: 503 });
+  if (!authenticationConfigured() || !configuredPublicOrigin()) return NextResponse.json({ ok: false }, { status: 503 });
   try {
     await readTenantStore();
     return NextResponse.json({ ok: true });
