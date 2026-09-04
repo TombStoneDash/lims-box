@@ -5,3 +5,4 @@ node_modules
 .ohworks-local-runtime
 *.log
 .env*
+!.env.example
