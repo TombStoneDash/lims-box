@@ -71,6 +71,7 @@ test('built customer runtime enforces auth, roles, rendered copy, persistence, a
     OHWORKS_SESSION_SECRET: randomBytes(48).toString('base64url'),
     OHWORKS_TEST_ACCOUNTS_JSON: JSON.stringify(accountConfigs),
     OHWORKS_INTERNAL_PROOF_ENABLED: 'false',
+    OHWORKS_PUBLIC_ORIGIN: baseUrl,
   };
   const launch = () => spawn(process.execPath, [resolve(root, 'node_modules/next/dist/bin/next'), 'start', '-p', String(port), '-H', '127.0.0.1'], { cwd: root, env: serverEnv, stdio: ['ignore', 'pipe', 'pipe'] });
   let child = launch();
@@ -98,8 +99,8 @@ test('built customer runtime enforces auth, roles, rendered copy, persistence, a
       const response = await fetch(`${baseUrl}/pilot/ohworks/api/login`, {
         method: 'POST', redirect: 'manual', headers: {
           'content-type': 'application/x-www-form-urlencoded',
-          'x-forwarded-host': `127.0.0.1:${port}`,
-          'x-forwarded-proto': 'http',
+          'x-forwarded-host': 'attacker.example:99999',
+          'x-forwarded-proto': 'garbage',
         },
         body: new URLSearchParams({ username: account.username, password: account.password }),
       });

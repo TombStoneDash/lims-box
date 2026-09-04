@@ -11,6 +11,8 @@ services:
       - no-new-privileges:true
     env_file:
       - /opt/limsbox/test-tenant-r14/secrets.env
+    environment:
+      OHWORKS_PUBLIC_ORIGIN: https://ohworks-demo-138-68-157-114.sslip.io
     ports:
       - "127.0.0.1:3218:3218"
     volumes:

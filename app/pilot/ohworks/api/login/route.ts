@@ -2,13 +2,15 @@ import { NextRequest, NextResponse } from 'next/server';
 import { authenticateAccount, issueSession, SESSION_COOKIE } from '@/lib/ohworks-tenant/auth';
 
 function externalOrigin(request: NextRequest): string {
-  const forwardedHost = request.headers.get('x-forwarded-host')?.split(',')[0]?.trim();
-  const requestHost = request.headers.get('host')?.trim();
-  const host = forwardedHost || requestHost;
-  if (!host || !/^[a-z0-9.-]+(?::\d{1,5})?$/i.test(host)) return request.nextUrl.origin;
-  const forwardedProtocol = request.headers.get('x-forwarded-proto')?.split(',')[0]?.trim().toLowerCase();
-  const protocol = forwardedProtocol === 'https' ? 'https' : 'http';
-  return `${protocol}://${host}`;
+  const configured = process.env.OHWORKS_PUBLIC_ORIGIN?.trim();
+  if (!configured) return request.nextUrl.origin;
+  try {
+    const parsed = new URL(configured);
+    if (!['http:', 'https:'].includes(parsed.protocol) || parsed.username || parsed.password) return request.nextUrl.origin;
+    return parsed.origin;
+  } catch {
+    return request.nextUrl.origin;
+  }
 }
 
 export async function POST(request: NextRequest) {
