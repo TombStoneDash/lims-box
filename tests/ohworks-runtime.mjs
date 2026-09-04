@@ -96,10 +96,15 @@ test('built customer runtime enforces auth, roles, rendered copy, persistence, a
 
     async function login(account) {
       const response = await fetch(`${baseUrl}/pilot/ohworks/api/login`, {
-        method: 'POST', redirect: 'manual', headers: { 'content-type': 'application/x-www-form-urlencoded' },
+        method: 'POST', redirect: 'manual', headers: {
+          'content-type': 'application/x-www-form-urlencoded',
+          'x-forwarded-host': `127.0.0.1:${port}`,
+          'x-forwarded-proto': 'http',
+        },
         body: new URLSearchParams({ username: account.username, password: account.password }),
       });
       assert.equal(response.status, 303);
+      assert.equal(response.headers.get('location'), `${baseUrl}/pilot/ohworks`);
       const cookie = response.headers.get('set-cookie')?.split(';')[0];
       assert.ok(cookie);
       return cookie;
