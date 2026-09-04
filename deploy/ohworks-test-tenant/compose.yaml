@@ -1,0 +1,30 @@
+services:
+  ohworks-test-tenant:
+    image: ${OHWORKS_IMAGE:?Set OHWORKS_IMAGE to the exact versioned image tag}
+    container_name: limsbox-ohworks-test-tenant-r14
+    restart: unless-stopped
+    init: true
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    env_file:
+      - /opt/limsbox/test-tenant-r14/secrets.env
+    ports:
+      - "127.0.0.1:3218:3218"
+    volumes:
+      - /opt/limsbox/test-tenant-r14/data:/var/lib/ohworks-test
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,nodev,size=32m
+      - /app/.next/cache:rw,noexec,nosuid,nodev,size=32m,uid=1000,gid=1000
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - fetch('http://127.0.0.1:3218/pilot/ohworks/api/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))
+      interval: 20s
+      timeout: 5s
+      retries: 6
+      start_period: 30s

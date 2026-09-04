@@ -1,0 +1,7 @@
+.git
+.next
+node_modules
+.ohworks-test-data
+.ohworks-local-runtime
+*.log
+.env*

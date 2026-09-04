@@ -5,6 +5,7 @@
 
 # testing
 /coverage
+/.ohworks-local-runtime/
 
 # next.js
 /.next/
