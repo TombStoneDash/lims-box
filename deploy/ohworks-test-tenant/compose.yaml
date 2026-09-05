@@ -1,32 +1,51 @@
+name: ohworks-senaite-candidate
+
 services:
-  ohworks-test-tenant:
-    image: ${OHWORKS_IMAGE:?Set OHWORKS_IMAGE to the exact versioned image tag}
-    container_name: limsbox-ohworks-test-tenant-r14
+  web:
+    image: ${OHWORKS_IMAGE:?Set OHWORKS_IMAGE to an exact versioned candidate image}
     restart: unless-stopped
     init: true
     read_only: true
-    cap_drop:
-      - ALL
-    security_opt:
-      - no-new-privileges:true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
     env_file:
-      - /opt/limsbox/test-tenant-r14/secrets.env
+      - ${OHWORKS_RUNTIME_ENV_FILE:?Set the path to the separately managed runtime environment file}
     environment:
-      OHWORKS_PUBLIC_ORIGIN: https://ohworks-demo-138-68-157-114.sslip.io
-    ports:
-      - "127.0.0.1:3218:3218"
+      OHWORKS_PERSONNEL_DATA_DIR: /var/lib/ohworks-personnel
+      OHWORKS_SENAITE_BUNDLE_DIR: /run/ohworks-bundle
+      OHWORKS_RESULT_IMPORTER_PATH: /opt/ohworks-senaite-source/tools/import-results.js
+      OHWORKS_BUNDLE_LOADER_PATH: /opt/ohworks-senaite-source/tools/load-client.js
+    expose: ["3218"]
     volumes:
-      - /opt/limsbox/test-tenant-r14/data:/var/lib/ohworks-test
+      - ohworks_personnel:/var/lib/ohworks-personnel
+      - ${OHWORKS_BUNDLE_PATH:?Set the checksum-verified OHWorks bundle path}:/run/ohworks-bundle:ro
+      - ${OHWORKS_SENAITE_SOURCE_PATH:?Set the clean bcc97cc5 source path}:/opt/ohworks-senaite-source:ro
+    networks: [ui, senaite_private]
     tmpfs:
       - /tmp:rw,noexec,nosuid,nodev,size=32m
       - /app/.next/cache:rw,noexec,nosuid,nodev,size=32m,uid=1000,gid=1000
-    healthcheck:
-      test:
-        - CMD
-        - node
-        - -e
-        - fetch('http://127.0.0.1:3218/pilot/ohworks/api/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))
-      interval: 20s
-      timeout: 5s
-      retries: 6
-      start_period: 30s
+
+  candidate_proxy:
+    image: ${OHWORKS_CADDY_IMAGE:?Set an exact versioned Caddy image}
+    restart: unless-stopped
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    environment:
+      OHWORKS_CANDIDATE_HOST: ${OHWORKS_CANDIDATE_HOST:?Set the unactivated candidate hostname}
+    ports:
+      - "127.0.0.1:${OHWORKS_CANDIDATE_PORT:?Set an unused local candidate port}:8080"
+    volumes:
+      - ./Caddyfile.candidate:/etc/caddy/Caddyfile:ro
+    networks: [ui]
+
+networks:
+  ui:
+    internal: true
+  senaite_private:
+    external: true
+    name: ${OHWORKS_SENAITE_NETWORK:?Set the existing private SENAITE network name}
+
+volumes:
+  ohworks_personnel:
+    name: ${OHWORKS_PERSONNEL_VOLUME:?Set the personnel volume name}

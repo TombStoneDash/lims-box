@@ -1,0 +1,12 @@
+{
+  auto_https off
+  admin off
+}
+
+:8080 {
+  @expected_host host {$OHWORKS_CANDIDATE_HOST}
+  handle @expected_host {
+    reverse_proxy web:3218
+  }
+  respond "candidate host rejected" 421
+}

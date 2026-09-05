@@ -11,10 +11,8 @@ export type TenantRole =
 
 export type TenantPermission =
   | 'sample:read'
-  | 'sample:accession'
   | 'sample:queue'
   | 'result:read'
-  | 'result:record'
   | 'result:retest'
   | 'result:quarantine'
   | 'result:reject'
@@ -27,17 +25,16 @@ export type TenantPermission =
 export type SampleState =
   | 'Accessioned'
   | 'Queued'
-  | 'Result available'
+  | 'Awaiting verification'
   | 'Retest requested'
   | 'Quarantined'
   | 'Rejected'
   | 'Technical review'
-  | 'Released';
+  | 'Released'
+  | 'Unknown';
 
 export type SampleAction =
-  | 'accession'
   | 'queue'
-  | 'record_result'
   | 'request_retest'
   | 'quarantine'
   | 'reject'
@@ -52,32 +49,34 @@ export interface TenantPrincipal {
 }
 
 export interface ResultValue {
+  uid: string;
   code: string;
   analyte: string;
   value: string;
-  units: string;
-  reference: string;
-  flag: 'Within range' | 'Out of range';
+  units?: string;
+  reference?: string;
+  flag?: string;
+  reviewState: string;
 }
 
 export interface SampleRecord {
+  uid: string;
   id: string;
   tenantId: typeof TEST_TENANT_ID;
-  dataDomain: typeof TEST_DATA_DOMAIN;
-  orderId: string;
-  subjectReference: string;
-  panel: string;
-  specimen: string;
-  receivedAt: string;
-  priority: 'Routine' | 'Urgent';
+  dataDomain: 'senaite';
+  orderId?: string;
+  subjectReference?: string;
+  panel?: string;
+  specimen?: string;
+  receivedAt?: string;
+  priority?: string;
   state: SampleState;
-  instrument: 'LIAISON XL';
-  rackPosition: string;
+  senaiteState: string;
   results: ResultValue[];
-  review?: { accountId: string; actor: string; at: string; outcome: 'Accepted' };
-  release?: { accountId: string; actor: string; at: string; reportId: string };
-  exception?: { reason: string; at: string };
-  revision: number;
+  review?: { accountId?: string; actor: string; at?: string; outcome: string };
+  release?: { accountId?: string; actor: string; at?: string; reportId: string };
+  exception?: { reason: string; at?: string };
+  remarks?: string;
 }
 
 export interface PersonnelRecord {
@@ -94,7 +93,7 @@ export interface PersonnelRecord {
 export interface AuditRecord {
   id: string;
   tenantId: typeof TEST_TENANT_ID;
-  dataDomain: typeof TEST_DATA_DOMAIN;
+  dataDomain: 'senaite';
   at: string;
   actor: string;
   action: string;
@@ -105,19 +104,25 @@ export interface AuditRecord {
 export interface InstrumentRecord {
   id: string;
   tenantId: typeof TEST_TENANT_ID;
-  dataDomain: typeof TEST_DATA_DOMAIN;
-  name: 'LIAISON XL';
-  status: 'Ready';
+  dataDomain: 'senaite';
+  name: string;
+  status: string;
   queueDepth: number;
-  lastImportAt: string;
-  connection: 'Test file import';
+  lastImportAt?: string;
+  connection: 'SENAITE result importer';
+}
+
+export interface LaboratoryAvailability {
+  available: boolean;
+  source: 'senaite';
+  checkedAt: string;
+  reason?: string;
 }
 
 export interface TenantStore {
-  schemaVersion: 2;
+  schemaVersion: 3;
   tenantId: typeof TEST_TENANT_ID;
-  dataDomain: typeof TEST_DATA_DOMAIN;
-  sequence: number;
+  laboratory: LaboratoryAvailability;
   samples: SampleRecord[];
   personnel: PersonnelRecord[];
   instruments: InstrumentRecord[];

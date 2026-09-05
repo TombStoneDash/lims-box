@@ -30,14 +30,14 @@ FROM node:22-bookworm-slim AS runtime
 ENV NODE_ENV=production
 ENV HOSTNAME=0.0.0.0
 ENV PORT=3218
-ENV OHWORKS_DATA_DIR=/var/lib/ohworks-test
+ENV OHWORKS_PERSONNEL_DATA_DIR=/var/lib/ohworks-personnel
 WORKDIR /app
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends ca-certificates \
     && rm -rf /var/lib/apt/lists/* \
-    && mkdir -p /var/lib/ohworks-test \
-    && chown node:node /var/lib/ohworks-test
+    && mkdir -p /var/lib/ohworks-personnel \
+    && chown node:node /var/lib/ohworks-personnel
 
 COPY --from=build --chown=node:node /app/package.json ./package.json
 COPY --from=build --chown=node:node /app/next.config.js ./next.config.js

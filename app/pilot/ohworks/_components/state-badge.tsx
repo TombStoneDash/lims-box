@@ -3,7 +3,8 @@ import type { SampleState } from '@/lib/ohworks-tenant/model';
 const styles: Record<SampleState, string> = {
   Accessioned: 'bg-slate-100 text-slate-700 ring-slate-200',
   Queued: 'bg-sky-50 text-sky-700 ring-sky-200',
-  'Result available': 'bg-violet-50 text-violet-700 ring-violet-200',
+  'Awaiting verification': 'bg-violet-50 text-violet-700 ring-violet-200',
+  Unknown: 'bg-slate-50 text-slate-700 ring-slate-200',
   'Retest requested': 'bg-amber-50 text-amber-800 ring-amber-200',
   Quarantined: 'bg-rose-50 text-rose-700 ring-rose-200',
   Rejected: 'bg-red-100 text-red-800 ring-red-200',

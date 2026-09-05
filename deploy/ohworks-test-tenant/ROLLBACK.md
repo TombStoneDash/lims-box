@@ -1,21 +1,17 @@
-# OHWorks test tenant rollback
+# Source-only candidate boundary and rollback
 
-The existing pilot remains on `127.0.0.1:3217`. The replacement runs separately
-on `127.0.0.1:3218`, with its own versioned image and persistent data directory.
+This directory is an unactivated candidate. It does not alter the existing
+pilot, public Caddy configuration, DNS, running SENAITE service, or SENAITE
+data volume. The web service joins the existing private SENAITE network and
+the candidate proxy publishes only an explicitly selected loopback port.
 
-To roll back customer traffic, restore the preserved Caddyfile and reload Caddy:
+The SENAITE image must remain the separately verified, pinned image containing
+the installed security backport. This candidate neither rebuilds nor replaces
+that image. The OHWorks bundle mounted at `/run/ohworks-bundle` must come from
+the clean checksum-bound source head
+`bcc97cc5df73941c3e34171e67a64b552e13425e`.
 
-```sh
-cp /opt/limsbox/gateway/Caddyfile.pre-test-tenant-r14 /opt/limsbox/gateway/Caddyfile
-docker exec limsbox-public-gateway caddy reload --config /etc/caddy/Caddyfile
-```
-
-Verify the public route, then stop only the replacement if required:
-
-```sh
-cd /opt/limsbox/test-tenant-r14
-OHWORKS_IMAGE="$(cat image-tag.txt)" docker compose down
-```
-
-Do not remove the replacement data directory, image, old pilot container, or
-SENAITE volumes during routine rollback.
+No rollback action is required for source review because nothing is activated.
+If a later separately authorized private test starts this compose project,
+rollback is limited to stopping `ohworks-senaite-candidate`; do not remove the
+personnel volume, SENAITE volume, images, or the existing pilot.

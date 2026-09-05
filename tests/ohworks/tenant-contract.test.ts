@@ -43,7 +43,7 @@ test('signed sessions reject tampering, expiry, and cross-tenant payload changes
 });
 
 test('roles cannot exceed their explicit permissions', () => {
-  assert.deepEqual([...permissionsFor('receiving')].sort(), ['sample:accession', 'sample:queue', 'sample:read']);
+  assert.deepEqual([...permissionsFor('receiving')].sort(), ['sample:queue', 'sample:read']);
   assert.equal(permissionsFor('scientist').includes('result:review'), false);
   assert.equal(permissionsFor('reviewer').includes('result:release'), false);
   assert.equal(permissionsFor('approver').includes('result:review'), false);
@@ -52,7 +52,14 @@ test('roles cannot exceed their explicit permissions', () => {
   const receiving: TenantPrincipal = { accountId: 'acct-receiving', username: 'configured-user', displayName: 'Elliot Mercer', role: 'receiving' };
   assert.deepEqual(authorizeAction(receiving, 'release', 'Technical review'), { ok: false, reason: 'Your account is not permitted to perform this action.' });
   const approver: TenantPrincipal = { ...receiving, accountId: 'acct-approver', role: 'approver' };
-  assert.deepEqual(authorizeAction(approver, 'release', 'Result available'), { ok: false, reason: 'The action is not available while the sample is Result available.' });
+  assert.deepEqual(authorizeAction(approver, 'release', 'Awaiting verification'), { ok: false, reason: 'The action is not available while the sample is Awaiting verification.' });
+});
+
+test('interactive laboratory result recording is absent from the tenant contract', () => {
+  const model = readFileSync(resolve(root, 'lib/ohworks-tenant/model.ts'), 'utf8');
+  const route = readFileSync(resolve(root, 'app/pilot/ohworks/api/actions/route.ts'), 'utf8');
+  const controls = readFileSync(resolve(root, 'app/pilot/ohworks/_components/sample-actions.tsx'), 'utf8');
+  for (const source of [model, route, controls]) assert.doesNotMatch(source, /record_result|result:record/);
 });
 
 test('the customer route disables the previous assistant endpoint', () => {

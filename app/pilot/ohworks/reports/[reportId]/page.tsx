@@ -10,6 +10,7 @@ export default async function ReportPage({ params }: { params: Promise<{ reportI
   const principal = await requirePrincipal();
   if (!hasPermission(principal, 'report:read')) notFound();
   const store = visibleStore(await readTenantStore(), principal);
+  if (!store.laboratory.available) notFound();
   const { reportId } = await params;
   const sample = store.samples.find((candidate) => candidate.release?.reportId === reportId);
   if (!sample?.release || !sample.review) notFound();

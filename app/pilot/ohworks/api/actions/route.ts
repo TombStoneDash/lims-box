@@ -3,7 +3,7 @@ import { getPrincipal } from '@/lib/ohworks-tenant/auth';
 import type { SampleAction } from '@/lib/ohworks-tenant/model';
 import { applySampleAction } from '@/lib/ohworks-tenant/store';
 
-const ACTIONS = new Set<SampleAction>(['accession', 'queue', 'record_result', 'request_retest', 'quarantine', 'reject', 'technical_review', 'release']);
+const ACTIONS = new Set<SampleAction>(['queue', 'request_retest', 'quarantine', 'reject', 'technical_review', 'release']);
 
 export async function POST(request: NextRequest) {
   const principal = await getPrincipal();
@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
   } catch {
     return NextResponse.json({ error: 'Invalid request' }, { status: 400 });
   }
-  if (!body.action || !ACTIONS.has(body.action as SampleAction) || (body.sampleId && !/^OW-\d{6}-\d{3}$/.test(body.sampleId))) {
+  if (!body.action || !ACTIONS.has(body.action as SampleAction) || !body.sampleId || !/^[A-Za-z0-9._-]{1,80}$/.test(body.sampleId)) {
     return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
   }
   try {
