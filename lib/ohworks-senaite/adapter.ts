@@ -2,7 +2,20 @@ import type { AuditRecord, InstrumentRecord, ResultValue, SampleAction, SampleRe
 import { TEST_TENANT_ID } from '@/lib/ohworks-tenant/model';
 import { createSenaiteClient, type SenaiteClient, type SenaiteRecord } from './client';
 
-type ActionConfiguration = Record<SampleAction, { resource: 'analysisrequest'; transition: string; expectedState: string }>;
+type ActionMapping = { resource: 'analysisrequest'; transition: string; expectedState: string };
+type ActionConfiguration = Record<SampleAction, ActionMapping>;
+
+const ACTION_MAPPINGS: Readonly<ActionConfiguration> = Object.freeze({
+  queue: Object.freeze({ resource: 'analysisrequest', transition: 'assign', expectedState: 'assigned' }),
+  request_retest: Object.freeze({ resource: 'analysisrequest', transition: 'retract', expectedState: 'to_be_verified' }),
+  quarantine: Object.freeze({ resource: 'analysisrequest', transition: 'reject', expectedState: 'rejected' }),
+  reject: Object.freeze({ resource: 'analysisrequest', transition: 'reject', expectedState: 'rejected' }),
+  technical_review: Object.freeze({ resource: 'analysisrequest', transition: 'verify', expectedState: 'verified' }),
+  release: Object.freeze({ resource: 'analysisrequest', transition: 'publish', expectedState: 'published' }),
+});
+
+const SAMPLE_ACTIONS = Object.freeze(Object.keys(ACTION_MAPPINGS) as SampleAction[]);
+const APPROVED_ACTOR_FIELD = 'Remarks';
 
 export interface SenaiteConfiguration {
   clientUid: string;
@@ -17,17 +30,52 @@ function required(value: string | undefined, name: string): string {
   return value.trim();
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function validateActionConfiguration(value: unknown): Partial<ActionConfiguration> {
+  if (!isRecord(value)) throw new Error('OHWORKS_SENAITE_ACTIONS_JSON must be a JSON object');
+  const actions: Partial<ActionConfiguration> = {};
+  for (const [name, candidate] of Object.entries(value)) {
+    if (!SAMPLE_ACTIONS.includes(name as SampleAction)) throw new Error(`OHWORKS_SENAITE_ACTIONS_JSON contains unsupported action ${name}`);
+    const action = name as SampleAction;
+    const expected = ACTION_MAPPINGS[action];
+    if (!isRecord(candidate)
+      || Object.keys(candidate).sort().join(',') !== 'expectedState,resource,transition'
+      || candidate.resource !== expected.resource
+      || candidate.transition !== expected.transition
+      || candidate.expectedState !== expected.expectedState) {
+      throw new Error(`SENAITE action mapping for ${action} must be ${expected.resource}:${expected.transition}->${expected.expectedState}`);
+    }
+    actions[action] = expected;
+  }
+  return actions;
+}
+
+function validateConfiguration(config: SenaiteConfiguration): void {
+  required(config.clientUid, 'OHWORKS_SENAITE_CLIENT_UID');
+  required(config.auditResource, 'OHWORKS_SENAITE_AUDIT_RESOURCE');
+  required(config.instrumentResource, 'OHWORKS_SENAITE_INSTRUMENT_RESOURCE');
+  if (config.actorField !== APPROVED_ACTOR_FIELD) {
+    throw new Error(`OHWORKS_SENAITE_ACTOR_FIELD must be ${APPROVED_ACTOR_FIELD}`);
+  }
+  validateActionConfiguration(config.actions);
+}
+
 export function configurationFromEnvironment(env: NodeJS.ProcessEnv = process.env): SenaiteConfiguration {
-  let actions: Partial<ActionConfiguration>;
-  try { actions = JSON.parse(required(env.OHWORKS_SENAITE_ACTIONS_JSON, 'OHWORKS_SENAITE_ACTIONS_JSON')) as Partial<ActionConfiguration>; }
+  let parsedActions: unknown;
+  try { parsedActions = JSON.parse(required(env.OHWORKS_SENAITE_ACTIONS_JSON, 'OHWORKS_SENAITE_ACTIONS_JSON')); }
   catch (error) { throw new Error(error instanceof SyntaxError ? 'OHWORKS_SENAITE_ACTIONS_JSON must be valid JSON' : (error as Error).message); }
-  return {
+  const config = {
     clientUid: required(env.OHWORKS_SENAITE_CLIENT_UID, 'OHWORKS_SENAITE_CLIENT_UID'),
     auditResource: required(env.OHWORKS_SENAITE_AUDIT_RESOURCE, 'OHWORKS_SENAITE_AUDIT_RESOURCE'),
     instrumentResource: required(env.OHWORKS_SENAITE_INSTRUMENT_RESOURCE, 'OHWORKS_SENAITE_INSTRUMENT_RESOURCE'),
     actorField: required(env.OHWORKS_SENAITE_ACTOR_FIELD, 'OHWORKS_SENAITE_ACTOR_FIELD'),
-    actions,
+    actions: validateActionConfiguration(parsedActions),
   };
+  validateConfiguration(config);
+  return config;
 }
 
 function field(record: SenaiteRecord | undefined | null, aliases: string[]): unknown {
@@ -165,8 +213,9 @@ function actorMarker(principal: TenantPrincipal, action: SampleAction): string {
 }
 
 export async function mutateSenaiteSample(client: SenaiteClient, config: SenaiteConfiguration, principal: TenantPrincipal, action: SampleAction, sample: SampleRecord): Promise<SampleRecord> {
+  validateConfiguration(config);
   const actionConfig = config.actions[action];
-  if (!actionConfig || actionConfig.resource !== 'analysisrequest' || !actionConfig.transition || !actionConfig.expectedState) {
+  if (!actionConfig) {
     throw new Error(`SENAITE mutation ${action} is not configured`);
   }
   const marker = actorMarker(principal, action);

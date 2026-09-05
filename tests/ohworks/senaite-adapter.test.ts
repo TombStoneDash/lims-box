@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { mutateSenaiteSample, readSenaiteLaboratory, type SenaiteConfiguration } from '../../lib/ohworks-senaite/adapter';
+import { configurationFromEnvironment, mutateSenaiteSample, readSenaiteLaboratory, type SenaiteConfiguration } from '../../lib/ohworks-senaite/adapter';
 import { createSenaiteClient, type SenaiteClient, type SenaiteRecord } from '../../lib/ohworks-senaite/client';
 import type { TenantPrincipal } from '../../lib/ohworks-tenant/model';
 
@@ -10,7 +10,7 @@ function configuration(): SenaiteConfiguration {
     auditResource: 'audit-history',
     instrumentResource: 'instrument',
     actorField: 'Remarks',
-    actions: { technical_review: { resource: 'analysisrequest', transition: 'configured-verify-transition', expectedState: 'verified' } },
+    actions: { technical_review: { resource: 'analysisrequest', transition: 'verify', expectedState: 'verified' } },
   };
 }
 
@@ -62,7 +62,7 @@ test('allowed mutation reaches SENAITE and independently reads back state plus h
   const after = await mutateSenaiteSample(client, configuration(), principal, 'technical_review', snapshot.samples[0]);
   assert.equal(after.state, 'Technical review');
   assert.deepEqual(Object.keys(client.updates[0]).sort(), ['Remarks', 'transition']);
-  assert.equal(client.updates[0].transition, 'configured-verify-transition');
+  assert.equal(client.updates[0].transition, 'verify');
   assert.match(String(client.updates[0].Remarks), /OHWORKS_ACTOR account=acct-reviewer name=Review Person action=technical_review/);
 });
 
@@ -72,6 +72,65 @@ test('mutation rejects a read-back that loses human actor attribution', async ()
   client.readOne = async () => ({ ...client.sample, Remarks: '', review_state: 'verified' });
   const principal: TenantPrincipal = { accountId: 'acct-reviewer', username: 'reviewer', displayName: 'Review Person', role: 'reviewer' };
   await assert.rejects(() => mutateSenaiteSample(client, configuration(), principal, 'technical_review', snapshot.samples[0]), /actor attribution was not preserved/);
+});
+
+test('configuration rejects queue remapping to publish and a configurable published postcondition', () => {
+  assert.throws(() => configurationFromEnvironment({
+    NODE_ENV: 'test',
+    OHWORKS_SENAITE_CLIENT_UID: 'client',
+    OHWORKS_SENAITE_AUDIT_RESOURCE: 'audit-history',
+    OHWORKS_SENAITE_INSTRUMENT_RESOURCE: 'instrument',
+    OHWORKS_SENAITE_ACTOR_FIELD: 'Remarks',
+    OHWORKS_SENAITE_ACTIONS_JSON: JSON.stringify({ queue: { resource: 'analysisrequest', transition: 'publish', expectedState: 'published' } }),
+  }), /mapping for queue must be analysisrequest:assign->assigned/);
+});
+
+test('configuration rejects reserved and mixed-case actor field names', () => {
+  for (const actorField of ['Result', 'rEsUlT', 'Reviewer', 'approval', 'Publisher', 'password']) {
+    assert.throws(() => configurationFromEnvironment({
+      NODE_ENV: 'test',
+      OHWORKS_SENAITE_CLIENT_UID: 'client',
+      OHWORKS_SENAITE_AUDIT_RESOURCE: 'audit-history',
+      OHWORKS_SENAITE_INSTRUMENT_RESOURCE: 'instrument',
+      OHWORKS_SENAITE_ACTOR_FIELD: actorField,
+      OHWORKS_SENAITE_ACTIONS_JSON: JSON.stringify({ technical_review: { resource: 'analysisrequest', transition: 'verify', expectedState: 'verified' } }),
+    }), /ACTOR_FIELD must be Remarks/);
+  }
+});
+
+test('mutation validates every configured mapping before any SENAITE write', async () => {
+  const client = fakeClient();
+  const config = configuration();
+  config.actions.queue = { resource: 'analysisrequest', transition: 'publish', expectedState: 'published' };
+  const principal: TenantPrincipal = { accountId: 'acct-reviewer', username: 'reviewer', displayName: 'Review Person', role: 'reviewer' };
+  await assert.rejects(
+    () => mutateSenaiteSample(client, config, principal, 'technical_review', {
+      uid: 'sample-uid', id: 'AR-001', tenantId: 'ohworks-test-tenant', dataDomain: 'senaite', state: 'Awaiting verification', senaiteState: 'to_be_verified', results: [],
+    }),
+    /mapping for queue must be analysisrequest:assign->assigned/,
+  );
+  assert.equal(client.updates.length, 0);
+});
+
+test('mutation rejects incompatible selected mappings before any SENAITE write', async () => {
+  const principal: TenantPrincipal = { accountId: 'acct-receiving', username: 'receiving', displayName: 'Receiving Person', role: 'receiving' };
+  const incompatibleMappings = [
+    { resource: 'analysisrequest', transition: 'assign', expectedState: 'published' },
+    { resource: 'analysisrequest', transition: 'verify', expectedState: 'assigned' },
+    { resource: 'analysisrequest', transition: 'publish', expectedState: 'published' },
+  ] as const;
+  for (const mapping of incompatibleMappings) {
+    const client = fakeClient();
+    const config = configuration();
+    config.actions = { queue: mapping };
+    await assert.rejects(
+      () => mutateSenaiteSample(client, config, principal, 'queue', {
+        uid: 'sample-uid', id: 'AR-001', tenantId: 'ohworks-test-tenant', dataDomain: 'senaite', state: 'Accessioned', senaiteState: 'sample_received', results: [],
+      }),
+      /mapping for queue must be analysisrequest:assign->assigned/,
+    );
+    assert.equal(client.updates.length, 0);
+  }
 });
 
 test('SENAITE client redacts structurally escaped credentials from server failures', async () => {
