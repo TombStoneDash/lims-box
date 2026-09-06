@@ -5,6 +5,7 @@ on:
     paths:
       - "app/cola/page.tsx"
       - "app/api/early-access/route.ts"
+      - "lib/earlyAccessHandler.ts"
       - "lib/leadAttribution.ts"
       - "tests/attribution/**"
       - "docs/campaign-attribution-verification.md"
@@ -17,6 +18,7 @@ on:
     paths:
       - "app/cola/page.tsx"
       - "app/api/early-access/route.ts"
+      - "lib/earlyAccessHandler.ts"
       - "lib/leadAttribution.ts"
       - "tests/attribution/**"
       - "docs/campaign-attribution-verification.md"
