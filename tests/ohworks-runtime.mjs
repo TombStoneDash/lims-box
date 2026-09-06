@@ -3,7 +3,9 @@ import { access, mkdtemp, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { resolve } from 'node:path';
 import { test } from 'node:test';
-import { readTenantStore } from '../lib/ohworks-tenant/store.ts';
+import storeNamespace from '../lib/ohworks-tenant/store.ts';
+
+const { readTenantStore } = storeNamespace;
 
 const root = resolve(import.meta.dirname, '..');
 
