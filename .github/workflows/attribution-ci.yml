@@ -5,6 +5,7 @@ on:
     paths:
       - "app/cola/page.tsx"
       - "app/api/early-access/route.ts"
+      - "lib/earlyAccessApplication.ts"
       - "lib/earlyAccessHandler.ts"
       - "lib/leadAttribution.ts"
       - "tests/attribution/**"
@@ -18,6 +19,7 @@ on:
     paths:
       - "app/cola/page.tsx"
       - "app/api/early-access/route.ts"
+      - "lib/earlyAccessApplication.ts"
       - "lib/earlyAccessHandler.ts"
       - "lib/leadAttribution.ts"
       - "tests/attribution/**"
