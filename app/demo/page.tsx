@@ -13,7 +13,7 @@ type Step = 'entry' | 'coc' | 'report';
 const steps: { id: Step; label: string; icon: React.ElementType }[] = [
   { id: 'entry', label: 'Sample Entry', icon: ClipboardList },
   { id: 'coc', label: 'Chain of Custody', icon: Shield },
-  { id: 'report', label: 'Compliance Report', icon: FileText },
+  { id: 'report', label: 'Demo Report', icon: FileText },
 ];
 
 function SampleEntryStep() {
@@ -27,7 +27,7 @@ function SampleEntryStep() {
         </div>
         <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Sample Logged</h3>
         <p className="text-slate-600 dark:text-slate-300 text-sm">
-          WS-2026-0384 has been registered. Holding time countdown started automatically.
+          Synthetic sample WS-2026-0384 has been registered. Holding time countdown started for this demo walkthrough.
         </p>
         <div className="mt-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-3 max-w-sm mx-auto">
           <div className="flex items-center gap-2 text-sm text-amber-800 dark:text-amber-200">
@@ -160,7 +160,7 @@ function COCStep() {
         <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-3">
           <div className="flex items-center gap-2 text-sm text-green-800 dark:text-green-200">
             <Check className="w-4 h-4" />
-            <span><strong>COC complete.</strong> Electronic signature captured with timestamp and IP. Full audit trail recorded.</span>
+            <span><strong>COC complete.</strong> Demo signature captured with timestamp and IP. A synthetic audit trail entry was recorded.</span>
           </div>
         </div>
       )}
@@ -186,9 +186,9 @@ function ReportStep() {
       {!generated ? (
         <div className="text-center py-8">
           <BarChart3 className="w-12 h-12 text-lab-teal mx-auto mb-4" />
-          <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Generate Compliance Report</h3>
+          <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Generate Demo Report</h3>
           <p className="text-slate-600 dark:text-slate-300 text-sm mb-6 max-w-md mx-auto">
-            LIMS BOX auto-populates the report with sample data, QC results, and regulatory limits. One click.
+            Generate a synthetic report preview using example sample data, QC results, and threshold references from this walkthrough.
           </p>
           <button
             onClick={() => setGenerated(true)}
@@ -203,12 +203,12 @@ function ReportStep() {
           <div className="bg-slate-800 text-white px-6 py-4">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-lg font-bold">Analytical Report</h3>
-                <p className="text-slate-300 text-xs">LIMS BOX Report #RPT-2026-0384</p>
+                <h3 className="text-lg font-bold">Synthetic Analytical Report</h3>
+                <p className="text-slate-300 text-xs">LIMS BOX Demo Report #RPT-2026-0384</p>
               </div>
               <div className="text-right text-xs text-slate-300">
                 <p>Generated: April 14, 2026</p>
-                <p>Report Status: FINAL</p>
+                <p>Report Status: DEMO</p>
               </div>
             </div>
           </div>
@@ -223,8 +223,8 @@ function ReportStep() {
               </div>
               <div>
                 <p className="text-xs text-slate-500 uppercase tracking-wider mb-1">Project</p>
-                <p className="font-medium text-slate-900 dark:text-white">Monthly Compliance Monitoring</p>
-                <p className="text-slate-600 dark:text-slate-400">Permit #CO-0042891</p>
+                <p className="font-medium text-slate-900 dark:text-white">Synthetic Nitrate Monitoring Walkthrough</p>
+                <p className="text-slate-600 dark:text-slate-400">Example permit reference for demonstration only</p>
               </div>
             </div>
 
@@ -278,14 +278,14 @@ function ReportStep() {
               </div>
             </div>
 
-            {/* Compliance note */}
+            {/* Demo interpretation note */}
             <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3 text-sm text-blue-800 dark:text-blue-200">
-              <strong>Compliance note:</strong> Nitrate result of 4.2 mg/L is below the EPA Maximum Contaminant Level (MCL) of 10 mg/L for drinking water. Sample was analyzed within holding time. All QC criteria met.
+              <strong>Demo note:</strong> This synthetic example shows how a result can be presented alongside reference thresholds and QC context. Labs remain responsible for method review, approvals, and any regulatory determinations.
             </div>
           </div>
 
           <div className="bg-slate-50 dark:bg-white/5 border-t border-slate-200 dark:border-white/10 px-6 py-3 text-xs text-slate-400">
-            Auto-generated by LIMS BOX — This report was compiled automatically from sample, QC, and method data. Electronic signatures and full audit trail are stored in the system.
+            Synthetic demo output generated by LIMS BOX from example sample, QC, and method data. No customer, patient, or production records are used on this page.
           </div>
         </div>
       )}
@@ -294,7 +294,7 @@ function ReportStep() {
 }
 
 const CALENDLY_URL =
-  'https://calendly.com/tombstonedash/lims-demo?hide_gdpr_banner=1&background_color=f8fafc&text_color=0f172a&primary_color=0d9488';
+  'https://calendly.com/hudtaylor/30min?hide_gdpr_banner=1&background_color=f8fafc&text_color=0f172a&primary_color=0d9488';
 
 function CalendlyEmbed() {
   useEffect(() => {
@@ -365,7 +365,7 @@ export default function DemoPage() {
             Schedule a LIMS BOX Demo
           </h1>
           <p className="text-lg text-slate-600 dark:text-slate-300 mb-6">
-            Walk through a real workflow: logging a drinking water sample for nitrate testing, tracking chain of custody, and generating a compliance report.
+            Walk through a synthetic workflow: logging an example drinking water sample, tracking chain of custody, and generating a demo report preview.
           </p>
           <a
             href="#schedule"
@@ -405,6 +405,9 @@ export default function DemoPage() {
       {/* Step content */}
       <section className="px-4 pb-12">
         <div className="max-w-3xl mx-auto bg-white dark:bg-white/5 rounded-2xl border border-black/5 dark:border-white/10 p-6 md:p-8">
+          <div className="mb-6 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+            This page is a synthetic demonstration. It uses example records and does not process customer, patient, regulated, or production data.
+          </div>
           <div className="flex items-center gap-2 mb-6">
             {(() => {
               const StepIcon = steps[stepIndex].icon;
@@ -447,15 +450,15 @@ export default function DemoPage() {
         </div>
       </section>
 
-      {/* CMS Deficiency Stats */}
+      {/* Demo workflow themes */}
       <section className="py-12 px-4">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-8">
             <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">
-              Why labs fail inspections
+              What this demo walkthrough highlights
             </h2>
             <p className="text-sm text-slate-500 dark:text-slate-400">
-              Top CMS deficiency categories — the problems LIMS BOX is built to prevent.
+              Example workflow checkpoints shown with synthetic records on this page.
             </p>
           </div>
 
@@ -463,75 +466,70 @@ export default function DemoPage() {
             <div className="bg-white dark:bg-white/5 border border-black/5 dark:border-white/10 rounded-xl p-5">
               <div className="flex items-center gap-2 mb-3">
                 <AlertTriangle className="w-5 h-5 text-amber-500" />
-                <span className="text-2xl font-bold text-slate-900 dark:text-white">5.0%</span>
+                <span className="text-sm font-semibold text-slate-900 dark:text-white">Sample intake context</span>
               </div>
-              <h3 className="text-sm font-semibold text-slate-900 dark:text-white mb-1">Reagent handling & storage</h3>
+              <h3 className="text-sm font-semibold text-slate-900 dark:text-white mb-1">Sample entry and holding-time cues</h3>
               <p className="text-xs text-slate-500 dark:text-slate-400">
-                Expired reagents, missing lot numbers, undocumented storage temps. LIMS BOX tracks expiration dates, lot numbers, and storage conditions automatically.
+                The walkthrough shows example identifiers, collection details, and holding-time prompts that help explain the intake flow.
               </p>
             </div>
             <div className="bg-white dark:bg-white/5 border border-black/5 dark:border-white/10 rounded-xl p-5">
               <div className="flex items-center gap-2 mb-3">
                 <AlertTriangle className="w-5 h-5 text-amber-500" />
-                <span className="text-2xl font-bold text-slate-900 dark:text-white">4.8%</span>
+                <span className="text-sm font-semibold text-slate-900 dark:text-white">Chain of custody</span>
               </div>
-              <h3 className="text-sm font-semibold text-slate-900 dark:text-white mb-1">Competency assessment</h3>
+              <h3 className="text-sm font-semibold text-slate-900 dark:text-white mb-1">Transfer and sign-off steps</h3>
               <p className="text-xs text-slate-500 dark:text-slate-400">
-                Expired training records, missing competency documentation, untracked certifications. LIMS BOX alerts before any competency expires.
+                It illustrates how a custody handoff can be displayed with timestamps, names, and sign-off prompts in a demo setting.
               </p>
             </div>
             <div className="bg-white dark:bg-white/5 border border-black/5 dark:border-white/10 rounded-xl p-5">
               <div className="flex items-center gap-2 mb-3">
                 <AlertTriangle className="w-5 h-5 text-amber-500" />
-                <span className="text-2xl font-bold text-slate-900 dark:text-white">3.9%</span>
+                <span className="text-sm font-semibold text-slate-900 dark:text-white">Report preview</span>
               </div>
-              <h3 className="text-sm font-semibold text-slate-900 dark:text-white mb-1">Procedure documentation</h3>
+              <h3 className="text-sm font-semibold text-slate-900 dark:text-white mb-1">Example results and QC context</h3>
               <p className="text-xs text-slate-500 dark:text-slate-400">
-                Outdated SOPs, unsigned procedures, missing revision control. LIMS BOX enforces document control with electronic signatures and version tracking.
+                The report preview demonstrates one way synthetic results, QC summaries, and reference thresholds can be presented for evaluation.
               </p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Competitor Pricing Comparison */}
+      {/* Pricing summary */}
       <section className="py-12 px-4 bg-white/50 dark:bg-white/5 border-y border-black/5 dark:border-white/5">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-8">
             <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">
-              How LIMS BOX compares
+              LIMS BOX pricing at a glance
             </h2>
-            <p className="text-sm text-slate-500 dark:text-slate-400">Real pricing. Real timelines. No asterisks.</p>
+            <p className="text-sm text-slate-500 dark:text-slate-400">Current public pricing for LIMS BOX. See the pricing page for plan details and limits.</p>
           </div>
 
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-slate-200 dark:border-white/10">
-                  <th className="text-left py-3 px-4 text-slate-500 font-medium"></th>
+                  <th className="text-left py-3 px-4 text-slate-500 font-medium">Plan</th>
                   <th className="text-center py-3 px-4 bg-lab-teal/10 dark:bg-lab-teal/20 rounded-t-lg">
-                    <span className="text-lab-teal font-bold">LIMS BOX</span>
+                    <span className="text-lab-teal font-bold">Starting price</span>
                   </th>
-                  <th className="text-center py-3 px-4 text-slate-500 font-medium">LabWare</th>
-                  <th className="text-center py-3 px-4 text-slate-500 font-medium">STARLIMS</th>
-                  <th className="text-center py-3 px-4 text-slate-500 font-medium">Spreadsheets</th>
+                  <th className="text-center py-3 px-4 text-slate-500 font-medium">Users</th>
+                  <th className="text-center py-3 px-4 text-slate-500 font-medium">Notes</th>
                 </tr>
               </thead>
               <tbody className="text-slate-700 dark:text-slate-300">
                 {[
-                  ['Starting price', '$500/mo', '$100K+', '$150K+', 'Free'],
-                  ['Implementation', 'Days', '12–18 months', '12–24 months', 'N/A'],
-                  ['Users included', '3–10', 'Per-seat', 'Per-seat', 'Unlimited'],
-                  ['Audit trail', 'Built-in', 'Built-in', 'Built-in', 'None'],
-                  ['IT required', 'No', 'Dedicated team', 'Dedicated team', 'No'],
-                  ['Contract', 'Month-to-month', '3–5 years', '3–5 years', 'N/A'],
-                ].map(([label, lims, lw, star, xl]) => (
+                  ['Starter', '$500/mo', 'Up to 3 users', 'Core workflow modules'],
+                  ['Growth', '$1,200/mo', 'Up to 10 users', 'Advanced reporting and expanded support'],
+                  ['Enterprise', 'Custom', 'Custom', 'Talk with us about scope'],
+                ].map(([label, price, users, notes]) => (
                   <tr key={label} className="border-b border-slate-100 dark:border-white/5">
                     <td className="py-3 px-4 text-slate-600 dark:text-slate-400 font-medium">{label}</td>
-                    <td className="py-3 px-4 text-center bg-lab-teal/5 dark:bg-lab-teal/10 font-semibold text-lab-teal">{lims}</td>
-                    <td className="py-3 px-4 text-center text-slate-500">{lw}</td>
-                    <td className="py-3 px-4 text-center text-slate-500">{star}</td>
-                    <td className="py-3 px-4 text-center text-slate-500">{xl}</td>
+                    <td className="py-3 px-4 text-center bg-lab-teal/5 dark:bg-lab-teal/10 font-semibold text-lab-teal">{price}</td>
+                    <td className="py-3 px-4 text-center text-slate-500">{users}</td>
+                    <td className="py-3 px-4 text-center text-slate-500">{notes}</td>
                   </tr>
                 ))}
               </tbody>
@@ -567,18 +565,18 @@ export default function DemoPage() {
               <div className="w-12 h-12 bg-lab-teal/10 rounded-xl flex items-center justify-center mx-auto mb-3">
                 <Clock className="w-6 h-6 text-lab-teal" />
               </div>
-              <h3 className="font-semibold text-slate-900 dark:text-white mb-1 text-sm">80% Less Data Entry</h3>
+              <h3 className="font-semibold text-slate-900 dark:text-white mb-1 text-sm">Synthetic workflow preview</h3>
               <p className="text-xs text-slate-600 dark:text-slate-400">
-                Instrument integration eliminates manual transcription. Results flow from ICP-MS, GC-MS, and IC directly into the LIMS.
+                See an example intake, custody, and reporting flow without connecting instruments or loading customer data.
               </p>
             </div>
             <div className="text-center">
               <div className="w-12 h-12 bg-lab-teal/10 rounded-xl flex items-center justify-center mx-auto mb-3">
                 <Shield className="w-6 h-6 text-lab-teal" />
               </div>
-              <h3 className="font-semibold text-slate-900 dark:text-white mb-1 text-sm">Compliance Automation</h3>
+              <h3 className="font-semibold text-slate-900 dark:text-white mb-1 text-sm">Validation support context</h3>
               <p className="text-xs text-slate-600 dark:text-slate-400">
-                ISO 17025 audit trails, QC enforcement, and report generation happen automatically. Your next assessment just got easier.
+                Review how audit trails, sign-offs, and report context can appear in the product while your lab retains responsibility for validation and compliance.
               </p>
             </div>
           </div>
@@ -593,7 +591,7 @@ export default function DemoPage() {
               Schedule a Live Demo
             </h2>
             <p className="text-slate-600 dark:text-slate-300 max-w-xl mx-auto">
-              30 minutes with our founder. See your actual workflows demonstrated, ask questions, and decide if LIMS BOX fits your lab.
+              30 minutes with our founder. Review the synthetic walkthrough, talk through your workflow, and decide whether a deeper evaluation makes sense.
             </p>
           </div>
 
@@ -628,11 +626,11 @@ export default function DemoPage() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center text-sm">
             <div>
               <p className="font-bold text-slate-900 dark:text-white">ISO 17025</p>
-              <p className="text-xs text-slate-500">Survey-ready</p>
+              <p className="text-xs text-slate-500">Workflow context</p>
             </div>
             <div>
               <p className="font-bold text-slate-900 dark:text-white">21 CFR Part 11</p>
-              <p className="text-xs text-slate-500">Data integrity</p>
+              <p className="text-xs text-slate-500">Validation support</p>
             </div>
             <div>
               <p className="font-bold text-slate-900 dark:text-white">Offline-Capable</p>
