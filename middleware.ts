@@ -1,75 +1,76 @@
-import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
+import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
+import {
+  DEMO_OPERATOR_PASS_ENV,
+  DEMO_OPERATOR_USER_ENV,
+  evaluateDemoAccess,
+} from "@/lib/demo-access";
 
 /**
- * Admin / demo route protection via HTTP Basic Auth.
+ * Fail-closed supervised-demo protection via HTTP Basic Auth.
  *
- * Protected paths : /admin/* and /senaite-demo/*
- * Public paths    : /, /demo, /pricing, /blog/*, /api/health
+ * Protected paths include the operator sandbox, admin/read APIs, and mockups.
+ * Public /demo remains a browser-local, non-persistent walkthrough.
  *
  * Required env vars (set in Vercel dashboard or .env.local):
  *   ADMIN_BASIC_USER  — username for Basic auth
  *   ADMIN_BASIC_PASS  — password for Basic auth
  *
- * When either env var is absent (e.g. local `next dev` without .env.local),
- * the auth check is skipped so local iteration stays frictionless.
- *
- * To re-enable the old 404 behaviour for /admin in production, replace
- * this file with the previous single-line 404 guard.
+ * Missing credentials fail closed with 503. Authenticated non-GET requests to
+ * protected demo/admin paths fail with 405. The only mutable rehearsal is the
+ * browser-local /demo/operator state, which performs no HTTP writes.
  */
 
-const PUBLIC_EXACT: ReadonlySet<string> = new Set(['/', '/demo', '/pricing', '/api/health']);
-const PUBLIC_PREFIXES: readonly string[] = ['/blog/'];
-
-function isPublicPath(pathname: string): boolean {
-  if (PUBLIC_EXACT.has(pathname)) return true;
-  return PUBLIC_PREFIXES.some((prefix) => pathname.startsWith(prefix));
-}
-
-function isProtectedPath(pathname: string): boolean {
-  return (
-    pathname.startsWith('/admin') ||
-    pathname.startsWith('/senaite-demo') ||
-    pathname.startsWith('/api/admin')
-  );
-}
-
 export function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl;
+  const decision = evaluateDemoAccess({
+    pathname: request.nextUrl.pathname,
+    method: request.method,
+    authorization: request.headers.get("authorization"),
+    configuredUser: process.env[DEMO_OPERATOR_USER_ENV],
+    configuredPass: process.env[DEMO_OPERATOR_PASS_ENV],
+  });
 
-  // Public paths bypass auth entirely
-  if (isPublicPath(pathname)) {
-    return NextResponse.next();
-  }
+  if (decision.kind === "allow") return NextResponse.next();
 
-  // Only gate protected paths; everything else passes through
-  if (!isProtectedPath(pathname)) {
-    return NextResponse.next();
-  }
+  const commonHeaders = {
+    "Cache-Control": "no-store",
+    "X-Robots-Tag": "noindex, nofollow",
+  };
 
-  const adminUser = process.env.ADMIN_BASIC_USER;
-  const adminPass = process.env.ADMIN_BASIC_PASS;
-
-  // No creds configured → skip auth (local dev / preview without env vars)
-  if (!adminUser || !adminPass) {
-    return NextResponse.next();
-  }
-
-  const authHeader = request.headers.get('authorization') ?? '';
-  const expected = `Basic ${Buffer.from(`${adminUser}:${adminPass}`).toString('base64')}`;
-
-  if (authHeader !== expected) {
-    return new NextResponse('Authentication required', {
-      status: 401,
-      headers: {
-        'WWW-Authenticate': 'Basic realm="LIMS BOX Admin"',
-      },
+  if (decision.kind === "unavailable") {
+    return new NextResponse("Demo operator access is not configured.", {
+      status: decision.status,
+      headers: commonHeaders,
     });
   }
 
-  return NextResponse.next();
+  if (decision.kind === "read_only") {
+    return new NextResponse(
+      "Database-backed demo mutations are disabled. Use the synthetic operator sandbox.",
+      { status: decision.status, headers: { ...commonHeaders, Allow: "GET, HEAD, OPTIONS" } },
+    );
+  }
+
+  return new NextResponse("Authentication required", {
+    status: decision.status,
+    headers: {
+      ...commonHeaders,
+      "WWW-Authenticate": 'Basic realm="LIMS BOX Synthetic Demo"',
+    },
+  });
 }
 
 export const config = {
-  matcher: ['/admin/:path*', '/senaite-demo/:path*', '/api/admin/:path*'],
+  matcher: [
+    "/admin/:path*",
+    "/senaite-demo/:path*",
+    "/demo/operator/:path*",
+    "/api/admin/:path*",
+    "/api/authorizations/:path*",
+    "/api/competencies/:path*",
+    "/api/documents/:path*",
+    "/api/people/:path*",
+    "/api/procedures/:path*",
+    "/api/reviews/:path*",
+  ],
 };

@@ -18,7 +18,7 @@ export default function DemoLayout({ children }: { children: React.ReactNode }) 
           <div className="flex items-center gap-3">
             <FlaskConical className="w-6 h-6 text-[#1abc9c]" />
             <span className="text-lg font-bold tracking-wide">SENAITE LIMS</span>
-            <span className="text-xs bg-[#1abc9c] text-white px-2 py-0.5 rounded ml-2">DEMO</span>
+            <span className="text-xs bg-[#1abc9c] text-white px-2 py-0.5 rounded ml-2">SYNTHETIC · NON-PRODUCTION</span>
           </div>
           <div className="flex items-center gap-4 text-sm text-slate-300">
             <span>Sarah Chen (Lab Director)</span>
@@ -53,7 +53,7 @@ export default function DemoLayout({ children }: { children: React.ReactNode }) 
       <footer className="border-t border-slate-200 bg-white mt-8">
         <div className="max-w-[1400px] mx-auto px-4 py-3 text-xs text-slate-400 flex justify-between">
           <span>SENAITE LIMS v2.5.0 — Mockup for LIMS BOX Demo</span>
-          <span>Data is simulated for &quot;Audit Tomorrow&quot; production</span>
+          <span>Fictional browser display only · no customer or production data</span>
         </div>
       </footer>
     </div>
