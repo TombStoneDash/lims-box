@@ -1,0 +1,7 @@
+{
+  "worker": ["outcome_only"],
+  "clinician": ["outcome_only", "clinical_detail"],
+  "employer": ["outcome_only"],
+  "quality": ["outcome_only", "clinical_detail", "admin"],
+  "admin": ["outcome_only", "clinical_detail", "admin"]
+}

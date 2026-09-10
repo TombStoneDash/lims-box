@@ -1,0 +1,98 @@
+[
+  {
+    "id": "src-employer-restricted-001",
+    "rightsClass": "EMPLOYER_RESTRICTED_EXCLUDED",
+    "status": "approved",
+    "rightsEvidence": {
+      "reference": "irrelevant",
+      "reviewer": "hudson.taylor",
+      "reviewedAt": "2026-08-06T00:00:00Z"
+    }
+  },
+  {
+    "id": "src-approved-without-evidence-001",
+    "rightsClass": "VENDOR_COPYRIGHT_INTERNAL_INDEX",
+    "status": "approved"
+  },
+  {
+    "id": "src-original-internal-missing-attestation-001",
+    "rightsClass": "ORIGINAL_INTERNAL",
+    "status": "approved",
+    "rightsEvidence": {
+      "reference": "internal review record",
+      "reviewer": "hudson.taylor",
+      "reviewedAt": "2026-08-07T00:00:00Z"
+    },
+    "employerIpAttestation": false,
+    "evidenceRef": "evidence-original-internal-001"
+  },
+  {
+    "id": "src-original-internal-rejected-evidence-001",
+    "rightsClass": "ORIGINAL_INTERNAL",
+    "status": "approved",
+    "rightsEvidence": {
+      "reference": "internal review record",
+      "reviewer": "hudson.taylor",
+      "reviewedAt": "2026-08-08T00:00:00Z"
+    },
+    "employerIpAttestation": true,
+    "evidenceRef": "evidence-rejected-001"
+  },
+  {
+    "id": "src-original-internal-missing-evidence-001",
+    "rightsClass": "ORIGINAL_INTERNAL",
+    "status": "approved",
+    "rightsEvidence": {
+      "reference": "internal review record",
+      "reviewer": "hudson.taylor",
+      "reviewedAt": "2026-08-09T00:00:00Z"
+    },
+    "employerIpAttestation": true,
+    "evidenceRef": "evidence-nonexistent-999"
+  },
+  {
+    "id": "src-original-internal-freetext-evidence-001",
+    "rightsClass": "ORIGINAL_INTERNAL",
+    "status": "approved",
+    "rightsEvidence": {
+      "reference": "internal review record",
+      "reviewer": "hudson.taylor",
+      "reviewedAt": "2026-08-10T00:00:00Z"
+    },
+    "employerIpAttestation": true,
+    "evidenceRef": "https://example.com/some-doc.pdf"
+  },
+  {
+    "id": "src-original-internal-malformed-hash-001",
+    "rightsClass": "ORIGINAL_INTERNAL",
+    "status": "approved",
+    "rightsEvidence": {
+      "reference": "internal review record",
+      "reviewer": "hudson.taylor",
+      "reviewedAt": "2026-08-11T00:00:00Z"
+    },
+    "employerIpAttestation": true,
+    "evidenceRef": "evidence-malformed-hash-001"
+  },
+  {
+    "id": "src-public-web-summary-missing-cap-001",
+    "rightsClass": "PUBLIC_WEB_SUMMARY",
+    "status": "approved",
+    "rightsEvidence": {
+      "reference": "https://example-vendor.com/manual-index",
+      "reviewer": "hudson.taylor",
+      "reviewedAt": "2026-08-12T00:00:00Z"
+    }
+  },
+  {
+    "id": "src-public-web-summary-wrong-cap-001",
+    "rightsClass": "PUBLIC_WEB_SUMMARY",
+    "status": "approved",
+    "rightsEvidence": {
+      "reference": "https://example-vendor.com/manual-index",
+      "reviewer": "hudson.taylor",
+      "reviewedAt": "2026-08-13T00:00:00Z"
+    },
+    "summaryWordCap": 50
+  }
+]
