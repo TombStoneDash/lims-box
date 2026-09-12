@@ -13,6 +13,13 @@ const STATUS_BADGE = {
   invalid: { label: 'Needs review', className: 'text-amber-700 bg-amber-50', Icon: AlertTriangle },
 } as const;
 
+function slugify(value: string): string {
+  return value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
+
 function LeveyJenningsChart({ analyte, evaluation }: { analyte: QCAnalyte; evaluation: QCAnalyteEvaluation }) {
   const { runs, mean, sd, name, unit } = analyte;
   const badge = STATUS_BADGE[evaluation.status];
@@ -20,6 +27,10 @@ function LeveyJenningsChart({ analyte, evaluation }: { analyte: QCAnalyte; evalu
     evaluation.status === 'out-of-range'
       ? `${evaluation.outOfRangeCount} of ${evaluation.totalRuns} out of range`
       : badge.label;
+  const chartSlug = slugify(`${name}-${analyte.controlLot}`);
+  const titleId = `lj-chart-${chartSlug}-title`;
+  const descId = `lj-chart-${chartSlug}-desc`;
+  const chartDesc = `Levey-Jennings control chart for ${name}, control lot ${analyte.controlLot}, unit ${unit}, ${runs.length} runs. QC status: ${badgeLabel}.`;
   const min = mean - 3.5 * sd;
   const max = mean + 3.5 * sd;
   const range = max - min;
@@ -58,7 +69,15 @@ function LeveyJenningsChart({ analyte, evaluation }: { analyte: QCAnalyte; evalu
           <badge.Icon className="w-3 h-3" /> {badgeLabel}
         </div>
       </div>
-      <svg viewBox={`0 0 ${w} ${h}`} className="w-full" style={{ maxHeight: 220 }}>
+      <svg
+        viewBox={`0 0 ${w} ${h}`}
+        className="w-full"
+        style={{ maxHeight: 220 }}
+        role="img"
+        aria-labelledby={`${titleId} ${descId}`}
+      >
+        <title id={titleId}>Levey-Jennings control chart: {name}</title>
+        <desc id={descId}>{chartDesc}</desc>
         {/* SD zone shading */}
         <rect x={pad.left} y={toY(mean + 2 * sd)} width={plotW} height={toY(mean - 2 * sd) - toY(mean + 2 * sd)} fill="#f0fdf4" />
         <rect x={pad.left} y={toY(mean + 3 * sd)} width={plotW} height={toY(mean + 2 * sd) - toY(mean + 3 * sd)} fill="#fefce8" />
@@ -137,7 +156,11 @@ export default function QCChartsPage() {
           <p className="text-sm text-slate-500 mt-1">Levey-Jennings plots — 90-day trending</p>
         </div>
         <div className="flex items-center gap-3">
+          <label htmlFor="qc-analyte-filter" className="sr-only">
+            Filter QC charts by analyte
+          </label>
           <select
+            id="qc-analyte-filter"
             value={selected}
             onChange={e => setSelected(e.target.value)}
             className="text-sm border border-slate-200 rounded-lg px-3 py-2 bg-white text-slate-700"
