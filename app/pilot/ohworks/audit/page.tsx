@@ -1,4 +1,4 @@
-import { AlertTriangle, ClipboardCheck, FileCheck2, LockKeyhole } from 'lucide-react';
+import { AlertTriangle, ClipboardCheck, Download, FileCheck2, LockKeyhole } from 'lucide-react';
 import {
   getVisibleAudit,
   getVisibleDiscoveryRecords,
@@ -52,10 +52,24 @@ export default async function OHWorksAuditReadiness({ searchParams }: PageProps)
         </div>
 
         <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-          <div className="flex items-center gap-2">
-            <FileCheck2 className="h-5 w-5 text-teal-700" />
-            <h2 className="text-lg font-semibold">Role-filtered synthetic audit events</h2>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-2">
+              <FileCheck2 className="h-5 w-5 text-teal-700" />
+              <h2 className="text-lg font-semibold">Role-filtered synthetic audit events</h2>
+            </div>
+            <a
+              href={`/pilot/ohworks/audit/export?role=${encodeURIComponent(role.id)}`}
+              download={`ohworks-synthetic-audit-${role.id}.csv`}
+              className="inline-flex items-center justify-center gap-2 rounded-xl border border-teal-200 bg-teal-50 px-3 py-2 text-xs font-semibold text-teal-800 hover:bg-teal-100"
+            >
+              <Download className="h-4 w-4" />
+              Download role-visible CSV
+            </a>
           </div>
+          <p className="mt-3 text-xs leading-5 text-slate-500">
+            Synthetic demonstration data only. The export keeps this role&apos;s current visibility and uses the stable
+            columns event_id, occurred_at, actor_id, action, object, and note.
+          </p>
           {visibleAudit.length > 0 ? (
             <div className="mt-5 space-y-4">
               {visibleAudit.map((event) => (
