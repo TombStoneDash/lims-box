@@ -6,9 +6,11 @@ import test from 'node:test';
 import { NextRequest } from 'next/server';
 import {
   createPersonnelPackPostHandler,
+  loadDownloadableAsset,
   PERSONNEL_PACK_PUBLIC_ASSETS,
   resolveBundledAsset,
 } from '../../lib/personnelPackFulfillment';
+import { GET as downloadGet } from '../../app/api/personnel-pack-download/route';
 
 function request(body: unknown) {
   return new NextRequest('https://lims.bot/api/personnel-pack-download', {
@@ -88,10 +90,10 @@ test('default fulfillment exercises the reviewed bundled asset and its real hash
 
   assert.equal(response.status, 200);
   const body = await response.json();
-  assert.equal(body.delivery.assetUrl, new URL(
-    PERSONNEL_PACK_PUBLIC_ASSETS.iso15189.publicPath,
-    'https://lims.bot',
-  ).toString());
+  assert.equal(
+    body.delivery.assetUrl,
+    'https://lims.bot/api/personnel-pack-download?asset=iso15189',
+  );
   assert.equal(leads.length, 1);
   assert.equal(notices.length, 1);
   assert.equal(deliveries.length, 1);
@@ -109,6 +111,34 @@ test('bundled asset hash pin rejects modified bytes before fulfillment', async (
   await assert.rejects(
     resolveBundledAsset('iso15189', 'https://lims.bot', modifiedAsset),
     /asset hash mismatch/i,
+  );
+});
+
+test('accreditation mapping is deterministic: configured key always resolves, unmapped keys never do', async () => {
+  assert.equal(PERSONNEL_PACK_PUBLIC_ASSETS.iso15189?.key, 'iso15189');
+  assert.equal(PERSONNEL_PACK_PUBLIC_ASSETS.cola, undefined);
+  assert.equal(PERSONNEL_PACK_PUBLIC_ASSETS.cap, undefined);
+
+  const configured = await resolveBundledAsset('iso15189', 'https://lims.bot');
+  assert.ok(configured);
+
+  for (const unmapped of ['cola', 'cap', 'clia', 'other', 'ISO15189-typo']) {
+    assert.equal(await resolveBundledAsset(unmapped, 'https://lims.bot'), null);
+  }
+});
+
+test('missing bundled asset file fails closed distinctly from a hash mismatch', async () => {
+  const temporaryRoot = await mkdtemp(path.join(tmpdir(), 'lims-personnel-pack-missing-'));
+  const missingAsset = path.join(temporaryRoot, 'does-not-exist.pdf');
+  await rm(temporaryRoot, { recursive: true, force: true });
+
+  await assert.rejects(
+    resolveBundledAsset('iso15189', 'https://lims.bot', missingAsset),
+    /ENOENT/,
+  );
+  await assert.rejects(
+    loadDownloadableAsset('iso15189', missingAsset),
+    /ENOENT/,
   );
 });
 
@@ -259,4 +289,45 @@ test('public PDF security contract is explicit lead capture, not access control'
   assert.match(securityIntent, /must not contain customer data, secrets, or private records/i);
   assert.doesNotMatch(environmentExample, /PERSONNEL_PACK_PDF_URL/);
   assert.match(PERSONNEL_PACK_PUBLIC_ASSETS.iso15189.publicPath, /^\/personnel-pack-assets\//);
+});
+
+function downloadRequest(query: string) {
+  return new NextRequest(`https://lims.bot/api/personnel-pack-download${query}`);
+}
+
+test('download route serves the reviewed asset with a stable filename and privacy-safe headers', async () => {
+  const response = await downloadGet(downloadRequest('?asset=iso15189'));
+
+  assert.equal(response.status, 200);
+  assert.equal(response.headers.get('content-type'), 'application/pdf');
+  assert.equal(
+    response.headers.get('content-disposition'),
+    `attachment; filename="${PERSONNEL_PACK_PUBLIC_ASSETS.iso15189.downloadFilename}"`,
+  );
+  assert.equal(response.headers.get('cache-control'), 'private, no-store');
+  assert.equal(response.headers.get('x-content-type-options'), 'nosniff');
+
+  const expectedBytes = await readFile(
+    path.join(process.cwd(), 'public', PERSONNEL_PACK_PUBLIC_ASSETS.iso15189.publicPath.replace(/^\//, '')),
+  );
+  const actualBytes = Buffer.from(await response.arrayBuffer());
+  assert.ok(actualBytes.equals(expectedBytes));
+});
+
+test('download route defaults to the ISO 15189 pack when no asset key is given', async () => {
+  const response = await downloadGet(downloadRequest(''));
+  assert.equal(response.status, 200);
+  assert.equal(
+    response.headers.get('content-disposition'),
+    `attachment; filename="${PERSONNEL_PACK_PUBLIC_ASSETS.iso15189.downloadFilename}"`,
+  );
+});
+
+test('download route fails closed on an unsupported asset key without leaking a 500', async () => {
+  const response = await downloadGet(downloadRequest('?asset=clia'));
+  assert.equal(response.status, 404);
+  assert.deepEqual(await response.json(), {
+    error: 'Automatic fulfillment is currently available only for the reviewed ISO 15189 pack.',
+    code: 'unsupported_pack_selection',
+  });
 });

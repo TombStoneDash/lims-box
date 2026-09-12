@@ -1,8 +1,49 @@
-import { createPersonnelPackPostHandler, type PersonnelPackDelivery } from '@/lib/personnelPackFulfillment';
+import { NextRequest, NextResponse } from 'next/server';
+import {
+  createPersonnelPackPostHandler,
+  loadDownloadableAsset,
+  type PersonnelPackDelivery,
+} from '@/lib/personnelPackFulfillment';
 import { sendSubmissionNotice } from '@/lib/notify';
 import { getSupabase } from '@/lib/supabase';
 
 export const runtime = 'nodejs';
+
+export async function GET(request: NextRequest) {
+  const key = request.nextUrl.searchParams.get('asset') ?? 'iso15189';
+
+  let result;
+  try {
+    result = await loadDownloadableAsset(key);
+  } catch (error) {
+    console.error('[personnel-pack-download]', 'asset_unavailable', JSON.stringify({
+      asset: key,
+      stage: 'download',
+      error: error instanceof Error ? error.message : String(error),
+    }));
+    return NextResponse.json(
+      { error: 'Automatic fulfillment is temporarily unavailable. Email info@lims.bot directly.', code: 'asset_unavailable' },
+      { status: 503 },
+    );
+  }
+
+  if (!result) {
+    return NextResponse.json(
+      { error: 'Automatic fulfillment is currently available only for the reviewed ISO 15189 pack.', code: 'unsupported_pack_selection' },
+      { status: 404 },
+    );
+  }
+
+  return new NextResponse(result.bytes, {
+    status: 200,
+    headers: {
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': `attachment; filename="${result.asset.downloadFilename}"`,
+      'Cache-Control': 'private, no-store',
+      'X-Content-Type-Options': 'nosniff',
+    },
+  });
+}
 
 async function createLead(record: { email: string; accred_type: string | null; source: 'personnel-pack-download' }) {
   const supabase = getSupabase();

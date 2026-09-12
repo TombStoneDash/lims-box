@@ -4,15 +4,6 @@ import path from 'node:path';
 import { NextRequest, NextResponse } from 'next/server';
 import { normalizeEmail } from '@/lib/emailValidation';
 
-const REVIEWED_ISO_15189_SHA256 = '6f58d8e865ca801575d7c6659b015fad72e6db7a786587b14b58e6deb6d8d0f0';
-const ISO_15189_PUBLIC_PATH =
-  '/personnel-pack-assets/iso-15189-personnel-pack-v1-5-customer-20260827.pdf';
-const ISO_15189_PUBLIC_FILE = path.join(
-  process.cwd(),
-  'public',
-  ISO_15189_PUBLIC_PATH.replace(/^\//, ''),
-);
-
 export interface PersonnelPackRecord {
   email: string;
   accred_type: string | null;
@@ -25,10 +16,29 @@ interface SubmissionNotice {
 }
 
 export interface PersonnelPackAsset {
-  key: 'iso15189';
+  key: string;
   label: string;
   publicPath: string;
+  /** Filename shown to the applicant on download, stable across future asset revisions. */
+  downloadFilename: string;
+  sha256: string;
 }
+
+/**
+ * Single source of truth for which accreditation types are fulfilled automatically.
+ * Adding a type here (with its reviewed hash) is the only step required to support it —
+ * resolution and download both key off this map so there is exactly one place that can
+ * declare a pack "supported."
+ */
+export const PERSONNEL_PACK_PUBLIC_ASSETS: Record<string, PersonnelPackAsset> = {
+  iso15189: {
+    key: 'iso15189',
+    label: 'ISO 15189 Personnel Pack v1.5',
+    publicPath: '/personnel-pack-assets/iso-15189-personnel-pack-v1-5-customer-20260827.pdf',
+    downloadFilename: 'lims-box-iso-15189-personnel-pack-v1-5.pdf',
+    sha256: '6f58d8e865ca801575d7c6659b015fad72e6db7a786587b14b58e6deb6d8d0f0',
+  },
+};
 
 export interface PersonnelPackDelivery {
   assetUrl: string;
@@ -56,25 +66,55 @@ function normalizeAccredType(value: unknown): string | null {
   return normalized.length > 0 ? normalized : null;
 }
 
+export function resolvePersonnelPackAsset(accredType: string | null): PersonnelPackAsset | null {
+  if (!accredType) return null;
+  return PERSONNEL_PACK_PUBLIC_ASSETS[accredType] ?? null;
+}
+
+function personnelPackAssetFile(asset: PersonnelPackAsset): string {
+  return path.join(process.cwd(), 'public', asset.publicPath.replace(/^\//, ''));
+}
+
+/** Reads the reviewed bytes for a supported asset, failing closed if the file is missing or its content drifted from the reviewed hash. */
+export async function readReviewedAsset(
+  asset: PersonnelPackAsset,
+  assetFileOverride?: string,
+): Promise<Buffer> {
+  const file = await readFile(assetFileOverride ?? personnelPackAssetFile(asset));
+  const hash = createHash('sha256').update(file).digest('hex');
+  if (hash !== asset.sha256) {
+    throw new Error(`Reviewed ${asset.label} asset hash mismatch`);
+  }
+  return file;
+}
+
+/** Loads a supported asset's bytes for the download route. Returns null for an unsupported/unmapped key (fail closed, not a 500). */
+export async function loadDownloadableAsset(
+  key: string | null,
+  assetFileOverride?: string,
+): Promise<{ asset: PersonnelPackAsset; bytes: Buffer } | null> {
+  const asset = resolvePersonnelPackAsset(key);
+  if (!asset) return null;
+  const bytes = await readReviewedAsset(asset, assetFileOverride);
+  return { asset, bytes };
+}
+
 export async function resolveBundledAsset(
   accredType: string | null,
   origin: string,
-  assetFile = ISO_15189_PUBLIC_FILE,
-) {
-  if (accredType !== 'iso15189') {
+  assetFileOverride?: string,
+): Promise<PersonnelPackDelivery | null> {
+  const asset = resolvePersonnelPackAsset(accredType);
+  if (!asset) {
     return null;
   }
 
-  const file = await readFile(assetFile);
-  const hash = createHash('sha256').update(file).digest('hex');
-  if (hash !== REVIEWED_ISO_15189_SHA256) {
-    throw new Error('Reviewed ISO 15189 personnel-pack asset hash mismatch');
-  }
+  await readReviewedAsset(asset, assetFileOverride);
 
   return {
-    assetUrl: new URL(ISO_15189_PUBLIC_PATH, origin).toString(),
+    assetUrl: new URL(`/api/personnel-pack-download?asset=${asset.key}`, origin).toString(),
     emailed: false,
-    label: 'ISO 15189 Personnel Pack v1.5',
+    label: asset.label,
   } satisfies PersonnelPackDelivery;
 }
 
@@ -205,11 +245,3 @@ export function createPersonnelPackPostHandler(dependencies: PersonnelPackDepend
     }
   };
 }
-
-export const PERSONNEL_PACK_PUBLIC_ASSETS = {
-  iso15189: {
-    key: 'iso15189',
-    label: 'ISO 15189 Personnel Pack v1.5',
-    publicPath: ISO_15189_PUBLIC_PATH,
-  } satisfies PersonnelPackAsset,
-} as const;
