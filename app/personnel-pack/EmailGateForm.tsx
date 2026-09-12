@@ -96,11 +96,7 @@ export function EmailGateForm() {
                          appearance-none"
             >
               <option value="">Select your pack</option>
-              <option value="cola">COLA</option>
-              <option value="cap">CAP</option>
-              <option value="iso15189">ISO 15189 only</option>
-              <option value="clia">CLIA only</option>
-              <option value="other">Other / not sure</option>
+              <option value="iso15189">ISO 15189 pack (reviewed)</option>
             </select>
             <button
               type="submit"
@@ -117,6 +113,12 @@ export function EmailGateForm() {
             </p>
             <p className="text-xs text-slate-500">
               Automatic fulfillment is currently available only for the reviewed ISO 15189 pack.
+              Need COLA, CAP, CLIA, or another framework? Email{' '}
+              <a href="mailto:info@lims.bot" className="underline hover:text-slate-300">
+                info@lims.bot
+              </a>{' '}
+              and we&apos;ll follow up directly — those packs aren&apos;t reviewed for automatic
+              delivery yet.
             </p>
           </form>
         )}
