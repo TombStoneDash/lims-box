@@ -11,7 +11,7 @@ export default function SampleDetailPage() {
     <div className="space-y-6">
       {/* Breadcrumb */}
       <div className="flex items-center gap-2 text-sm text-slate-500">
-        <Link href="/demo" className="hover:text-slate-700 flex items-center gap-1">
+        <Link href="/senaite-demo" className="hover:text-slate-700 flex items-center gap-1">
           <ArrowLeft className="w-3 h-3" /> Dashboard
         </Link>
         <span>/</span>

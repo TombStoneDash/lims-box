@@ -58,7 +58,7 @@ export default function DemoDashboard() {
           sub={`${qcSummary.passRate} pass rate — 0 out-of-range`}
           icon={Activity}
           color="bg-green-500"
-          href="/demo/qc"
+          href="/senaite-demo/qc"
         />
         <StatCard
           label="Instruments"
@@ -66,7 +66,7 @@ export default function DemoDashboard() {
           sub={`All calibrated — next due ${equipmentSummary.nextCalibrationDue}`}
           icon={Wrench}
           color="bg-purple-500"
-          href="/demo/equipment"
+          href="/senaite-demo/equipment"
         />
         <StatCard
           label="Staff"
@@ -74,7 +74,7 @@ export default function DemoDashboard() {
           sub={`All training current — next exp. ${trainingSummary.nextExpiration}`}
           icon={GraduationCap}
           color="bg-teal-500"
-          href="/demo/training"
+          href="/senaite-demo/training"
         />
       </div>
 
@@ -144,7 +144,7 @@ export default function DemoDashboard() {
               <p className="text-sm font-medium text-orange-800">3 samples pending verification</p>
               <p className="text-xs text-orange-600">SA-2026-0845, SA-2026-0846, SA-2026-0847 — awaiting supervisory review</p>
             </div>
-            <Link href="/demo/samples/SA-2026-0847" className="ml-auto text-xs font-medium text-orange-700 hover:text-orange-900 underline">
+            <Link href="/senaite-demo/samples/SA-2026-0847" className="ml-auto text-xs font-medium text-orange-700 hover:text-orange-900 underline">
               Review
             </Link>
           </div>
@@ -154,7 +154,7 @@ export default function DemoDashboard() {
               <p className="text-sm font-medium text-blue-800">Instrument calibration due April 28</p>
               <p className="text-xs text-blue-600">All 5 instruments — 15 days remaining</p>
             </div>
-            <Link href="/demo/equipment" className="ml-auto text-xs font-medium text-blue-700 hover:text-blue-900 underline">
+            <Link href="/senaite-demo/equipment" className="ml-auto text-xs font-medium text-blue-700 hover:text-blue-900 underline">
               View
             </Link>
           </div>
