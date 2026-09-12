@@ -60,15 +60,32 @@ function defaultLogDiagnostic(code: string, meta: Record<string, unknown>) {
   console.error('[personnel-pack-download]', code, JSON.stringify(meta));
 }
 
+/** Hard cap applied before an accreditation token is ever resolved or logged, so an oversized/adversarial value never reaches lookup or diagnostics. */
+const MAX_ACCRED_TYPE_LENGTH = 64;
+
 function normalizeAccredType(value: unknown): string | null {
   if (typeof value !== 'string') return null;
   const normalized = value.trim().toLowerCase();
-  return normalized.length > 0 ? normalized : null;
+  if (normalized.length === 0 || normalized.length > MAX_ACCRED_TYPE_LENGTH) return null;
+  return normalized;
 }
 
 export function resolvePersonnelPackAsset(accredType: string | null): PersonnelPackAsset | null {
   if (!accredType) return null;
+  if (!Object.prototype.hasOwnProperty.call(PERSONNEL_PACK_PUBLIC_ASSETS, accredType)) return null;
   return PERSONNEL_PACK_PUBLIC_ASSETS[accredType] ?? null;
+}
+
+/**
+ * Reduces an accreditation token to a fixed, finite classification for diagnostics:
+ * one of the configured asset keys, `unsupported`, or `none`. Diagnostics must never
+ * carry the raw applicant-supplied token, so this is the only value logDiagnostic sees.
+ */
+function classifyAccredType(accredType: string | null): string {
+  if (accredType === null) return 'none';
+  return Object.prototype.hasOwnProperty.call(PERSONNEL_PACK_PUBLIC_ASSETS, accredType)
+    ? accredType
+    : 'unsupported';
 }
 
 function personnelPackAssetFile(asset: PersonnelPackAsset): string {
@@ -145,12 +162,11 @@ export function createPersonnelPackPostHandler(dependencies: PersonnelPackDepend
       let delivery: PersonnelPackDelivery | null;
       try {
         delivery = await resolveAsset(accredType, request.nextUrl.origin);
-      } catch (error) {
+      } catch {
         logDiagnostic('asset_unavailable', {
           requestId,
-          accredType,
+          accredType: classifyAccredType(accredType),
           stage: 'asset-selection',
-          error: error instanceof Error ? error.message : String(error),
         });
         return failure(
           503,
@@ -162,7 +178,7 @@ export function createPersonnelPackPostHandler(dependencies: PersonnelPackDepend
       if (!delivery) {
         logDiagnostic('unsupported_pack_selection', {
           requestId,
-          accredType,
+          accredType: classifyAccredType(accredType),
           stage: 'asset-selection',
         });
         return failure(
@@ -178,12 +194,11 @@ export function createPersonnelPackPostHandler(dependencies: PersonnelPackDepend
           accred_type: accredType,
           source: 'personnel-pack-download',
         });
-      } catch (error) {
+      } catch {
         logDiagnostic('lead_store_failed', {
           requestId,
-          accredType,
+          accredType: classifyAccredType(accredType),
           stage: 'lead-store',
-          error: error instanceof Error ? error.message : String(error),
         });
         return failure(
           503,
@@ -204,12 +219,11 @@ export function createPersonnelPackPostHandler(dependencies: PersonnelPackDepend
             ['Received', (dependencies.now ?? (() => new Date().toISOString()))()],
           ],
         });
-      } catch (error) {
+      } catch {
         logDiagnostic('operator_notice_failed', {
           requestId,
-          accredType,
+          accredType: classifyAccredType(accredType),
           stage: 'operator-notice',
-          error: error instanceof Error ? error.message : String(error),
         });
         return failure(
           503,
@@ -221,12 +235,11 @@ export function createPersonnelPackPostHandler(dependencies: PersonnelPackDepend
       try {
         await dependencies.sendApplicantDelivery(normalizedEmail, delivery);
         delivery = { ...delivery, emailed: true };
-      } catch (error) {
+      } catch {
         logDiagnostic('applicant_delivery_failed', {
           requestId,
-          accredType,
+          accredType: classifyAccredType(accredType),
           stage: 'applicant-delivery',
-          error: error instanceof Error ? error.message : String(error),
         });
       }
 
@@ -235,11 +248,10 @@ export function createPersonnelPackPostHandler(dependencies: PersonnelPackDepend
         saved: true,
         delivery,
       });
-    } catch (error) {
+    } catch {
       logDiagnostic('invalid_request', {
         requestId,
         stage: 'request-parse',
-        error: error instanceof Error ? error.message : String(error),
       });
       return failure(400, 'Invalid request', 'invalid_request');
     }
