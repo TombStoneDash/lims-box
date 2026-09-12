@@ -1,23 +1,57 @@
-import { instruments, equipmentSummary } from '@/lib/demo-data';
-import { CheckCircle2, Wrench, Calendar, MapPin } from 'lucide-react';
+import { instruments } from '@/lib/demo-data';
+import { evaluateEquipmentStatus, evaluateInstrumentCalibration } from '@/lib/senaite-demo-equipment';
+import { CheckCircle2, AlertTriangle, HelpCircle, Wrench, Calendar, MapPin } from 'lucide-react';
+
+const equipmentStatus = evaluateEquipmentStatus(instruments);
+
+const BADGE_STYLES: Record<string, { icon: typeof CheckCircle2; wrap: string; text: string; label: string }> = {
+  current: { icon: CheckCircle2, wrap: 'bg-green-50 border-green-200', text: 'text-green-700', label: 'All Calibrations Current' },
+  overdue: { icon: AlertTriangle, wrap: 'bg-amber-50 border-amber-200', text: 'text-amber-700', label: 'Calibration Overdue' },
+  invalid: { icon: HelpCircle, wrap: 'bg-red-50 border-red-200', text: 'text-red-700', label: 'Calibration Data Invalid' },
+};
+
+const INSTRUMENT_BADGE_STYLES: Record<string, string> = {
+  current: 'bg-green-100 text-green-700 border-green-200',
+  overdue: 'bg-amber-100 text-amber-700 border-amber-200',
+  invalid: 'bg-red-100 text-red-700 border-red-200',
+};
+
+function formatHeadline(): string {
+  const { totalInstruments, overdueCount, invalidCount, nextCalibrationDue, nextDueInstrumentName } = equipmentStatus;
+  if (invalidCount > 0) {
+    return `${totalInstruments} instruments — ${invalidCount} with invalid calibration data`;
+  }
+  if (overdueCount > 0) {
+    return `${totalInstruments} instruments — ${overdueCount} calibration${overdueCount === 1 ? '' : 's'} overdue`;
+  }
+  if (nextCalibrationDue && nextDueInstrumentName) {
+    return `${totalInstruments} instruments — All calibrated. Next due: ${nextDueInstrumentName} (${nextCalibrationDue})`;
+  }
+  return `${totalInstruments} instruments — All calibrated`;
+}
 
 export default function EquipmentPage() {
+  const badge = BADGE_STYLES[equipmentStatus.status];
+  const BadgeIcon = badge.icon;
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Equipment & Calibration</h1>
-          <p className="text-sm text-slate-500 mt-1">{equipmentSummary.totalInstruments} instruments — All calibrated</p>
+          <p className="text-sm text-slate-500 mt-1">{formatHeadline()}</p>
         </div>
-        <div className="flex items-center gap-2 bg-green-50 border border-green-200 rounded-lg px-4 py-2">
-          <CheckCircle2 className="w-5 h-5 text-green-600" />
-          <span className="text-sm font-medium text-green-700">All Calibrations Current</span>
+        <div className={`flex items-center gap-2 border rounded-lg px-4 py-2 ${badge.wrap}`}>
+          <BadgeIcon className={`w-5 h-5 ${badge.text}`} />
+          <span className={`text-sm font-medium ${badge.text}`}>{badge.label}</span>
         </div>
       </div>
 
       {/* Instrument cards */}
       <div className="space-y-4">
-        {instruments.map(inst => (
+        {instruments.map(inst => {
+          const evaluation = evaluateInstrumentCalibration(inst);
+          return (
           <div key={inst.serialNumber} className="bg-white rounded-lg border border-slate-200 overflow-hidden">
             <div className="p-5">
               <div className="flex items-start justify-between mb-4">
@@ -25,8 +59,8 @@ export default function EquipmentPage() {
                   <h3 className="text-lg font-semibold text-slate-900">{inst.name}</h3>
                   <p className="text-sm text-slate-500">{inst.model} — S/N: {inst.serialNumber}</p>
                 </div>
-                <span className="px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700 border border-green-200">
-                  {inst.calibrationStatus}
+                <span className={`px-3 py-1 rounded-full text-xs font-medium border ${INSTRUMENT_BADGE_STYLES[evaluation.status]}`}>
+                  {evaluation.status === 'current' ? 'Calibrated' : evaluation.status === 'overdue' ? 'Overdue' : 'Invalid'}
                 </span>
               </div>
 
@@ -106,7 +140,8 @@ export default function EquipmentPage() {
               </table>
             </div>
           </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
