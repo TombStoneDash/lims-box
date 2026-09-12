@@ -11,10 +11,9 @@ const logos = [
 ];
 
 const screenshots = [
-  { name: 'Dashboard', file: '/press/screenshot-dashboard.svg' },
-  { name: 'Sample Tracking', file: '/press/screenshot-sample-tracking.svg' },
-  { name: 'QC Charts', file: '/press/screenshot-qc-charts.svg' },
-  { name: 'Reporting', file: '/press/screenshot-reporting.svg' },
+  { name: 'Personnel List', file: '/screenshots/admin-personnel-pack.png' },
+  { name: 'Survey-Ready Export', file: '/screenshots/admin-survey-ready.png' },
+  { name: 'Personnel Detail', file: '/screenshots/admin-personnel-detail.png' },
 ];
 
 export default function PressPage() {
@@ -125,7 +124,7 @@ export default function PressPage() {
             <Download className="w-5 h-5 text-lab-teal" />
             <h2 className="text-xl font-bold text-slate-900 dark:text-white">Logos</h2>
           </div>
-          <p className="text-sm text-slate-500 mb-4">Right-click and &quot;Save As&quot; or click to download. SVG format — scales to any size.</p>
+          <p className="text-sm text-slate-500 mb-4">Right-click and &quot;Save As&quot; or click to download.</p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {logos.map(logo => (
               <a
@@ -151,7 +150,7 @@ export default function PressPage() {
             <ImageIcon className="w-5 h-5 text-lab-teal" />
             <h2 className="text-xl font-bold text-slate-900 dark:text-white">Product Screenshots</h2>
           </div>
-          <p className="text-sm text-slate-500 mb-4">Click to download. Replace placeholders with actual screenshots as they become available.</p>
+          <p className="text-sm text-slate-500 mb-4">Click to download.</p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {screenshots.map(ss => (
               <a
