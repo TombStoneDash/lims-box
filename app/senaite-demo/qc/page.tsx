@@ -2,11 +2,24 @@
 
 import { allQCData, qcSummary } from '@/lib/demo-data';
 import type { QCAnalyte } from '@/lib/demo-data';
-import { CheckCircle2, TrendingUp } from 'lucide-react';
+import { evaluateAnalyteQC, evaluateQCSummary } from '@/lib/senaite-demo-qc';
+import type { QCAnalyteEvaluation } from '@/lib/senaite-demo-qc';
+import { AlertTriangle, CheckCircle2, TrendingUp } from 'lucide-react';
 import { useState } from 'react';
 
-function LeveyJenningsChart({ analyte }: { analyte: QCAnalyte }) {
+const STATUS_BADGE = {
+  'in-range': { label: 'All in range', className: 'text-green-700 bg-green-50', Icon: CheckCircle2 },
+  'out-of-range': { label: 'Out of range', className: 'text-red-700 bg-red-50', Icon: AlertTriangle },
+  invalid: { label: 'Needs review', className: 'text-amber-700 bg-amber-50', Icon: AlertTriangle },
+} as const;
+
+function LeveyJenningsChart({ analyte, evaluation }: { analyte: QCAnalyte; evaluation: QCAnalyteEvaluation }) {
   const { runs, mean, sd, name, unit } = analyte;
+  const badge = STATUS_BADGE[evaluation.status];
+  const badgeLabel =
+    evaluation.status === 'out-of-range'
+      ? `${evaluation.outOfRangeCount} of ${evaluation.totalRuns} out of range`
+      : badge.label;
   const min = mean - 3.5 * sd;
   const max = mean + 3.5 * sd;
   const range = max - min;
@@ -41,8 +54,8 @@ function LeveyJenningsChart({ analyte }: { analyte: QCAnalyte }) {
           <h3 className="text-base font-semibold text-slate-900">{name}</h3>
           <p className="text-xs text-slate-500">Control Lot: {analyte.controlLot} — Unit: {unit}</p>
         </div>
-        <div className="flex items-center gap-1 text-xs font-medium text-green-700 bg-green-50 px-2 py-1 rounded-full">
-          <CheckCircle2 className="w-3 h-3" /> All in range
+        <div className={`flex items-center gap-1 text-xs font-medium ${badge.className} px-2 py-1 rounded-full`}>
+          <badge.Icon className="w-3 h-3" /> {badgeLabel}
         </div>
       </div>
       <svg viewBox={`0 0 ${w} ${h}`} className="w-full" style={{ maxHeight: 220 }}>
@@ -93,9 +106,28 @@ function LeveyJenningsChart({ analyte }: { analyte: QCAnalyte }) {
   );
 }
 
+const BANNER_STYLE = {
+  'in-range': { wrap: 'bg-green-50 border-green-200', icon: 'text-green-600', title: 'text-green-800', text: 'text-green-600' },
+  'out-of-range': { wrap: 'bg-red-50 border-red-200', icon: 'text-red-600', title: 'text-red-800', text: 'text-red-600' },
+  invalid: { wrap: 'bg-amber-50 border-amber-200', icon: 'text-amber-600', title: 'text-amber-800', text: 'text-amber-600' },
+} as const;
+
+const BANNER_TITLE = {
+  'in-range': 'QC Status: All analytes within acceptable limits',
+  'out-of-range': 'QC Status: Out-of-range results detected',
+  invalid: 'QC Status: Needs review — invalid QC data',
+} as const;
+
 export default function QCChartsPage() {
   const [selected, setSelected] = useState<string>('all');
   const filtered = selected === 'all' ? allQCData : allQCData.filter(a => a.name === selected);
+  const evaluations = new Map(allQCData.map(a => [a.name, evaluateAnalyteQC(a)]));
+  const summary = evaluateQCSummary(allQCData);
+  const banner = BANNER_STYLE[summary.status];
+  const passRate =
+    summary.totalRuns > 0
+      ? `${(((summary.totalRuns - summary.outOfRangeCount) / summary.totalRuns) * 100).toFixed(1)}%`
+      : 'N/A';
 
   return (
     <div className="space-y-6">
@@ -119,14 +151,14 @@ export default function QCChartsPage() {
       </div>
 
       {/* Summary banner */}
-      <div className="bg-green-50 border border-green-200 rounded-lg p-4 flex items-center gap-4">
-        <TrendingUp className="w-6 h-6 text-green-600" />
+      <div className={`${banner.wrap} border rounded-lg p-4 flex items-center gap-4`}>
+        <TrendingUp className={`w-6 h-6 ${banner.icon}`} />
         <div>
-          <p className="text-sm font-medium text-green-800">
-            QC Status: All analytes within acceptable limits
+          <p className={`text-sm font-medium ${banner.title}`}>
+            {BANNER_TITLE[summary.status]}
           </p>
-          <p className="text-xs text-green-600">
-            {qcSummary.totalRuns} total QC runs — {qcSummary.passRate} pass rate — 0 out-of-range flags — Control lots: {qcSummary.controlLots.join(', ')}
+          <p className={`text-xs ${banner.text}`}>
+            {summary.totalRuns} total QC runs — {passRate} pass rate — {summary.outOfRangeCount} out-of-range flags — Control lots: {qcSummary.controlLots.join(', ')}
           </p>
         </div>
       </div>
@@ -134,7 +166,7 @@ export default function QCChartsPage() {
       {/* Charts */}
       <div className="space-y-4">
         {filtered.map(analyte => (
-          <LeveyJenningsChart key={analyte.name} analyte={analyte} />
+          <LeveyJenningsChart key={analyte.name} analyte={analyte} evaluation={evaluations.get(analyte.name)!} />
         ))}
       </div>
     </div>
