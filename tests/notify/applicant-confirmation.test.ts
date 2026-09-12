@@ -94,7 +94,45 @@ test('outcome is failed without throwing when fetch itself rejects', async () =>
   const outcome = await sendApplicantConfirmationOutcome(APPLICANT_EMAIL, 'Test Applicant');
 
   assert.equal(outcome.status, 'failed');
-  assert.equal(outcome.reason, 'network down');
+  assert.equal(outcome.reason, 'Applicant confirmation delivery failed (unexpected error)');
+});
+
+test('a secret in a thrown provider error never reaches the outcome, the wrapper rejection, or logs', async () => {
+  const CANARY = 'SECRET-CANARY-9f3a1c7e';
+  (globalThis as unknown as { fetch: unknown }).fetch = async () => {
+    throw new Error(`connection reset: leaked-credential=${CANARY}`);
+  };
+
+  const origLog = console.log;
+  const origError = console.error;
+  const logged: string[] = [];
+  console.log = (...args: unknown[]) => { logged.push(args.map(String).join(' ')); };
+  console.error = (...args: unknown[]) => { logged.push(args.map(String).join(' ')); };
+
+  let outcome: Awaited<ReturnType<typeof sendApplicantConfirmationOutcome>>;
+  try {
+    outcome = await sendApplicantConfirmationOutcome(APPLICANT_EMAIL, 'Test Applicant');
+
+    assert.equal(outcome.status, 'failed');
+    assert.equal(outcome.reason, 'Applicant confirmation delivery failed (unexpected error)');
+    assert.equal(JSON.stringify(outcome).includes(CANARY), false, 'canary leaked into outcome');
+
+    await assert.rejects(
+      sendApplicantConfirmation(APPLICANT_EMAIL, 'Test Applicant'),
+      (err: unknown) => {
+        assert.ok(err instanceof Error);
+        assert.equal(err.message.includes(CANARY), false, 'canary leaked into thrown wrapper error');
+        return true;
+      },
+    );
+  } finally {
+    console.log = origLog;
+    console.error = origError;
+  }
+
+  for (const line of logged) {
+    assert.equal(line.includes(CANARY), false, `canary leaked into logs: ${line}`);
+  }
 });
 
 test('outcome never logs the full applicant address', async () => {

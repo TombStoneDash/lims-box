@@ -123,11 +123,11 @@ export async function sendApplicantConfirmationOutcome(
     }
     console.log('[notify] Applicant confirmation sent to', maskEmail(email));
     return { status: 'sent' };
-  } catch (err) {
-    console.error('[notify] Resend applicant confirmation threw', err);
+  } catch {
+    console.error('[notify] Resend applicant confirmation request threw an unexpected error', maskEmail(email));
     return {
       status: 'failed',
-      reason: err instanceof Error ? err.message : 'Applicant confirmation delivery threw an unexpected error',
+      reason: 'Applicant confirmation delivery failed (unexpected error)',
     };
   }
 }
