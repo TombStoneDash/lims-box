@@ -60,14 +60,34 @@ function defaultLogDiagnostic(code: string, meta: Record<string, unknown>) {
   console.error('[personnel-pack-download]', code, JSON.stringify(meta));
 }
 
+/** Accreditation type selections are short fixed tokens (e.g. "iso15189"), never free text. */
+const ACCRED_TYPE_MAX_LENGTH = 64;
+const ACCRED_TYPE_PATTERN = /^[a-z0-9][a-z0-9-]*$/;
+
 function normalizeAccredType(value: unknown): string | null {
   if (typeof value !== 'string') return null;
-  const normalized = value.trim().toLowerCase();
-  return normalized.length > 0 ? normalized : null;
+  const trimmed = value.trim();
+  if (trimmed.length === 0 || trimmed.length > ACCRED_TYPE_MAX_LENGTH) return null;
+  const normalized = trimmed.toLowerCase();
+  if (!ACCRED_TYPE_PATTERN.test(normalized)) return null;
+  return normalized;
+}
+
+/**
+ * Fixed, privacy-safe classification for diagnostics: either a known supported asset key
+ * or one of two fixed sentinels. Never echoes applicant-supplied text, so a request cannot
+ * use the accreditation-type field to smuggle arbitrary content into logs.
+ */
+function classifyAccredTypeForDiagnostics(accredType: string | null): string {
+  if (accredType === null) return 'not_provided';
+  return Object.prototype.hasOwnProperty.call(PERSONNEL_PACK_PUBLIC_ASSETS, accredType)
+    ? accredType
+    : 'unsupported';
 }
 
 export function resolvePersonnelPackAsset(accredType: string | null): PersonnelPackAsset | null {
   if (!accredType) return null;
+  if (!Object.prototype.hasOwnProperty.call(PERSONNEL_PACK_PUBLIC_ASSETS, accredType)) return null;
   return PERSONNEL_PACK_PUBLIC_ASSETS[accredType] ?? null;
 }
 
@@ -148,7 +168,7 @@ export function createPersonnelPackPostHandler(dependencies: PersonnelPackDepend
       } catch (error) {
         logDiagnostic('asset_unavailable', {
           requestId,
-          accredType,
+          accredType: classifyAccredTypeForDiagnostics(accredType),
           stage: 'asset-selection',
           error: error instanceof Error ? error.message : String(error),
         });
@@ -162,7 +182,7 @@ export function createPersonnelPackPostHandler(dependencies: PersonnelPackDepend
       if (!delivery) {
         logDiagnostic('unsupported_pack_selection', {
           requestId,
-          accredType,
+          accredType: classifyAccredTypeForDiagnostics(accredType),
           stage: 'asset-selection',
         });
         return failure(
@@ -181,7 +201,7 @@ export function createPersonnelPackPostHandler(dependencies: PersonnelPackDepend
       } catch (error) {
         logDiagnostic('lead_store_failed', {
           requestId,
-          accredType,
+          accredType: classifyAccredTypeForDiagnostics(accredType),
           stage: 'lead-store',
           error: error instanceof Error ? error.message : String(error),
         });
@@ -207,7 +227,7 @@ export function createPersonnelPackPostHandler(dependencies: PersonnelPackDepend
       } catch (error) {
         logDiagnostic('operator_notice_failed', {
           requestId,
-          accredType,
+          accredType: classifyAccredTypeForDiagnostics(accredType),
           stage: 'operator-notice',
           error: error instanceof Error ? error.message : String(error),
         });
@@ -224,7 +244,7 @@ export function createPersonnelPackPostHandler(dependencies: PersonnelPackDepend
       } catch (error) {
         logDiagnostic('applicant_delivery_failed', {
           requestId,
-          accredType,
+          accredType: classifyAccredTypeForDiagnostics(accredType),
           stage: 'applicant-delivery',
           error: error instanceof Error ? error.message : String(error),
         });
