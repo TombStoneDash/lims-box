@@ -147,7 +147,7 @@ export const equipmentSummary = {
   nextCalibrationDue: 'Apr 20, 2026',
 };
 
-type Competency = {
+export type Competency = {
   name: string;
   certifiedDate: string;
   expirationDate: string;
@@ -155,7 +155,7 @@ type Competency = {
   assessedBy: string;
 };
 
-type Staff = {
+export type Staff = {
   name: string;
   role: string;
   employeeId: string;
@@ -215,10 +215,84 @@ export const staff: Staff[] = [
   },
 ];
 
+export const TRAINING_SUMMARY_AS_OF_DATE = '2026-04-13';
+
+const MS_PER_DAY = 24 * 60 * 60 * 1000;
+const MONTH_ABBREVIATIONS = [
+  'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+  'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+];
+
+function toShortStaffName(fullName: string): string {
+  const parts = fullName.trim().split(/\s+/);
+  const last = parts[parts.length - 1];
+  return parts.length > 1 ? `${parts[0][0]}. ${last}` : last;
+}
+
+function formatExpirationDate(isoDate: string): string {
+  const d = new Date(`${isoDate}T00:00:00Z`);
+  const month = MONTH_ABBREVIATIONS[d.getUTCMonth()];
+  const day = String(d.getUTCDate()).padStart(2, '0');
+  return `${month} ${day}, ${d.getUTCFullYear()}`;
+}
+
+export type NextTrainingExpiration = {
+  staffName: string;
+  competencyName: string;
+  expirationDate: string;
+  daysRemaining: number;
+};
+
+/**
+ * Finds the soonest-expiring competency across all staff as of `asOfDate`.
+ * Ties (same expirationDate) resolve deterministically by staff name, then
+ * competency name, both ascending. Returns null on empty input (fail closed
+ * rather than guessing a date).
+ */
+export function getNextTrainingExpiration(
+  staffList: Staff[],
+  asOfDate: string = TRAINING_SUMMARY_AS_OF_DATE,
+): NextTrainingExpiration | null {
+  let earliest: { staffName: string; competencyName: string; expirationDate: string } | null = null;
+
+  for (const member of staffList) {
+    for (const comp of member.competencies) {
+      if (
+        !earliest ||
+        comp.expirationDate < earliest.expirationDate ||
+        (comp.expirationDate === earliest.expirationDate &&
+          (member.name < earliest.staffName ||
+            (member.name === earliest.staffName && comp.name < earliest.competencyName)))
+      ) {
+        earliest = {
+          staffName: member.name,
+          competencyName: comp.name,
+          expirationDate: comp.expirationDate,
+        };
+      }
+    }
+  }
+
+  if (!earliest) return null;
+
+  const asOfMs = new Date(`${asOfDate}T00:00:00Z`).getTime();
+  const expirationMs = new Date(`${earliest.expirationDate}T00:00:00Z`).getTime();
+  const daysRemaining = Math.max(0, Math.round((expirationMs - asOfMs) / MS_PER_DAY));
+
+  return { ...earliest, daysRemaining };
+}
+
+const nextTrainingExpiration = getNextTrainingExpiration(staff);
+
 export const trainingSummary = {
   totalStaff: staff.length,
-  nextExpiration: 'Jun 06, 2026',
-  nextExpirationName: 'Chain of Custody — J. Martinez',
+  nextExpiration: nextTrainingExpiration
+    ? formatExpirationDate(nextTrainingExpiration.expirationDate)
+    : 'None scheduled',
+  nextExpirationName: nextTrainingExpiration
+    ? `${nextTrainingExpiration.competencyName} — ${toShortStaffName(nextTrainingExpiration.staffName)}`
+    : 'None scheduled',
+  nextExpirationDaysRemaining: nextTrainingExpiration ? nextTrainingExpiration.daysRemaining : 0,
 };
 
 export const featuredSample = {
