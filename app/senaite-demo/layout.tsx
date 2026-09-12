@@ -2,11 +2,11 @@ import Link from 'next/link';
 import { FlaskConical, LayoutDashboard, TestTubes, Activity, Wrench, GraduationCap } from 'lucide-react';
 
 const navItems = [
-  { href: '/demo', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/demo/samples/SA-2026-0847', label: 'Sample Detail', icon: TestTubes },
-  { href: '/demo/qc', label: 'QC Charts', icon: Activity },
-  { href: '/demo/equipment', label: 'Equipment', icon: Wrench },
-  { href: '/demo/training', label: 'Training', icon: GraduationCap },
+  { href: '/senaite-demo', label: 'Dashboard', icon: LayoutDashboard },
+  { href: '/senaite-demo/samples/SA-2026-0847', label: 'Sample Detail', icon: TestTubes },
+  { href: '/senaite-demo/qc', label: 'QC Charts', icon: Activity },
+  { href: '/senaite-demo/equipment', label: 'Equipment', icon: Wrench },
+  { href: '/senaite-demo/training', label: 'Training', icon: GraduationCap },
 ];
 
 export default function DemoLayout({ children }: { children: React.ReactNode }) {
