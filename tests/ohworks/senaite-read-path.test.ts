@@ -12,11 +12,15 @@ import {
 
 const root = resolve(import.meta.dirname, '../..');
 
-const FULL_ENV = {
+function testEnv(overrides: Partial<NodeJS.ProcessEnv> = {}): NodeJS.ProcessEnv {
+  return overrides as NodeJS.ProcessEnv;
+}
+
+const FULL_ENV = testEnv({
   OHWORKS_SENAITE_BASE_URL: 'https://senaite.example.test',
   OHWORKS_SENAITE_USERNAME: 'reader',
   OHWORKS_SENAITE_PASSWORD: 'secret',
-} as NodeJS.ProcessEnv;
+});
 
 function jsonResponse(status: number, body: unknown): Response {
   return {
@@ -27,23 +31,25 @@ function jsonResponse(status: number, body: unknown): Response {
 }
 
 test('resolveOHWorksSenaiteMode defaults to synthetic and only real on exact opt-in', () => {
-  assert.equal(resolveOHWorksSenaiteMode({} as NodeJS.ProcessEnv), 'synthetic');
-  assert.equal(resolveOHWorksSenaiteMode({ OHWORKS_SENAITE_MODE: 'REAL' } as NodeJS.ProcessEnv), 'synthetic');
-  assert.equal(resolveOHWorksSenaiteMode({ OHWORKS_SENAITE_MODE: 'live' } as NodeJS.ProcessEnv), 'synthetic');
-  assert.equal(resolveOHWorksSenaiteMode({ OHWORKS_SENAITE_MODE: 'real' } as NodeJS.ProcessEnv), 'real');
+  assert.equal(resolveOHWorksSenaiteMode(testEnv()), 'synthetic');
+  assert.equal(resolveOHWorksSenaiteMode(testEnv({ OHWORKS_SENAITE_MODE: 'REAL' })), 'synthetic');
+  assert.equal(resolveOHWorksSenaiteMode(testEnv({ OHWORKS_SENAITE_MODE: 'live' })), 'synthetic');
+  assert.equal(resolveOHWorksSenaiteMode(testEnv({ OHWORKS_SENAITE_MODE: 'real' })), 'real');
 });
 
 test('readSenaiteConfigFromEnv requires all three server-only variables and a valid URL', () => {
-  assert.equal(readSenaiteConfigFromEnv({} as NodeJS.ProcessEnv), undefined);
+  assert.equal(readSenaiteConfigFromEnv(testEnv()), undefined);
   assert.equal(
-    readSenaiteConfigFromEnv({ ...FULL_ENV, OHWORKS_SENAITE_PASSWORD: '' } as NodeJS.ProcessEnv),
+    readSenaiteConfigFromEnv(testEnv({ ...FULL_ENV, OHWORKS_SENAITE_PASSWORD: '' })),
     undefined,
   );
   assert.equal(
-    readSenaiteConfigFromEnv({ ...FULL_ENV, OHWORKS_SENAITE_BASE_URL: 'not-a-url' } as NodeJS.ProcessEnv),
+    readSenaiteConfigFromEnv(testEnv({ ...FULL_ENV, OHWORKS_SENAITE_BASE_URL: 'not-a-url' })),
     undefined,
   );
-  const config = readSenaiteConfigFromEnv({ ...FULL_ENV, OHWORKS_SENAITE_BASE_URL: 'https://senaite.example.test/' } as NodeJS.ProcessEnv);
+  const config = readSenaiteConfigFromEnv(
+    testEnv({ ...FULL_ENV, OHWORKS_SENAITE_BASE_URL: 'https://senaite.example.test/' }),
+  );
   assert.deepEqual(config, {
     baseUrl: 'https://senaite.example.test',
     username: 'reader',
@@ -57,7 +63,7 @@ test('readSenaiteSamples returns unavailable/not_configured and never calls fetc
     calls += 1;
     throw new Error('should not be called');
   };
-  const result = await readSenaiteSamples({ env: {} as NodeJS.ProcessEnv, fetchImpl });
+  const result = await readSenaiteSamples({ env: testEnv(), fetchImpl });
   assert.deepEqual(result, {
     status: 'unavailable',
     reason: 'not_configured',
