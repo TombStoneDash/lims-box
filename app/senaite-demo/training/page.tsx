@@ -24,7 +24,7 @@ export default function TrainingPage() {
       {/* Summary bar */}
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
         <p className="text-sm text-blue-800">
-          <span className="font-medium">Next expiration:</span> {trainingSummary.nextExpirationName} — expires {trainingSummary.nextExpiration} (54 days from now)
+          <span className="font-medium">Next expiration:</span> {trainingSummary.nextExpirationName} — expires {trainingSummary.nextExpiration} ({trainingSummary.nextExpirationDaysRemaining} days from now)
         </p>
       </div>
 
