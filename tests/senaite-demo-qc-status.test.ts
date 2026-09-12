@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { evaluateAnalyteQC, evaluateQCSummary } from "../lib/senaite-demo-qc.ts";
+import { evaluateAnalyteQC, evaluateQCSummary } from "../lib/senaite-demo-qc";
 
 test("in-range analyte reports in-range with no flagged runs", () => {
   const result = evaluateAnalyteQC({
