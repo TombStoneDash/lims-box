@@ -1,0 +1,219 @@
+import assert from 'node:assert/strict';
+import test from 'node:test';
+
+import {
+  explainSpecimenStatusReason,
+  projectSpecimenStatuses,
+  SpecimenStatusInputError,
+  type SpecimenInternalRecord,
+  type SpecimenLifecycleState,
+  type SpecimenStatus,
+  type SpecimenStatusContext,
+} from '../../lib/ohworks-specimen-status';
+
+/**
+ * All fabricated: synthetic tenant/reference tokens and made-up lifecycle
+ * timestamps. None of this represents a real patient, sample, or result.
+ */
+function baselineContext(): SpecimenStatusContext {
+  return { tenantId: 'tenant-synthetic-a' };
+}
+
+function baselineRecord(overrides: Partial<SpecimenInternalRecord> = {}): SpecimenInternalRecord {
+  return {
+    tenantId: 'tenant-synthetic-a',
+    referenceToken: 'ref-synthetic-1',
+    lifecycleState: 'INTAKE_LOGGED',
+    updatedAt: '2026-01-01T12:00:00.000Z',
+    ...overrides,
+  };
+}
+
+const EXPECTED_STATUS_BY_STATE: Record<SpecimenLifecycleState, SpecimenStatus> = {
+  INTAKE_LOGGED: 'received',
+  ACCESSIONED: 'received',
+  IN_PREPARATION: 'in_progress',
+  IN_ANALYSIS: 'in_progress',
+  PENDING_QC_REVIEW: 'review',
+  QC_REVIEW_IN_PROGRESS: 'review',
+  VERIFIED: 'completed',
+  REPORTED: 'completed',
+  ON_HOLD: 'exception',
+  REJECTED: 'exception',
+  CANCELLED: 'exception',
+  LOST: 'exception',
+};
+
+test('maps every known internal lifecycle state to its bounded external status', () => {
+  for (const [lifecycleState, expectedStatus] of Object.entries(EXPECTED_STATUS_BY_STATE)) {
+    const [view] = projectSpecimenStatuses(
+      [baselineRecord({ lifecycleState, referenceToken: `ref-${lifecycleState}` })],
+      baselineContext(),
+    );
+    assert.equal(view.status, expectedStatus, `expected ${lifecycleState} -> ${expectedStatus}`);
+    assert.equal(view.referenceToken, `ref-${lifecycleState}`);
+    assert.equal(view.reasonCode, undefined, `${lifecycleState} is a known state and should carry no reason code`);
+  }
+});
+
+test('covers all five bounded external statuses across the known state set', () => {
+  const observed = new Set(Object.values(EXPECTED_STATUS_BY_STATE));
+  assert.deepEqual(
+    [...observed].sort(),
+    ['completed', 'exception', 'in_progress', 'received', 'review'].sort(),
+  );
+});
+
+test('fails closed on an unrecognized internal lifecycle state', () => {
+  const [view] = projectSpecimenStatuses(
+    [baselineRecord({ lifecycleState: 'TESTING_IN_THE_FIELD' })],
+    baselineContext(),
+  );
+  assert.equal(view.status, 'exception');
+  assert.equal(view.reasonCode, 'lifecycle-state-unknown');
+});
+
+test('fails closed on an empty-string internal lifecycle state', () => {
+  assert.throws(
+    () => projectSpecimenStatuses([baselineRecord({ lifecycleState: '' })], baselineContext()),
+    SpecimenStatusInputError,
+  );
+});
+
+test('fails closed on an unparsable timestamp', () => {
+  const [view] = projectSpecimenStatuses(
+    [baselineRecord({ updatedAt: 'not-a-timestamp' })],
+    baselineContext(),
+  );
+  assert.equal(view.status, 'exception');
+  assert.equal(view.reasonCode, 'timestamp-invalid');
+});
+
+test('fails closed on a non-UTC (no trailing Z) timestamp', () => {
+  const [view] = projectSpecimenStatuses(
+    [baselineRecord({ updatedAt: '2026-01-01T12:00:00.000' })],
+    baselineContext(),
+  );
+  assert.equal(view.status, 'exception');
+  assert.equal(view.reasonCode, 'timestamp-not-utc');
+});
+
+test('fails closed on a tenant mismatch', () => {
+  const [view] = projectSpecimenStatuses(
+    [baselineRecord({ tenantId: 'tenant-synthetic-other' })],
+    baselineContext(),
+  );
+  assert.equal(view.status, 'exception');
+  assert.equal(view.reasonCode, 'tenant-mismatch');
+});
+
+test('checks tenant mismatch before timestamp validity', () => {
+  const [view] = projectSpecimenStatuses(
+    [baselineRecord({ tenantId: 'tenant-synthetic-other', updatedAt: 'not-a-timestamp' })],
+    baselineContext(),
+  );
+  assert.equal(view.reasonCode, 'tenant-mismatch');
+});
+
+test('checks timestamp validity before lifecycle state', () => {
+  const [view] = projectSpecimenStatuses(
+    [baselineRecord({ updatedAt: 'not-a-timestamp', lifecycleState: 'NOT_A_REAL_STATE' })],
+    baselineContext(),
+  );
+  assert.equal(view.reasonCode, 'timestamp-invalid');
+});
+
+test('projection view excludes names, identifiers, raw notes, and results', () => {
+  const record = baselineRecord({
+    patientName: 'Synthetic Patient Doe',
+    submitterName: 'Synthetic Submitter Roe',
+    sampleIdentifier: 'SAMPLE-SYNTH-REAL-0001',
+    accessionNumber: 'ACC-SYNTH-REAL-0001',
+    rawNotes: 'Synthetic free-text note mentioning a fabricated contact detail.',
+    resultValues: { analyte: 'SYNTH-ANALYTE', value: 42, unit: 'mg/L' },
+  });
+
+  const [view] = projectSpecimenStatuses([record], baselineContext());
+
+  assert.deepEqual(Object.keys(view).sort(), ['referenceToken', 'status']);
+
+  const serialized = JSON.stringify(view);
+  assert.ok(!serialized.includes('Patient'));
+  assert.ok(!serialized.includes('Submitter'));
+  assert.ok(!serialized.includes('SAMPLE-SYNTH-REAL-0001'));
+  assert.ok(!serialized.includes('ACC-SYNTH-REAL-0001'));
+  assert.ok(!serialized.includes('free-text note'));
+  assert.ok(!serialized.includes('SYNTH-ANALYTE'));
+  assert.ok(!serialized.includes('42'));
+});
+
+test('exception views also carry no residual internal fields', () => {
+  const record = baselineRecord({
+    lifecycleState: 'UNKNOWN_STATE',
+    patientName: 'Synthetic Patient Doe',
+    rawNotes: 'Synthetic note',
+    resultValues: { value: 7 },
+  });
+
+  const [view] = projectSpecimenStatuses([record], baselineContext());
+
+  assert.deepEqual(Object.keys(view).sort(), ['reasonCode', 'referenceToken', 'status']);
+  assert.ok(!JSON.stringify(view).includes('Patient'));
+});
+
+test('projects a batch of mixed records in input order', () => {
+  const records = [
+    baselineRecord({ referenceToken: 'ref-a', lifecycleState: 'INTAKE_LOGGED' }),
+    baselineRecord({ referenceToken: 'ref-b', lifecycleState: 'VERIFIED' }),
+    baselineRecord({ referenceToken: 'ref-c', lifecycleState: 'BOGUS_STATE' }),
+  ];
+
+  const views = projectSpecimenStatuses(records, baselineContext());
+
+  assert.deepEqual(
+    views.map((v) => [v.referenceToken, v.status]),
+    [
+      ['ref-a', 'received'],
+      ['ref-b', 'completed'],
+      ['ref-c', 'exception'],
+    ],
+  );
+});
+
+test('throws SpecimenStatusInputError when the batch is not an array', () => {
+  assert.throws(
+    () => projectSpecimenStatuses('not-an-array' as unknown as unknown[], baselineContext()),
+    (error: unknown) => error instanceof SpecimenStatusInputError && error.code === 'records-not-array',
+  );
+});
+
+test('throws SpecimenStatusInputError for an invalid context', () => {
+  assert.throws(
+    () => projectSpecimenStatuses([baselineRecord()], { tenantId: '' } as SpecimenStatusContext),
+    (error: unknown) => error instanceof SpecimenStatusInputError && error.code === 'invalid-context',
+  );
+});
+
+test('throws SpecimenStatusInputError for a record missing a required identity field', () => {
+  const malformed = { ...baselineRecord(), referenceToken: undefined };
+  assert.throws(
+    () => projectSpecimenStatuses([malformed], baselineContext()),
+    (error: unknown) => error instanceof SpecimenStatusInputError && error.code === 'record-malformed',
+  );
+});
+
+test('throws SpecimenStatusInputError for a non-object record', () => {
+  assert.throws(
+    () => projectSpecimenStatuses([null], baselineContext()),
+    (error: unknown) => error instanceof SpecimenStatusInputError && error.code === 'record-malformed',
+  );
+});
+
+test('explainSpecimenStatusReason returns deterministic, privacy-safe text for every reason code', () => {
+  const reasonCodes = ['tenant-mismatch', 'timestamp-invalid', 'timestamp-not-utc', 'lifecycle-state-unknown'] as const;
+  for (const code of reasonCodes) {
+    const message = explainSpecimenStatusReason(code);
+    assert.equal(typeof message, 'string');
+    assert.ok(message.length > 0);
+  }
+});
