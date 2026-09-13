@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Download } from 'lucide-react';
 
 interface DeliveryState {
@@ -25,10 +25,32 @@ export type EmailGateState =
 
 const GENERIC_UNAVAILABLE_MESSAGE = 'Something went wrong. Email info@lims.bot directly.';
 const NETWORK_UNAVAILABLE_MESSAGE = 'Network error. Email info@lims.bot directly.';
+const UNSUPPORTED_PACK_MESSAGE =
+  'Automatic fulfillment is currently available only for the reviewed ISO 15189 pack.';
+const FULFILLMENT_UNAVAILABLE_MESSAGE =
+  'Automatic fulfillment is temporarily unavailable. Email info@lims.bot directly.';
 
 /** Only the one known "accepted but not fulfillable" code counts as pending; everything else fails closed to unavailable. */
 export function classifyFailureKind(status: number, code: unknown): 'pending' | 'unavailable' {
   return status === 409 && code === 'unsupported_pack_selection' ? 'pending' : 'unavailable';
+}
+
+/**
+ * Fixed, pre-approved copy for every known status/code pairing. The server's own `error` text,
+ * response body, and any other request-derived value are never used as rendered copy — an
+ * unrecognized pairing always falls back to the generic message rather than surfacing anything
+ * server-supplied.
+ */
+const KNOWN_FAILURE_MESSAGES: Record<string, string> = {
+  '409:unsupported_pack_selection': UNSUPPORTED_PACK_MESSAGE,
+  '503:asset_unavailable': FULFILLMENT_UNAVAILABLE_MESSAGE,
+  '503:lead_store_failed': FULFILLMENT_UNAVAILABLE_MESSAGE,
+  '503:operator_notice_failed': FULFILLMENT_UNAVAILABLE_MESSAGE,
+};
+
+function safeFailureMessage(status: number, code: unknown): string {
+  const key = `${status}:${typeof code === 'string' ? code : ''}`;
+  return KNOWN_FAILURE_MESSAGES[key] ?? GENERIC_UNAVAILABLE_MESSAGE;
 }
 
 /**
@@ -72,8 +94,8 @@ export function createEmailGateController(fetchImpl: typeof fetch = fetch) {
           emit({ kind: 'success', delivery: data.delivery });
           return state;
         }
-        const data = (await res.json().catch(() => ({}))) as { error?: string; code?: string };
-        const message = typeof data.error === 'string' && data.error ? data.error : GENERIC_UNAVAILABLE_MESSAGE;
+        const data = (await res.json().catch(() => ({}))) as { code?: string };
+        const message = safeFailureMessage(res.status, data.code);
         emit({ kind: classifyFailureKind(res.status, data.code), message });
         return state;
       } catch {
@@ -86,20 +108,36 @@ export function createEmailGateController(fetchImpl: typeof fetch = fetch) {
   };
 }
 
+/** Renders the pending/unavailable feedback surface for a given state, or nothing otherwise. Only the fixed, pre-approved `state.message` is ever shown — never raw server payloads. */
+export function EmailGateFeedback({ state }: { state: EmailGateState }) {
+  if (state.kind === 'pending') {
+    return (
+      <p role="status" aria-live="polite" className="text-amber-300 text-xs">
+        {state.message}
+      </p>
+    );
+  }
+  if (state.kind === 'unavailable') {
+    return (
+      <p role="alert" aria-live="assertive" className="text-red-400 text-xs">
+        {state.message}
+      </p>
+    );
+  }
+  return null;
+}
+
 export function EmailGateForm() {
   const [email, setEmail] = useState('');
   const [accredType, setAccredType] = useState('');
-  const controllerRef = useRef<ReturnType<typeof createEmailGateController> | null>(null);
-  if (!controllerRef.current) {
-    controllerRef.current = createEmailGateController();
-  }
-  const [state, setState] = useState<EmailGateState>(() => controllerRef.current!.getState());
+  const [controller] = useState(() => createEmailGateController());
+  const [state, setState] = useState<EmailGateState>(() => controller.getState());
 
-  useEffect(() => controllerRef.current!.subscribe(setState), []);
+  useEffect(() => controller.subscribe(setState), [controller]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    await controllerRef.current!.submit({ email, accredType });
+    await controller.submit({ email, accredType });
   }
 
   const submitting = state.kind === 'submitting';
@@ -178,17 +216,7 @@ export function EmailGateForm() {
               {submitting ? 'Sending…' : 'Send me the PDF →'}
             </button>
 
-            {state.kind === 'pending' && (
-              <p role="status" aria-live="polite" className="text-amber-300 text-xs">
-                {state.message}
-              </p>
-            )}
-
-            {state.kind === 'unavailable' && (
-              <p role="alert" aria-live="assertive" className="text-red-400 text-xs">
-                {state.message}
-              </p>
-            )}
+            <EmailGateFeedback state={state} />
 
             <p className="text-xs text-slate-500">
               No phone required. No spam. Unsubscribe anytime.

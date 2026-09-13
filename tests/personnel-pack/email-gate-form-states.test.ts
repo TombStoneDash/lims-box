@@ -5,11 +5,16 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import {
   classifyFailureKind,
   createEmailGateController,
+  EmailGateFeedback,
   EmailGateForm,
   type EmailGateState,
 } from '../../app/personnel-pack/EmailGateForm';
 
 const CANARY_EMAIL = 'canary-applicant@example.com';
+const CANARY_SECRET = 'secret-token-123';
+const CANARY_PATTERN = new RegExp(
+  [CANARY_EMAIL, CANARY_SECRET].map((s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|'),
+);
 
 function fakeFetch(status: number, body: unknown, ok = status >= 200 && status < 300) {
   let calls = 0;
@@ -235,6 +240,42 @@ test('the success state never embeds the submitted email in its delivery payload
   const final = await controller.submit({ email: CANARY_EMAIL, accredType: 'iso15189' });
 
   assert.doesNotMatch(JSON.stringify(final), new RegExp(CANARY_EMAIL.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
+});
+
+// --- fail-closed on hostile server errors ---------------------------------------------------
+
+test('a hostile server error body can never inject the applicant email or a secret into the emitted message', async () => {
+  const hostileBodies: Array<[number, unknown]> = [
+    [500, { error: `Contact ${CANARY_EMAIL} with token ${CANARY_SECRET}`, code: 'anything' }],
+    [503, { error: CANARY_SECRET, code: 'asset_unavailable' }],
+    [409, { error: CANARY_EMAIL, code: 'unsupported_pack_selection' }],
+    [400, { error: CANARY_SECRET, message: CANARY_EMAIL, code: 'invalid_email' }],
+  ];
+
+  for (const [status, body] of hostileBodies) {
+    const { impl } = fakeFetch(status, body);
+    const controller = createEmailGateController(impl as unknown as typeof fetch);
+    const final = await controller.submit({ email: CANARY_EMAIL, accredType: 'iso15189' });
+
+    assert.doesNotMatch(JSON.stringify(final), CANARY_PATTERN, `status ${status}`);
+  }
+});
+
+test('the rendered feedback surface never contains the applicant email or a secret, even for a hostile server body', async () => {
+  const hostileBodies: Array<[number, unknown]> = [
+    [500, { error: `Contact ${CANARY_EMAIL} with token ${CANARY_SECRET}`, code: 'anything' }],
+    [503, { error: CANARY_SECRET, code: 'asset_unavailable' }],
+    [409, { error: CANARY_EMAIL, code: 'unsupported_pack_selection' }],
+  ];
+
+  for (const [status, body] of hostileBodies) {
+    const { impl } = fakeFetch(status, body);
+    const controller = createEmailGateController(impl as unknown as typeof fetch);
+    const final = await controller.submit({ email: CANARY_EMAIL, accredType: 'iso15189' });
+
+    const markup = renderToStaticMarkup(React.createElement(EmailGateFeedback, { state: final }));
+    assert.doesNotMatch(markup, CANARY_PATTERN, `status ${status}`);
+  }
 });
 
 // --- component smoke test (React.createElement, no JSX) ------------------------------------
