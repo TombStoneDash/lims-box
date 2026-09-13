@@ -212,6 +212,154 @@ test('a unit that disagrees with the reference limit unit fails closed to HOLD',
   assert.ok(decision.reasons.some((r) => r.code === 'unit-mismatched'));
 });
 
+test('a result unit with only outer whitespace and case differences from the reference limit unit matches', () => {
+  const records = baselineRecords();
+  records[0].unit = '  MG/L  ';
+  const decisions = evaluateQCDecisions(records, baselineContext());
+  const decision = decisionFor(decisions, 'record-synthetic-1');
+  assert.equal(decision.status, 'ELIGIBLE_FOR_REVIEW');
+  assert.ok(!decision.reasons.some((r) => r.code === 'unit-mismatched'));
+});
+
+test('a reference limit unit with only outer whitespace and case differences from the result unit matches', () => {
+  const records = baselineRecords();
+  records[0].referenceLimits = [{ lowerBound: 10, upperBound: 20, unit: ' Mg/l ' }];
+  const decisions = evaluateQCDecisions(records, baselineContext());
+  assert.equal(decisionFor(decisions, 'record-synthetic-1').status, 'ELIGIBLE_FOR_REVIEW');
+});
+
+test('canonicalization never infers a conversion: mg/L and g/L still mismatch', () => {
+  const records = baselineRecords();
+  records[0].unit = 'mg/L';
+  records[0].referenceLimits = [{ lowerBound: 10, upperBound: 20, unit: 'g/L' }];
+  const decisions = evaluateQCDecisions(records, baselineContext());
+  const decision = decisionFor(decisions, 'record-synthetic-1');
+  assert.equal(decision.status, 'HOLD');
+  assert.ok(decision.reasons.some((r) => r.code === 'unit-mismatched'));
+});
+
+test('outer-whitespace/case variants of g/L vs mg/L still mismatch, not silently accepted', () => {
+  const records = baselineRecords();
+  records[0].unit = '  MG/L  ';
+  records[0].referenceLimits = [{ lowerBound: 10, upperBound: 20, unit: ' G/L ' }];
+  const decisions = evaluateQCDecisions(records, baselineContext());
+  const decision = decisionFor(decisions, 'record-synthetic-1');
+  assert.equal(decision.status, 'HOLD');
+  assert.ok(decision.reasons.some((r) => r.code === 'unit-mismatched'));
+});
+
+test('reference limits that are duplicates only after unit canonicalization are de-duplicated, not conflicting', () => {
+  const records = baselineRecords();
+  records[0].referenceLimits = [
+    { lowerBound: 10, upperBound: 20, unit: 'mg/L' },
+    { lowerBound: 10, upperBound: 20, unit: '  MG/L  ' },
+    { lowerBound: 10, upperBound: 20, unit: 'Mg/L' },
+  ];
+  const decisions = evaluateQCDecisions(records, baselineContext());
+  const decision = decisionFor(decisions, 'record-synthetic-1');
+  assert.equal(decision.status, 'ELIGIBLE_FOR_REVIEW');
+  assert.ok(!decision.reasons.some((r) => r.code === 'reference-limits-conflicting'));
+});
+
+test('a blank (whitespace-only) result unit fails closed to HOLD as missing, not canonicalized away', () => {
+  const records = baselineRecords();
+  records[0].unit = '   ';
+  const decisions = evaluateQCDecisions(records, baselineContext());
+  const decision = decisionFor(decisions, 'record-synthetic-1');
+  assert.equal(decision.status, 'HOLD');
+  assert.ok(decision.reasons.some((r) => r.code === 'unit-missing'));
+});
+
+test('a blank (whitespace-only) reference limit unit fails closed to HOLD as invalid', () => {
+  const records = baselineRecords();
+  records[0].referenceLimits = [{ lowerBound: 10, upperBound: 20, unit: '   ' }];
+  const decisions = evaluateQCDecisions(records, baselineContext());
+  const decision = decisionFor(decisions, 'record-synthetic-1');
+  assert.equal(decision.status, 'HOLD');
+  assert.ok(decision.reasons.some((r) => r.code === 'reference-limits-invalid'));
+});
+
+test('a missing result unit still fails closed to HOLD after canonicalization is applied', () => {
+  const records = baselineRecords();
+  delete records[0].unit;
+  const decisions = evaluateQCDecisions(records, baselineContext());
+  const decision = decisionFor(decisions, 'record-synthetic-1');
+  assert.equal(decision.status, 'HOLD');
+  assert.ok(decision.reasons.some((r) => r.code === 'unit-missing'));
+});
+
+test('a non-string result unit fails closed to HOLD as missing, not coerced to a string', () => {
+  const records = baselineRecords();
+  (records[0] as unknown as { unit: unknown }).unit = 5;
+  const decisions = evaluateQCDecisions(records, baselineContext());
+  const decision = decisionFor(decisions, 'record-synthetic-1');
+  assert.equal(decision.status, 'HOLD');
+  assert.ok(decision.reasons.some((r) => r.code === 'unit-missing'));
+});
+
+test('a non-string reference limit unit fails closed to HOLD as invalid, not coerced to a string', () => {
+  const records = baselineRecords();
+  records[0].referenceLimits = [
+    { lowerBound: 10, upperBound: 20, unit: 5 as unknown as string },
+  ];
+  const decisions = evaluateQCDecisions(records, baselineContext());
+  const decision = decisionFor(decisions, 'record-synthetic-1');
+  assert.equal(decision.status, 'HOLD');
+  assert.ok(decision.reasons.some((r) => r.code === 'reference-limits-invalid'));
+});
+
+test('a NaN observed value fails closed to HOLD as non-numeric', () => {
+  const records = baselineRecords();
+  records[0].rawValue = NaN;
+  const decisions = evaluateQCDecisions(records, baselineContext());
+  const decision = decisionFor(decisions, 'record-synthetic-1');
+  assert.equal(decision.status, 'HOLD');
+  assert.ok(decision.reasons.some((r) => r.code === 'value-non-numeric'));
+});
+
+test('an Infinity observed value fails closed to HOLD as non-numeric', () => {
+  const records = baselineRecords();
+  records[0].rawValue = Infinity;
+  const decisions = evaluateQCDecisions(records, baselineContext());
+  const decision = decisionFor(decisions, 'record-synthetic-1');
+  assert.equal(decision.status, 'HOLD');
+  assert.ok(decision.reasons.some((r) => r.code === 'value-non-numeric'));
+});
+
+test('a NaN reference limit bound fails closed to HOLD as invalid even with a valid unit', () => {
+  const records = baselineRecords();
+  records[0].referenceLimits = [{ lowerBound: NaN, upperBound: 20, unit: 'mg/L' }];
+  const decisions = evaluateQCDecisions(records, baselineContext());
+  const decision = decisionFor(decisions, 'record-synthetic-1');
+  assert.equal(decision.status, 'HOLD');
+  assert.ok(decision.reasons.some((r) => r.code === 'reference-limits-invalid'));
+});
+
+test('an Infinity reference limit bound fails closed to HOLD as invalid even with a valid unit', () => {
+  const records = baselineRecords();
+  records[0].referenceLimits = [{ lowerBound: 10, upperBound: Infinity, unit: 'mg/L' }];
+  const decisions = evaluateQCDecisions(records, baselineContext());
+  const decision = decisionFor(decisions, 'record-synthetic-1');
+  assert.equal(decision.status, 'HOLD');
+  assert.ok(decision.reasons.some((r) => r.code === 'reference-limits-invalid'));
+});
+
+test('a value exactly at the lower bound is in range after outer-whitespace/case unit canonicalization', () => {
+  const records = baselineRecords();
+  records[0].rawValue = 10;
+  records[0].unit = '  MG/L  ';
+  const decisions = evaluateQCDecisions(records, baselineContext());
+  assert.equal(decisionFor(decisions, 'record-synthetic-1').status, 'ELIGIBLE_FOR_REVIEW');
+});
+
+test('a value exactly at the upper bound is in range after outer-whitespace/case unit canonicalization', () => {
+  const records = baselineRecords();
+  records[0].rawValue = 20;
+  records[0].unit = '  MG/L  ';
+  const decisions = evaluateQCDecisions(records, baselineContext());
+  assert.equal(decisionFor(decisions, 'record-synthetic-1').status, 'ELIGIBLE_FOR_REVIEW');
+});
+
 test('an unknown qualifier fails closed to HOLD', () => {
   const records = baselineRecords();
   records[0].qualifier = 'suspicious-guess';
