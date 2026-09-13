@@ -8,6 +8,22 @@ import { PERSONNEL_PACK_PUBLIC_ASSETS } from '../../lib/personnelPackFulfillment
 
 const REMOVED_ACCRED_VALUES = ['cola', 'cap', 'clia', 'other'];
 
+// Detects user-visible promises of immediate/automatic pack fulfillment — a fulfillment
+// verb (download/get/access/receive/ship/send) combined with an immediacy signal
+// (instantly/automatically/immediately/now/right away) anywhere in the same sentence as a
+// pack/framework reference. Sentence-scoped rather than a fixed character window so it
+// catches long-range promises, not just ones sitting a few characters from "CLIA/COLA/CAP".
+function containsUnsupportedFulfillmentPromise(text: string): boolean {
+  const sentences = text.split(/(?<=[.!?])\s+/);
+  const fulfillmentVerb = /\b(download|downloads|downloading|get|gets|access|receive|receives|ship|ships|send|sends)\b/i;
+  const immediacy = /\b(instantly|instant|immediately|automatically|automatic|now|right away|in seconds)\b/i;
+  const packRef = /\b(pack|packs|CLIA|COLA|CAP|framework|frameworks)\b/i;
+
+  return sentences.some(
+    (sentence) => fulfillmentVerb.test(sentence) && immediacy.test(sentence) && packRef.test(sentence),
+  );
+}
+
 function extractSelectOptionValues(markup: string): string[] {
   const selectMatch = markup.match(/<select[^>]*>([\s\S]*?)<\/select>/);
   assert.ok(selectMatch, 'expected the pack picker <select> to be present in rendered markup');
@@ -69,4 +85,53 @@ test('unsupported-needs copy stays visible without claiming automatic fulfillmen
   for (const removedValue of REMOVED_ACCRED_VALUES) {
     assert.doesNotMatch(source, new RegExp(`<option value="${removedValue}"`));
   }
+});
+
+test('containsUnsupportedFulfillmentPromise flags generic and long-range fulfillment claims', () => {
+  const shouldFlag = [
+    'Download every Personnel Pack instantly',
+    'Every CLIA, COLA, and CAP framework pack downloads automatically the moment you sign up.',
+    'Get instant access to all our compliance packs — no email required, delivered right away.',
+    'Receive your framework pack immediately after checkout, automatically emailed to your inbox.',
+  ];
+  const shouldPass = [
+    'Generate a complete personnel competency packet — assessments, training history, certifications, and authorizations — formatted for CLIA and ISO 15189 survey review.',
+    'One ZIP with an index and a detail PDF for each person.',
+    'Personnel Pack documents personnel competency for both CLIA §493.1407 and ISO 15189 clause 6.2.2.',
+    'Survey-Ready Export dashboard with a one-click ZIP bundle download.',
+  ];
+
+  for (const text of shouldFlag) {
+    assert.ok(containsUnsupportedFulfillmentPromise(text), `expected to flag: "${text}"`);
+  }
+  for (const text of shouldPass) {
+    assert.ok(!containsUnsupportedFulfillmentPromise(text), `expected to accept: "${text}"`);
+  }
+});
+
+test('the personnel-pack landing page never embeds its own pack picker or download promise', async () => {
+  const source = await readFile('app/personnel-pack/page.tsx', 'utf8');
+
+  // The page delegates pack selection entirely to <EmailGateForm>. It must never grow a
+  // second, independent <select>/<option> picker that could drift out of sync with the
+  // single source of truth in PERSONNEL_PACK_PUBLIC_ASSETS.
+  assert.doesNotMatch(source, /<select[^>]*>/);
+  assert.doesNotMatch(source, /<option value=/);
+
+  for (const removedValue of REMOVED_ACCRED_VALUES) {
+    assert.doesNotMatch(
+      source,
+      new RegExp(`<option value="${removedValue}"`),
+      `expected no <option value="${removedValue}"> on the landing page`,
+    );
+  }
+
+  // Every CLIA/ISO 15189 reference on this page must describe the LIMS BOX product module
+  // (personnel records, competency tracking, the admin Survey-Ready Export) rather than an
+  // immediate/automatic fulfillment promise, since automatic download is scoped to the
+  // single reviewed ISO 15189 asset and is offered exclusively through <EmailGateForm>.
+  assert.ok(
+    !containsUnsupportedFulfillmentPromise(source),
+    'expected no generic or long-range unsupported immediate/automatic fulfillment promise on the landing page',
+  );
 });
