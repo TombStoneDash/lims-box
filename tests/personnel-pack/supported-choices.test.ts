@@ -70,3 +70,37 @@ test('unsupported-needs copy stays visible without claiming automatic fulfillmen
     assert.doesNotMatch(source, new RegExp(`<option value="${removedValue}"`));
   }
 });
+
+test('the personnel-pack landing page never embeds its own pack picker or download promise', async () => {
+  const source = await readFile('app/personnel-pack/page.tsx', 'utf8');
+
+  // The page delegates pack selection entirely to <EmailGateForm>. It must never grow a
+  // second, independent <select>/<option> picker that could drift out of sync with the
+  // single source of truth in PERSONNEL_PACK_PUBLIC_ASSETS.
+  assert.doesNotMatch(source, /<select[^>]*>/);
+  assert.doesNotMatch(source, /<option value=/);
+
+  for (const removedValue of REMOVED_ACCRED_VALUES) {
+    assert.doesNotMatch(
+      source,
+      new RegExp(`<option value="${removedValue}"`),
+      `expected no <option value="${removedValue}"> on the landing page`,
+    );
+  }
+
+  // Every CLIA/ISO 15189 reference on this page must describe the LIMS BOX product module
+  // (personnel records, competency tracking, the admin Survey-Ready Export) rather than an
+  // immediate/automatic PDF download, since automatic download is scoped to the single
+  // reviewed ISO 15189 asset and is offered exclusively through <EmailGateForm>.
+  assert.doesNotMatch(source, /download[\s\S]{0,40}(CLIA|COLA|CAP)\b/i);
+  assert.doesNotMatch(source, /(CLIA|COLA|CAP)\b[\s\S]{0,40}download/i);
+});
+
+test('the landing page and the fulfillment map agree on exactly one automatically-downloadable pack', () => {
+  const supportedKeys = Object.keys(PERSONNEL_PACK_PUBLIC_ASSETS);
+  assert.deepEqual(
+    supportedKeys,
+    ['iso15189'],
+    'the personnel-pack page relies on EmailGateForm honoring this exact set — update both together if it ever grows',
+  );
+});
