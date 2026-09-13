@@ -6,7 +6,7 @@ import test from 'node:test';
 import { NextRequest } from 'next/server';
 import {
   GET as publicGet,
-} from '../app/api/personnel-pack-download/route';
+} from '../../app/api/personnel-pack-download/route';
 import {
   createDownloadClaimService,
   createPersonnelPackGetHandler,
@@ -14,8 +14,8 @@ import {
   type DownloadClaimPayload,
   type DownloadClaimSqlClient,
   type DownloadClaimStore,
-} from '../lib/personnelPackDownloadClaims';
-import { PERSONNEL_PACK_PUBLIC_ASSETS } from '../lib/personnelPackFulfillment';
+} from '../../lib/personnelPackDownloadClaims';
+import { PERSONNEL_PACK_PUBLIC_ASSETS } from '../../lib/personnelPackFulfillment';
 
 const CLAIM_SECRET = 'test-only-personnel-pack-download-claim-secret';
 
