@@ -260,3 +260,146 @@ export function createPersonnelPackPostHandler(dependencies: PersonnelPackDepend
     }
   };
 }
+
+/**
+ * Explicit lifecycle for a single Personnel Pack fulfillment request, tracked independently
+ * of the HTTP handler above. This store never sends email or calls a provider — it only
+ * records which state a request is in, so callers can decide whether a duplicate request
+ * should re-attempt side effects, retry, or be blocked outright.
+ *
+ * `pending` and `retryable-failure` both permit another attempt (retry-able, including the
+ * first try); `fulfilled` and `terminal-failure` are absorbing — once reached, a duplicate
+ * request is a no-op rather than a re-send or a second attempt.
+ */
+export type PersonnelPackFulfillmentState = 'pending' | 'fulfilled' | 'retryable-failure' | 'terminal-failure';
+
+export interface PersonnelPackFulfillmentRecord {
+  readonly state: PersonnelPackFulfillmentState;
+  readonly attempts: number;
+  readonly reason: string | null;
+  readonly updatedAt: string;
+}
+
+export interface PersonnelPackFulfillmentAttempt {
+  /** False when the key is already fulfilled, already in flight, or terminally failed. */
+  readonly allowed: boolean;
+  readonly record: PersonnelPackFulfillmentRecord;
+}
+
+export interface PersonnelPackFulfillmentStateStore {
+  get(key: string): PersonnelPackFulfillmentRecord | undefined;
+  beginAttempt(key: string): PersonnelPackFulfillmentAttempt;
+  markFulfilled(key: string): PersonnelPackFulfillmentRecord;
+  markRetryableFailure(key: string, reason: unknown): PersonnelPackFulfillmentRecord;
+  markTerminalFailure(key: string, reason: unknown): PersonnelPackFulfillmentRecord;
+}
+
+/** Stable key for deduplicating repeated fulfillment requests for the same applicant + pack selection. */
+export function buildPersonnelPackFulfillmentKey(email: string, accredType: string | null): string {
+  return `${email.trim().toLowerCase()}::${accredType ?? 'unspecified'}`;
+}
+
+const FAILURE_REASON_MAX_LENGTH = 64;
+const FAILURE_REASON_PATTERN = /^[a-z0-9][a-z0-9_-]*$/;
+
+/**
+ * Failure reasons are reduced to a fixed, safe code, matching the diagnostic-redaction
+ * contract elsewhere in this file. Raw caught-error text, stack traces, and control bytes
+ * are never accepted as a reason; anything that is not already a clean fixed token becomes
+ * the 'unknown' sentinel instead of being stored verbatim.
+ */
+function sanitizeFailureReason(reason: unknown): string {
+  if (typeof reason !== 'string') return 'unknown';
+  const trimmed = reason.trim().toLowerCase();
+  if (trimmed.length === 0 || trimmed.length > FAILURE_REASON_MAX_LENGTH) return 'unknown';
+  if (!FAILURE_REASON_PATTERN.test(trimmed)) return 'unknown';
+  return trimmed;
+}
+
+function requirePersonnelPackFulfillmentRecord(
+  records: Map<string, PersonnelPackFulfillmentRecord>,
+  key: string,
+): PersonnelPackFulfillmentRecord {
+  const record = records.get(key);
+  if (!record) {
+    throw new Error('Cannot transition a Personnel Pack fulfillment key before beginAttempt() has started it');
+  }
+  return record;
+}
+
+/** In-memory, dependency-free state machine for idempotent Personnel Pack fulfillment attempts. */
+export function createPersonnelPackFulfillmentStateStore(
+  now: () => string = () => new Date().toISOString(),
+): PersonnelPackFulfillmentStateStore {
+  const records = new Map<string, PersonnelPackFulfillmentRecord>();
+
+  function get(key: string) {
+    return records.get(key);
+  }
+
+  function beginAttempt(key: string): PersonnelPackFulfillmentAttempt {
+    const existing = records.get(key);
+    if (existing && existing.state !== 'retryable-failure') {
+      // Already fulfilled, already in flight, or terminally failed: a duplicate request
+      // must not re-trigger fulfillment, so report the unchanged record as-is.
+      return { allowed: false, record: existing };
+    }
+    const record: PersonnelPackFulfillmentRecord = {
+      state: 'pending',
+      attempts: (existing?.attempts ?? 0) + 1,
+      reason: null,
+      updatedAt: now(),
+    };
+    records.set(key, record);
+    return { allowed: true, record };
+  }
+
+  function markFulfilled(key: string): PersonnelPackFulfillmentRecord {
+    const existing = requirePersonnelPackFulfillmentRecord(records, key);
+    if (existing.state === 'fulfilled') return existing;
+    if (existing.state !== 'pending') {
+      throw new Error(`Cannot mark Personnel Pack fulfillment key as fulfilled from state "${existing.state}"`);
+    }
+    const record: PersonnelPackFulfillmentRecord = {
+      state: 'fulfilled',
+      attempts: existing.attempts,
+      reason: null,
+      updatedAt: now(),
+    };
+    records.set(key, record);
+    return record;
+  }
+
+  function markRetryableFailure(key: string, reason: unknown): PersonnelPackFulfillmentRecord {
+    const existing = requirePersonnelPackFulfillmentRecord(records, key);
+    if (existing.state !== 'pending') {
+      throw new Error(`Cannot mark Personnel Pack fulfillment key as retryable-failure from state "${existing.state}"`);
+    }
+    const record: PersonnelPackFulfillmentRecord = {
+      state: 'retryable-failure',
+      attempts: existing.attempts,
+      reason: sanitizeFailureReason(reason),
+      updatedAt: now(),
+    };
+    records.set(key, record);
+    return record;
+  }
+
+  function markTerminalFailure(key: string, reason: unknown): PersonnelPackFulfillmentRecord {
+    const existing = requirePersonnelPackFulfillmentRecord(records, key);
+    if (existing.state === 'terminal-failure') return existing;
+    if (existing.state !== 'pending') {
+      throw new Error(`Cannot mark Personnel Pack fulfillment key as terminal-failure from state "${existing.state}"`);
+    }
+    const record: PersonnelPackFulfillmentRecord = {
+      state: 'terminal-failure',
+      attempts: existing.attempts,
+      reason: sanitizeFailureReason(reason),
+      updatedAt: now(),
+    };
+    records.set(key, record);
+    return record;
+  }
+
+  return { get, beginAttempt, markFulfilled, markRetryableFailure, markTerminalFailure };
+}
