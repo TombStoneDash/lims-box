@@ -1,11 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createHmac, randomBytes, randomUUID, timingSafeEqual } from 'node:crypto';
 import {
   createPersonnelPackPostHandler,
   loadDownloadableAsset,
   resolveBundledAsset,
   type PersonnelPackDelivery,
 } from '@/lib/personnelPackFulfillment';
+import {
+  configuredDownloadClaimService,
+  type DownloadClaimService,
+} from '@/lib/personnelPackDownloadClaims';
 import { sendSubmissionNotice } from '@/lib/notify';
 import { getSupabase } from '@/lib/supabase';
 
@@ -17,154 +20,82 @@ export const runtime = 'nodejs';
  * additive, optional freshness/anti-replay check for links this route itself
  * mints via POST. Its absence never blocks a request; once present it must
  * be well-formed, unexpired, unused, and bound to the requested asset, or the
- * request fails closed. Set PERSONNEL_PACK_DOWNLOAD_CLAIM_SECRET for a stable
- * signing key across process restarts/instances; otherwise a per-process key
- * is generated (fine for a single-instance deployment).
+ * request fails closed. Claim-bearing requests require a stable configured
+ * signing key and a durable atomic claim store; missing infrastructure never
+ * falls back to process-local state.
  */
-const DOWNLOAD_CLAIM_SECRET = process.env.PERSONNEL_PACK_DOWNLOAD_CLAIM_SECRET ?? randomBytes(32).toString('hex');
-const DOWNLOAD_CLAIM_TTL_MS = 15 * 60 * 1000;
+type DownloadClaimServiceResolver = () => DownloadClaimService | null;
 
-interface DownloadClaimPayload {
-  asset: string;
-  exp: number;
-  jti: string;
-}
+export function createPersonnelPackGetHandler(
+  resolveClaims: DownloadClaimServiceResolver = configuredDownloadClaimService,
+) {
+  return async function personnelPackGet(request: NextRequest) {
+    const key = request.nextUrl.searchParams.get('asset') ?? 'iso15189';
+    const claimToken = request.nextUrl.searchParams.get('claim');
 
-function isDownloadClaimPayload(value: unknown): value is DownloadClaimPayload {
-  if (typeof value !== 'object' || value === null) return false;
-  const record = value as Record<string, unknown>;
-  return (
-    typeof record.asset === 'string' &&
-    typeof record.exp === 'number' &&
-    Number.isFinite(record.exp) &&
-    typeof record.jti === 'string' &&
-    record.jti.length > 0
-  );
-}
+    if (claimToken !== null) {
+      const claims = resolveClaims();
+      if (!claims) {
+        return NextResponse.json(
+          { error: 'This download link is temporarily unavailable. Request a new one from the Personnel Pack form.', code: 'download_claim_unavailable' },
+          { status: 503 },
+        );
+      }
+      const claimResult = await claims.verifyAndConsume(claimToken, key, Date.now());
+      if (claimResult.ok === false) {
+        console.error('[personnel-pack-download]', 'download_claim_rejected', JSON.stringify({
+          asset: key,
+          stage: 'authorization',
+          code: claimResult.code,
+        }));
+        const unavailable = claimResult.code === 'download_claim_unavailable';
+        return NextResponse.json(
+          {
+            error: unavailable
+              ? 'This download link is temporarily unavailable. Request a new one from the Personnel Pack form.'
+              : 'This download link is invalid or has expired. Request a new one from the Personnel Pack form.',
+            code: claimResult.code,
+          },
+          { status: unavailable ? 503 : 401 },
+        );
+      }
+    }
 
-function signDownloadClaim(payload: DownloadClaimPayload): string {
-  const body = Buffer.from(JSON.stringify(payload), 'utf8').toString('base64url');
-  const signature = createHmac('sha256', DOWNLOAD_CLAIM_SECRET).update(body).digest('base64url');
-  return `${body}.${signature}`;
-}
-
-type DownloadClaimFailureCode =
-  | 'download_claim_malformed'
-  | 'download_claim_expired'
-  | 'download_claim_mismatched'
-  | 'download_claim_replayed';
-
-type DownloadClaimResult =
-  | { ok: true; payload: DownloadClaimPayload }
-  | { ok: false; code: DownloadClaimFailureCode };
-
-/** Claims already redeemed, so a captured/replayed link cannot be reused. Pruned lazily on each check. */
-const redeemedDownloadClaims = new Map<string, number>();
-
-function pruneRedeemedDownloadClaims(now: number): void {
-  for (const [jti, expiresAt] of redeemedDownloadClaims) {
-    if (expiresAt <= now) redeemedDownloadClaims.delete(jti);
-  }
-}
-
-function verifyDownloadClaim(token: string, asset: string, now: number): DownloadClaimResult {
-  const separatorIndex = token.indexOf('.');
-  if (separatorIndex <= 0 || separatorIndex === token.length - 1) {
-    return { ok: false, code: 'download_claim_malformed' };
-  }
-
-  const body = token.slice(0, separatorIndex);
-  const signature = token.slice(separatorIndex + 1);
-  const expectedSignature = createHmac('sha256', DOWNLOAD_CLAIM_SECRET).update(body).digest('base64url');
-  const providedSignatureBytes = Buffer.from(signature, 'utf8');
-  const expectedSignatureBytes = Buffer.from(expectedSignature, 'utf8');
-  if (
-    providedSignatureBytes.length !== expectedSignatureBytes.length ||
-    !timingSafeEqual(providedSignatureBytes, expectedSignatureBytes)
-  ) {
-    return { ok: false, code: 'download_claim_malformed' };
-  }
-
-  let parsed: unknown;
-  try {
-    parsed = JSON.parse(Buffer.from(body, 'base64url').toString('utf8'));
-  } catch {
-    return { ok: false, code: 'download_claim_malformed' };
-  }
-  if (!isDownloadClaimPayload(parsed)) {
-    return { ok: false, code: 'download_claim_malformed' };
-  }
-
-  if (parsed.exp <= now) {
-    return { ok: false, code: 'download_claim_expired' };
-  }
-  if (parsed.asset !== asset) {
-    return { ok: false, code: 'download_claim_mismatched' };
-  }
-
-  pruneRedeemedDownloadClaims(now);
-  if (redeemedDownloadClaims.has(parsed.jti)) {
-    return { ok: false, code: 'download_claim_replayed' };
-  }
-
-  return { ok: true, payload: parsed };
-}
-
-export async function GET(request: NextRequest) {
-  const key = request.nextUrl.searchParams.get('asset') ?? 'iso15189';
-  const claimToken = request.nextUrl.searchParams.get('claim');
-
-  if (claimToken !== null) {
-    const claimResult = verifyDownloadClaim(claimToken, key, Date.now());
-    if (claimResult.ok === false) {
-      console.error('[personnel-pack-download]', 'download_claim_rejected', JSON.stringify({
+    let result;
+    try {
+      result = await loadDownloadableAsset(key);
+    } catch (error) {
+      console.error('[personnel-pack-download]', 'asset_unavailable', JSON.stringify({
         asset: key,
-        stage: 'authorization',
-        code: claimResult.code,
+        stage: 'download',
+        error: error instanceof Error ? error.message : String(error),
       }));
       return NextResponse.json(
-        {
-          error: 'This download link is invalid or has expired. Request a new one from the Personnel Pack form.',
-          code: claimResult.code,
-        },
-        { status: 401 },
+        { error: 'Automatic fulfillment is temporarily unavailable. Email info@lims.bot directly.', code: 'asset_unavailable' },
+        { status: 503 },
       );
     }
-    redeemedDownloadClaims.set(claimResult.payload.jti, claimResult.payload.exp);
-  }
 
-  let result;
-  try {
-    result = await loadDownloadableAsset(key);
-  } catch (error) {
-    console.error('[personnel-pack-download]', 'asset_unavailable', JSON.stringify({
-      asset: key,
-      stage: 'download',
-      error: error instanceof Error ? error.message : String(error),
-    }));
-    return NextResponse.json(
-      { error: 'Automatic fulfillment is temporarily unavailable. Email info@lims.bot directly.', code: 'asset_unavailable' },
-      { status: 503 },
-    );
-  }
+    if (!result) {
+      return NextResponse.json(
+        { error: 'Automatic fulfillment is currently available only for the reviewed ISO 15189 pack.', code: 'unsupported_pack_selection' },
+        { status: 404 },
+      );
+    }
 
-  if (!result) {
-    return NextResponse.json(
-      { error: 'Automatic fulfillment is currently available only for the reviewed ISO 15189 pack.', code: 'unsupported_pack_selection' },
-      { status: 404 },
-    );
-  }
-
-  return new NextResponse(result.bytes, {
-    status: 200,
-    headers: {
-      'Content-Type': 'application/pdf',
-      'Content-Disposition': `attachment; filename="${result.asset.downloadFilename}"`,
-      'Cache-Control': 'private, no-store',
-      'X-Content-Type-Options': 'nosniff',
-    },
-  });
+    return new NextResponse(result.bytes, {
+      status: 200,
+      headers: {
+        'Content-Type': 'application/pdf',
+        'Content-Disposition': `attachment; filename="${result.asset.downloadFilename}"`,
+        'Cache-Control': 'private, no-store',
+        'X-Content-Type-Options': 'nosniff',
+      },
+    });
+  };
 }
+
+export const GET = createPersonnelPackGetHandler();
 
 async function createLead(record: { email: string; accred_type: string | null; source: 'personnel-pack-download' }) {
   const supabase = getSupabase();
@@ -246,11 +177,9 @@ async function resolveAssetWithDownloadClaim(
   const asset = url.searchParams.get('asset');
   if (!asset) return delivery;
 
-  const claim = signDownloadClaim({
-    asset,
-    exp: Date.now() + DOWNLOAD_CLAIM_TTL_MS,
-    jti: randomUUID(),
-  });
+  const claims = configuredDownloadClaimService();
+  if (!claims) throw new Error('Applicant delivery is not configured');
+  const claim = claims.issue(asset);
   url.searchParams.set('claim', claim);
 
   return { ...delivery, assetUrl: url.toString() };
