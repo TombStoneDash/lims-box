@@ -1,5 +1,7 @@
 import { createHmac, randomUUID, timingSafeEqual } from 'node:crypto';
+import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { loadDownloadableAsset } from '@/lib/personnelPackFulfillment';
 
 const DOWNLOAD_CLAIM_TTL_MS = 15 * 60 * 1000;
 
@@ -27,6 +29,10 @@ export interface DownloadClaimStore {
 export interface DownloadClaimService {
   issue(asset: string, now?: number): string;
   verifyAndConsume(token: string, asset: string, now?: number): Promise<DownloadClaimResult>;
+}
+
+export interface DownloadClaimSqlClient {
+  $executeRaw(strings: TemplateStringsArray, ...values: unknown[]): Promise<number>;
 }
 
 function isDownloadClaimPayload(value: unknown): value is DownloadClaimPayload {
@@ -120,20 +126,100 @@ export function createDownloadClaimService(input: {
   };
 }
 
-export const prismaDownloadClaimStore: DownloadClaimStore = {
-  async consume(payload, consumedAt): Promise<boolean> {
-    const inserted = await prisma.$executeRaw`
+export function createPrismaDownloadClaimStore(client: DownloadClaimSqlClient): DownloadClaimStore {
+  return {
+    async consume(payload, consumedAt): Promise<boolean> {
+      const inserted = await client.$executeRaw`
       INSERT INTO "PersonnelPackDownloadClaim" ("jti", "asset", "expiresAt", "consumedAt")
       SELECT ${payload.jti}, ${payload.asset}, ${new Date(payload.exp)}, ${consumedAt}
       WHERE ${new Date(payload.exp)} > CURRENT_TIMESTAMP
       ON CONFLICT ("jti") DO NOTHING
     `;
-    return inserted === 1;
-  },
-};
+      return inserted === 1;
+    },
+  };
+}
+
+export const prismaDownloadClaimStore = createPrismaDownloadClaimStore(prisma);
 
 export function configuredDownloadClaimService(): DownloadClaimService | null {
   const secret = process.env.PERSONNEL_PACK_DOWNLOAD_CLAIM_SECRET;
   if (!secret?.trim()) return null;
   return createDownloadClaimService({ secret, store: prismaDownloadClaimStore });
+}
+
+type DownloadClaimServiceResolver = () => DownloadClaimService | null;
+
+/**
+ * Builds the GET implementation outside the App Router module so that tests can
+ * inject independent claim-store instances without adding an unsupported route
+ * export. Claim authorization always completes before asset bytes are loaded.
+ */
+export function createPersonnelPackGetHandler(
+  resolveClaims: DownloadClaimServiceResolver = configuredDownloadClaimService,
+) {
+  return async function personnelPackGet(request: NextRequest) {
+    const key = request.nextUrl.searchParams.get('asset') ?? 'iso15189';
+    const claimToken = request.nextUrl.searchParams.get('claim');
+
+    if (claimToken !== null) {
+      const claims = resolveClaims();
+      if (!claims) {
+        return NextResponse.json(
+          { error: 'This download link is temporarily unavailable. Request a new one from the Personnel Pack form.', code: 'download_claim_unavailable' },
+          { status: 503 },
+        );
+      }
+      const claimResult = await claims.verifyAndConsume(claimToken, key, Date.now());
+      if (claimResult.ok === false) {
+        console.error('[personnel-pack-download]', 'download_claim_rejected', JSON.stringify({
+          asset: key,
+          stage: 'authorization',
+          code: claimResult.code,
+        }));
+        const unavailable = claimResult.code === 'download_claim_unavailable';
+        return NextResponse.json(
+          {
+            error: unavailable
+              ? 'This download link is temporarily unavailable. Request a new one from the Personnel Pack form.'
+              : 'This download link is invalid or has expired. Request a new one from the Personnel Pack form.',
+            code: claimResult.code,
+          },
+          { status: unavailable ? 503 : 401 },
+        );
+      }
+    }
+
+    let result;
+    try {
+      result = await loadDownloadableAsset(key);
+    } catch (error) {
+      console.error('[personnel-pack-download]', 'asset_unavailable', JSON.stringify({
+        asset: key,
+        stage: 'download',
+        error: error instanceof Error ? error.message : String(error),
+      }));
+      return NextResponse.json(
+        { error: 'Automatic fulfillment is temporarily unavailable. Email info@lims.bot directly.', code: 'asset_unavailable' },
+        { status: 503 },
+      );
+    }
+
+    if (!result) {
+      return NextResponse.json(
+        { error: 'Automatic fulfillment is currently available only for the reviewed ISO 15189 pack.', code: 'unsupported_pack_selection' },
+        { status: 404 },
+      );
+    }
+
+    return new NextResponse(result.bytes, {
+      status: 200,
+      headers: {
+        'Content-Type': 'application/pdf',
+        'Content-Disposition': `attachment; filename="${result.asset.downloadFilename}"`,
+        'Cache-Control': 'private, no-store',
+        'X-Content-Type-Options': 'nosniff',
+      },
+    });
+  };
 }

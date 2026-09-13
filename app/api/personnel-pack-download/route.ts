@@ -1,13 +1,11 @@
-import { NextRequest, NextResponse } from 'next/server';
 import {
   createPersonnelPackPostHandler,
-  loadDownloadableAsset,
   resolveBundledAsset,
   type PersonnelPackDelivery,
 } from '@/lib/personnelPackFulfillment';
 import {
   configuredDownloadClaimService,
-  type DownloadClaimService,
+  createPersonnelPackGetHandler,
 } from '@/lib/personnelPackDownloadClaims';
 import { sendSubmissionNotice } from '@/lib/notify';
 import { getSupabase } from '@/lib/supabase';
@@ -24,77 +22,6 @@ export const runtime = 'nodejs';
  * signing key and a durable atomic claim store; missing infrastructure never
  * falls back to process-local state.
  */
-type DownloadClaimServiceResolver = () => DownloadClaimService | null;
-
-export function createPersonnelPackGetHandler(
-  resolveClaims: DownloadClaimServiceResolver = configuredDownloadClaimService,
-) {
-  return async function personnelPackGet(request: NextRequest) {
-    const key = request.nextUrl.searchParams.get('asset') ?? 'iso15189';
-    const claimToken = request.nextUrl.searchParams.get('claim');
-
-    if (claimToken !== null) {
-      const claims = resolveClaims();
-      if (!claims) {
-        return NextResponse.json(
-          { error: 'This download link is temporarily unavailable. Request a new one from the Personnel Pack form.', code: 'download_claim_unavailable' },
-          { status: 503 },
-        );
-      }
-      const claimResult = await claims.verifyAndConsume(claimToken, key, Date.now());
-      if (claimResult.ok === false) {
-        console.error('[personnel-pack-download]', 'download_claim_rejected', JSON.stringify({
-          asset: key,
-          stage: 'authorization',
-          code: claimResult.code,
-        }));
-        const unavailable = claimResult.code === 'download_claim_unavailable';
-        return NextResponse.json(
-          {
-            error: unavailable
-              ? 'This download link is temporarily unavailable. Request a new one from the Personnel Pack form.'
-              : 'This download link is invalid or has expired. Request a new one from the Personnel Pack form.',
-            code: claimResult.code,
-          },
-          { status: unavailable ? 503 : 401 },
-        );
-      }
-    }
-
-    let result;
-    try {
-      result = await loadDownloadableAsset(key);
-    } catch (error) {
-      console.error('[personnel-pack-download]', 'asset_unavailable', JSON.stringify({
-        asset: key,
-        stage: 'download',
-        error: error instanceof Error ? error.message : String(error),
-      }));
-      return NextResponse.json(
-        { error: 'Automatic fulfillment is temporarily unavailable. Email info@lims.bot directly.', code: 'asset_unavailable' },
-        { status: 503 },
-      );
-    }
-
-    if (!result) {
-      return NextResponse.json(
-        { error: 'Automatic fulfillment is currently available only for the reviewed ISO 15189 pack.', code: 'unsupported_pack_selection' },
-        { status: 404 },
-      );
-    }
-
-    return new NextResponse(result.bytes, {
-      status: 200,
-      headers: {
-        'Content-Type': 'application/pdf',
-        'Content-Disposition': `attachment; filename="${result.asset.downloadFilename}"`,
-        'Cache-Control': 'private, no-store',
-        'X-Content-Type-Options': 'nosniff',
-      },
-    });
-  };
-}
-
 export const GET = createPersonnelPackGetHandler();
 
 async function createLead(record: { email: string; accred_type: string | null; source: 'personnel-pack-download' }) {

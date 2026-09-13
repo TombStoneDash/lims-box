@@ -5,12 +5,14 @@ import path from 'node:path';
 import test from 'node:test';
 import { NextRequest } from 'next/server';
 import {
-  createPersonnelPackGetHandler,
   GET as publicGet,
 } from '../app/api/personnel-pack-download/route';
 import {
   createDownloadClaimService,
+  createPersonnelPackGetHandler,
+  createPrismaDownloadClaimStore,
   type DownloadClaimPayload,
+  type DownloadClaimSqlClient,
   type DownloadClaimStore,
 } from '../lib/personnelPackDownloadClaims';
 import { PERSONNEL_PACK_PUBLIC_ASSETS } from '../lib/personnelPackFulfillment';
@@ -29,7 +31,25 @@ class SyntheticDurableStore implements DownloadClaimStore {
   }
 }
 
-function claimedGet(store = new SyntheticDurableStore()) {
+class SyntheticAtomicClaimDatabase {
+  readonly consumed = new Set<string>();
+  readonly statements: string[] = [];
+
+  client(): DownloadClaimSqlClient {
+    return {
+      $executeRaw: async (strings, ...values) => {
+        this.statements.push(strings.join('?'));
+        const jti = values[0];
+        if (typeof jti !== 'string') throw new Error('missing claim id');
+        if (this.consumed.has(jti)) return 0;
+        this.consumed.add(jti);
+        return 1;
+      },
+    };
+  }
+}
+
+function claimedGet(store: DownloadClaimStore = new SyntheticDurableStore()) {
   const service = createDownloadClaimService({ secret: CLAIM_SECRET, store });
   return {
     GET: createPersonnelPackGetHandler(() => service),
@@ -204,9 +224,9 @@ test('independent instances sharing durable storage accept a claim at most once 
 });
 
 test('concurrent independent instances produce exactly one successful redemption', async () => {
-  const store = new SyntheticDurableStore();
-  const firstInstance = claimedGet(store);
-  const secondInstance = claimedGet(store);
+  const database = new SyntheticAtomicClaimDatabase();
+  const firstInstance = claimedGet(createPrismaDownloadClaimStore(database.client()));
+  const secondInstance = claimedGet(createPrismaDownloadClaimStore(database.client()));
   const claim = firstInstance.service.issue('iso15189', Date.now());
   const query = `?asset=iso15189&claim=${encodeURIComponent(claim)}`;
 
@@ -219,6 +239,20 @@ test('concurrent independent instances produce exactly one successful redemption
   const rejected = responses.find((response) => response.status === 401);
   assert.ok(rejected);
   assert.equal((await rejected.json()).code, 'download_claim_replayed');
+  assert.equal(database.consumed.size, 1);
+  assert.equal(database.statements.length, 2);
+  assert.ok(database.statements.every((statement) => statement.includes('ON CONFLICT ("jti") DO NOTHING')));
+});
+
+test('production claim-store adapter preserves atomic replay state across client replacement', async () => {
+  const database = new SyntheticAtomicClaimDatabase();
+  const payload = { asset: 'iso15189', exp: Date.now() + 60_000, jti: randomUUID() };
+  const beforeRestart = createPrismaDownloadClaimStore(database.client());
+  const afterRestart = createPrismaDownloadClaimStore(database.client());
+
+  assert.equal(await beforeRestart.consume(payload, new Date()), true);
+  assert.equal(await afterRestart.consume(payload, new Date()), false);
+  assert.equal(database.consumed.size, 1);
 });
 
 test('missing stable signing configuration fails closed before returning the artifact', async () => {
@@ -230,8 +264,9 @@ test('missing stable signing configuration fails closed before returning the art
 });
 
 test('unavailable durable storage fails closed before returning the artifact', async () => {
-  const instance = claimedGet();
-  instance.store.available = false;
+  const store = new SyntheticDurableStore();
+  const instance = claimedGet(store);
+  store.available = false;
   const claim = instance.service.issue('iso15189', Date.now());
   const response = await instance.GET(
     downloadRequest(`?asset=iso15189&claim=${encodeURIComponent(claim)}`),
