@@ -2,6 +2,7 @@
   "name": "lims-box",
   "version": "1.0.0",
   "description": "LIMS BOX — Modern lab management for small environmental and water testing labs",
+  "packageManager": "pnpm@9.15.9",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
