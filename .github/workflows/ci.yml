@@ -30,6 +30,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: OHWorks tests
+        run: npm run test:ohworks
+
       - name: Lint
         run: npm run lint
 
