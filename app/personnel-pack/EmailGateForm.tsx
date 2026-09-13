@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Download } from 'lucide-react';
 
 interface DeliveryState {
@@ -9,37 +9,100 @@ interface DeliveryState {
   label: string;
 }
 
+/**
+ * Explicit, mutually exclusive UI states for the gate form. `pending` covers a selection the
+ * server accepted the request format for but cannot fulfill automatically (e.g. an
+ * unsupported pack choice); `unavailable` covers everything else that failed — validation,
+ * a misconfigured/broken asset, storage, notice, or network failure. Neither ever carries the
+ * applicant's email: only the server's pre-sanitized message string is stored.
+ */
+export type EmailGateState =
+  | { kind: 'form' }
+  | { kind: 'submitting' }
+  | { kind: 'success'; delivery: DeliveryState }
+  | { kind: 'pending'; message: string }
+  | { kind: 'unavailable'; message: string };
+
+const GENERIC_UNAVAILABLE_MESSAGE = 'Something went wrong. Email info@lims.bot directly.';
+const NETWORK_UNAVAILABLE_MESSAGE = 'Network error. Email info@lims.bot directly.';
+
+/** Only the one known "accepted but not fulfillable" code counts as pending; everything else fails closed to unavailable. */
+export function classifyFailureKind(status: number, code: unknown): 'pending' | 'unavailable' {
+  return status === 409 && code === 'unsupported_pack_selection' ? 'pending' : 'unavailable';
+}
+
+/**
+ * Framework-free controller for the gate form's submit lifecycle: owns the in-flight guard so
+ * duplicate submits (double-click, double Enter) never issue a second request, and exposes
+ * state via subscribe() so it is testable without rendering React or touching a DOM.
+ */
+export function createEmailGateController(fetchImpl: typeof fetch = fetch) {
+  let state: EmailGateState = { kind: 'form' };
+  let inFlight = false;
+  const listeners = new Set<(state: EmailGateState) => void>();
+
+  function emit(next: EmailGateState) {
+    state = next;
+    listeners.forEach((listener) => listener(state));
+  }
+
+  return {
+    getState(): EmailGateState {
+      return state;
+    },
+    subscribe(listener: (state: EmailGateState) => void): () => void {
+      listeners.add(listener);
+      return () => listeners.delete(listener);
+    },
+    isSubmitting(): boolean {
+      return inFlight;
+    },
+    async submit(input: { email: string; accredType: string }): Promise<EmailGateState> {
+      if (inFlight) return state;
+      inFlight = true;
+      emit({ kind: 'submitting' });
+      try {
+        const res = await fetchImpl('/api/personnel-pack-download', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(input),
+        });
+        if (res.ok) {
+          const data = (await res.json()) as { delivery: DeliveryState };
+          emit({ kind: 'success', delivery: data.delivery });
+          return state;
+        }
+        const data = (await res.json().catch(() => ({}))) as { error?: string; code?: string };
+        const message = typeof data.error === 'string' && data.error ? data.error : GENERIC_UNAVAILABLE_MESSAGE;
+        emit({ kind: classifyFailureKind(res.status, data.code), message });
+        return state;
+      } catch {
+        emit({ kind: 'unavailable', message: NETWORK_UNAVAILABLE_MESSAGE });
+        return state;
+      } finally {
+        inFlight = false;
+      }
+    },
+  };
+}
+
 export function EmailGateForm() {
   const [email, setEmail] = useState('');
   const [accredType, setAccredType] = useState('');
-  const [delivery, setDelivery] = useState<DeliveryState | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const controllerRef = useRef<ReturnType<typeof createEmailGateController> | null>(null);
+  if (!controllerRef.current) {
+    controllerRef.current = createEmailGateController();
+  }
+  const [state, setState] = useState<EmailGateState>(() => controllerRef.current!.getState());
+
+  useEffect(() => controllerRef.current!.subscribe(setState), []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setLoading(true);
-    setError('');
-    setDelivery(null);
-    try {
-      const res = await fetch('/api/personnel-pack-download', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, accredType }),
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setDelivery((data as { delivery: DeliveryState }).delivery);
-      } else {
-        const data = await res.json().catch(() => ({}));
-        setError((data as { error?: string }).error || 'Something went wrong. Email info@lims.bot directly.');
-      }
-    } catch {
-      setError('Network error. Email info@lims.bot directly.');
-    } finally {
-      setLoading(false);
-    }
+    await controllerRef.current!.submit({ email, accredType });
   }
+
+  const submitting = state.kind === 'submitting';
 
   return (
     <section className="px-4 pb-10">
@@ -56,21 +119,25 @@ export function EmailGateForm() {
           the inspection.
         </p>
 
-        {delivery ? (
-          <div className="bg-[#2E8B57]/10 border border-[#2E8B57]/30 rounded-lg px-4 py-3">
+        {state.kind === 'success' ? (
+          <div
+            role="status"
+            aria-live="polite"
+            className="bg-[#2E8B57]/10 border border-[#2E8B57]/30 rounded-lg px-4 py-3"
+          >
             <p className="text-[#2E8B57] font-medium text-sm">
               ✓ Your reviewed pack is ready now.
             </p>
             <a
-              href={delivery.assetUrl}
+              href={state.delivery.assetUrl}
               target="_blank"
               rel="noreferrer"
               className="mt-3 inline-flex items-center gap-2 rounded-lg bg-[#2E8B57] px-4 py-2 text-sm font-semibold text-white hover:bg-[#2E8B57]/90 transition-colors"
             >
-              Download {delivery.label} →
+              Download {state.delivery.label} →
             </a>
             <p className="mt-3 text-xs text-slate-400">
-              {delivery.emailed
+              {state.delivery.emailed
                 ? 'A copy was also emailed to you.'
                 : 'Email delivery is unavailable right now, so this page is your fulfillment path.'}
             </p>
@@ -83,31 +150,46 @@ export function EmailGateForm() {
               placeholder="your@lab.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              disabled={submitting}
               className="bg-white/10 border border-white/20 rounded-lg px-4 py-2.5 text-sm
                          text-white placeholder:text-slate-500 focus:outline-none
-                         focus:border-[#2E8B57]/60 w-full"
+                         focus:border-[#2E8B57]/60 w-full disabled:opacity-60"
             />
             <select
               required
               value={accredType}
               onChange={(e) => setAccredType(e.target.value)}
+              disabled={submitting}
               className="bg-white/10 border border-white/20 rounded-lg px-4 py-2.5 text-sm
                          text-slate-300 focus:outline-none focus:border-[#2E8B57]/60 w-full
-                         appearance-none"
+                         appearance-none disabled:opacity-60"
             >
               <option value="">Select your pack</option>
               <option value="iso15189">ISO 15189 pack (reviewed)</option>
             </select>
             <button
               type="submit"
-              disabled={loading}
+              disabled={submitting}
+              aria-busy={submitting}
               className="bg-[#2E8B57] hover:bg-[#2E8B57]/90 disabled:opacity-60
                          text-white font-semibold px-6 py-2.5 rounded-lg text-sm
                          transition-colors flex items-center justify-center gap-2"
             >
-              {loading ? 'Sending…' : 'Send me the PDF →'}
+              {submitting ? 'Sending…' : 'Send me the PDF →'}
             </button>
-            {error && <p className="text-red-400 text-xs">{error}</p>}
+
+            {state.kind === 'pending' && (
+              <p role="status" aria-live="polite" className="text-amber-300 text-xs">
+                {state.message}
+              </p>
+            )}
+
+            {state.kind === 'unavailable' && (
+              <p role="alert" aria-live="assertive" className="text-red-400 text-xs">
+                {state.message}
+              </p>
+            )}
+
             <p className="text-xs text-slate-500">
               No phone required. No spam. Unsubscribe anytime.
             </p>
