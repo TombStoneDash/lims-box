@@ -4,9 +4,17 @@ import test from 'node:test';
 import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { EmailGateForm } from '../../app/personnel-pack/EmailGateForm';
-import { PERSONNEL_PACK_PUBLIC_ASSETS } from '../../lib/personnelPackFulfillment';
+import {
+  PERSONNEL_PACK_PUBLIC_ASSETS,
+  resolvePersonnelPackAsset as resolveFulfillmentAsset,
+} from '../../lib/personnelPackFulfillment';
 
 const REMOVED_ACCRED_VALUES = ['cola', 'cap', 'clia', 'other'];
+
+// Synthetic, never-real-applicant-data inputs used to probe fail-closed behavior. None of
+// these are valid tokens for a supported accreditation choice.
+const MISSING_CHOICES: Array<string | null | undefined> = ['', '   ', null, undefined];
+const MALFORMED_CHOICES = ['ISO15189', ' iso15189 ', 'iso 15189', '<script>iso15189</script>', 'a'.repeat(65)];
 
 // Detects user-visible promises of immediate/automatic pack fulfillment — a fulfillment
 // verb (download/get/access/receive/ship/send) combined with an immediacy signal
@@ -134,4 +142,53 @@ test('the personnel-pack landing page never embeds its own pack picker or downlo
     !containsUnsupportedFulfillmentPromise(source),
     'expected no generic or long-range unsupported immediate/automatic fulfillment promise on the landing page',
   );
+});
+
+test('every choice offered by the picker is exactly the set of choices the fulfillment matrix approves', () => {
+  const markup = renderToStaticMarkup(React.createElement(EmailGateForm));
+  const offeredChoices = extractSelectOptionValues(markup).filter((value) => value !== '');
+  const approvedChoices = Object.keys(PERSONNEL_PACK_PUBLIC_ASSETS);
+
+  // Sorted comparison: the picker and the fulfillment matrix must name the same choices,
+  // regardless of declaration order, so the two can never silently drift apart.
+  assert.deepEqual([...offeredChoices].sort(), [...approvedChoices].sort());
+});
+
+test('every currently supported accreditation choice resolves to a deterministic, approved asset', () => {
+  const approvedChoices = Object.keys(PERSONNEL_PACK_PUBLIC_ASSETS);
+  assert.ok(approvedChoices.length > 0, 'expected at least one supported accreditation choice to characterize');
+
+  for (const choice of approvedChoices) {
+    const first = resolveFulfillmentAsset(choice);
+    const second = resolveFulfillmentAsset(choice);
+
+    assert.ok(first, `expected supported choice "${choice}" to resolve to an asset`);
+    assert.deepEqual(first, second, `expected repeated resolution of "${choice}" to be deterministic`);
+    assert.deepEqual(first, PERSONNEL_PACK_PUBLIC_ASSETS[choice]);
+    assert.equal(first!.key, choice);
+    assert.ok(first!.label.length > 0);
+    assert.match(first!.publicPath, /^\/personnel-pack-assets\//);
+  }
+});
+
+test('unsupported, missing, and malformed accreditation choices fail closed to null, never throwing', () => {
+  const unsupported = [...REMOVED_ACCRED_VALUES, 'not-a-real-framework', 'iso15189x'];
+
+  for (const choice of unsupported) {
+    assert.equal(
+      resolveFulfillmentAsset(choice),
+      null,
+      `expected unsupported synthetic choice "${choice}" to fail closed`,
+    );
+  }
+
+  for (const choice of MISSING_CHOICES) {
+    assert.doesNotThrow(() => resolveFulfillmentAsset(choice as string | null));
+    assert.equal(resolveFulfillmentAsset(choice as string | null), null, 'expected a missing choice to fail closed');
+  }
+
+  for (const choice of MALFORMED_CHOICES) {
+    assert.doesNotThrow(() => resolveFulfillmentAsset(choice));
+    assert.equal(resolveFulfillmentAsset(choice), null, `expected malformed synthetic choice "${choice}" to fail closed`);
+  }
 });
