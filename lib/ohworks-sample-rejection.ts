@@ -182,6 +182,30 @@ export function explainSampleRejectionReason(reason: SampleRejectionReason): str
   return REASON_MESSAGES[reason.code];
 }
 
+/** The concrete corrective step a submitter can take to move a held or rejected sample forward, keyed by reason code. */
+const REASON_NEXT_ACTIONS: Record<SampleRejectionReasonCode, string> = {
+  'tenant-mismatch': 'Confirm the sample belongs to this tenant and resubmit under the correct tenant.',
+  'matrix-container-not-approved': 'Recollect the sample using an approved matrix and container pairing for this policy.',
+  'volume-invalid': 'Resupply a numeric volume value.',
+  'volume-unit-mismatched': 'Resupply the volume using the configured unit for this matrix.',
+  'volume-out-of-range': 'Recollect the sample with a volume inside the configured range for this matrix.',
+  'temperature-invalid': 'Resupply a numeric temperature value.',
+  'temperature-unit-mismatched': 'Resupply the temperature using the configured unit for this matrix.',
+  'temperature-out-of-range': 'Recollect and store the sample within the configured temperature range for this matrix.',
+  'seal-state-invalid': 'Recollect the sample with an accepted seal state.',
+  'timestamp-invalid': 'Resupply a parsable collection timestamp.',
+  'timestamp-out-of-bound': 'Recollect the sample within the configured freshness window.',
+  'duplicate-conflict': 'Resolve the conflicting duplicate submissions before resubmitting this sample identifier.',
+  'duplicate-replay': 'This sample was already submitted with identical content; no resubmission is needed.',
+  'note-unsafe-content': 'Remove unsafe or personally identifying content from the note and resubmit.',
+  'hold-condition-matched': 'Await manual hold review; no resubmission is needed unless the reviewer requests one.',
+};
+
+/** Deterministic, privacy-safe next corrective action for a disposition reason, suitable for UI display alongside the explanation. */
+export function explainSampleRejectionNextAction(reason: SampleRejectionReason): string {
+  return REASON_NEXT_ACTIONS[reason.code];
+}
+
 export type SampleRejectionInputErrorCode =
   | 'policy-malformed'
   | 'policy-tenant-invalid'

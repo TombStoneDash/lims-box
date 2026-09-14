@@ -4,6 +4,7 @@ import test from 'node:test';
 import {
   validateOHWorksAccessionRequest,
   explainAccessionFieldError,
+  explainAccessionFieldNextAction,
   AccessionValidationInputError,
   type AccessionValidationRequest,
 } from '../lib/ohworks/accession-validation';
@@ -258,4 +259,43 @@ test('explainAccessionFieldError returns deterministic, value-free text for ever
     assert.equal(typeof message, 'string');
     assert.ok(message.length > 0);
   }
+});
+
+test('explainAccessionFieldNextAction returns deterministic, value-free text distinct from the explanation for every code', () => {
+  const codes = [
+    'field-missing',
+    'field-not-string',
+    'field-empty',
+    'identifier-ambiguous',
+    'identifier-suspected-phi',
+    'date-invalid',
+    'date-chronology-impossible',
+  ] as const;
+  for (const code of codes) {
+    const error = { field: 'accessionRequestId', code } as const;
+    const explanation = explainAccessionFieldError(error);
+    const nextAction = explainAccessionFieldNextAction(error);
+    assert.equal(typeof nextAction, 'string');
+    assert.ok(nextAction.length > 0);
+    assert.notEqual(nextAction, explanation);
+  }
+});
+
+test('a rejected accession request never has its raw field values echoed in the field errors or next actions', () => {
+  const result = validateOHWorksAccessionRequest({
+    accessionRequestId: 'accession-synthetic-0003',
+    tenantId: 'tenant-synthetic-a',
+    specimen: { specimenId: 'specimen-synthetic-0003', specimenType: 'urine' },
+    order: { orderId: 'order-synthetic-0003', orderedAt: '2026-01-01T08:00:00.000Z' },
+    collection: { collectedAt: '2026-01-01T09:00:00.000Z', receivedAt: '2026-01-01T11:00:00.000Z' },
+    patientReference: { referenceId: 'jane.synthetic@example.com' },
+  });
+  assert.equal(result.valid, false);
+  if (result.valid) {
+    throw new Error('expected invalid result');
+  }
+  const serialized = JSON.stringify(
+    result.errors.map((error) => ({ ...error, next: explainAccessionFieldNextAction(error) })),
+  );
+  assert.doesNotMatch(serialized, /jane\.synthetic@example\.com/);
 });
