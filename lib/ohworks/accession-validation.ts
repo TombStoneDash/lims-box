@@ -298,3 +298,19 @@ const FIELD_ERROR_MESSAGES: Record<AccessionFieldErrorCode, string> = {
 export function explainAccessionFieldError(error: AccessionFieldError): string {
   return FIELD_ERROR_MESSAGES[error.code];
 }
+
+/** The concrete corrective step a submitter can take to fix a rejected field, keyed by error code. */
+const FIELD_ERROR_NEXT_ACTIONS: Record<AccessionFieldErrorCode, string> = {
+  'field-missing': 'Provide a value for this field and resubmit.',
+  'field-not-string': 'Provide this field as text and resubmit.',
+  'field-empty': 'Provide a non-blank value for this field and resubmit.',
+  'identifier-ambiguous': 'Reformat this identifier as a single unambiguous token, with no whitespace or delimiters, and resubmit.',
+  'identifier-suspected-phi': 'Replace this value with a de-identified reference code and resubmit.',
+  'date-invalid': 'Provide a parsable date and resubmit.',
+  'date-chronology-impossible': 'Correct this date so it is consistent with the other dates on this request and resubmit.',
+};
+
+/** Deterministic, privacy-safe next corrective action for a field error, suitable for UI display alongside the explanation. */
+export function explainAccessionFieldNextAction(error: AccessionFieldError): string {
+  return FIELD_ERROR_NEXT_ACTIONS[error.code];
+}

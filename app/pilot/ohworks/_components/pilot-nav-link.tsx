@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
-import { Activity, Bot, ClipboardCheck, FlaskConical, Gauge, Users } from 'lucide-react';
+import { Activity, Bot, ClipboardCheck, FlaskConical, Gauge, ShieldAlert, Users } from 'lucide-react';
 
 const icons = {
   activity: Activity,
@@ -10,6 +10,7 @@ const icons = {
   clipboard: ClipboardCheck,
   flask: FlaskConical,
   gauge: Gauge,
+  shieldAlert: ShieldAlert,
   users: Users,
 } as const;
 

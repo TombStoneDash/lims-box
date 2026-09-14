@@ -5,6 +5,7 @@ import {
   applyAccessionEvent,
   AccessionInputError,
   explainAccessionBlock,
+  explainAccessionBlockNextAction,
   runAccessionWorkflow,
   type AccessionBlockCode,
   type AccessionContext,
@@ -524,6 +525,24 @@ test('every block code has a non-empty, privacy-safe explanation', () => {
 
 test('explanations are stable across repeated calls for the same code', () => {
   assert.equal(explainAccessionBlock('tenant-mismatch'), explainAccessionBlock('tenant-mismatch'));
+});
+
+test('every block code has a non-empty, privacy-safe, distinct-from-explanation next action', () => {
+  for (const code of ALL_BLOCK_CODES) {
+    const explanation = explainAccessionBlock(code);
+    const nextAction = explainAccessionBlockNextAction(code);
+    assert.equal(typeof nextAction, 'string');
+    assert.ok(nextAction.length > 0);
+    assert.notEqual(nextAction, explanation);
+    assert.doesNotMatch(nextAction, /tenant-synthetic|sample-synthetic/);
+    for (const pattern of FORBIDDEN_WORDS) {
+      assert.doesNotMatch(nextAction, pattern);
+    }
+  }
+});
+
+test('next-action text is stable across repeated calls for the same code', () => {
+  assert.equal(explainAccessionBlockNextAction('timestamp-backwards'), explainAccessionBlockNextAction('timestamp-backwards'));
 });
 
 test('no accession states use testing, release, or approval language', () => {

@@ -3,6 +3,7 @@ import test from 'node:test';
 
 import {
   evaluateSampleAcceptance,
+  explainSampleRejectionNextAction,
   explainSampleRejectionReason,
   SampleRejectionInputError,
   type SampleAcceptanceDecision,
@@ -681,6 +682,27 @@ test('explanations are stable across repeated calls for the same code', () => {
   assert.equal(
     explainSampleRejectionReason({ code: 'timestamp-out-of-bound' }),
     explainSampleRejectionReason({ code: 'timestamp-out-of-bound' }),
+  );
+});
+
+test('every disposition reason code has a non-empty, privacy-safe, distinct-from-explanation next action', () => {
+  for (const code of ALL_REASON_CODES) {
+    const explanation = explainSampleRejectionReason({ code });
+    const nextAction = explainSampleRejectionNextAction({ code });
+    assert.equal(typeof nextAction, 'string');
+    assert.ok(nextAction.length > 0);
+    assert.notEqual(nextAction, explanation);
+    assert.doesNotMatch(nextAction, /sample-synthetic|tenant-synthetic|water-surface|soil-composite/);
+    for (const pattern of FORBIDDEN_WORDS) {
+      assert.doesNotMatch(nextAction, pattern);
+    }
+  }
+});
+
+test('next-action text is stable across repeated calls for the same code', () => {
+  assert.equal(
+    explainSampleRejectionNextAction({ code: 'timestamp-out-of-bound' }),
+    explainSampleRejectionNextAction({ code: 'timestamp-out-of-bound' }),
   );
 });
 
