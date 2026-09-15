@@ -188,6 +188,11 @@ function checkPatientReferenceIdentifier(
 
 type CheckedDate = { iso: string; epochMs: number };
 
+// Date.parse() accepts ambiguous/non-ISO shapes (date-only, locale-style,
+// space-separated). Require explicit date+time with Z or numeric offset.
+const STRICT_ISO_TIMESTAMP_PATTERN =
+  /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:\d{2})$/;
+
 function checkDate(
   raw: unknown,
   field: AccessionFieldPath,
@@ -195,6 +200,10 @@ function checkDate(
 ): CheckedDate | undefined {
   const trimmed = checkRequiredString(raw, field, errors);
   if (trimmed === undefined) {
+    return undefined;
+  }
+  if (!STRICT_ISO_TIMESTAMP_PATTERN.test(trimmed)) {
+    errors.push({ field, code: 'date-invalid' });
     return undefined;
   }
   const epochMs = Date.parse(trimmed);
