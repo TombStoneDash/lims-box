@@ -299,3 +299,41 @@ test('a rejected accession request never has its raw field values echoed in the 
   );
   assert.doesNotMatch(serialized, /jane\.synthetic@example\.com/);
 });
+
+test('rejects a date-only timestamp as date-invalid', () => {
+  const request = baselineRequest();
+  request.order.orderedAt = '2026-01-01';
+  const result = validateOHWorksAccessionRequest(request);
+  assert.equal(result.valid, false);
+  if (result.valid) throw new Error('expected invalid result');
+  assert.equal(findError(result.errors, 'order.orderedAt')?.code, 'date-invalid');
+});
+
+test('rejects a locale-style date as date-invalid', () => {
+  const request = baselineRequest();
+  request.collection.receivedAt = '01/02/2026';
+  const result = validateOHWorksAccessionRequest(request);
+  assert.equal(result.valid, false);
+  if (result.valid) throw new Error('expected invalid result');
+  assert.equal(findError(result.errors, 'collection.receivedAt')?.code, 'date-invalid');
+});
+
+test('rejects a space-separated timestamp as date-invalid', () => {
+  const request = baselineRequest();
+  request.collection.collectedAt = '2026-01-01 08:00:00Z';
+  const result = validateOHWorksAccessionRequest(request);
+  assert.equal(result.valid, false);
+  if (result.valid) throw new Error('expected invalid result');
+  assert.equal(findError(result.errors, 'collection.collectedAt')?.code, 'date-invalid');
+});
+
+test('accepts explicit Z and numeric-offset timestamps and normalizes to UTC', () => {
+  const request = baselineRequest();
+  request.order.orderedAt = '2026-01-01T08:00:00.000Z';
+  request.collection.collectedAt = '2026-01-01T03:00:00.000-05:00';
+  const result = validateOHWorksAccessionRequest(request);
+  assert.equal(result.valid, true);
+  if (!result.valid) throw new Error('expected valid result');
+  assert.equal(result.normalized.order.orderedAt, '2026-01-01T08:00:00.000Z');
+  assert.equal(result.normalized.collection.collectedAt, '2026-01-01T08:00:00.000Z');
+});
