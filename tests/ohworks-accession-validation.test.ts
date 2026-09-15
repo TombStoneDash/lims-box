@@ -327,6 +327,15 @@ test('rejects a space-separated timestamp as date-invalid', () => {
   assert.equal(findError(result.errors, 'collection.collectedAt')?.code, 'date-invalid');
 });
 
+test('rejects a calendar date that Date.parse would normalize into the next month', () => {
+  const request = baselineRequest();
+  request.order.orderedAt = '2026-02-30T08:00:00Z';
+  const result = validateOHWorksAccessionRequest(request);
+  assert.equal(result.valid, false);
+  if (result.valid) throw new Error('expected invalid result');
+  assert.equal(findError(result.errors, 'order.orderedAt')?.code, 'date-invalid');
+});
+
 test('accepts explicit Z and numeric-offset timestamps and normalizes to UTC', () => {
   const request = baselineRequest();
   request.order.orderedAt = '2026-01-01T08:00:00.000Z';

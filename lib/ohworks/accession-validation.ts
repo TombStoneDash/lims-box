@@ -193,6 +193,18 @@ type CheckedDate = { iso: string; epochMs: number };
 const STRICT_ISO_TIMESTAMP_PATTERN =
   /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:\d{2})$/;
 
+function hasValidCalendarDate(value: string): boolean {
+  const year = Number(value.slice(0, 4));
+  const month = Number(value.slice(5, 7));
+  const day = Number(value.slice(8, 10));
+  if (month < 1 || month > 12) {
+    return false;
+  }
+  const leapYear = year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
+  const daysInMonth = [31, leapYear ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+  return day >= 1 && day <= daysInMonth[month - 1];
+}
+
 function checkDate(
   raw: unknown,
   field: AccessionFieldPath,
@@ -202,7 +214,7 @@ function checkDate(
   if (trimmed === undefined) {
     return undefined;
   }
-  if (!STRICT_ISO_TIMESTAMP_PATTERN.test(trimmed)) {
+  if (!STRICT_ISO_TIMESTAMP_PATTERN.test(trimmed) || !hasValidCalendarDate(trimmed)) {
     errors.push({ field, code: 'date-invalid' });
     return undefined;
   }
