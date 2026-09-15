@@ -1,49 +1,28 @@
-import { NextRequest, NextResponse } from 'next/server';
 import {
   createPersonnelPackPostHandler,
-  loadDownloadableAsset,
+  resolveBundledAsset,
   type PersonnelPackDelivery,
 } from '@/lib/personnelPackFulfillment';
+import {
+  configuredDownloadClaimService,
+  createPersonnelPackGetHandler,
+} from '@/lib/personnelPackDownloadClaims';
 import { sendSubmissionNotice } from '@/lib/notify';
 import { getSupabase } from '@/lib/supabase';
 
 export const runtime = 'nodejs';
 
-export async function GET(request: NextRequest) {
-  const key = request.nextUrl.searchParams.get('asset') ?? 'iso15189';
-
-  let result;
-  try {
-    result = await loadDownloadableAsset(key);
-  } catch (error) {
-    console.error('[personnel-pack-download]', 'asset_unavailable', JSON.stringify({
-      asset: key,
-      stage: 'download',
-      error: error instanceof Error ? error.message : String(error),
-    }));
-    return NextResponse.json(
-      { error: 'Automatic fulfillment is temporarily unavailable. Email info@lims.bot directly.', code: 'asset_unavailable' },
-      { status: 503 },
-    );
-  }
-
-  if (!result) {
-    return NextResponse.json(
-      { error: 'Automatic fulfillment is currently available only for the reviewed ISO 15189 pack.', code: 'unsupported_pack_selection' },
-      { status: 404 },
-    );
-  }
-
-  return new NextResponse(result.bytes, {
-    status: 200,
-    headers: {
-      'Content-Type': 'application/pdf',
-      'Content-Disposition': `attachment; filename="${result.asset.downloadFilename}"`,
-      'Cache-Control': 'private, no-store',
-      'X-Content-Type-Options': 'nosniff',
-    },
-  });
-}
+/**
+ * The bare `?asset=<key>` URL stays intentionally public (see
+ * docs/personnel-pack-fulfillment-security.md) — a `claim` query param is an
+ * additive, optional freshness/anti-replay check for links this route itself
+ * mints via POST. Its absence never blocks a request; once present it must
+ * be well-formed, unexpired, unused, and bound to the requested asset, or the
+ * request fails closed. Claim-bearing requests require a stable configured
+ * signing key and a durable atomic claim store; missing infrastructure never
+ * falls back to process-local state.
+ */
+export const GET = createPersonnelPackGetHandler();
 
 async function createLead(record: { email: string; accred_type: string | null; source: 'personnel-pack-download' }) {
   const supabase = getSupabase();
@@ -113,8 +92,29 @@ async function sendPersonnelPackDelivery(
   }
 }
 
+/** Mints a fresh, single-use download claim for each newly issued delivery link. */
+async function resolveAssetWithDownloadClaim(
+  accredType: string | null,
+  origin: string,
+): Promise<PersonnelPackDelivery | null> {
+  const delivery = await resolveBundledAsset(accredType, origin);
+  if (!delivery) return null;
+
+  const url = new URL(delivery.assetUrl);
+  const asset = url.searchParams.get('asset');
+  if (!asset) return delivery;
+
+  const claims = configuredDownloadClaimService();
+  if (!claims) throw new Error('Applicant delivery is not configured');
+  const claim = claims.issue(asset);
+  url.searchParams.set('claim', claim);
+
+  return { ...delivery, assetUrl: url.toString() };
+}
+
 export const POST = createPersonnelPackPostHandler({
   createLead,
   sendSubmissionNotice,
   sendApplicantDelivery: sendPersonnelPackDelivery,
+  resolveAsset: resolveAssetWithDownloadClaim,
 });
