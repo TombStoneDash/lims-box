@@ -93,6 +93,7 @@ export default function EnvironmentalLabsPage() {
             <nav className="flex items-center gap-6 text-sm font-medium text-slate-600 dark:text-slate-300">
               <Link href="/pricing" className="hover:text-lab-teal transition-colors">Pricing</Link>
               <Link href="/demo" className="hover:text-lab-teal transition-colors">Demo</Link>
+              <Link href="/field-scout" className="hover:text-lab-teal transition-colors">Field Scout preview</Link>
               <Link href="/contact" className="hover:text-lab-teal transition-colors">Contact</Link>
             </nav>
           </div>

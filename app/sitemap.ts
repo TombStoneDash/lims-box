@@ -31,6 +31,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: '/webinar', priority: 0.7, changeFrequency: 'monthly' as const },
     { url: '/early-adopter', priority: 0.6, changeFrequency: 'monthly' as const },
     { url: '/start', priority: 0.6, changeFrequency: 'monthly' as const },
+    // Added 2026-08-08 — water-lane funnel discoverability (issue #72 pass)
+    { url: '/field-scout', priority: 0.8, changeFrequency: 'weekly' as const },
   ]
 
   const blogPosts = getAllPosts().map((post) => ({
