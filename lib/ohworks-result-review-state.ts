@@ -253,6 +253,26 @@ function isUtcTimestamp(value: string): boolean {
   return value.endsWith('Z') && Number.isFinite(Date.parse(value));
 }
 
+/** Rejects impossible calendar dates that `Date.parse` silently rolls forward instead of rejecting (e.g. 2026-02-30, non-leap 2026-02-29, 2026-04-31). */
+function isValidGregorianCalendarDate(value: string): boolean {
+  const match = /^(\d{4})-(\d{2})-(\d{2})T/.exec(value);
+  if (!match) {
+    return true;
+  }
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) {
+    return true;
+  }
+  return (
+    parsed.getUTCFullYear() === year &&
+    parsed.getUTCMonth() + 1 === month &&
+    parsed.getUTCDate() === day
+  );
+}
+
 /**
  * Evaluate a single candidate event against the current state and prior
  * history, and either accept it or return a bounded reason it was blocked.
@@ -299,7 +319,7 @@ export function applyResultReviewEvent(
   if (rawEvent.resultId !== context.resultId) {
     return block('result-id-mismatch');
   }
-  if (!Number.isFinite(Date.parse(rawEvent.occurredAt))) {
+  if (!Number.isFinite(Date.parse(rawEvent.occurredAt)) || !isValidGregorianCalendarDate(rawEvent.occurredAt)) {
     return block('timestamp-invalid');
   }
   if (!isUtcTimestamp(rawEvent.occurredAt)) {

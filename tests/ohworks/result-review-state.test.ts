@@ -416,6 +416,176 @@ test('a non-UTC (offset, non-"Z") timestamp fails closed', () => {
 });
 
 // ---------------------------------------------------------------------------
+// Impossible Gregorian calendar dates
+// ---------------------------------------------------------------------------
+
+test('February 30th fails closed as an invalid timestamp', () => {
+  const context = baselineContext();
+  const result = applyResultReviewEvent('draft', event({ occurredAt: '2026-02-30T10:00:00Z' }), [], context);
+  assert.equal(result.allowed, false);
+  assert.equal((result as { blockCode: ResultReviewBlockCode }).blockCode, 'timestamp-invalid');
+});
+
+test('February 29th in a non-leap year fails closed as an invalid timestamp', () => {
+  const context = baselineContext();
+  const result = applyResultReviewEvent('draft', event({ occurredAt: '2026-02-29T10:00:00Z' }), [], context);
+  assert.equal(result.allowed, false);
+  assert.equal((result as { blockCode: ResultReviewBlockCode }).blockCode, 'timestamp-invalid');
+});
+
+test('April 31st fails closed as an invalid timestamp (April has 30 days)', () => {
+  const context = baselineContext();
+  const result = applyResultReviewEvent('draft', event({ occurredAt: '2026-04-31T10:00:00Z' }), [], context);
+  assert.equal(result.allowed, false);
+  assert.equal((result as { blockCode: ResultReviewBlockCode }).blockCode, 'timestamp-invalid');
+});
+
+test('June 31st fails closed as an invalid timestamp (June has 30 days)', () => {
+  const context = baselineContext();
+  const result = applyResultReviewEvent('draft', event({ occurredAt: '2026-06-31T10:00:00Z' }), [], context);
+  assert.equal(result.allowed, false);
+  assert.equal((result as { blockCode: ResultReviewBlockCode }).blockCode, 'timestamp-invalid');
+});
+
+test('a zero month fails closed as an invalid timestamp', () => {
+  const context = baselineContext();
+  const result = applyResultReviewEvent('draft', event({ occurredAt: '2026-00-01T10:00:00Z' }), [], context);
+  assert.equal(result.allowed, false);
+  assert.equal((result as { blockCode: ResultReviewBlockCode }).blockCode, 'timestamp-invalid');
+});
+
+test('a month of 13 fails closed as an invalid timestamp', () => {
+  const context = baselineContext();
+  const result = applyResultReviewEvent('draft', event({ occurredAt: '2026-13-01T10:00:00Z' }), [], context);
+  assert.equal(result.allowed, false);
+  assert.equal((result as { blockCode: ResultReviewBlockCode }).blockCode, 'timestamp-invalid');
+});
+
+test('a zero day-of-month fails closed as an invalid timestamp', () => {
+  const context = baselineContext();
+  const result = applyResultReviewEvent('draft', event({ occurredAt: '2026-01-00T10:00:00Z' }), [], context);
+  assert.equal(result.allowed, false);
+  assert.equal((result as { blockCode: ResultReviewBlockCode }).blockCode, 'timestamp-invalid');
+});
+
+test('century year 1900 is not a leap year, so February 29th 1900 fails closed', () => {
+  const context = baselineContext();
+  const result = applyResultReviewEvent('draft', event({ occurredAt: '1900-02-29T10:00:00Z' }), [], context);
+  assert.equal(result.allowed, false);
+  assert.equal((result as { blockCode: ResultReviewBlockCode }).blockCode, 'timestamp-invalid');
+});
+
+test('century year 2100 is not a leap year, so February 29th 2100 fails closed', () => {
+  const context = baselineContext();
+  const result = applyResultReviewEvent('draft', event({ occurredAt: '2100-02-29T10:00:00Z' }), [], context);
+  assert.equal(result.allowed, false);
+  assert.equal((result as { blockCode: ResultReviewBlockCode }).blockCode, 'timestamp-invalid');
+});
+
+test('century year 2000 is a leap year (divisible by 400), so February 29th 2000 is accepted', () => {
+  const context = baselineContext();
+  const result = applyResultReviewEvent('draft', event({ occurredAt: '2000-02-29T10:00:00Z' }), [], context);
+  assert.equal(result.allowed, true);
+});
+
+test('an ordinary leap year, February 29th 2024 is accepted', () => {
+  const context = baselineContext();
+  const result = applyResultReviewEvent('draft', event({ occurredAt: '2024-02-29T10:00:00Z' }), [], context);
+  assert.equal(result.allowed, true);
+});
+
+test('an ordinary non-leap-year, non-February control date is accepted', () => {
+  const context = baselineContext();
+  const result = applyResultReviewEvent('draft', event({ occurredAt: '2026-03-15T10:00:00Z' }), [], context);
+  assert.equal(result.allowed, true);
+});
+
+test('the last valid day of a 30-day month is accepted', () => {
+  const context = baselineContext();
+  const result = applyResultReviewEvent('draft', event({ occurredAt: '2026-04-30T10:00:00Z' }), [], context);
+  assert.equal(result.allowed, true);
+});
+
+test('the last valid day of a 31-day month is accepted', () => {
+  const context = baselineContext();
+  const result = applyResultReviewEvent('draft', event({ occurredAt: '2026-01-31T10:00:00Z' }), [], context);
+  assert.equal(result.allowed, true);
+});
+
+test('a valid timestamp with millisecond precision is accepted (existing ISO form)', () => {
+  const context = baselineContext();
+  const result = applyResultReviewEvent('draft', event({ occurredAt: '2026-01-01T12:00:00.000Z' }), [], context);
+  assert.equal(result.allowed, true);
+});
+
+test('a valid timestamp without millisecond precision is accepted (existing ISO form)', () => {
+  const context = baselineContext();
+  const result = applyResultReviewEvent('draft', event({ occurredAt: '2026-01-01T12:00:00Z' }), [], context);
+  assert.equal(result.allowed, true);
+});
+
+test('a valid timestamp produced by Date#toISOString (native form) is accepted', () => {
+  const context = baselineContext();
+  const occurredAt = new Date('2026-05-15T09:30:00.000Z').toISOString();
+  const result = applyResultReviewEvent('draft', event({ occurredAt }), [], context);
+  assert.equal(result.allowed, true);
+});
+
+test('an impossible calendar date with a non-UTC offset still fails closed as invalid, not merely non-UTC', () => {
+  const context = baselineContext();
+  const result = applyResultReviewEvent('draft', event({ occurredAt: '2026-02-30T10:00:00.000+00:00' }), [], context);
+  assert.equal(result.allowed, false);
+  assert.equal((result as { blockCode: ResultReviewBlockCode }).blockCode, 'timestamp-invalid');
+});
+
+test('an impossible calendar date does not advance the workflow past draft', () => {
+  const events = [event({ eventId: 'e1', kind: 'submit_for_review', occurredAt: '2026-02-30T10:00:00Z' })];
+  const result = runResultReviewWorkflow(baselineContext(), events);
+  assert.equal(result.blocked, true);
+  assert.equal(result.finalState, 'draft');
+  assert.deepEqual(result.history, []);
+  assert.equal((result.steps.at(-1) as { blockCode: ResultReviewBlockCode }).blockCode, 'timestamp-invalid');
+});
+
+test('an impossible calendar date mid-workflow halts processing and leaves prior history and later events untouched', () => {
+  const events = [
+    event({ eventId: 'e1', kind: 'submit_for_review', occurredAt: '2026-01-01T12:00:00.000Z' }),
+    event({
+      eventId: 'e2',
+      kind: 'approve',
+      actorRole: 'reviewer',
+      actorId: 'actor-synthetic-reviewer-001',
+      reasonCode: 'meets-acceptance-criteria',
+      occurredAt: '2026-04-31T10:00:00Z',
+    }),
+    event({
+      eventId: 'e3',
+      kind: 'reject',
+      actorRole: 'reviewer',
+      actorId: 'actor-synthetic-reviewer-001',
+      reasonCode: 'qc-failure',
+      occurredAt: '2026-05-01T10:00:00Z',
+    }),
+  ];
+  const result = runResultReviewWorkflow(baselineContext(), events);
+  assert.equal(result.blocked, true);
+  assert.equal(result.finalState, 'ready_for_review');
+  assert.equal(result.history.length, 1);
+  assert.equal(result.history[0].eventId, 'e1');
+  assert.equal(result.steps.length, 2);
+  assert.equal((result.steps.at(-1) as { blockCode: ResultReviewBlockCode }).blockCode, 'timestamp-invalid');
+});
+
+test('rejecting an impossible calendar date leaves the caller-supplied event object unchanged', () => {
+  const context = baselineContext();
+  const original = event({ occurredAt: '2026-02-30T10:00:00Z' });
+  const before = JSON.stringify(original);
+  const result = applyResultReviewEvent('draft', original, [], context);
+  assert.equal(result.allowed, false);
+  assert.equal(JSON.stringify(original), before);
+});
+
+// ---------------------------------------------------------------------------
 // PII in audit metadata
 // ---------------------------------------------------------------------------
 
