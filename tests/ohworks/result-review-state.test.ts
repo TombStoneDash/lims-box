@@ -575,6 +575,38 @@ test('rejecting an impossible-date event does not mutate the caller-supplied eve
   assert.equal(JSON.stringify(raw), before);
 });
 
+test('all accepted timestamp families reject impossible dates while preserving paired valid controls', () => {
+  const context = baselineContext();
+  const pairs = [
+    ['ISO minute precision', '2026-02-28T10:00Z', '2026-02-30T10:00Z'],
+    ['space minute precision', '2026-02-28 10:00Z', '2026-02-30 10:00Z'],
+    ['RFC day first', '28 Feb 2026 10:00:00 Z', '30 Feb 2026 10:00:00 Z'],
+    ['text month first', 'Feb 28 2026 10:00:00 Z', 'Feb 30 2026 10:00:00 Z'],
+    ['slash year first', '2026/02/28 10:00:00Z', '2026/02/30 10:00:00Z'],
+    ['slash month first', '02/28/2026 10:00:00Z', '02/30/2026 10:00:00Z'],
+  ] as const;
+
+  for (const [label, valid, impossible] of pairs) {
+    const accepted = applyResultReviewEvent('draft', event({ eventId: `valid-${label}`, occurredAt: valid }), [], context);
+    assert.equal(accepted.allowed, true, `${label}: valid control must remain accepted`);
+    assert.equal(accepted.nextState, 'ready_for_review', `${label}: valid control must advance normally`);
+
+    const rejected = applyResultReviewEvent(
+      'draft',
+      event({ eventId: `invalid-${label}`, occurredAt: impossible }),
+      [],
+      context,
+    );
+    assert.equal(rejected.allowed, false, `${label}: impossible date must fail closed`);
+    assert.equal(rejected.nextState, 'draft', `${label}: impossible date must not advance the workflow`);
+    assert.equal(
+      (rejected as { blockCode: ResultReviewBlockCode }).blockCode,
+      'timestamp-invalid',
+      `${label}: impossible date must use the stable timestamp-invalid reason`,
+    );
+  }
+});
+
 // ---------------------------------------------------------------------------
 // PII in audit metadata
 // ---------------------------------------------------------------------------
