@@ -271,6 +271,54 @@ function toFiniteNumber(rawValue: unknown): number | undefined {
   return undefined;
 }
 
+/**
+ * Matches an ISO 8601 calendar date, optionally followed by a time-of-day
+ * with fractional seconds and a `Z` or explicit `+HH:MM` / `-HH:MM` offset.
+ * Only used to recover the literal year/month/day digits so they can be
+ * checked against the real calendar; the actual instant is still resolved by
+ * `Date.parse`, so every supported offset and format keeps working exactly
+ * as before once the calendar date itself is confirmed to exist.
+ */
+const ISO_CALENDAR_TIMESTAMP_PATTERN =
+  /^(\d{4})-(\d{2})-(\d{2})(?:T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})?)?$/;
+
+function isLeapYear(year: number): boolean {
+  return (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
+}
+
+function daysInMonth(year: number, month: number): number {
+  const DAYS_BY_MONTH = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+  if (month === 2 && isLeapYear(year)) {
+    return 29;
+  }
+  return DAYS_BY_MONTH[month - 1];
+}
+
+function isRealCalendarDate(year: number, month: number, day: number): boolean {
+  return month >= 1 && month <= 12 && day >= 1 && day <= daysInMonth(year, month);
+}
+
+/**
+ * Parses an ISO 8601 timestamp the same way `Date.parse` always has, except
+ * that a literal year/month/day that names no real calendar date (e.g.
+ * 2026-02-30) is rejected as unparsable instead of being silently rolled
+ * forward by the underlying Date implementation. This applies regardless of
+ * whether the timestamp is UTC (`Z`) or carries an explicit offset, because
+ * the offset never changes which calendar date was actually written.
+ */
+function parseCalendarTimestamp(value: string): number {
+  const match = ISO_CALENDAR_TIMESTAMP_PATTERN.exec(value);
+  if (match) {
+    const year = Number(match[1]);
+    const month = Number(match[2]);
+    const day = Number(match[3]);
+    if (!isRealCalendarDate(year, month, day)) {
+      return NaN;
+    }
+  }
+  return Date.parse(value);
+}
+
 const PII_PATTERNS: readonly RegExp[] = [
   /[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}/i,
   /\b(?:\+?1[\s.-]?)?\(?\d{3}\)?[\s.-]\d{3}[\s.-]\d{4}\b/,
@@ -318,7 +366,9 @@ function compilePolicy(rawPolicy: unknown): CompiledPolicy {
     fail('policy-timestamp-bound-invalid');
   }
   const timestampBound = policy.timestampBound;
-  const parsedReferenceTime = isNonEmptyString(timestampBound.referenceTime) ? Date.parse(timestampBound.referenceTime) : NaN;
+  const parsedReferenceTime = isNonEmptyString(timestampBound.referenceTime)
+    ? parseCalendarTimestamp(timestampBound.referenceTime)
+    : NaN;
   const maxAgeMs = timestampBound.maxAgeMs;
   if (!Number.isFinite(parsedReferenceTime) || !isFiniteNumber(maxAgeMs) || maxAgeMs < 0) {
     fail('policy-timestamp-bound-invalid');
@@ -566,7 +616,7 @@ function evaluateSingleSample(
     flag('seal-state-invalid');
   }
 
-  const collectedTime = Date.parse(sample.collectedAt);
+  const collectedTime = parseCalendarTimestamp(sample.collectedAt);
   if (!Number.isFinite(collectedTime)) {
     flag('timestamp-invalid');
   } else {

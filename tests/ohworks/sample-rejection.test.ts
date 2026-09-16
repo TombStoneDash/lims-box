@@ -360,6 +360,63 @@ test('an unparsable collection timestamp rejects', () => {
 });
 
 // ---------------------------------------------------------------------------
+// Impossible calendar dates (fail-open regression)
+// ---------------------------------------------------------------------------
+
+test('a Z-form collection timestamp naming a nonexistent calendar date (2026-02-30) rejects, not normalized forward', () => {
+  const samples = baselineSamples();
+  samples[0].collectedAt = '2026-02-30T11:30:00.000Z';
+  const decisions = evaluateSampleAcceptance(baselinePolicy(), samples);
+  const decision = decisionFor(decisions, 'sample-synthetic-1');
+  assert.equal(decision.status, 'REJECT');
+  assert.deepEqual(decision.reasons, [{ code: 'timestamp-invalid' }]);
+});
+
+test('an explicit-offset collection timestamp naming a nonexistent calendar date (2026-02-30+01:00) rejects, not normalized forward', () => {
+  const samples = baselineSamples();
+  samples[0].collectedAt = '2026-02-30T12:30:00+01:00';
+  const decisions = evaluateSampleAcceptance(baselinePolicy(), samples);
+  const decision = decisionFor(decisions, 'sample-synthetic-1');
+  assert.equal(decision.status, 'REJECT');
+  assert.deepEqual(decision.reasons, [{ code: 'timestamp-invalid' }]);
+});
+
+test('a Z-form policy reference time naming a nonexistent calendar date (2026-02-30) throws a sanitized typed error', () => {
+  const policy = baselinePolicy();
+  policy.timestampBound.referenceTime = '2026-02-30T12:00:00.000Z';
+  assertPolicyRejected(policy, 'policy-timestamp-bound-invalid');
+});
+
+test('an explicit-offset policy reference time naming a nonexistent calendar date (2026-02-30+01:00) throws a sanitized typed error', () => {
+  const policy = baselinePolicy();
+  policy.timestampBound.referenceTime = '2026-02-30T13:00:00+01:00';
+  assertPolicyRejected(policy, 'policy-timestamp-bound-invalid');
+});
+
+test('a valid leap day collection timestamp (2024-02-29) is accepted, not rejected as impossible', () => {
+  const policy = baselinePolicy();
+  policy.timestampBound.referenceTime = '2024-02-29T12:00:00.000Z';
+  const samples = baselineSamples();
+  samples[0].collectedAt = '2024-02-29T11:30:00.000Z';
+  const decisions = evaluateSampleAcceptance(policy, samples);
+  assert.equal(decisionFor(decisions, 'sample-synthetic-1').status, 'ACCEPT');
+});
+
+test('a collection timestamp with fractional seconds on a real calendar date is accepted', () => {
+  const samples = baselineSamples();
+  samples[0].collectedAt = '2026-01-01T11:30:00.123Z';
+  const decisions = evaluateSampleAcceptance(baselinePolicy(), samples);
+  assert.equal(decisionFor(decisions, 'sample-synthetic-1').status, 'ACCEPT');
+});
+
+test('a valid explicit-offset collection timestamp naming an equivalent instant to a Z timestamp is accepted', () => {
+  const samples = baselineSamples();
+  samples[0].collectedAt = '2026-01-01T12:30:00+01:00'; // same instant as 2026-01-01T11:30:00.000Z
+  const decisions = evaluateSampleAcceptance(baselinePolicy(), samples);
+  assert.equal(decisionFor(decisions, 'sample-synthetic-1').status, 'ACCEPT');
+});
+
+// ---------------------------------------------------------------------------
 // Tenant mismatch
 // ---------------------------------------------------------------------------
 
