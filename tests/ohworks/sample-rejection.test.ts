@@ -367,6 +367,8 @@ test('an unparsable collection timestamp rejects', () => {
 // ---------------------------------------------------------------------------
 
 const IMPOSSIBLE_DATE_SHAPES = [
+  { label: 'full UTC', impossible: '2026-02-30T12:00:00Z', valid: '2026-01-01T11:30:00Z' },
+  { label: 'explicit offset', impossible: '2026-02-30T13:00:00+01:00', valid: '2026-01-01T12:30:00+01:00' },
   { label: 'no-seconds', impossible: '2026-02-30T12:00Z', valid: '2026-01-01T11:30Z' },
   { label: 'space-separated', impossible: '2026-02-30 12:00:00Z', valid: '2026-01-01 11:30:00Z' },
   { label: 'lowercase t', impossible: '2026-02-30t12:00:00Z', valid: '2026-01-01t11:30:00Z' },
@@ -854,3 +856,39 @@ test('a rejected sample carrying an unsafe note never echoes the note text anywh
   assert.doesNotMatch(serialized, /jane\.synthetic@example\.com/);
   assert.doesNotMatch(serialized, /123-45-6789/);
 });
+
+// Preserve the native parser boundary while checking literal calendar fields.
+test('negative-zero expanded year rejects as an invalid collection timestamp', () => {
+  const sample = { ...baselineSamples()[0], collectedAt: '-000000-01-01T12:00:00Z' };
+  const [decision] = evaluateSampleAcceptance(baselinePolicy(), [sample]);
+  assert.equal(decision.status, 'REJECT');
+  assert.deepEqual(decision.reasons, [{ code: 'timestamp-invalid' }]);
+});
+
+test('negative-zero expanded year rejects as an invalid policy reference', () => {
+  const policy = baselinePolicy();
+  policy.timestampBound.referenceTime = '-000000-01-01T12:00:00Z';
+  assertPolicyRejected(policy, 'policy-timestamp-bound-invalid');
+});
+
+for (const [label, value, canonical] of [
+  ['date-only', '2026-01-01', '2026-01-01T00:00:00Z'],
+  ['lowercase UTC designator', '2026-01-01t12:00:00z', '2026-01-01T12:00:00Z'],
+]) {
+  test(`existing ${label} collection timestamps retain their accepted instant`, () => {
+    const policy = baselinePolicy();
+    policy.timestampBound = { referenceTime: canonical, maxAgeMs: 0 };
+    const sample = { ...baselineSamples()[0], collectedAt: value };
+    const [decision] = evaluateSampleAcceptance(policy, [sample]);
+    assert.equal(decision.status, 'ACCEPT');
+    assert.deepEqual(decision.reasons, []);
+  });
+  test(`existing ${label} policy timestamps retain their accepted instant`, () => {
+    const policy = baselinePolicy();
+    policy.timestampBound = { referenceTime: value, maxAgeMs: 0 };
+    const sample = { ...baselineSamples()[0], collectedAt: canonical };
+    const [decision] = evaluateSampleAcceptance(policy, [sample]);
+    assert.equal(decision.status, 'ACCEPT');
+    assert.deepEqual(decision.reasons, []);
+  });
+}
