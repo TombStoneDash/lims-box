@@ -360,6 +360,136 @@ test('an unparsable collection timestamp rejects', () => {
 });
 
 // ---------------------------------------------------------------------------
+// Impossible calendar dates (e.g. a February 30th) across every timestamp
+// shape the parser accepts, in both the collection (sample.collectedAt) and
+// policy (timestampBound.referenceTime) forms, plus a paired valid control
+// for every one of those accepted shapes proving it still parses correctly.
+// ---------------------------------------------------------------------------
+
+const IMPOSSIBLE_DATE_SHAPES = [
+  { label: 'no-seconds', impossible: '2026-02-30T12:00Z', valid: '2026-01-01T11:30Z' },
+  { label: 'space-separated', impossible: '2026-02-30 12:00:00Z', valid: '2026-01-01 11:30:00Z' },
+  { label: 'lowercase t', impossible: '2026-02-30t12:00:00Z', valid: '2026-01-01t11:30:00Z' },
+  { label: 'expanded signed year', impossible: '+002026-02-30T12:00:00Z', valid: '+002026-01-01T11:30:00Z' },
+];
+
+for (const shape of IMPOSSIBLE_DATE_SHAPES) {
+  test(`a collection timestamp with an impossible calendar date (${shape.label} form) rejects`, () => {
+    const samples = baselineSamples();
+    samples[0].collectedAt = shape.impossible;
+    const decisions = evaluateSampleAcceptance(baselinePolicy(), samples);
+    const decision = decisionFor(decisions, 'sample-synthetic-1');
+    assert.equal(decision.status, 'REJECT');
+    assert.deepEqual(decision.reasons, [{ code: 'timestamp-invalid' }]);
+  });
+
+  test(`a valid collection timestamp in the ${shape.label} form is still accepted`, () => {
+    const samples = baselineSamples();
+    samples[0].collectedAt = shape.valid;
+    const decisions = evaluateSampleAcceptance(baselinePolicy(), samples);
+    const decision = decisionFor(decisions, 'sample-synthetic-1');
+    assert.equal(decision.status, 'ACCEPT');
+    assert.deepEqual(decision.reasons, []);
+  });
+
+  test(`a policy reference time with an impossible calendar date (${shape.label} form) throws a sanitized typed error`, () => {
+    const policy = baselinePolicy();
+    policy.timestampBound.referenceTime = shape.impossible;
+    assertPolicyRejected(policy, 'policy-timestamp-bound-invalid');
+  });
+}
+
+test('a policy reference time in the no-seconds form parses to the same instant as the full form', () => {
+  const policy = baselinePolicy();
+  policy.timestampBound.referenceTime = '2026-01-01T12:00Z';
+  const decisions = evaluateSampleAcceptance(policy, baselineSamples());
+  for (const decision of decisions) {
+    assert.equal(decision.status, 'ACCEPT');
+    assert.deepEqual(decision.reasons, []);
+  }
+});
+
+test('a policy reference time in the space-separated form parses to the same instant as the full form', () => {
+  const policy = baselinePolicy();
+  policy.timestampBound.referenceTime = '2026-01-01 12:00:00Z';
+  const decisions = evaluateSampleAcceptance(policy, baselineSamples());
+  for (const decision of decisions) {
+    assert.equal(decision.status, 'ACCEPT');
+    assert.deepEqual(decision.reasons, []);
+  }
+});
+
+test('a policy reference time in the lowercase t form parses to the same instant as the full form', () => {
+  const policy = baselinePolicy();
+  policy.timestampBound.referenceTime = '2026-01-01t12:00:00Z';
+  const decisions = evaluateSampleAcceptance(policy, baselineSamples());
+  for (const decision of decisions) {
+    assert.equal(decision.status, 'ACCEPT');
+    assert.deepEqual(decision.reasons, []);
+  }
+});
+
+test('a policy reference time in the expanded signed year form parses to the same instant as the full form', () => {
+  const policy = baselinePolicy();
+  policy.timestampBound.referenceTime = '+002026-01-01T12:00:00Z';
+  const decisions = evaluateSampleAcceptance(policy, baselineSamples());
+  for (const decision of decisions) {
+    assert.equal(decision.status, 'ACCEPT');
+    assert.deepEqual(decision.reasons, []);
+  }
+});
+
+// ---------------------------------------------------------------------------
+// Preserved timestamp parsing behavior: 24:00:00 rollover, leap days,
+// fractional seconds, and explicit UTC offsets, none of which are impossible
+// calendar dates and must keep working exactly as before.
+// ---------------------------------------------------------------------------
+
+test('a collection timestamp of 24:00:00 still rolls over to the next day', () => {
+  const policy = baselinePolicy();
+  policy.timestampBound = { referenceTime: '2026-01-02T00:30:00.000Z', maxAgeMs: 60 * 60 * 1000 };
+  const samples = baselineSamples();
+  samples[0].collectedAt = '2026-01-01T24:00:00.000Z'; // equivalent to 2026-01-02T00:00:00.000Z
+  const decisions = evaluateSampleAcceptance(policy, samples);
+  const decision = decisionFor(decisions, 'sample-synthetic-1');
+  assert.equal(decision.status, 'ACCEPT');
+  assert.deepEqual(decision.reasons, []);
+});
+
+test('a leap day collection timestamp (2024-02-29) is accepted', () => {
+  const policy = baselinePolicy();
+  policy.timestampBound = { referenceTime: '2024-02-29T12:00:00.000Z', maxAgeMs: 0 };
+  const samples = baselineSamples();
+  samples[0].collectedAt = '2024-02-29T12:00:00.000Z';
+  const decisions = evaluateSampleAcceptance(policy, samples);
+  const decision = decisionFor(decisions, 'sample-synthetic-1');
+  assert.equal(decision.status, 'ACCEPT');
+  assert.deepEqual(decision.reasons, []);
+});
+
+test('fractional-second precision is preserved when computing freshness', () => {
+  const policy = baselinePolicy();
+  policy.timestampBound = { referenceTime: '2026-01-01T12:00:00.000Z', maxAgeMs: 1 };
+  const samples = baselineSamples();
+  samples[0].collectedAt = '2026-01-01T11:59:59.999Z'; // exactly 1ms before reference
+  const decisions = evaluateSampleAcceptance(policy, samples);
+  const decision = decisionFor(decisions, 'sample-synthetic-1');
+  assert.equal(decision.status, 'ACCEPT');
+  assert.deepEqual(decision.reasons, []);
+});
+
+test('an explicit UTC offset parses to the same instant as its Z equivalent', () => {
+  const policy = baselinePolicy();
+  policy.timestampBound = { referenceTime: '2026-01-01T12:00:00.000Z', maxAgeMs: 0 };
+  const samples = baselineSamples();
+  samples[0].collectedAt = '2026-01-01T07:00:00-05:00'; // equivalent to 2026-01-01T12:00:00.000Z
+  const decisions = evaluateSampleAcceptance(policy, samples);
+  const decision = decisionFor(decisions, 'sample-synthetic-1');
+  assert.equal(decision.status, 'ACCEPT');
+  assert.deepEqual(decision.reasons, []);
+});
+
+// ---------------------------------------------------------------------------
 // Tenant mismatch
 // ---------------------------------------------------------------------------
 

@@ -271,6 +271,108 @@ function toFiniteNumber(rawValue: unknown): number | undefined {
   return undefined;
 }
 
+/**
+ * Matches an ISO 8601 date-time: a basic 4-digit calendar year or a signed
+ * 6-digit expanded year, a 'T', 't', or single space date/time separator,
+ * optional seconds, optional fractional seconds, and a mandatory 'Z' or
+ * numeric offset. Calendar and clock ranges are validated separately below,
+ * since the grammar alone can't rule out e.g. a February 30th.
+ */
+// Capture groups (positional, not named, to stay compatible with this
+// project's ES2017 TypeScript target): 1 sign, 2 year, 3 month, 4 day,
+// 5 hour, 6 minute, 7 second, 8 fraction, 9 offset.
+const ISO_TIMESTAMP_PATTERN =
+  /^([+-])?(\d{4}|\d{6})-(\d{2})-(\d{2})[Tt ](\d{2}):(\d{2})(?::(\d{2})(?:\.(\d+))?)?(Z|[+-]\d{2}:?\d{2})$/;
+
+function isLeapYear(year: number): boolean {
+  return year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
+}
+
+function daysInMonth(year: number, month: number): number {
+  const lengths = [31, isLeapYear(year) ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+  return lengths[month - 1];
+}
+
+/**
+ * Parses a caller-supplied timestamp into an epoch millisecond instant,
+ * rejecting any string whose calendar date cannot exist (e.g. a February
+ * 30th) even when it is otherwise syntactically well formed. Deliberately
+ * does not delegate to the native Date parser: that parser silently rolls
+ * impossible calendar dates forward once the string strays from the single
+ * exact grammar it validates strictly (a different separator, an omitted
+ * seconds field, or an expanded signed year all fall through to a lenient
+ * legacy parser that never rejects an out-of-range day). A '24:00:00'
+ * (optionally with an all-zero fraction) is accepted as the ISO 8601
+ * end-of-day form and rolls over to the next day, matching the previously
+ * parseable rollover behavior.
+ */
+function parseIsoInstant(raw: string): number | undefined {
+  const match = ISO_TIMESTAMP_PATTERN.exec(raw);
+  if (!match) {
+    return undefined;
+  }
+  const [, sign, yearText, monthText, dayText, hourText, minuteText, secondText, fraction, offset] = match;
+
+  const hasSign = sign !== undefined;
+  const isExpandedYear = yearText.length === 6;
+  if (hasSign !== isExpandedYear) {
+    return undefined;
+  }
+
+  const year = (sign === '-' ? -1 : 1) * Number(yearText);
+  const month = Number(monthText);
+  const day = Number(dayText);
+  const hour = Number(hourText);
+  const minute = Number(minuteText);
+  const second = secondText === undefined ? 0 : Number(secondText);
+
+  if (month < 1 || month > 12) {
+    return undefined;
+  }
+  if (day < 1 || day > daysInMonth(year, month)) {
+    return undefined;
+  }
+  if (minute < 0 || minute > 59) {
+    return undefined;
+  }
+  if (second < 0 || second > 59) {
+    return undefined;
+  }
+
+  const fractionIsAllZero = fraction === undefined || /^0+$/.test(fraction);
+  const milliseconds = fraction === undefined ? 0 : Number(fraction.padEnd(3, '0').slice(0, 3));
+
+  if (hour === 24) {
+    if (minute !== 0 || second !== 0 || !fractionIsAllZero) {
+      return undefined;
+    }
+  } else if (hour < 0 || hour > 23) {
+    return undefined;
+  }
+
+  const instant = new Date(0);
+  instant.setUTCFullYear(year, month - 1, day);
+  instant.setUTCHours(hour, minute, second, milliseconds);
+  const wallClockMs = instant.getTime();
+  if (!Number.isFinite(wallClockMs)) {
+    return undefined;
+  }
+
+  if (offset === 'Z' || offset === 'z') {
+    return wallClockMs;
+  }
+
+  const offsetSign = offset[0] === '-' ? -1 : 1;
+  const offsetDigits = offset.slice(1).replace(':', '');
+  const offsetHours = Number(offsetDigits.slice(0, 2));
+  const offsetMinutes = Number(offsetDigits.slice(2, 4));
+  if (offsetHours > 23 || offsetMinutes > 59) {
+    return undefined;
+  }
+  const offsetMs = offsetSign * (offsetHours * 60 + offsetMinutes) * 60000;
+  return wallClockMs - offsetMs;
+}
+
 const PII_PATTERNS: readonly RegExp[] = [
   /[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}/i,
   /\b(?:\+?1[\s.-]?)?\(?\d{3}\)?[\s.-]\d{3}[\s.-]\d{4}\b/,
@@ -318,9 +420,9 @@ function compilePolicy(rawPolicy: unknown): CompiledPolicy {
     fail('policy-timestamp-bound-invalid');
   }
   const timestampBound = policy.timestampBound;
-  const parsedReferenceTime = isNonEmptyString(timestampBound.referenceTime) ? Date.parse(timestampBound.referenceTime) : NaN;
+  const parsedReferenceTime = isNonEmptyString(timestampBound.referenceTime) ? parseIsoInstant(timestampBound.referenceTime) : undefined;
   const maxAgeMs = timestampBound.maxAgeMs;
-  if (!Number.isFinite(parsedReferenceTime) || !isFiniteNumber(maxAgeMs) || maxAgeMs < 0) {
+  if (parsedReferenceTime === undefined || !isFiniteNumber(maxAgeMs) || maxAgeMs < 0) {
     fail('policy-timestamp-bound-invalid');
   }
 
@@ -566,8 +668,8 @@ function evaluateSingleSample(
     flag('seal-state-invalid');
   }
 
-  const collectedTime = Date.parse(sample.collectedAt);
-  if (!Number.isFinite(collectedTime)) {
+  const collectedTime = parseIsoInstant(sample.collectedAt);
+  if (collectedTime === undefined) {
     flag('timestamp-invalid');
   } else {
     const age = policy.parsedReferenceTime - collectedTime;
