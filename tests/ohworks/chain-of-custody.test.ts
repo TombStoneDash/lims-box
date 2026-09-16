@@ -220,6 +220,107 @@ test('throws CustodyChainInputError for an invalid eventType value', () => {
   );
 });
 
+test('rejects an impossible calendar date instead of rolling it over', () => {
+  const chain = baselineChain();
+  chain[0] = { ...chain[0], timestamp: '2026-02-30T12:00:00Z' };
+  const summary = validateCustodyChain('ref-synthetic-ts-impossible-day', chain);
+  assert.deepEqual(summary.failure, { transferIndex: 0, code: 'timestamp-invalid' });
+});
+
+test('rejects February 29 in a non-leap year', () => {
+  const chain = baselineChain();
+  chain[0] = { ...chain[0], timestamp: '2026-02-29T12:00:00Z' };
+  const summary = validateCustodyChain('ref-synthetic-ts-non-leap', chain);
+  assert.deepEqual(summary.failure, { transferIndex: 0, code: 'timestamp-invalid' });
+});
+
+test('accepts February 29 in a leap year', () => {
+  const summary = validateCustodyChain('ref-synthetic-ts-leap', [
+    baselineTransfer({ timestamp: '2028-02-29T12:00:00Z' }),
+  ]);
+  assert.equal(summary.status, 'VALID');
+});
+
+test('rejects a month outside 1-12', () => {
+  const chain = baselineChain();
+  chain[0] = { ...chain[0], timestamp: '2026-13-01T12:00:00Z' };
+  const summary = validateCustodyChain('ref-synthetic-ts-bad-month', chain);
+  assert.deepEqual(summary.failure, { transferIndex: 0, code: 'timestamp-invalid' });
+});
+
+test('rejects an out-of-range hour, minute, or second', () => {
+  for (const timestamp of ['2026-01-01T24:00:00Z', '2026-01-01T12:60:00Z', '2026-01-01T12:00:60Z']) {
+    const summary = validateCustodyChain('ref-synthetic-ts-bad-clock', [baselineTransfer({ timestamp })]);
+    assert.deepEqual(summary.failure, { transferIndex: 0, code: 'timestamp-invalid' }, `expected ${timestamp} to be rejected`);
+  }
+});
+
+test('rejects a timestamp with no timezone designator', () => {
+  for (const timestamp of ['2026-01-01T12:00:00', '2026-01-01T12:00:00.000', '2026-01-01']) {
+    const summary = validateCustodyChain('ref-synthetic-ts-no-tz', [baselineTransfer({ timestamp })]);
+    assert.deepEqual(summary.failure, { transferIndex: 0, code: 'timestamp-invalid' }, `expected ${timestamp} to be rejected`);
+  }
+});
+
+test('rejects a timezone offset with an out-of-range hour or minute component', () => {
+  for (const timestamp of ['2026-01-01T12:00:00+24:00', '2026-01-01T12:00:00+02:60']) {
+    const summary = validateCustodyChain('ref-synthetic-ts-bad-offset', [baselineTransfer({ timestamp })]);
+    assert.deepEqual(summary.failure, { transferIndex: 0, code: 'timestamp-invalid' }, `expected ${timestamp} to be rejected`);
+  }
+});
+
+test('accepts a numeric-offset timestamp equivalent to Z and orders by absolute instant', () => {
+  const summary = validateCustodyChain('ref-synthetic-ts-offset-order', [
+    baselineTransfer({
+      releasingActor: 'actor-synthetic-a',
+      receivingActor: 'actor-synthetic-b',
+      timestamp: '2026-01-01T12:00:00+02:00',
+    }),
+    baselineTransfer({
+      releasingActor: 'actor-synthetic-b',
+      receivingActor: 'actor-synthetic-c',
+      timestamp: '2026-01-01T10:30:00.000Z',
+    }),
+  ]);
+  assert.equal(summary.status, 'VALID');
+});
+
+test('validation and ordering are invariant across process timezones', () => {
+  const originalTz = process.env.TZ;
+  const chain = baselineChain();
+  const noTzTimestamp = '2026-01-01T12:00:00.000';
+  const impossibleDate = '2026-02-30T12:00:00Z';
+  const zones = ['UTC', 'Pacific/Kiritimati', 'Pacific/Niue', 'Asia/Kathmandu'];
+
+  try {
+    const results = zones.map((zone) => {
+      process.env.TZ = zone;
+      return {
+        wellFormed: validateCustodyChain('ref-synthetic-tz-well-formed', chain),
+        noTz: validateCustodyChain('ref-synthetic-tz-no-tz', [baselineTransfer({ timestamp: noTzTimestamp })]),
+        impossible: validateCustodyChain('ref-synthetic-tz-impossible', [
+          baselineTransfer({ timestamp: impossibleDate }),
+        ]),
+      };
+    });
+
+    for (const result of results) {
+      assert.deepEqual(result.wellFormed, results[0].wellFormed);
+      assert.deepEqual(result.noTz, results[0].noTz);
+      assert.deepEqual(result.impossible, results[0].impossible);
+    }
+    assert.equal(results[0].wellFormed.status, 'VALID');
+    assert.deepEqual(results[0].noTz.failure, { transferIndex: 0, code: 'timestamp-invalid' });
+    assert.deepEqual(results[0].impossible.failure, { transferIndex: 0, code: 'timestamp-invalid' });
+  } finally {
+    if (originalTz === undefined) {
+      delete process.env.TZ;
+    } else {
+      process.env.TZ = originalTz;
+    }
+  }
+});
+
 test('explainCustodyChainReason and explainCustodyChainNextAction cover every reason code', () => {
   const codes: CustodyChainReasonCode[] = [
     'custody-gap',
