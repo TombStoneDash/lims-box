@@ -254,6 +254,49 @@ function isUtcTimestamp(value: string): boolean {
 }
 
 /**
+ * Matches the Y-M-D prefix of the calendar-date timestamp shapes this
+ * workflow accepts (ordinary ISO, one-digit month-day, space-separated,
+ * date-only, and signed extended-year), each optionally followed by a time
+ * component and a "Z" or numeric offset. Textual forms such as RFC-style
+ * UTC ("Thu, 01 Jan 2026 12:00:00 Z") never match and are left to
+ * `Date.parse` alone, since this workflow does not attempt calendar
+ * validation for those.
+ */
+const CALENDAR_DATE_PATTERN =
+  /^([+-]\d{6}|\d{4})-(\d{1,2})-(\d{1,2})(?:[T ]\d{1,2}:\d{1,2}:\d{1,2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})?|Z)?$/;
+
+function isLeapYear(year: number): boolean {
+  return year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
+}
+
+function daysInMonth(year: number, month: number): number {
+  const DAYS_BY_MONTH = [31, isLeapYear(year) ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+  return DAYS_BY_MONTH[month - 1];
+}
+
+/**
+ * `Date.parse` silently rolls impossible calendar dates (e.g. "2026-02-30",
+ * a non-leap Feb 30) forward into the next valid date instead of rejecting
+ * them, which would otherwise let a fabricated out-of-range day advance
+ * this workflow as if it were a legitimate event. This checks the literal
+ * Y-M-D digits against the actual length of that month/year, independent
+ * of whatever `Date.parse` computed.
+ */
+function hasImpossibleCalendarDate(value: string): boolean {
+  const match = CALENDAR_DATE_PATTERN.exec(value);
+  if (!match) {
+    return false;
+  }
+  const year = Number.parseInt(match[1], 10);
+  const month = Number.parseInt(match[2], 10);
+  const day = Number.parseInt(match[3], 10);
+  if (month < 1 || month > 12) {
+    return true;
+  }
+  return day < 1 || day > daysInMonth(year, month);
+}
+
+/**
  * Evaluate a single candidate event against the current state and prior
  * history, and either accept it or return a bounded reason it was blocked.
  *
@@ -299,7 +342,7 @@ export function applyResultReviewEvent(
   if (rawEvent.resultId !== context.resultId) {
     return block('result-id-mismatch');
   }
-  if (!Number.isFinite(Date.parse(rawEvent.occurredAt))) {
+  if (!Number.isFinite(Date.parse(rawEvent.occurredAt)) || hasImpossibleCalendarDate(rawEvent.occurredAt)) {
     return block('timestamp-invalid');
   }
   if (!isUtcTimestamp(rawEvent.occurredAt)) {
