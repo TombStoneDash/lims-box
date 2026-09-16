@@ -11,11 +11,11 @@
  * when the result is not `on_target`.
  *
  * This module performs no I/O and reads no clock: every timestamp it
- * reasons about is supplied by the caller. A missing or unparsable stage
- * timestamp, a negative stage duration (raw, or after paused time is
- * subtracted), a malformed paused interval, or an unrecognized priority
- * class all fail closed by throwing TurnaroundTimeInputError rather than
- * guessing.
+ * reasons about is supplied by the caller. A missing, unparsable, or
+ * non-existent-calendar-date stage timestamp, a negative stage duration
+ * (raw, or after paused time is subtracted), a malformed or overlapping
+ * paused interval, or an unrecognized priority class all fail closed by
+ * throwing TurnaroundTimeInputError rather than guessing.
  */
 
 /** The three pipeline stages this module measures, in chronological order. */
@@ -120,9 +120,11 @@ export type TurnaroundTimeInputErrorCode =
   | 'timestamps-missing'
   | 'timestamp-invalid'
   | 'timestamp-not-utc'
+  | 'timestamp-nonexistent-date'
   | 'stage-duration-negative'
   | 'paused-intervals-not-array'
-  | 'paused-interval-invalid';
+  | 'paused-interval-invalid'
+  | 'paused-interval-overlap';
 
 const INPUT_ERROR_MESSAGES: Record<TurnaroundTimeInputErrorCode, string> = {
   'input-malformed': 'The turnaround-time input is not a valid object.',
@@ -130,9 +132,11 @@ const INPUT_ERROR_MESSAGES: Record<TurnaroundTimeInputErrorCode, string> = {
   'timestamps-missing': 'One or more required stage timestamps is missing.',
   'timestamp-invalid': 'A stage timestamp could not be parsed.',
   'timestamp-not-utc': 'A stage timestamp is not an explicit UTC timestamp.',
+  'timestamp-nonexistent-date': 'A timestamp does not name a real UTC calendar instant.',
   'stage-duration-negative': 'A stage duration is negative, either before or after subtracting paused time.',
   'paused-intervals-not-array': 'The paused intervals input is not a list.',
   'paused-interval-invalid': 'A paused interval is missing a required field, unparsable, or ends before it starts.',
+  'paused-interval-overlap': 'Two or more paused intervals overlap in time.',
 };
 
 /** Thrown for structurally unusable input that cannot be safely assigned a fail-closed result. */
@@ -156,6 +160,46 @@ function isUtcTimestamp(value: string): boolean {
   return value.endsWith('Z') && Number.isFinite(Date.parse(value));
 }
 
+const ISO_UTC_TIMESTAMP_PATTERN = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.\d{1,9})?Z$/;
+
+function isLeapYear(year: number): boolean {
+  return year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
+}
+
+const DAYS_IN_MONTH = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+
+/**
+ * Rejects ISO-8601 UTC timestamps whose calendar fields do not name a real
+ * instant, e.g. "2026-02-30T12:00:00Z". `Date.parse` silently rolls values
+ * like this over into the following month rather than failing, so calendar
+ * validity must be checked against the literal digits, not the parsed value.
+ */
+function namesRealCalendarUtcInstant(value: string): boolean {
+  const match = ISO_UTC_TIMESTAMP_PATTERN.exec(value);
+  if (!match) {
+    return false;
+  }
+  const [, yearStr, monthStr, dayStr, hourStr, minuteStr, secondStr] = match;
+  const year = Number(yearStr);
+  const month = Number(monthStr);
+  const day = Number(dayStr);
+  const hour = Number(hourStr);
+  const minute = Number(minuteStr);
+  const second = Number(secondStr);
+
+  if (month < 1 || month > 12) {
+    return false;
+  }
+  const daysInMonth = month === 2 && isLeapYear(year) ? 29 : DAYS_IN_MONTH[month - 1];
+  if (day < 1 || day > daysInMonth) {
+    return false;
+  }
+  if (hour > 23 || minute > 59 || second > 59) {
+    return false;
+  }
+  return true;
+}
+
 function parseRequiredTimestamp(value: unknown): number {
   if (!isNonEmptyString(value)) {
     throw new TurnaroundTimeInputError('timestamps-missing');
@@ -165,6 +209,9 @@ function parseRequiredTimestamp(value: unknown): number {
   }
   if (!isUtcTimestamp(value)) {
     throw new TurnaroundTimeInputError('timestamp-not-utc');
+  }
+  if (!namesRealCalendarUtcInstant(value)) {
+    throw new TurnaroundTimeInputError('timestamp-nonexistent-date');
   }
   return Date.parse(value);
 }
@@ -198,13 +245,33 @@ function parsePausedIntervals(raw: unknown): ParsedPausedInterval[] {
     if (!Number.isFinite(Date.parse(endedAt)) || !isUtcTimestamp(endedAt)) {
       throw new TurnaroundTimeInputError('paused-interval-invalid');
     }
+    if (!namesRealCalendarUtcInstant(startedAt) || !namesRealCalendarUtcInstant(endedAt)) {
+      throw new TurnaroundTimeInputError('paused-interval-invalid');
+    }
     const startMs = Date.parse(startedAt);
     const endMs = Date.parse(endedAt);
     if (endMs < startMs) {
       throw new TurnaroundTimeInputError('paused-interval-invalid');
     }
     return { startMs, endMs };
-  });
+  }).sort((a, b) => a.startMs - b.startMs || a.endMs - b.endMs);
+}
+
+/**
+ * Rejects duplicate, nested, and partially overlapping paused intervals so
+ * they cannot be silently double-subtracted from the same stage window.
+ * Intervals that merely touch at a shared boundary (adjacent) or do not
+ * overlap at all remain valid. `intervals` must already be sorted by
+ * startMs.
+ */
+function assertNoOverlappingPausedIntervals(intervals: readonly ParsedPausedInterval[]): void {
+  let maxEndSoFarMs = -Infinity;
+  for (const interval of intervals) {
+    if (interval.startMs < maxEndSoFarMs) {
+      throw new TurnaroundTimeInputError('paused-interval-overlap');
+    }
+    maxEndSoFarMs = Math.max(maxEndSoFarMs, interval.endMs);
+  }
 }
 
 function overlapMs(aStart: number, aEnd: number, bStart: number, bEnd: number): number {
@@ -216,10 +283,10 @@ function overlapMs(aStart: number, aEnd: number, bStart: number, bEnd: number): 
  * for a single specimen from caller-supplied timestamps.
  *
  * Fails closed (throws TurnaroundTimeInputError) on: a malformed input
- * object; an unrecognized priority class; a missing, unparsable, or
- * non-UTC stage timestamp; a malformed paused interval; and a negative
- * stage duration, whether from out-of-order timestamps or from paused time
- * exceeding a stage's raw span.
+ * object; an unrecognized priority class; a missing, unparsable, non-UTC,
+ * or non-existent-calendar-date stage timestamp; a malformed or overlapping
+ * paused interval; and a negative stage duration, whether from out-of-order
+ * timestamps or from paused time exceeding a stage's raw span.
  */
 export function computeTurnaroundTime(input: TurnaroundInput): TurnaroundResult {
   if (typeof input !== 'object' || input === null) {
@@ -254,6 +321,7 @@ export function computeTurnaroundTime(input: TurnaroundInput): TurnaroundResult 
   }
 
   const pausedIntervals = parsePausedIntervals(input.pausedIntervals);
+  assertNoOverlappingPausedIntervals(pausedIntervals);
 
   const stages: TurnaroundStageDuration[] = TURNAROUND_STAGES.map((stage) => {
     const window = stageWindows[stage];

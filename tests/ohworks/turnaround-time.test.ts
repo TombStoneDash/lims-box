@@ -147,18 +147,73 @@ test('a paused interval outside every stage window contributes no paused time', 
   assert.equal(result.totalDurationMinutes, 65);
 });
 
-test('fails closed when overlapping paused intervals subtract more than a stage raw duration', () => {
+test('fails closed on duplicate paused intervals instead of silently double-subtracting them', () => {
   const paused: PausedInterval[] = [
     { startedAt: ts(45), endedAt: ts(60) },
     { startedAt: ts(45), endedAt: ts(60) },
   ];
   assert.throws(
     () => computeTurnaroundTime(buildInput('STAT', [15, 30, 15], paused)),
-    (error: unknown) =>
-      error instanceof TurnaroundTimeInputError &&
-      error.code === 'stage-duration-negative' &&
-      error.stage === 'analysis_to_report',
+    (error: unknown) => error instanceof TurnaroundTimeInputError && error.code === 'paused-interval-overlap',
   );
+});
+
+test('fails closed on a nested paused interval instead of silently double-subtracting it', () => {
+  const paused: PausedInterval[] = [
+    { startedAt: ts(0), endedAt: ts(30) },
+    { startedAt: ts(10), endedAt: ts(20) },
+  ];
+  assert.throws(
+    () => computeTurnaroundTime(buildInput('STAT', [15, 30, 15], paused)),
+    (error: unknown) => error instanceof TurnaroundTimeInputError && error.code === 'paused-interval-overlap',
+  );
+});
+
+test('fails closed on a partially overlapping paused interval instead of silently double-subtracting the overlap', () => {
+  const paused: PausedInterval[] = [
+    { startedAt: ts(0), endedAt: ts(20) },
+    { startedAt: ts(10), endedAt: ts(30) },
+  ];
+  assert.throws(
+    () => computeTurnaroundTime(buildInput('STAT', [15, 30, 15], paused)),
+    (error: unknown) => error instanceof TurnaroundTimeInputError && error.code === 'paused-interval-overlap',
+  );
+});
+
+test('fails closed on overlapping paused intervals declared out of order', () => {
+  const paused: PausedInterval[] = [
+    { startedAt: ts(10), endedAt: ts(30) },
+    { startedAt: ts(0), endedAt: ts(20) },
+  ];
+  assert.throws(
+    () => computeTurnaroundTime(buildInput('STAT', [15, 30, 15], paused)),
+    (error: unknown) => error instanceof TurnaroundTimeInputError && error.code === 'paused-interval-overlap',
+  );
+});
+
+test('preserves valid adjacent paused intervals that merely touch at a shared boundary', () => {
+  const paused: PausedInterval[] = [
+    { startedAt: ts(0), endedAt: ts(10) },
+    { startedAt: ts(10), endedAt: ts(20) },
+  ];
+  const result = computeTurnaroundTime(buildInput('STAT', [15, 30, 15], paused));
+
+  assert.equal(result.totalPausedMinutes, 20);
+  const c2r = result.stages.find((s) => s.stage === 'collection_to_receipt')!;
+  assert.equal(c2r.pausedMinutes, 15);
+});
+
+test('preserves valid non-overlapping paused intervals across stages, unchanged behavior', () => {
+  const paused: PausedInterval[] = [
+    { startedAt: ts(5), endedAt: ts(10) },
+    { startedAt: ts(22), endedAt: ts(25) },
+    { startedAt: ts(30), endedAt: ts(33) },
+  ];
+  const result = computeTurnaroundTime(buildInput('STAT', [20, 25, 20], paused));
+
+  assert.equal(result.totalPausedMinutes, 11);
+  assert.equal(result.totalDurationMinutes, 54);
+  assert.equal(result.status, 'at_risk');
 });
 
 test('fails closed on a negative raw stage duration from out-of-order timestamps', () => {
@@ -213,6 +268,60 @@ test('fails closed on a non-UTC (no trailing Z) stage timestamp', () => {
   assert.throws(
     () => computeTurnaroundTime(input),
     (error: unknown) => error instanceof TurnaroundTimeInputError && error.code === 'timestamp-not-utc',
+  );
+});
+
+test('fails closed on a stage timestamp naming a nonexistent calendar date instead of normalizing it', () => {
+  const input = buildInput('STAT', [15, 30, 15]);
+  input.timestamps.collectedAt = '2026-02-30T12:00:00.000Z';
+  assert.throws(
+    () => computeTurnaroundTime(input),
+    (error: unknown) => error instanceof TurnaroundTimeInputError && error.code === 'timestamp-nonexistent-date',
+  );
+});
+
+test('fails closed on an out-of-range month, which Date.parse cannot parse at all', () => {
+  const monthInput = buildInput('STAT', [15, 30, 15]);
+  monthInput.timestamps.receivedAt = '2026-13-01T00:00:00.000Z';
+  assert.throws(
+    () => computeTurnaroundTime(monthInput),
+    (error: unknown) => error instanceof TurnaroundTimeInputError && error.code === 'timestamp-invalid',
+  );
+});
+
+test('fails closed on an out-of-range hour, which Date.parse normalizes into the next day instead of rejecting', () => {
+  const hourInput = buildInput('STAT', [15, 30, 15]);
+  hourInput.timestamps.reportedAt = '2026-01-02T24:00:00.000Z';
+  assert.throws(
+    () => computeTurnaroundTime(hourInput),
+    (error: unknown) => error instanceof TurnaroundTimeInputError && error.code === 'timestamp-nonexistent-date',
+  );
+});
+
+test('accepts February 29 on a leap year but rejects it on a non-leap year', () => {
+  const leapInput = buildInput('STAT', [1, 2, 1]);
+  leapInput.timestamps.collectedAt = '2024-02-29T00:00:00.000Z';
+  leapInput.timestamps.receivedAt = '2024-02-29T00:01:00.000Z';
+  leapInput.timestamps.analyzedAt = '2024-02-29T00:03:00.000Z';
+  leapInput.timestamps.reportedAt = '2024-02-29T00:04:00.000Z';
+  const result = computeTurnaroundTime(leapInput);
+  assert.equal(result.status, 'on_target');
+
+  const nonLeapInput = buildInput('STAT', [15, 30, 15]);
+  nonLeapInput.timestamps.collectedAt = '2026-02-29T00:00:00.000Z';
+  assert.throws(
+    () => computeTurnaroundTime(nonLeapInput),
+    (error: unknown) => error instanceof TurnaroundTimeInputError && error.code === 'timestamp-nonexistent-date',
+  );
+});
+
+test('fails closed on a paused interval naming a nonexistent calendar date', () => {
+  const input = buildInput('STAT', [15, 30, 15], [
+    { startedAt: '2026-02-30T00:00:00.000Z', endedAt: ts(10) },
+  ]);
+  assert.throws(
+    () => computeTurnaroundTime(input),
+    (error: unknown) => error instanceof TurnaroundTimeInputError && error.code === 'paused-interval-invalid',
   );
 });
 
