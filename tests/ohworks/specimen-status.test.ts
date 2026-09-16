@@ -209,6 +209,133 @@ test('throws SpecimenStatusInputError for a non-object record', () => {
   );
 });
 
+// --- PR153 calendar-correction regression corpus -------------------------
+//
+// PR153's reviewed helper fell back to "not invalid" whenever a single
+// canonical regex (full millisecond precision, uppercase "T", plain
+// 4-digit year) failed to match, so every other accepted timestamp form
+// bypassed calendar validation entirely and impossible dates like
+// February 30th completed instead of failing closed. These cases pin
+// calendar/clock validity across every accepted form.
+
+test('accepts a valid Feb 28 date in a non-leap year', () => {
+  const [view] = projectSpecimenStatuses(
+    [baselineRecord({ updatedAt: '2026-02-28T12:00:00.000Z' })],
+    baselineContext(),
+  );
+  assert.equal(view.status, 'received');
+  assert.equal(view.reasonCode, undefined);
+});
+
+test('accepts a valid Feb 29 leap day', () => {
+  const [view] = projectSpecimenStatuses(
+    [baselineRecord({ updatedAt: '2028-02-29T12:00:00.000Z' })],
+    baselineContext(),
+  );
+  assert.equal(view.status, 'received');
+  assert.equal(view.reasonCode, undefined);
+});
+
+const VALID_ALTERNATE_FORMS = [
+  { label: 'minute precision', updatedAt: '2026-01-05T12:00Z' },
+  { label: 'space separator', updatedAt: '2026-01-05 12:00:00Z' },
+  { label: 'lowercase-t separator', updatedAt: '2026-01-05t12:00:00Z' },
+  { label: 'expanded year', updatedAt: '+002026-01-05T12:00:00.000Z' },
+  { label: 'single-digit fractional seconds', updatedAt: '2026-01-05T12:00:00.5Z' },
+  { label: 'microsecond-scale fractional seconds', updatedAt: '2026-01-05T12:00:00.123456Z' },
+];
+
+for (const { label, updatedAt } of VALID_ALTERNATE_FORMS) {
+  test(`accepts a valid calendar date using the ${label} form`, () => {
+    const [view] = projectSpecimenStatuses([baselineRecord({ updatedAt })], baselineContext());
+    assert.equal(view.status, 'received', `${label}: expected acceptance for ${updatedAt}`);
+    assert.equal(view.reasonCode, undefined);
+    assert.deepEqual(Object.keys(view).sort(), ['referenceToken', 'status']);
+  });
+}
+
+const IMPOSSIBLE_FEB_30_FORMS = [
+  { label: 'full millisecond precision', updatedAt: '2026-02-30T12:00:00.000Z' },
+  { label: 'minute precision', updatedAt: '2026-02-30T12:00Z' },
+  { label: 'space separator', updatedAt: '2026-02-30 12:00:00Z' },
+  { label: 'lowercase-t separator', updatedAt: '2026-02-30t12:00:00Z' },
+  { label: 'expanded year', updatedAt: '+002026-02-30T12:00:00.000Z' },
+];
+
+for (const { label, updatedAt } of IMPOSSIBLE_FEB_30_FORMS) {
+  test(`rejects the impossible date Feb 30 in the ${label} form`, () => {
+    const [view] = projectSpecimenStatuses([baselineRecord({ updatedAt })], baselineContext());
+    assert.equal(view.status, 'exception', `${label}: expected fail-closed for ${updatedAt}`);
+    assert.equal(view.reasonCode, 'timestamp-invalid');
+  });
+}
+
+const OTHER_IMPOSSIBLE_CALENDAR_VALUES = [
+  { label: 'Feb 29 in a non-leap year', updatedAt: '2026-02-29T12:00:00.000Z' },
+  { label: 'April 31st (April has 30 days)', updatedAt: '2026-04-31T12:00:00.000Z' },
+  { label: 'month 13', updatedAt: '2026-13-01T12:00:00.000Z' },
+  { label: 'day 0', updatedAt: '2026-01-00T12:00:00.000Z' },
+  { label: 'hour 24', updatedAt: '2026-01-01T24:00:00.000Z' },
+  { label: 'minute 60', updatedAt: '2026-01-01T12:60:00.000Z' },
+  { label: 'second 60', updatedAt: '2026-01-01T12:00:60.000Z' },
+];
+
+for (const { label, updatedAt } of OTHER_IMPOSSIBLE_CALENDAR_VALUES) {
+  test(`rejects the impossible calendar/clock value: ${label}`, () => {
+    const [view] = projectSpecimenStatuses([baselineRecord({ updatedAt })], baselineContext());
+    assert.equal(view.status, 'exception', `${label}: expected fail-closed for ${updatedAt}`);
+    assert.equal(view.reasonCode, 'timestamp-invalid');
+  });
+}
+
+const UNSUPPORTED_FORMS_FAIL_CLOSED = [
+  { label: 'date with no time component', updatedAt: '2026-01-01' },
+  { label: 'ordinal (day-of-year) date', updatedAt: '2026-060T12:00:00Z' },
+  { label: 'ISO week date', updatedAt: '2026-W09-1T12:00:00Z' },
+  { label: 'out-of-range expanded year', updatedAt: '+999999-01-01T12:00:00Z' },
+  { label: 'negative-zero expanded year', updatedAt: '-000000-01-01T12:00:00Z' },
+];
+
+for (const { label, updatedAt } of UNSUPPORTED_FORMS_FAIL_CLOSED) {
+  test(`fails closed rather than bypassing calendar validation for an unsupported form: ${label}`, () => {
+    const [view] = projectSpecimenStatuses([baselineRecord({ updatedAt })], baselineContext());
+    assert.equal(view.status, 'exception', `${label}: expected fail-closed for ${updatedAt}`);
+    assert.equal(view.reasonCode, 'timestamp-invalid');
+  });
+}
+
+const NON_UTC_ALTERNATE_FORMS = [
+  { label: 'minute precision with no trailing Z', updatedAt: '2026-01-05T12:00' },
+  { label: 'space separator with no trailing Z', updatedAt: '2026-01-05 12:00:00' },
+  { label: 'explicit numeric UTC offset instead of Z', updatedAt: '2026-01-01T12:00:00.000+05:00' },
+  { label: 'explicit numeric UTC offset instead of Z (colon-free)', updatedAt: '2026-09-16T12:00:00+0100' },
+];
+
+for (const { label, updatedAt } of NON_UTC_ALTERNATE_FORMS) {
+  test(`fails closed with timestamp-not-utc for a calendar-valid but unmarked form: ${label}`, () => {
+    const [view] = projectSpecimenStatuses([baselineRecord({ updatedAt })], baselineContext());
+    assert.equal(view.status, 'exception', `${label}: expected fail-closed for ${updatedAt}`);
+    assert.equal(view.reasonCode, 'timestamp-not-utc');
+  });
+}
+
+test('preserves timestamp-not-utc for a parseable non-UTC-offset value', () => {
+  const [view] = projectSpecimenStatuses(
+    [baselineRecord({ updatedAt: '2026-09-16T12:00:00+01:00' })],
+    baselineContext(),
+  );
+  assert.equal(view.status, 'exception');
+  assert.equal(view.reasonCode, 'timestamp-not-utc');
+});
+
+test('tenant-mismatch still takes precedence over an impossible-calendar timestamp', () => {
+  const [view] = projectSpecimenStatuses(
+    [baselineRecord({ tenantId: 'tenant-synthetic-other', updatedAt: '2026-02-30T12:00Z' })],
+    baselineContext(),
+  );
+  assert.equal(view.reasonCode, 'tenant-mismatch');
+});
+
 test('explainSpecimenStatusReason returns deterministic, privacy-safe text for every reason code', () => {
   const reasonCodes = ['tenant-mismatch', 'timestamp-invalid', 'timestamp-not-utc', 'lifecycle-state-unknown'] as const;
   for (const code of reasonCodes) {

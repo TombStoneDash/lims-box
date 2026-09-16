@@ -99,7 +99,15 @@ export type SpecimenInternalRecord = {
   referenceToken: string;
   /** Raw internal lifecycle state string; may be unrecognized. */
   lifecycleState: string;
-  /** UTC timestamp the lifecycle state was last updated, e.g. "2026-01-01T12:00:00.000Z". Must end in "Z". */
+  /**
+   * UTC timestamp the lifecycle state was last updated, e.g.
+   * "2026-01-01T12:00:00.000Z". Must end in "Z". Minute precision
+   * ("...T12:00Z"), a space or lowercase "t" date-time separator, a
+   * signed 6-digit expanded year ("+002026-...Z"), and fractional seconds
+   * of any digit count are all accepted, but the calendar date and clock
+   * values must be real (e.g. no February 30th) in every one of these
+   * forms.
+   */
   updatedAt: string;
   patientName?: string;
   submitterName?: string;
@@ -165,8 +173,113 @@ function isValidContext(context: unknown): context is SpecimenStatusContext {
   return isNonEmptyString(candidate.tenantId);
 }
 
-function isUtcTimestamp(value: string): boolean {
-  return value.endsWith('Z') && Number.isFinite(Date.parse(value));
+/**
+ * Accepted timestamp shapes: a plain 4-digit year or a signed 6-digit
+ * expanded year, a "T"/"t"/space date-time separator, minute or second
+ * precision with optional fractional seconds of any digit count, and an
+ * optional trailing "Z". Anything that does not match this shape at all
+ * (an offset, an ordinal or week date, a date with no time component, ...)
+ * is an unsupported form rather than a UTC/non-UTC variant of a supported
+ * one.
+ */
+const TIMESTAMP_SHAPE_REGEX =
+  /^(?:(\d{4})|([+-])(\d{6}))-(\d{2})-(\d{2})[Tt ](\d{2}):(\d{2})(?::(\d{2})(?:\.\d+)?)?(Z|[+-]\d{2}:?\d{2})?$/;
+
+type ParsedTimestamp = {
+  /** The year exactly as captured, e.g. "2026", "+002026", "+999999", or "-000000" — kept as text so a sign on a zero year is not lost to numeric normalization. */
+  yearPart: string;
+  year: number;
+  month: number;
+  day: number;
+  hour: number;
+  minute: number;
+  second: number;
+  /** 'Z' for an explicit UTC marker, a numeric offset string, or undefined when no marker is present at all. */
+  marker: string | undefined;
+};
+
+function parseTimestampShape(value: string): ParsedTimestamp | null {
+  const match = TIMESTAMP_SHAPE_REGEX.exec(value);
+  if (!match) {
+    return null;
+  }
+  const [, plainYear, expandedSign, expandedYear, month, day, hour, minute, second, marker] = match;
+  const yearPart = plainYear !== undefined ? plainYear : `${expandedSign}${expandedYear}`;
+  return {
+    yearPart,
+    year: Number(yearPart),
+    month: Number(month),
+    day: Number(day),
+    hour: Number(hour),
+    minute: Number(minute),
+    second: second !== undefined ? Number(second) : 0,
+    marker,
+  };
+}
+
+function isLeapYear(year: number): boolean {
+  return (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
+}
+
+const DAYS_IN_MONTH = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+
+function daysInMonth(year: number, month: number): number {
+  return month === 2 && isLeapYear(year) ? 29 : DAYS_IN_MONTH[month - 1];
+}
+
+/**
+ * `Date.parse` silently normalizes calendar overflow (e.g. treats
+ * "2026-02-30" as March 2 rather than rejecting it), so calendar and clock
+ * validity is checked against the parsed fields directly instead of being
+ * delegated to it.
+ */
+function isCalendarValid(parsed: ParsedTimestamp): boolean {
+  return (
+    parsed.month >= 1 &&
+    parsed.month <= 12 &&
+    parsed.day >= 1 &&
+    parsed.day <= daysInMonth(parsed.year, parsed.month) &&
+    parsed.hour >= 0 &&
+    parsed.hour <= 23 &&
+    parsed.minute >= 0 &&
+    parsed.minute <= 59 &&
+    parsed.second >= 0 &&
+    parsed.second <= 59
+  );
+}
+
+/**
+ * `Date.parse` on the raw value can't be trusted for range/negative-zero-year
+ * rejection because the accepted shapes include separators and precisions
+ * (space, lowercase "t", minute-only) that are not guaranteed to be
+ * recognized by every engine's native parser. Rebuilding a canonical
+ * uppercase-"T", explicit-seconds, "Z"-suffixed string from the already
+ * shape-validated fields lets `Number.isFinite(Date.parse(...))` be used
+ * purely for its spec-guaranteed extended-year range and "-000000" rejection
+ * behavior, independent of the original separator or precision.
+ */
+function isYearRangeValid(parsed: ParsedTimestamp): boolean {
+  const pad2 = (n: number) => String(n).padStart(2, '0');
+  const canonical = `${parsed.yearPart}-${pad2(parsed.month)}-${pad2(parsed.day)}T${pad2(parsed.hour)}:${pad2(parsed.minute)}:${pad2(parsed.second)}Z`;
+  return Number.isFinite(Date.parse(canonical));
+}
+
+type TimestampClassification =
+  | { valid: true }
+  | { valid: false; reasonCode: 'timestamp-invalid' | 'timestamp-not-utc' };
+
+function classifyTimestamp(value: string): TimestampClassification {
+  const parsed = parseTimestampShape(value);
+  if (!parsed) {
+    return { valid: false, reasonCode: 'timestamp-invalid' };
+  }
+  if (parsed.marker !== 'Z') {
+    return { valid: false, reasonCode: 'timestamp-not-utc' };
+  }
+  if (!isCalendarValid(parsed) || !isYearRangeValid(parsed)) {
+    return { valid: false, reasonCode: 'timestamp-invalid' };
+  }
+  return { valid: true };
 }
 
 function projectSingleRecord(record: SpecimenInternalRecord, context: SpecimenStatusContext): SpecimenStatusView {
@@ -180,12 +293,9 @@ function projectSingleRecord(record: SpecimenInternalRecord, context: SpecimenSt
     return exception('tenant-mismatch');
   }
 
-  if (!Number.isFinite(Date.parse(record.updatedAt))) {
-    return exception('timestamp-invalid');
-  }
-
-  if (!isUtcTimestamp(record.updatedAt)) {
-    return exception('timestamp-not-utc');
+  const timestamp = classifyTimestamp(record.updatedAt);
+  if (timestamp.valid === false) {
+    return exception(timestamp.reasonCode);
   }
 
   if (!KNOWN_LIFECYCLE_STATES.has(record.lifecycleState)) {
