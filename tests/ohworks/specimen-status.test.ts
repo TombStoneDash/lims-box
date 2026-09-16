@@ -89,6 +89,139 @@ test('fails closed on an unparsable timestamp', () => {
   assert.equal(view.reasonCode, 'timestamp-invalid');
 });
 
+test('fails closed on a nonexistent calendar date (February 30th)', () => {
+  const [view] = projectSpecimenStatuses(
+    [baselineRecord({ updatedAt: '2026-02-30T12:00:00Z' })],
+    baselineContext(),
+  );
+  assert.equal(view.status, 'exception');
+  assert.equal(view.reasonCode, 'timestamp-invalid');
+});
+
+test('fails closed on a nonexistent calendar date (April 31st)', () => {
+  const [view] = projectSpecimenStatuses(
+    [baselineRecord({ updatedAt: '2026-04-31T12:00:00Z' })],
+    baselineContext(),
+  );
+  assert.equal(view.status, 'exception');
+  assert.equal(view.reasonCode, 'timestamp-invalid');
+});
+
+test('fails closed on an out-of-range hour field (24:00:00)', () => {
+  const [view] = projectSpecimenStatuses(
+    [baselineRecord({ updatedAt: '2026-09-16T24:00:00Z' })],
+    baselineContext(),
+  );
+  assert.equal(view.status, 'exception');
+  assert.equal(view.reasonCode, 'timestamp-invalid');
+});
+
+test('fails closed on an out-of-range minute field', () => {
+  const [view] = projectSpecimenStatuses(
+    [baselineRecord({ updatedAt: '2026-09-16T12:60:00Z' })],
+    baselineContext(),
+  );
+  assert.equal(view.status, 'exception');
+  assert.equal(view.reasonCode, 'timestamp-invalid');
+});
+
+test('fails closed on an out-of-range second field', () => {
+  const [view] = projectSpecimenStatuses(
+    [baselineRecord({ updatedAt: '2026-09-16T12:00:60Z' })],
+    baselineContext(),
+  );
+  assert.equal(view.status, 'exception');
+  assert.equal(view.reasonCode, 'timestamp-invalid');
+});
+
+test('fails closed on February 29th in a non-leap year', () => {
+  const [view] = projectSpecimenStatuses(
+    [baselineRecord({ updatedAt: '2026-02-29T12:00:00Z' })],
+    baselineContext(),
+  );
+  assert.equal(view.status, 'exception');
+  assert.equal(view.reasonCode, 'timestamp-invalid');
+});
+
+test('accepts a valid leap day in a leap year', () => {
+  const [view] = projectSpecimenStatuses(
+    [baselineRecord({ updatedAt: '2024-02-29T12:00:00Z' })],
+    baselineContext(),
+  );
+  assert.equal(view.status, 'received');
+  assert.equal(view.reasonCode, undefined);
+});
+
+test('rejects a century year that is not a leap year despite being divisible by 4 (1900-02-29)', () => {
+  const [view] = projectSpecimenStatuses(
+    [baselineRecord({ updatedAt: '1900-02-29T12:00:00Z' })],
+    baselineContext(),
+  );
+  assert.equal(view.status, 'exception');
+  assert.equal(view.reasonCode, 'timestamp-invalid');
+});
+
+test('accepts a leap day in a year divisible by 400 (2000-02-29)', () => {
+  const [view] = projectSpecimenStatuses(
+    [baselineRecord({ updatedAt: '2000-02-29T12:00:00Z' })],
+    baselineContext(),
+  );
+  assert.equal(view.status, 'received');
+  assert.equal(view.reasonCode, undefined);
+});
+
+test('preserves a valid fractional-second timestamp with non-millisecond precision', () => {
+  const [view] = projectSpecimenStatuses(
+    [baselineRecord({ updatedAt: '2026-09-16T12:00:00.123456Z' })],
+    baselineContext(),
+  );
+  assert.equal(view.status, 'received');
+  assert.equal(view.reasonCode, undefined);
+});
+
+test('preserves a valid timestamp with no fractional seconds at all', () => {
+  const [view] = projectSpecimenStatuses(
+    [baselineRecord({ updatedAt: '2026-09-16T12:00:00Z' })],
+    baselineContext(),
+  );
+  assert.equal(view.status, 'received');
+  assert.equal(view.reasonCode, undefined);
+});
+
+test('fails closed on the last day of a 30-day month being rolled from day 31 (June 31st)', () => {
+  const [view] = projectSpecimenStatuses(
+    [baselineRecord({ updatedAt: '2026-06-31T12:00:00Z' })],
+    baselineContext(),
+  );
+  assert.equal(view.status, 'exception');
+  assert.equal(view.reasonCode, 'timestamp-invalid');
+});
+
+test('nonexistent calendar date does not leak the raw timestamp into the view', () => {
+  const [view] = projectSpecimenStatuses(
+    [baselineRecord({ updatedAt: '2026-02-30T12:00:00Z' })],
+    baselineContext(),
+  );
+  assert.deepEqual(Object.keys(view).sort(), ['reasonCode', 'referenceToken', 'status']);
+  assert.ok(!JSON.stringify(view).includes('2026-02-30'));
+});
+
+test('tenant mismatch takes precedence over a nonexistent calendar date', () => {
+  const [view] = projectSpecimenStatuses(
+    [baselineRecord({ tenantId: 'tenant-synthetic-other', updatedAt: '2026-02-30T12:00:00Z' })],
+    baselineContext(),
+  );
+  assert.equal(view.reasonCode, 'tenant-mismatch');
+});
+
+test('non-UTC suffix check still takes precedence over calendar validity for a missing Z', () => {
+  const [view] = projectSpecimenStatuses(
+    [baselineRecord({ updatedAt: '2026-02-30T12:00:00.000' })],
+    baselineContext(),
+  );
+  assert.equal(view.reasonCode, 'timestamp-not-utc');
+});
+
 test('fails closed on a non-UTC (no trailing Z) timestamp', () => {
   const [view] = projectSpecimenStatuses(
     [baselineRecord({ updatedAt: '2026-01-01T12:00:00.000' })],
