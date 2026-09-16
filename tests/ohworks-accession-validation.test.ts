@@ -513,6 +513,28 @@ test('accepts a valid numeric offset that rolls the UTC date and hour forward ac
   assert.equal(result.normalized.collection.collectedAt, '2026-01-02T01:30:00.000Z');
 });
 
+test('truncates sub-millisecond precision without rounding the normalized instant forward', () => {
+  const cases = [
+    ['2026-02-28T09:00:00.1235Z', '2026-02-28T09:00:00.123Z'],
+    ['2026-02-28T23:59:59.9999Z', '2026-02-28T23:59:59.999Z'],
+    ['2026-12-31T23:59:59.9999Z', '2026-12-31T23:59:59.999Z'],
+    ['2026-02-28T23:59:59.9999+02:00', '2026-02-28T21:59:59.999Z'],
+  ] as const;
+
+  for (const [input, expected] of cases) {
+    const request = baselineRequest();
+    request.order.orderedAt = input;
+    request.collection.collectedAt = input;
+    request.collection.receivedAt = input;
+    const result = validateOHWorksAccessionRequest(request);
+    assert.equal(result.valid, true, input);
+    if (!result.valid) throw new Error(`expected valid result for ${input}`);
+    assert.equal(result.normalized.order.orderedAt, expected, input);
+    assert.equal(result.normalized.collection.collectedAt, expected, input);
+    assert.equal(result.normalized.collection.receivedAt, expected, input);
+  }
+});
+
 test('still rejects chronology violations once dates carry real calendar instants across offsets', () => {
   const request = baselineRequest();
   request.order.orderedAt = '2026-01-02T00:00:00.000Z';

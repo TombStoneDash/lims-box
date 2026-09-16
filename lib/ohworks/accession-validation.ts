@@ -267,7 +267,11 @@ function checkDate(
     offsetMinutesTotal = (sign === '-' ? -1 : 1) * (offsetHour * 60 + offsetMinute);
   }
 
-  const fractionMs = fractionStr ? Math.round(Number(`0${fractionStr}`) * 1000) : 0;
+  // ISO timestamps may carry more precision than JavaScript Dates. Preserve
+  // Date.parse's millisecond semantics by taking, rather than rounding, the
+  // first three decimal digits. Rounding .9999 to 1000 would otherwise roll a
+  // validated timestamp into the next second, day, month, or year.
+  const fractionMs = fractionStr ? Number(fractionStr.slice(1, 4).padEnd(3, '0')) : 0;
 
   // setUTCFullYear/setUTCHours (rather than Date.UTC or new Date(string))
   // avoid Date.UTC's two-digit-year-means-1900s quirk and never roll over,
