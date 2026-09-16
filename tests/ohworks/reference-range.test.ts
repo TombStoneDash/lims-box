@@ -158,6 +158,56 @@ test('an empty string result fails closed to invalid', () => {
   assert.ok(evaluation.reasons.some((r) => r.code === 'result-non-finite'));
 });
 
+test('a less-than marker with no numeric operand fails closed to invalid, not zero', () => {
+  const input = baselineInput();
+  input.result = '<';
+  const evaluation = evaluateReferenceRange(input);
+  assert.equal(evaluation.classification, 'invalid');
+  assert.ok(evaluation.reasons.some((r) => r.code === 'result-non-finite'));
+});
+
+test('a greater-than marker with no numeric operand fails closed to invalid, not zero', () => {
+  const input = baselineInput();
+  input.result = '>';
+  const evaluation = evaluateReferenceRange(input);
+  assert.equal(evaluation.classification, 'invalid');
+  assert.ok(evaluation.reasons.some((r) => r.code === 'result-non-finite'));
+});
+
+test('a less-than marker with a whitespace-only operand fails closed to invalid, not zero', () => {
+  const input = baselineInput();
+  input.result = '<   ';
+  const evaluation = evaluateReferenceRange(input);
+  assert.equal(evaluation.classification, 'invalid');
+  assert.ok(evaluation.reasons.some((r) => r.code === 'result-non-finite'));
+});
+
+test('a greater-than marker with a whitespace-only operand fails closed to invalid, not zero', () => {
+  const input = baselineInput();
+  input.result = '>   ';
+  const evaluation = evaluateReferenceRange(input);
+  assert.equal(evaluation.classification, 'invalid');
+  assert.ok(evaluation.reasons.some((r) => r.code === 'result-non-finite'));
+});
+
+test('a less-than censored genuine zero at the limit of detection is preserved as below_detection', () => {
+  const input = baselineInput();
+  input.limitOfDetection = 0;
+  input.result = '<0';
+  const evaluation = evaluateReferenceRange(input);
+  assert.equal(evaluation.classification, 'below_detection');
+  assert.deepEqual(evaluation.reasons, []);
+});
+
+test('a less-than censored value with a valid finite decimal operand matching the limit of detection is below_detection', () => {
+  const input = baselineInput();
+  input.limitOfDetection = 0.25;
+  input.result = '<0.25';
+  const evaluation = evaluateReferenceRange(input);
+  assert.equal(evaluation.classification, 'below_detection');
+  assert.deepEqual(evaluation.reasons, []);
+});
+
 test('a unit mismatch between the result and the declared reference range fails closed to invalid', () => {
   const input = baselineInput();
   input.unit = 'g/L';

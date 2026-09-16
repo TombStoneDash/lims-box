@@ -104,11 +104,13 @@ function parseResult(result: number | string): ParsedResult {
 
   const trimmed = result.trim();
   if (trimmed.startsWith('<')) {
-    const parsed = Number(trimmed.slice(1).trim());
+    const operand = trimmed.slice(1).trim();
+    const parsed = operand.length > 0 ? Number(operand) : NaN;
     return { qualifier: 'less-than', value: Number.isFinite(parsed) ? parsed : undefined };
   }
   if (trimmed.startsWith('>')) {
-    const parsed = Number(trimmed.slice(1).trim());
+    const operand = trimmed.slice(1).trim();
+    const parsed = operand.length > 0 ? Number(operand) : NaN;
     return { qualifier: 'greater-than', value: Number.isFinite(parsed) ? parsed : undefined };
   }
   if (trimmed.length === 0) {
