@@ -76,7 +76,7 @@ export type SpecimenStatusReasonCode =
 
 const REASON_MESSAGES: Record<SpecimenStatusReasonCode, string> = {
   'tenant-mismatch': 'The record does not belong to the tenant this projection is being computed for.',
-  'timestamp-invalid': 'The last-updated timestamp could not be parsed.',
+  'timestamp-invalid': 'The last-updated timestamp could not be parsed or does not represent an existing UTC date and time.',
   'timestamp-not-utc': 'The last-updated timestamp is not an explicit UTC timestamp.',
   'lifecycle-state-unknown': 'The internal lifecycle state is not a recognized bounded value.',
 };
@@ -282,6 +282,61 @@ function classifyTimestamp(value: string): TimestampClassification {
   return { valid: true };
 }
 
+/**
+ * Matches the canonical fully-specified UTC timestamp form this module
+ * accepts: `YYYY-MM-DDTHH:mm:ss[.fraction]Z`. The fractional-second group
+ * accepts any number of digits so existing valid fractional forms keep
+ * working; calendar/clock-field range checks happen separately below
+ * because `Date.parse` silently normalizes out-of-range fields (e.g. it
+ * rolls 2026-02-30 into 2026-03-02 and 24:00:00 into the next day).
+ */
+const CALENDAR_UTC_TIMESTAMP_PATTERN =
+  /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.\d+)?Z$/;
+
+function isLeapYear(year: number): boolean {
+  return (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
+}
+
+function daysInMonth(year: number, month: number): number {
+  const DAYS_BY_MONTH = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+  if (month === 2 && isLeapYear(year)) {
+    return 29;
+  }
+  return DAYS_BY_MONTH[month - 1];
+}
+
+/**
+ * Rejects UTC timestamps in the canonical fully-specified form whose
+ * calendar date or clock fields cannot exist (e.g. 2026-02-30, 2026-04-31,
+ * or an hour of 24), independent of `Date.parse`'s lenient normalization.
+ * Timestamps not in the canonical form are left to the existing
+ * parse/UTC-suffix checks and are treated as calendar-valid here.
+ */
+function isCalendarValidUtcTimestamp(value: string): boolean {
+  const match = CALENDAR_UTC_TIMESTAMP_PATTERN.exec(value);
+  if (!match) {
+    return true;
+  }
+  const [, yearStr, monthStr, dayStr, hourStr, minuteStr, secondStr] = match;
+  const year = Number(yearStr);
+  const month = Number(monthStr);
+  const day = Number(dayStr);
+  const hour = Number(hourStr);
+  const minute = Number(minuteStr);
+  const second = Number(secondStr);
+
+  if (month < 1 || month > 12) {
+    return false;
+  }
+  if (day < 1 || day > daysInMonth(year, month)) {
+    return false;
+  }
+  if (hour > 23 || minute > 59 || second > 59) {
+    return false;
+  }
+  return true;
+}
+
 function projectSingleRecord(record: SpecimenInternalRecord, context: SpecimenStatusContext): SpecimenStatusView {
   const exception = (reasonCode: SpecimenStatusReasonCode): SpecimenStatusView => ({
     referenceToken: record.referenceToken,
@@ -296,6 +351,10 @@ function projectSingleRecord(record: SpecimenInternalRecord, context: SpecimenSt
   const timestamp = classifyTimestamp(record.updatedAt);
   if (timestamp.valid === false) {
     return exception(timestamp.reasonCode);
+  }
+
+  if (!isCalendarValidUtcTimestamp(record.updatedAt)) {
+    return exception('timestamp-invalid');
   }
 
   if (!KNOWN_LIFECYCLE_STATES.has(record.lifecycleState)) {
