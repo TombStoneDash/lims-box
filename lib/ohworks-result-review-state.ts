@@ -253,6 +253,100 @@ function isUtcTimestamp(value: string): boolean {
   return value.endsWith('Z') && Number.isFinite(Date.parse(value));
 }
 
+type CalendarDateParts = Readonly<{ year: number; month: number; day: number }>;
+
+const MONTH_BY_NAME: Readonly<Record<string, number>> = Object.freeze({
+  jan: 1,
+  feb: 2,
+  mar: 3,
+  apr: 4,
+  may: 5,
+  jun: 6,
+  jul: 7,
+  aug: 8,
+  sep: 9,
+  oct: 10,
+  nov: 11,
+  dec: 12,
+});
+
+function numericCalendarDate(year: string, month: string, day: string): CalendarDateParts {
+  return {
+    year: Number.parseInt(year, 10),
+    month: Number.parseInt(month, 10),
+    day: Number.parseInt(day, 10),
+  };
+}
+
+/**
+ * Extract the literal calendar fields from every parseable date family this
+ * workflow already accepts. The rest of each value is still validated by
+ * `Date.parse`; this extractor exists only because `Date.parse` normalizes
+ * impossible days instead of rejecting them.
+ */
+function calendarDateParts(value: string): CalendarDateParts | undefined {
+  const yearFirstHyphen = /^([+-]\d{6}|\d{4})-(\d{1,2})-(\d{1,2})(?=$|Z$|[T ])/i.exec(value);
+  if (yearFirstHyphen) {
+    return numericCalendarDate(yearFirstHyphen[1], yearFirstHyphen[2], yearFirstHyphen[3]);
+  }
+
+  const yearFirstSlash = /^([+-]?\d{4,6})\/(\d{1,2})\/(\d{1,2})(?=$|Z$|[T ])/i.exec(value);
+  if (yearFirstSlash) {
+    return numericCalendarDate(yearFirstSlash[1], yearFirstSlash[2], yearFirstSlash[3]);
+  }
+
+  const monthFirstSlash = /^(\d{1,2})\/(\d{1,2})\/([+-]?\d{4,6})(?=$|Z$|[T ])/i.exec(value);
+  if (monthFirstSlash) {
+    return numericCalendarDate(monthFirstSlash[3], monthFirstSlash[1], monthFirstSlash[2]);
+  }
+
+  const dayFirstText = /^(?:[a-z]+,\s*)?(\d{1,2})\s+([a-z]+)\s+([+-]?\d{4,6})(?=\s|$)/i.exec(value);
+  if (dayFirstText) {
+    const month = MONTH_BY_NAME[dayFirstText[2].slice(0, 3).toLowerCase()];
+    if (month !== undefined) {
+      return numericCalendarDate(dayFirstText[3], String(month), dayFirstText[1]);
+    }
+  }
+
+  const monthFirstText = /^([a-z]+)\s+(\d{1,2}),?\s+([+-]?\d{4,6})(?=\s|$)/i.exec(value);
+  if (monthFirstText) {
+    const month = MONTH_BY_NAME[monthFirstText[1].slice(0, 3).toLowerCase()];
+    if (month !== undefined) {
+      return numericCalendarDate(monthFirstText[3], String(month), monthFirstText[2]);
+    }
+  }
+
+  return undefined;
+}
+
+function isLeapYear(year: number): boolean {
+  return year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
+}
+
+function daysInMonth(year: number, month: number): number {
+  const DAYS_BY_MONTH = [31, isLeapYear(year) ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+  return DAYS_BY_MONTH[month - 1];
+}
+
+/**
+ * `Date.parse` silently rolls impossible calendar dates (e.g. "2026-02-30",
+ * a non-leap Feb 30) forward into the next valid date instead of rejecting
+ * them, which would otherwise let a fabricated out-of-range day advance
+ * this workflow as if it were a legitimate event. This checks the literal
+ * Y-M-D digits against the actual length of that month/year, independent
+ * of whatever `Date.parse` computed.
+ */
+function hasImpossibleCalendarDate(value: string): boolean {
+  const parts = calendarDateParts(value);
+  if (!parts) {
+    return false;
+  }
+  if (parts.month < 1 || parts.month > 12) {
+    return true;
+  }
+  return parts.day < 1 || parts.day > daysInMonth(parts.year, parts.month);
+}
+
 /**
  * Evaluate a single candidate event against the current state and prior
  * history, and either accept it or return a bounded reason it was blocked.
@@ -299,7 +393,7 @@ export function applyResultReviewEvent(
   if (rawEvent.resultId !== context.resultId) {
     return block('result-id-mismatch');
   }
-  if (!Number.isFinite(Date.parse(rawEvent.occurredAt))) {
+  if (!Number.isFinite(Date.parse(rawEvent.occurredAt)) || hasImpossibleCalendarDate(rawEvent.occurredAt)) {
     return block('timestamp-invalid');
   }
   if (!isUtcTimestamp(rawEvent.occurredAt)) {
