@@ -191,8 +191,30 @@ type CheckedDate = { iso: string; epochMs: number };
 // Date.parse() accepts ambiguous/non-ISO shapes (date-only, locale-style,
 // space-separated). Require explicit date+time with Z or numeric offset.
 const STRICT_ISO_TIMESTAMP_PATTERN =
-  /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:\d{2})$/;
+  /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(\.\d+)?(Z|[+-]\d{2}:\d{2})$/;
 
+const NUMERIC_OFFSET_PATTERN = /^([+-])(\d{2}):(\d{2})$/;
+
+const DAYS_IN_MONTH: readonly number[] = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+
+function isLeapYear(year: number): boolean {
+  return (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
+}
+
+function daysInMonth(year: number, month: number): number {
+  if (month === 2 && isLeapYear(year)) {
+    return 29;
+  }
+  return DAYS_IN_MONTH[month - 1];
+}
+
+/**
+ * Date.parse()/`new Date(...)` silently roll overflowing calendar fields
+ * forward (e.g. 2026-02-30 becomes 2026-03-02), which would let an
+ * impossible instant slip through as a plausible-looking normalized date.
+ * Every component is range-checked by hand against the calendar of the
+ * stated year before any UTC conversion happens.
+ */
 function checkDate(
   raw: unknown,
   field: AccessionFieldPath,
@@ -202,11 +224,63 @@ function checkDate(
   if (trimmed === undefined) {
     return undefined;
   }
-  if (!STRICT_ISO_TIMESTAMP_PATTERN.test(trimmed)) {
+  const match = STRICT_ISO_TIMESTAMP_PATTERN.exec(trimmed);
+  if (!match) {
     errors.push({ field, code: 'date-invalid' });
     return undefined;
   }
-  const epochMs = Date.parse(trimmed);
+  const [, yearStr, monthStr, dayStr, hourStr, minuteStr, secondStr, fractionStr, offsetStr] = match;
+  const year = Number(yearStr);
+  const month = Number(monthStr);
+  const day = Number(dayStr);
+  const hour = Number(hourStr);
+  const minute = Number(minuteStr);
+  const second = Number(secondStr);
+
+  if (month < 1 || month > 12) {
+    errors.push({ field, code: 'date-invalid' });
+    return undefined;
+  }
+  if (day < 1 || day > daysInMonth(year, month)) {
+    errors.push({ field, code: 'date-invalid' });
+    return undefined;
+  }
+  if (hour > 23 || minute > 59 || second > 59) {
+    errors.push({ field, code: 'date-invalid' });
+    return undefined;
+  }
+
+  let offsetMinutesTotal = 0;
+  if (offsetStr !== 'Z') {
+    const offsetMatch = NUMERIC_OFFSET_PATTERN.exec(offsetStr);
+    if (!offsetMatch) {
+      errors.push({ field, code: 'date-invalid' });
+      return undefined;
+    }
+    const [, sign, offsetHourStr, offsetMinuteStr] = offsetMatch;
+    const offsetHour = Number(offsetHourStr);
+    const offsetMinute = Number(offsetMinuteStr);
+    if (offsetHour > 23 || offsetMinute > 59) {
+      errors.push({ field, code: 'date-invalid' });
+      return undefined;
+    }
+    offsetMinutesTotal = (sign === '-' ? -1 : 1) * (offsetHour * 60 + offsetMinute);
+  }
+
+  // ISO timestamps may carry more precision than JavaScript Dates. Preserve
+  // Date.parse's millisecond semantics by taking, rather than rounding, the
+  // first three decimal digits. Rounding .9999 to 1000 would otherwise roll a
+  // validated timestamp into the next second, day, month, or year.
+  const fractionMs = fractionStr ? Number(fractionStr.slice(1, 4).padEnd(3, '0')) : 0;
+
+  // setUTCFullYear/setUTCHours (rather than Date.UTC or new Date(string))
+  // avoid Date.UTC's two-digit-year-means-1900s quirk and never roll over,
+  // since every component above is already confirmed to be in range.
+  const instant = new Date(0);
+  instant.setUTCFullYear(year, month - 1, day);
+  instant.setUTCHours(hour, minute, second, fractionMs);
+  const epochMs = instant.getTime() - offsetMinutesTotal * 60000;
+
   if (!Number.isFinite(epochMs)) {
     errors.push({ field, code: 'date-invalid' });
     return undefined;
