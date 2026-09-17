@@ -293,18 +293,6 @@ function classifyTimestamp(value: string): TimestampClassification {
 const CALENDAR_UTC_TIMESTAMP_PATTERN =
   /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.\d+)?Z$/;
 
-function isLeapYear(year: number): boolean {
-  return (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
-}
-
-function daysInMonth(year: number, month: number): number {
-  const DAYS_BY_MONTH = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
-  if (month === 2 && isLeapYear(year)) {
-    return 29;
-  }
-  return DAYS_BY_MONTH[month - 1];
-}
-
 /**
  * Rejects UTC timestamps in the canonical fully-specified form whose
  * calendar date or clock fields cannot exist (e.g. 2026-02-30, 2026-04-31,
