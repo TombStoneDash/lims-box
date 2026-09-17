@@ -15,8 +15,11 @@
  *
  *   1. a custody gap        — the releasing actor does not match the actor
  *                              who received custody in the prior transfer
- *   2. a timestamp problem   — the timestamp cannot be parsed, repeats the
- *                              prior transfer's timestamp, or precedes it
+ *   2. a timestamp problem   — the timestamp is not a strict, calendar-valid
+ *                              ISO 8601 date-time with an explicit timezone
+ *                              designator (Z or a numeric offset), or it
+ *                              repeats the prior transfer's timestamp, or
+ *                              precedes it
  *   3. a self-transfer       — the releasing and receiving actor are the same
  *   4. an unknown role       — the releasing or receiving role is not on the
  *                              bounded known role list
@@ -56,6 +59,95 @@ const KNOWN_EVENT_TYPES: ReadonlySet<string> = new Set<CustodyEventType>(['TRANS
 
 /** Seal ids must be uppercase alphanumeric, 4-32 characters, e.g. "SEAL0042". */
 const SEAL_ID_PATTERN = /^[A-Z0-9]{4,32}$/;
+
+/**
+ * Strict ISO 8601 date-time with an explicit timezone designator (Z or a
+ * numeric +HH:MM/-HH:MM offset). Date.parse() also accepts date-only,
+ * locale-style, and timezone-less shapes whose absolute instant depends on
+ * the host's local timezone; this module never accepts those.
+ */
+const STRICT_TIMESTAMP_PATTERN =
+  /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.(\d{1,9}))?(Z|[+-]\d{2}:\d{2})$/;
+
+function isLeapYear(year: number): boolean {
+  return (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
+}
+
+const DAYS_IN_MONTH = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+
+function daysInMonth(year: number, month: number): number {
+  if (month === 2 && isLeapYear(year)) {
+    return 29;
+  }
+  return DAYS_IN_MONTH[month - 1];
+}
+
+/**
+ * Days since the Unix epoch for a proleptic-Gregorian calendar date
+ * (Howard Hinnant's days_from_civil algorithm). Pure integer arithmetic —
+ * consults no Date object and no host timezone.
+ */
+function daysFromCivil(year: number, month: number, day: number): number {
+  const y = month <= 2 ? year - 1 : year;
+  const era = Math.floor((y >= 0 ? y : y - 399) / 400);
+  const yoe = y - era * 400;
+  const doy = Math.floor((153 * (month + (month > 2 ? -3 : 9)) + 2) / 5) + day - 1;
+  const doe = yoe * 365 + Math.floor(yoe / 4) - Math.floor(yoe / 100) + doy;
+  return era * 146097 + doe - 719468;
+}
+
+/**
+ * Parse a strict, explicit-timezone ISO 8601 timestamp into epoch
+ * milliseconds, or NaN if it is malformed or names a calendar-invalid date
+ * (e.g. 2026-02-30, which Date.parse silently rolls over into March).
+ * Computed entirely from the parsed digits and the parsed offset — never
+ * from a Date object or the host timezone — so the result, and therefore
+ * chain ordering, is identical no matter what timezone the process runs in.
+ */
+function parseStrictTimestamp(raw: string): number {
+  const match = STRICT_TIMESTAMP_PATTERN.exec(raw);
+  if (!match) {
+    return NaN;
+  }
+  const [, yearStr, monthStr, dayStr, hourStr, minuteStr, secondStr, fractionStr, tz] = match;
+  const year = Number(yearStr);
+  const month = Number(monthStr);
+  const day = Number(dayStr);
+  const hour = Number(hourStr);
+  const minute = Number(minuteStr);
+  const second = Number(secondStr);
+
+  if (month < 1 || month > 12) {
+    return NaN;
+  }
+  if (day < 1 || day > daysInMonth(year, month)) {
+    return NaN;
+  }
+  if (hour > 23 || minute > 59 || second > 59) {
+    return NaN;
+  }
+
+  let offsetMinutes = 0;
+  if (tz !== 'Z') {
+    const sign = tz[0] === '-' ? -1 : 1;
+    const offsetHours = Number(tz.slice(1, 3));
+    const offsetMins = Number(tz.slice(4, 6));
+    if (offsetHours > 23 || offsetMins > 59) {
+      return NaN;
+    }
+    offsetMinutes = sign * (offsetHours * 60 + offsetMins);
+  }
+
+  const fractionMs = fractionStr ? Math.round(Number(`0.${fractionStr}`) * 1000) : 0;
+  const utcMs =
+    daysFromCivil(year, month, day) * 86_400_000 +
+    hour * 3_600_000 +
+    minute * 60_000 +
+    second * 1_000 +
+    fractionMs;
+
+  return utcMs - offsetMinutes * 60_000;
+}
 
 export type CustodyTransfer = {
   /** Synthetic actor identifier releasing custody. Never a real name. */
@@ -225,7 +317,7 @@ export function validateCustodyChain(referenceToken: unknown, rawTransfers: unkn
       return invalid('custody-gap');
     }
 
-    const timestampMs = Date.parse(transfer.timestamp);
+    const timestampMs = parseStrictTimestamp(transfer.timestamp);
     if (!Number.isFinite(timestampMs)) {
       return invalid('timestamp-invalid');
     }
