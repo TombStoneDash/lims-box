@@ -1,3 +1,4 @@
+import type { DeliveryResult } from './notify';
 import { createHash, randomUUID } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
@@ -48,7 +49,7 @@ export interface PersonnelPackDelivery {
 
 export interface PersonnelPackDependencies {
   createLead: (record: PersonnelPackRecord) => Promise<void>;
-  sendSubmissionNotice: (notice: SubmissionNotice) => Promise<void>;
+  sendSubmissionNotice: (notice: SubmissionNotice) => Promise<void | DeliveryResult>;
   sendApplicantDelivery: (email: string, delivery: PersonnelPackDelivery) => Promise<void>;
   resolveAsset?: (accredType: string | null, origin: string) => Promise<PersonnelPackDelivery | null>;
   logDiagnostic?: (code: string, meta: Record<string, unknown>) => void;
