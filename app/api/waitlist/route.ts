@@ -1,7 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { sendSubmissionNotice } from '@/lib/notify';
+import { sendSubmissionNotice, sendApplicantConfirmationOutcome } from '@/lib/notify';
 import { normalizeEmail } from '@/lib/emailValidation';
+
+function describeConfirmation(outcome: { status: string; httpStatus?: number }): string {
+  switch (outcome.status) {
+    case 'sent':
+      return 'sent';
+    case 'blocked_domain_unverified':
+      return 'blocked (domain not verified)';
+    case 'not_configured':
+      return 'not configured';
+    default:
+      return outcome.httpStatus ? `failed (${outcome.httpStatus})` : 'failed';
+  }
+}
 
 export const runtime = 'nodejs';
 
@@ -37,6 +50,8 @@ export async function POST(request: NextRequest) {
       console.error('[waitlist] DB save failed (non-fatal):', dbErr);
     }
 
+    const confirmation = await sendApplicantConfirmationOutcome(record.email, record.name);
+
     let noticeSent = false;
     try {
       await sendSubmissionNotice({
@@ -46,6 +61,7 @@ export async function POST(request: NextRequest) {
           ['Name', record.name],
           ['Lab name', record.labName],
           ['Source', record.source],
+          ['Applicant confirmation', describeConfirmation(confirmation)],
           ['Received', new Date().toISOString()],
         ],
       });
@@ -58,7 +74,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to process signup' }, { status: 500 });
     }
 
-    return NextResponse.json({ success: true, saved: dbSaved });
+    return NextResponse.json({ success: true, saved: dbSaved, confirmation });
   } catch (err) {
     console.error('[waitlist] handler threw', err);
     return NextResponse.json({ error: 'Invalid request' }, { status: 400 });

@@ -43,10 +43,26 @@ function escape(s: string) {
   return s.replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]!));
 }
 
-export async function sendApplicantConfirmation(email: string, name: string): Promise<void> {
+// Log-safe stand-in for an applicant address: never print the full address.
+function maskEmail(email: string): string {
+  const at = email.indexOf('@');
+  if (at <= 0) return '[redacted]';
+  return `${email[0]}***@${email.slice(at + 1)}`;
+}
+
+export type ApplicantConfirmationOutcome = {
+  status: 'sent' | 'blocked_domain_unverified' | 'not_configured' | 'failed';
+  httpStatus?: number;
+  reason?: string;
+};
+
+export async function sendApplicantConfirmationOutcome(
+  email: string,
+  name: string,
+): Promise<ApplicantConfirmationOutcome> {
   const apiKey = process.env.RESEND_API_KEY;
   if (!apiKey) {
-    throw new Error('Applicant confirmation delivery is not configured');
+    return { status: 'not_configured', reason: 'Applicant confirmation delivery is not configured' };
   }
 
   const html = `
@@ -90,18 +106,41 @@ export async function sendApplicantConfirmation(email: string, name: string): Pr
     });
     if (!res.ok) {
       const body = await res.text();
-      console.error('[notify] Resend applicant confirmation error', res.status, body);
+      console.error('[notify] Resend applicant confirmation error', res.status, maskEmail(email));
       if (shouldDomainFallback(res.status, body)) {
         console.error('[notify] applicant confirmation blocked: lims.bot domain not verified in Resend — no fallback possible for external recipients');
+        return {
+          status: 'blocked_domain_unverified',
+          httpStatus: res.status,
+          reason: 'lims.bot domain not verified in Resend',
+        };
       }
-      throw new Error(`Applicant confirmation delivery failed (${res.status})`);
-    } else {
-      console.log('[notify] Applicant confirmation sent to', email);
+      return {
+        status: 'failed',
+        httpStatus: res.status,
+        reason: `Applicant confirmation delivery failed (${res.status})`,
+      };
     }
-  } catch (err) {
-    console.error('[notify] Resend applicant confirmation threw', err);
-    throw err;
+    console.log('[notify] Applicant confirmation sent to', maskEmail(email));
+    return { status: 'sent' };
+  } catch {
+    console.error('[notify] Resend applicant confirmation request threw an unexpected error', maskEmail(email));
+    return {
+      status: 'failed',
+      reason: 'Applicant confirmation delivery failed (unexpected error)',
+    };
   }
+}
+
+export async function sendApplicantConfirmation(email: string, name: string): Promise<void> {
+  const outcome = await sendApplicantConfirmationOutcome(email, name);
+  if (outcome.status === 'sent') {
+    return;
+  }
+  if (outcome.httpStatus) {
+    throw new Error(`Applicant confirmation delivery failed (${outcome.httpStatus})`);
+  }
+  throw new Error(outcome.reason ?? 'Applicant confirmation delivery failed');
 }
 
 export async function sendSubmissionNotice(payload: NotifyPayload): Promise<void> {
