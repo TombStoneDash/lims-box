@@ -210,13 +210,15 @@ export function createPersonnelPackPostHandler(dependencies: PersonnelPackDepend
         );
       }
 
+      // Internal alert delivery must not gate applicant fulfillment: the lead is
+      // already persisted and the PDF has passed integrity verification.
       try {
         await dependencies.sendSubmissionNotice({
           subject: `New Personnel Pack lead — ${delivery.label}`,
           lines: [
             ['Email', normalizedEmail],
             ['Accreditation type', accredType ?? 'not provided'],
-            ['Pack delivered', delivery.label],
+            ['Pack available', delivery.label],
             ['Pack URL', delivery.assetUrl],
             ['Source', 'lims.bot/personnel-pack'],
             ['Received', (dependencies.now ?? (() => new Date().toISOString()))()],
@@ -228,11 +230,6 @@ export function createPersonnelPackPostHandler(dependencies: PersonnelPackDepend
           accredType: classifyAccredTypeForDiagnostics(accredType),
           stage: 'operator-notice',
         });
-        return failure(
-          503,
-          'Automatic fulfillment is temporarily unavailable. Email info@lims.bot directly.',
-          'operator_notice_failed',
-        );
       }
 
       try {

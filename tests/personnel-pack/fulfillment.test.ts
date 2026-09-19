@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
 import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
@@ -206,24 +207,46 @@ test('lead-store failures fail closed and do not promise delivery', async () => 
   assert.equal(diagnostics[0].code, 'lead_store_failed');
 });
 
-test('operator notice failures fail closed and block applicant delivery', async () => {
-  const { handler, deliveries, diagnostics } = createHandler({
-    sendSubmissionNotice: async () => { throw new Error('domain not verified'); },
-  });
+for (const applicantFails of [false, true]) {
+  test(`operator notice failure preserves reviewed PDF fulfillment (applicant email fails: ${applicantFails})`, async () => {
+    let applicantAttempts = 0;
+    const { handler, leads, diagnostics } = createHandler({
+      resolveAsset: undefined,
+      sendSubmissionNotice: async () => {
+        throw new Error('notification rejected for canary@example.com: canary-provider-secret');
+      },
+      sendApplicantDelivery: async (_email, delivery) => {
+        applicantAttempts += 1;
+        assert.equal(delivery.assetUrl, 'https://lims.bot/api/personnel-pack-download?asset=iso15189');
+        if (applicantFails) throw new Error('canary-provider-secret');
+      },
+    });
 
-  const response = await handler(request({
-    email: 'user@example.com',
-    accredType: 'iso15189',
-  }));
+    const response = await handler(request({ email: 'user@example.com', accredType: 'iso15189' }));
+    assert.equal(response.status, 200);
+    const body = await response.json();
+    assert.equal(body.success, true);
+    assert.equal(body.saved, true);
+    assert.equal(body.delivery.emailed, !applicantFails);
+    assert.equal(leads.length, 1);
+    assert.equal(applicantAttempts, 1);
+    assert.deepEqual(diagnostics.map(({ code }) => code), applicantFails
+      ? ['operator_notice_failed', 'applicant_delivery_failed']
+      : ['operator_notice_failed']);
+    assert.doesNotMatch(JSON.stringify({ body, diagnostics }), /canary@example\.com|canary-provider-secret/);
 
-  assert.equal(response.status, 503);
-  assert.deepEqual(await response.json(), {
-    error: 'Automatic fulfillment is temporarily unavailable. Email info@lims.bot directly.',
-    code: 'operator_notice_failed',
+    // Follow the actual returned URL through the real GET handler. Only external
+    // side effects are stubbed; selection, file loading and hash verification run.
+    const download = await downloadGet(new NextRequest(body.delivery.assetUrl));
+    assert.equal(download.status, 200);
+    assert.equal(download.headers.get('content-type'), 'application/pdf');
+    assert.equal(download.headers.get('content-disposition'),
+      `attachment; filename="${PERSONNEL_PACK_PUBLIC_ASSETS.iso15189.downloadFilename}"`);
+    const bytes = Buffer.from(await download.arrayBuffer());
+    assert.equal(bytes.subarray(0, 5).toString(), '%PDF-');
+    assert.equal(createHash('sha256').update(bytes).digest('hex'), PERSONNEL_PACK_PUBLIC_ASSETS.iso15189.sha256);
   });
-  assert.equal(deliveries.length, 0);
-  assert.equal(diagnostics[0].code, 'operator_notice_failed');
-});
+}
 
 test('applicant delivery failures return the direct asset without promising email delivery', async () => {
   const { handler, diagnostics } = createHandler({
