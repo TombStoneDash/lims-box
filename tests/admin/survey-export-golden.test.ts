@@ -3,10 +3,10 @@ import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import test from "node:test";
-import { inflateSync } from "node:zlib";
 import { strFromU8, unzipSync } from "fflate";
 import { GET } from "../../app/api/admin/personnel-pack/survey-export/route";
 import { prisma } from "../../lib/prisma";
+import { extractPdfText } from "../helpers/pdf";
 
 interface GoldenFixture {
   fixtureNotice: string;
@@ -146,42 +146,6 @@ function installDeterministicDate(): () => void {
   return () => {
     globalThis.Date = originalDate;
   };
-}
-
-function extractPdfText(pdf: Uint8Array): string[] {
-  const pdfSource = Buffer.from(pdf).toString("latin1");
-  const inflatedStreams: string[] = [];
-
-  for (const match of pdfSource.matchAll(
-    /stream\r?\n([\s\S]*?)\r?\nendstream/g,
-  )) {
-    try {
-      inflatedStreams.push(
-        inflateSync(Buffer.from(match[1], "latin1")).toString("latin1"),
-      );
-    } catch {
-      // PDFKit also emits non-content streams. Only Flate text streams matter.
-    }
-  }
-
-  const lines: string[] = [];
-  for (const stream of inflatedStreams) {
-    for (const textMatch of stream.matchAll(/\[([\s\S]*?)\]\s*TJ/g)) {
-      const chunks = Array.from(
-        textMatch[1].matchAll(/<([0-9a-fA-F]+)>/g),
-        (hexMatch) => Buffer.from(hexMatch[1], "hex"),
-      );
-      const line = new TextDecoder("windows-1252")
-        .decode(Buffer.concat(chunks))
-        .replace(/\s+/g, " ")
-        .trim();
-      if (line) {
-        lines.push(line);
-      }
-    }
-  }
-
-  return lines;
 }
 
 test("survey export matches the deterministic fictional golden bundle", async (t) => {
