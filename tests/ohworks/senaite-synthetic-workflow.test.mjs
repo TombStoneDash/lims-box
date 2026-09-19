@@ -169,3 +169,60 @@ test('missing explicit test configuration performs no HTTP request', async () =>
   });
   assert.deepEqual(http.calls, []);
 });
+
+test('a received specimen with a Westgard 1_3s failure is held before automatic result release', async () => {
+  // tsx loads this repository's TypeScript as CommonJS under the ESM harness.
+  const { default: { evaluateQCWestgardMultirule } } = await import('../../lib/ohworks-qc-westgard.ts');
+  const { default: { evaluateAutoVerification } } = await import('../../lib/ohworks-autoverification.ts');
+  const http = transport(() => Response.json({ items: [syntheticSample('QC-FAILURE')] }));
+  const received = await readSenaiteSamples({ env, fetchImpl: http.fetchImpl });
+  http.assertRequest();
+  assert.deepEqual(received, {
+    status: 'ok', source: 'real_senaite', samples: [expectedSample('QC-FAILURE')],
+  });
+
+  // The summary adapter has no analysis/transition API. Associate fabricated
+  // result and run data explicitly, then compose the existing pure evaluators;
+  // this is a synthetic release-gate check, not a live SENAITE transition.
+  const specimen = {
+    sampleId: received.samples[0].id,
+    runId: 'SYNTHETIC-QC-FAILURE-RUN',
+    result: { analyteCode: 'SYNTHETIC-ANALYTE', value: 100, unit: 'mg/L', instrumentFlags: [] },
+  };
+  const qc = evaluateQCWestgardMultirule({
+    levels: [{ levelId: 'SYNTHETIC-LEVEL', mean: 100, sd: 5 }],
+    results: [{
+      levelId: 'SYNTHETIC-LEVEL', runId: specimen.runId, value: 120,
+      timestamp: '2026-09-18T10:05:00Z',
+    }],
+  });
+  assert.equal(qc.points[0].sdi, 4);
+  const run = qc.runs.find(({ runId }) => runId === specimen.runId);
+  assert.ok(run, 'QC evidence must belong to this specimen run');
+  assert.equal(run.status, 'rejected');
+  assert.deepEqual(run.violatedRules.filter(({ severity }) => severity === 'reject'), [{
+    rule: '1_3s', severity: 'reject', position: 0, levelId: 'SYNTHETIC-LEVEL',
+  }]);
+
+  // Translate the two public status vocabularies at the harness boundary.
+  const qcStates = { accepted: 'in-control', warning: 'warning', rejected: 'out-of-control' };
+  const request = {
+    result: specimen.result,
+    qcState: qcStates[run.status],
+    deltaCheckStatus: 'pass',
+    measurementRange: { lowerBound: 0, upperBound: 500, unit: 'mg/L' },
+    criticalLimits: { lower: 5, upper: 400, unit: 'mg/L' },
+  };
+  const disposition = { sampleId: specimen.sampleId, ...evaluateAutoVerification(request) };
+  assert.deepEqual(disposition, {
+    sampleId: 'SYNTHETIC-OHWORKS-QC-FAILURE',
+    decision: 'HOLD_FOR_REVIEW', reasons: ['qc-out-of-control'],
+  });
+  assert.notEqual(disposition.decision, 'AUTO_RELEASE');
+
+  // Paired control: no unrelated result/range/critical/delta problem can make
+  // this scenario pass by holding the specimen for a different reason.
+  assert.deepEqual(evaluateAutoVerification({ ...request, qcState: 'in-control' }), {
+    decision: 'AUTO_RELEASE', reasons: [],
+  });
+});
