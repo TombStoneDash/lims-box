@@ -4,6 +4,7 @@ import {
   resolveRoleView,
   workflowStages,
 } from '@/lib/ohworks-pilot';
+import { readSenaiteSamples, resolveOHWorksSenaiteMode } from '@/lib/ohworks-senaite';
 
 interface PageProps {
   searchParams?: Promise<{ role?: string }>;
@@ -23,6 +24,8 @@ export default async function OHWorksSampleWorkflow({ searchParams }: PageProps)
   const role = resolveRoleView(params?.role);
   const visibleCards = getVisibleWorkflowCards(role.id);
   const canSeeClinical = ['reviewer', 'admin'].includes(role.id);
+  const senaiteMode = resolveOHWorksSenaiteMode();
+  const senaiteResult = senaiteMode === 'real' ? await readSenaiteSamples() : undefined;
 
   return (
     <div className="space-y-7">
@@ -34,6 +37,34 @@ export default async function OHWorksSampleWorkflow({ searchParams }: PageProps)
           and release is impossible without a distinct authorized technical-review event.
         </p>
       </div>
+
+      {senaiteMode === 'real' && senaiteResult ? (
+        <section className="rounded-2xl border border-indigo-200 bg-indigo-50 p-6">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-indigo-700">
+            Real SENAITE read adapter (fail-closed, source-only)
+          </p>
+          {senaiteResult.status === 'unavailable' && (
+            <p className="mt-2 text-sm text-indigo-900">
+              Unavailable ({senaiteResult.reason}): {senaiteResult.detail}
+            </p>
+          )}
+          {senaiteResult.status === 'invalid' && (
+            <p className="mt-2 text-sm text-indigo-900">Invalid response: {senaiteResult.detail}</p>
+          )}
+          {senaiteResult.status === 'empty' && (
+            <p className="mt-2 text-sm text-indigo-900">Connected. Zero real samples returned for this query.</p>
+          )}
+          {senaiteResult.status === 'ok' && (
+            <ul className="mt-3 space-y-1 text-sm text-indigo-950">
+              {senaiteResult.samples.map((sample) => (
+                <li key={sample.id} className="font-mono">
+                  {sample.id} — {sample.reviewState} ({sample.sampleType})
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+      ) : null}
 
       <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <div className="grid gap-3 md:grid-cols-3 xl:grid-cols-6">
