@@ -1,3 +1,4 @@
+import type { DeliveryResult } from './notify';
 import { NextRequest, NextResponse } from 'next/server';
 import {
   validateEarlyAccessApplication,
@@ -12,8 +13,8 @@ interface SubmissionNotice {
 
 export interface EarlyAccessDependencies {
   createProspect: (record: EarlyAccessRecord) => Promise<unknown>;
-  sendSubmissionNotice: (notice: SubmissionNotice) => Promise<void>;
-  sendApplicantConfirmation: (email: string, name: string) => Promise<void>;
+  sendSubmissionNotice: (notice: SubmissionNotice) => Promise<void | DeliveryResult>;
+  sendApplicantConfirmation: (email: string, name: string) => Promise<void | DeliveryResult>;
   now?: () => string;
 }
 
