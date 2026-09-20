@@ -1,5 +1,6 @@
 import { AlertTriangle, BadgeCheck, CalendarClock, UserCheck } from 'lucide-react';
 import { getVisiblePersonnel, resolveRoleView } from '@/lib/ohworks-pilot';
+import { buildPilotReleaseAuthorizationView } from '@/lib/ohworks-demo-release-authorization-view';
 
 interface PageProps {
   searchParams?: Promise<{ role?: string }>;
@@ -9,6 +10,7 @@ export default async function OHWorksPersonnelPilot({ searchParams }: PageProps)
   const params = searchParams ? await searchParams : undefined;
   const role = resolveRoleView(params?.role);
   const visiblePersonnel = getVisiblePersonnel(role.id);
+  const releaseAuthorization = buildPilotReleaseAuthorizationView();
 
   return (
     <div className="space-y-7">
@@ -79,6 +81,62 @@ export default async function OHWorksPersonnelPilot({ searchParams }: PageProps)
             {role.label} is limited to outcome-only synthetic records. Personnel, review authorization,
             and release authority details are intentionally hidden in this demo role.
           </p>
+        </section>
+      )}
+
+      {visiblePersonnel.length > 0 && (
+        <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          <h2 className="text-lg font-semibold text-teal-700">Release authorization and device lockout (fabricated)</h2>
+          <p className="mt-3 text-sm leading-6 text-slate-600">
+            Fabricated analysts, competencies and devices evaluated by the real rule modules at a fixed demo timestamp;
+            this is a rule demonstration, not authentication and not a real authorization record. Every value and outcome
+            below is synthetic. Competency periods, suspension windows and QC frequencies are fabricated examples,
+            not regulatory guidance. No real SENAITE server or customer data is used.
+          </p>
+          <p className="mt-2 text-xs text-slate-600">Fixed synthetic evaluation timestamp: {releaseAuthorization.now}</p>
+          <p className="mt-4 font-semibold text-teal-800">
+            Refused synthetic releases: {releaseAuthorization.counts.refusedReleases} · Locked synthetic devices: {releaseAuthorization.counts.lockedDevices}
+          </p>
+          <div className="mt-5 overflow-x-auto">
+            <table className="w-full min-w-[800px] text-left text-xs">
+              <caption className="pb-2 text-left text-sm font-semibold text-teal-700">Fabricated release attempts — all inputs and outcomes are synthetic</caption>
+              <thead className="bg-slate-50 text-slate-600">
+                <tr>{['Result ID', 'Method', 'Flag', 'Analyst ID', 'Decision', 'Rule explanation'].map((label) => <th key={label} scope="col" className="px-3 py-2">{label}</th>)}</tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {releaseAuthorization.releaseRows.map((row) => (
+                  <tr key={row.resultId}>
+                    <th scope="row" className="px-3 py-3 font-mono font-normal">{row.resultId}</th>
+                    <td className="px-3 py-3">{row.method}</td>
+                    <td className="px-3 py-3">{row.flag}</td>
+                    <td className="px-3 py-3 font-mono">{row.analystId}</td>
+                    <td className="px-3 py-3"><span className={`rounded-full px-2 py-1 font-semibold ${row.decision === 'REFUSED' ? 'bg-amber-50 text-amber-800' : 'bg-teal-50 text-teal-700'}`}>{row.decision}</span></td>
+                    <td className="px-3 py-3 text-slate-600">{row.explanation}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <div className="mt-5 overflow-x-auto">
+            <table className="w-full min-w-[800px] text-left text-xs">
+              <caption className="pb-2 text-left text-sm font-semibold text-teal-700">Fabricated point-of-care devices — all inputs and outcomes are synthetic</caption>
+              <thead className="bg-slate-50 text-slate-600">
+                <tr>{['Device ID', 'Last QC result', 'Hours since last QC', 'Locked', 'Supervisor override required', 'Reason'].map((label) => <th key={label} scope="col" className="px-3 py-2">{label}</th>)}</tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {releaseAuthorization.deviceRows.map((row) => (
+                  <tr key={row.deviceId}>
+                    <th scope="row" className="px-3 py-3 font-mono font-normal">{row.deviceId}</th>
+                    <td className="px-3 py-3">{row.lastQcResult}</td>
+                    <td className="px-3 py-3 tabular-nums">{row.hoursSinceLastQc}</td>
+                    <td className="px-3 py-3"><span className={`rounded-full px-2 py-1 font-semibold ${row.locked ? 'bg-amber-50 text-amber-800' : 'bg-teal-50 text-teal-700'}`}>{row.locked ? 'Yes' : 'No'}</span></td>
+                    <td className="px-3 py-3"><span className={`rounded-full px-2 py-1 font-semibold ${row.overrideRequired ? 'bg-amber-50 text-amber-800' : 'bg-slate-100 text-slate-700'}`}>{row.overrideRequired ? 'Yes' : 'No'}</span></td>
+                    <td className="px-3 py-3 text-slate-600">{row.reason}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </section>
       )}
 
