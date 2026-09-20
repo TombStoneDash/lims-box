@@ -1,3 +1,4 @@
+import { safeErrorMeta } from '@/lib/safeLog';
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { sendSubmissionNotice } from '@/lib/notify';
@@ -34,7 +35,7 @@ export async function POST(request: NextRequest) {
       await prisma.prospect.create({ data: record });
       dbSaved = true;
     } catch (dbErr) {
-      console.error('[waitlist] DB save failed (non-fatal):', dbErr);
+      console.error('[waitlist] DB save failed (non-fatal):', safeErrorMeta(dbErr));
     }
 
     let noticeSent = false;
@@ -51,16 +52,18 @@ export async function POST(request: NextRequest) {
       });
       noticeSent = true;
     } catch (notifyErr) {
-      console.error('[waitlist] notification failed (non-fatal):', notifyErr);
+      console.error('[waitlist] notification failed (non-fatal):', safeErrorMeta(notifyErr));
     }
 
     if (!dbSaved && !noticeSent) {
+      // Both durable sinks failed: retain the full lead here as the last recovery copy.
+      console.error('[waitlist] LEAD-RECOVERY (both sinks failed):', record);
       return NextResponse.json({ error: 'Failed to process signup' }, { status: 500 });
     }
 
     return NextResponse.json({ success: true, saved: dbSaved });
   } catch (err) {
-    console.error('[waitlist] handler threw', err);
+    console.error('[waitlist] handler threw', safeErrorMeta(err));
     return NextResponse.json({ error: 'Invalid request' }, { status: 400 });
   }
 }
