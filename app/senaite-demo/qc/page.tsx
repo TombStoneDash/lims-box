@@ -5,7 +5,7 @@ import type { QCAnalyte } from '@/lib/demo-data';
 import { evaluateAnalyteQC, evaluateQCSummary } from '@/lib/senaite-demo-qc';
 import type { QCAnalyteEvaluation } from '@/lib/senaite-demo-qc';
 import { AlertTriangle, CheckCircle2, TrendingUp } from 'lucide-react';
-import { useState } from 'react';
+import React, { useState } from 'react';
 
 const STATUS_BADGE = {
   'in-range': { label: 'All in range', className: 'text-green-700 bg-green-50', Icon: CheckCircle2 },
