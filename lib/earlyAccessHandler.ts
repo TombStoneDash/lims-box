@@ -1,3 +1,4 @@
+import { safeErrorMeta } from '@/lib/safeLog';
 import type { DeliveryResult } from './notify';
 import { NextRequest, NextResponse } from 'next/server';
 import {
@@ -38,7 +39,7 @@ export function createEarlyAccessPostHandler(dependencies: EarlyAccessDependenci
         await dependencies.createProspect(record);
         dbSaved = true;
       } catch (dbErr) {
-        console.error('[early-access] DB save failed (non-fatal):', dbErr);
+        console.error('[early-access] DB save failed (non-fatal):', safeErrorMeta(dbErr));
       }
 
       let noticeSent = false;
@@ -59,10 +60,12 @@ export function createEarlyAccessPostHandler(dependencies: EarlyAccessDependenci
         });
         noticeSent = true;
       } catch (notifyErr) {
-        console.error('[early-access] notification failed (non-fatal)', notifyErr);
+        console.error('[early-access] notification failed (non-fatal)', safeErrorMeta(notifyErr));
       }
 
       if (!dbSaved && !noticeSent) {
+        // Both durable sinks failed: retain the full lead here as the last recovery copy.
+        console.error('[early-access] LEAD-RECOVERY (both sinks failed):', record);
         return NextResponse.json(
           { error: 'Failed to process application' },
           { status: 500 },
@@ -72,12 +75,12 @@ export function createEarlyAccessPostHandler(dependencies: EarlyAccessDependenci
       try {
         await dependencies.sendApplicantConfirmation(record.email, record.name);
       } catch (err) {
-        console.error('[early-access] Applicant confirmation failed (non-fatal)', err);
+        console.error('[early-access] Applicant confirmation failed (non-fatal)', safeErrorMeta(err));
       }
 
       return NextResponse.json({ success: true, saved: dbSaved });
     } catch (err) {
-      console.error('[early-access] handler threw', err);
+      console.error('[early-access] handler threw', safeErrorMeta(err));
       return NextResponse.json({ error: 'Invalid request' }, { status: 400 });
     }
   };
