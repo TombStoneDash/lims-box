@@ -6,6 +6,8 @@ import {
   resolveRoleView,
 } from '@/lib/ohworks-pilot';
 
+import { buildPilotQualityEventsView } from '@/lib/ohworks-demo-quality-events-view';
+
 interface PageProps {
   searchParams?: Promise<{ role?: string }>;
 }
@@ -15,6 +17,7 @@ export default async function OHWorksAuditReadiness({ searchParams }: PageProps)
   const role = resolveRoleView(params?.role);
   const visibleAudit = getVisibleAudit(role.id);
   const visibleDiscovery = getVisibleDiscoveryRecords(role.id);
+  const qualityEvents = buildPilotQualityEventsView();
 
   return (
     <div className="space-y-7">
@@ -119,6 +122,85 @@ export default async function OHWorksAuditReadiness({ searchParams }: PageProps)
               ))}
             </tbody>
           </table>
+        </div>
+      </section>
+
+      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <h2 className="text-lg font-semibold">Quality events (fabricated)</h2>
+        <p className="mt-3 text-sm leading-6 text-slate-600">
+          Fabricated records evaluated by the real lifecycle and diff rules; nothing here is a customer record
+          and nothing is written. All values, roles, and timestamps below are synthetic. This panel does not
+          connect to a SENAITE server.
+        </p>
+        <div className="mt-6 grid gap-6 xl:grid-cols-2">
+          <div className="min-w-0">
+            <h3 className="font-semibold text-teal-800">Fabricated nonconformance timeline</h3>
+            <p className="mt-2 text-xs text-slate-600">
+              {qualityEvents.record.recordId} · Synthetic final state: {qualityEvents.record.state}
+            </p>
+            <p className="mt-2 text-xs text-slate-600">
+              Synthetic attempts: {qualityEvents.counts.accepted} accepted, {qualityEvents.counts.refused} refused
+            </p>
+            <ol className="mt-4 space-y-3">
+              {qualityEvents.timeline.map((entry) => (
+                <li key={entry.occurredAt} className={entry.status === 'refused'
+                  ? 'rounded-xl border border-amber-200 bg-amber-50 p-4 text-amber-950'
+                  : 'rounded-xl border border-slate-200 bg-slate-50 p-4 text-slate-700'}>
+                  <p className="break-words text-xs font-semibold">{entry.action.kind} · {entry.status}</p>
+                  <p className="mt-1 break-words text-xs">{entry.fromState} → {entry.state}</p>
+                  <p className="mt-1 text-xs">Synthetic actor role: {entry.actorRole}</p>
+                  <p className="mt-1 break-all font-mono text-xs">{entry.occurredAt}</p>
+                  {entry.refusalCode && <p className="mt-2 text-xs font-semibold">{entry.refusalCode}</p>}
+                  <p className="mt-2 text-xs leading-5">{entry.explanation}</p>
+                </li>
+              ))}
+            </ol>
+          </div>
+          <div className="min-w-0">
+            <h3 className="font-semibold text-teal-800">What changed in the amended report</h3>
+            <p className="mt-2 text-xs text-slate-600">Fabricated sample: {qualityEvents.sampleId}</p>
+            <p className="mt-2 text-xs text-slate-600">
+              Synthetic rows: {qualityEvents.counts.changed} changed, {qualityEvents.counts.added} added,
+              {' '}{qualityEvents.counts.unchanged} unchanged; {qualityEvents.counts.significant} significant changes
+            </p>
+            <div className="mt-4 overflow-x-auto">
+              <table className="w-full min-w-[640px] text-left text-xs">
+                <caption className="mb-3 text-left text-slate-500">
+                  Fabricated original and amended values. Significance uses synthetic thresholds and flag rules.
+                </caption>
+                <thead className="bg-slate-50 text-slate-500">
+                  <tr>
+                    <th scope="col" className="p-3">Synthetic analyte</th>
+                    <th scope="col" className="p-3">Old</th>
+                    <th scope="col" className="p-3">New</th>
+                    <th scope="col" className="p-3">Delta</th>
+                    <th scope="col" className="p-3">Significant?</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {qualityEvents.diffEntries.map((entry) => (
+                    <tr key={entry.analyte}>
+                      <th scope="row" className="p-3 font-medium">
+                        <span className="break-all">{entry.analyte}</span>
+                        <span className="mt-1 block text-slate-500">{entry.kind}</span>
+                      </th>
+                      <td className="p-3">{entry.old}</td>
+                      <td className="p-3">{entry.new}</td>
+                      <td className="p-3">{entry.delta}</td>
+                      <td className="p-3">
+                        <span className={entry.significant
+                          ? 'inline-block rounded-full bg-teal-100 px-2 py-1 font-semibold text-teal-900'
+                          : 'inline-block rounded-full bg-slate-100 px-2 py-1 text-slate-700'}>
+                          {entry.significanceLabel}
+                        </span>
+                        <p className="mt-2 leading-5 text-slate-600">{entry.explanation}</p>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
       </section>
 
