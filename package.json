@@ -22,6 +22,7 @@
     "test:host-redirects": "node --import tsx --test tests/ops/host-redirects.test.ts",
     "test:demo-hardening": "node --import tsx --test tests/security/demo-access.test.ts tests/demo/operator-state.test.ts tests/security/vercel-db-gate.test.mjs",
     "test:ohworks": "node --import tsx --test tests/ohworks/pilot-contract.test.ts tests/ohworks/result-review-state.test.ts",
+    "test:all": "node scripts/run-all-tests.mjs",
     "postinstall": "prisma generate",
     "seed": "tsx prisma/seed.ts",
     "db:reset": "prisma migrate reset --force && tsx prisma/seed.ts",
