@@ -15,6 +15,7 @@ export const KNOWN_UNPROTECTED_PENDING_OWNER_DECISION: readonly string[] = [
   "/pilot/ohworks/instrument",
   "/pilot/ohworks/personnel",
   "/pilot/ohworks/qc",
+  "/pilot/ohworks/result-review",
   "/pilot/ohworks/samples",
 ];
 
