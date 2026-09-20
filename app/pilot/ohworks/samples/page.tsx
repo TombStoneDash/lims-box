@@ -1,3 +1,4 @@
+import { buildPilotSpecimenIntegrityView } from '@/lib/ohworks-demo-specimen-integrity-view';
 import { buildPilotTatPriorityView } from '@/lib/ohworks-demo-tat-priority-view';
 import { AlertTriangle, CheckCircle2, Lock, ShieldOff } from 'lucide-react';
 import {
@@ -26,6 +27,7 @@ export default async function OHWorksSampleWorkflow({ searchParams }: PageProps)
   const canSeeClinical = ['reviewer', 'admin'].includes(role.id);
 
   const tatPriorityView = buildPilotTatPriorityView();
+  const specimenIntegrity = buildPilotSpecimenIntegrityView();
 
   return (
     <div className="space-y-7">
@@ -178,6 +180,91 @@ export default async function OHWorksSampleWorkflow({ searchParams }: PageProps)
                     <p className="mt-1 text-xs text-slate-500">{row.unresolvedReason ?? row.tatReason}</p>
                   </td>
                   <td className="whitespace-nowrap p-3 text-xs">{row.dueAt ?? 'Unresolved'}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <h2 className="font-semibold">Specimen stability and transport temperature (fabricated specimens)</h2>
+        <p className="mt-2 text-sm text-slate-600">
+          All values and outcomes below are synthetic. This panel has no SENAITE connection and performs no writes.
+        </p>
+        <p className="mt-3 text-sm font-semibold text-teal-700">
+          Synthetic specimens not within window: {specimenIntegrity.notWithinWindowCount} · Synthetic transports rejected or unresolved: {specimenIntegrity.rejectedOrUnresolvedCount}
+        </p>
+        <div className="mt-4 overflow-x-auto">
+          <table className="w-full text-left text-sm">
+            <caption className="caption-top pb-3 text-left text-xs text-slate-500">
+              Stability windows, temperature bands and logs are fabricated examples evaluated by the real rule modules;
+              an expired or rejected specimen here would be routed to human review, nothing is rejected automatically.
+              These fabricated limits are not regulatory guidance.
+            </caption>
+            <thead className="border-b border-slate-200 text-xs text-slate-500">
+              <tr>
+                <th scope="col" className="p-3">Synthetic specimen / analyte</th>
+                <th scope="col" className="p-3">Synthetic storage segments (elapsed / window minutes)</th>
+                <th scope="col" className="p-3">Synthetic stability status</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {specimenIntegrity.stabilityRows.map((row) => (
+                <tr key={row.specimenId}>
+                  <th scope="row" className="p-3 font-normal">
+                    <p className="font-mono text-xs font-semibold">{row.specimenId}</p>
+                    <p className="mt-1 font-mono text-xs text-slate-500">{row.analyteCode}</p>
+                  </th>
+                  <td className="p-3 text-xs">
+                    {row.segments.length === 0 ? 'Unavailable — history gap' : row.segments.map((segment) => (
+                      <p key={segment.startAt} className="mt-1">
+                        {segment.condition}: {segment.elapsedMinutes} / {segment.windowMinutes ?? 'Undeclared'} minutes
+                      </p>
+                    ))}
+                  </td>
+                  <td className="p-3">
+                    <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ${row.status === 'within-window' ? 'bg-teal-50 text-teal-700 ring-teal-200' : 'bg-amber-50 text-amber-800 ring-amber-200'}`}>
+                      {row.status}
+                    </span>
+                    {row.status !== 'within-window' && <p className="mt-2 text-xs text-slate-500">{row.reasonCode}: {row.explanation}</p>}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <div className="mt-6 overflow-x-auto">
+          <table className="w-full text-left text-sm">
+            <caption className="caption-top pb-3 text-left text-xs text-slate-500">
+              Fabricated courier temperature logs and synthetic decisions. A logger gap leaves the temperature history unresolved.
+              Excursion durations use the first and last out-of-band readings in each run.
+            </caption>
+            <thead className="border-b border-slate-200 text-xs text-slate-500">
+              <tr>
+                <th scope="col" className="p-3">Synthetic specimen / type</th>
+                <th scope="col" className="p-3">Readings</th>
+                <th scope="col" className="p-3">Excursions</th>
+                <th scope="col" className="p-3">Total / longest excursion (minutes)</th>
+                <th scope="col" className="p-3">Synthetic decision</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {specimenIntegrity.transportRows.map((row) => (
+                <tr key={row.specimenId}>
+                  <th scope="row" className="p-3 font-normal">
+                    <p className="font-mono text-xs font-semibold">{row.specimenId}</p>
+                    <p className="mt-1 font-mono text-xs text-slate-500">{row.specimenType}</p>
+                  </th>
+                  <td className="p-3">{row.readingCount}</td>
+                  <td className="p-3">{row.excursionCount ?? 'Unavailable'}</td>
+                  <td className="p-3">{row.totalExcursionMinutes ?? 'Unavailable'} / {row.longestExcursionMinutes ?? 'Unavailable'}</td>
+                  <td className="p-3">
+                    <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ${row.decision === 'acceptable' ? 'bg-teal-50 text-teal-700 ring-teal-200' : 'bg-amber-50 text-amber-800 ring-amber-200'}`}>
+                      {row.decision}
+                    </span>
+                    {row.decision !== 'acceptable' && <p className="mt-2 text-xs text-slate-500">{row.errorCode ? `${row.errorCode}: ` : ''}{row.explanation}</p>}
+                  </td>
                 </tr>
               ))}
             </tbody>
