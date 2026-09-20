@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
+  alternates: { canonical: "/clinical" },
   title: "LIMS BOX for clinical labs — local-first documentation continuity",
   description:
     "Local-first documentation layer for CLIA-certified clinical labs. Survey-readiness organization. Human-reviewed drafting. Not a LIMS replacement. See a synthetic demo — no customer data, no live LIS integration.",

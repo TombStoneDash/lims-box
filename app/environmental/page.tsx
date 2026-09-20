@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
+  alternates: { canonical: "/environmental" },
   title: "LIMS BOX for environmental labs — field-to-bench continuity",
   description:
     "Local-first documentation layer for NELAP/ELAP environmental labs. Field-to-bench continuity. Audit-trail organization. Human-reviewed drafting. Not a LIMS replacement.",
