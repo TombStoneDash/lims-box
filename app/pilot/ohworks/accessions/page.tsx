@@ -1,4 +1,5 @@
 import { buildPilotOrderIntakeView } from '@/lib/ohworks-demo-order-intake-view';
+import { AccessionIdentityPanel } from '@/app/pilot/ohworks/_components/accession-identity-panel';
 import { AlertTriangle, ArrowRight, ShieldAlert } from 'lucide-react';
 import {
   explainAccessionBlock,
@@ -269,6 +270,7 @@ export default function OHWorksAccessionRejections() {
           </div>
         </div>
       </section>
+      <AccessionIdentityPanel />
     </div>
   );
 }
