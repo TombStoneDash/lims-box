@@ -18,7 +18,7 @@ The matcher check verifies that middleware source names each protected prefix, f
 | --- | --- | --- |
 | PROTECTED | 35 | Covered by the existing demo protection helper. |
 | PUBLIC_BY_DESIGN | 48 | Explicit public purpose recorded in the test. |
-| KNOWN_UNPROTECTED_PENDING_OWNER_DECISION | 11 | Explicit OHWorks exceptions; no implied approval to expose real data. |
+| KNOWN_UNPROTECTED_PENDING_OWNER_DECISION | 12 | Explicit OHWorks exceptions; no implied approval to expose real data. |
 
 Each row below is one discovered page or handler. Dynamic `x` values are inventory placeholders, not actual records.
 
@@ -30,6 +30,7 @@ Each row below is one discovered page or handler. Dynamic `x` values are invento
 | KNOWN_UNPROTECTED_PENDING_OWNER_DECISION | `/pilot/ohworks/audit/export` | Route handler | Synthetic supervised pilot; owner access decision pending. |
 | KNOWN_UNPROTECTED_PENDING_OWNER_DECISION | `/pilot/ohworks/bot` | Page | Synthetic supervised pilot; owner access decision pending. |
 | KNOWN_UNPROTECTED_PENDING_OWNER_DECISION | `/pilot/ohworks/bot/api` | Route handler | Synthetic supervised pilot; owner access decision pending. |
+| KNOWN_UNPROTECTED_PENDING_OWNER_DECISION | `/pilot/ohworks/critical-results` | Page | Synthetic supervised pilot; owner access decision pending. |
 | KNOWN_UNPROTECTED_PENDING_OWNER_DECISION | `/pilot/ohworks/instrument` | Page | Synthetic supervised pilot; owner access decision pending. |
 | KNOWN_UNPROTECTED_PENDING_OWNER_DECISION | `/pilot/ohworks/personnel` | Page | Synthetic supervised pilot; owner access decision pending. |
 | KNOWN_UNPROTECTED_PENDING_OWNER_DECISION | `/pilot/ohworks/qc` | Page | Read-only QC review page, synthetic data only; owner access decision pending. |
@@ -121,7 +122,7 @@ Each row below is one discovered page or handler. Dynamic `x` values are invento
 
 ## Known unprotected: OHWorks supervised pilot
 
-These eleven routes serve synthetic data only. The layout explicitly says "Demo role simulator - not authentication". They are outside the current demo protection helper and middleware matcher:
+These twelve routes serve synthetic data only. The layout explicitly says "Demo role simulator - not authentication". They are outside the current demo protection helper and middleware matcher:
 
 - `/pilot/ohworks` — overview page.
 - `/pilot/ohworks/accessions` — accessions page.
@@ -129,13 +130,14 @@ These eleven routes serve synthetic data only. The layout explicitly says "Demo 
 - `/pilot/ohworks/audit/export` — GET CSV route handler.
 - `/pilot/ohworks/bot` — bot page.
 - `/pilot/ohworks/bot/api` — POST route handler.
+- `/pilot/ohworks/critical-results` — critical-results page (read-only, synthetic data only, sends nothing).
 - `/pilot/ohworks/instrument` — instrument page.
 - `/pilot/ohworks/personnel` — personnel page.
 - `/pilot/ohworks/qc` — read-only QC review page, synthetic data only.
 - `/pilot/ohworks/result-review` — result-review queue page (read-only, synthetic data only).
 - `/pilot/ohworks/samples` — samples page.
 
-Nothing in this PR changes access. Gating these routes requires an owner decision plus a middleware change, with the protection helper kept consistent. The test compares the explicit pending list to the discovered OHWorks routes that are still unprotected. When the owner gates the entire pilot, the expected list becomes empty and the test forces all eleven exceptions to be removed. A newly added pilot route also fails until explicitly classified.
+Nothing in this PR changes access. Gating these routes requires an owner decision plus a middleware change, with the protection helper kept consistent. The test compares the explicit pending list to the discovered OHWorks routes that are still unprotected. When the owner gates the entire pilot, the expected list becomes empty and the test forces all twelve exceptions to be removed. A newly added pilot route also fails until explicitly classified.
 
 ## Public API GET review
 
