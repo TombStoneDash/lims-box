@@ -13,6 +13,7 @@ interface BotReply {
   grounded: boolean;
   sources: BotSource[];
   followUp?: { label: string; path: string };
+  suggestions?: string[];
 }
 
 interface ChatItem {
@@ -20,6 +21,7 @@ interface ChatItem {
   text: string;
   sources?: BotSource[];
   followUp?: { label: string; path: string };
+  suggestions?: string[];
 }
 
 const SUGGESTIONS = [
@@ -56,6 +58,7 @@ export function BotChat() {
             text: data.answer,
             sources: data.sources,
             followUp: data.followUp,
+            suggestions: data.grounded ? undefined : data.suggestions,
           },
         ]);
       }
@@ -117,6 +120,24 @@ export function BotChat() {
                     {item.followUp.label} →
                   </Link>
                 </p>
+              )}
+              {item.suggestions && item.suggestions.length > 0 && (
+                <div role="group" aria-label="Try asking:" className="mt-2">
+                  <p className="text-xs">Try asking:</p>
+                  <div className="mt-1 flex flex-wrap gap-2">
+                    {item.suggestions.map((suggestion) => (
+                      <button
+                        key={suggestion}
+                        type="button"
+                        onClick={() => ask(suggestion)}
+                        disabled={busy}
+                        className="rounded-sm text-left text-xs font-semibold underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:opacity-40"
+                      >
+                        {suggestion}
+                      </button>
+                    ))}
+                  </div>
+                </div>
               )}
             </div>
           </div>
