@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import IntakeForm from "../../_intake/IntakeForm";
 
 export const metadata: Metadata = {
+  alternates: { canonical: "/clinical/intake" },
   title: "Tell us about your clinical lab — LIMS BOX",
   description: "A short intake form for clinical labs. HT reads each one personally.",
 };
