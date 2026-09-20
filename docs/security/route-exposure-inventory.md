@@ -1,6 +1,6 @@
 # Route exposure inventory
 
-Snapshot of repository source at `087c4ab`, reviewed 2026-09-19. This is a test-only classification guard, not an authorization implementation or a live deployment check.
+Snapshot of repository source at `917672a`, reviewed 2026-09-19. This is a test-only classification guard, not an authorization implementation or a live deployment check.
 
 Run directly from the repository root (with the existing dependencies available):
 
@@ -18,7 +18,7 @@ The matcher check verifies that middleware source names each protected prefix, f
 | --- | --- | --- |
 | PROTECTED | 35 | Covered by the existing demo protection helper. |
 | PUBLIC_BY_DESIGN | 48 | Explicit public purpose recorded in the test. |
-| KNOWN_UNPROTECTED_PENDING_OWNER_DECISION | 9 | Explicit OHWorks exceptions; no implied approval to expose real data. |
+| KNOWN_UNPROTECTED_PENDING_OWNER_DECISION | 10 | Explicit OHWorks exceptions; no implied approval to expose real data. |
 
 Each row below is one discovered page or handler. Dynamic `x` values are inventory placeholders, not actual records.
 
@@ -32,6 +32,7 @@ Each row below is one discovered page or handler. Dynamic `x` values are invento
 | KNOWN_UNPROTECTED_PENDING_OWNER_DECISION | `/pilot/ohworks/bot/api` | Route handler | Synthetic supervised pilot; owner access decision pending. |
 | KNOWN_UNPROTECTED_PENDING_OWNER_DECISION | `/pilot/ohworks/instrument` | Page | Synthetic supervised pilot; owner access decision pending. |
 | KNOWN_UNPROTECTED_PENDING_OWNER_DECISION | `/pilot/ohworks/personnel` | Page | Synthetic supervised pilot; owner access decision pending. |
+| KNOWN_UNPROTECTED_PENDING_OWNER_DECISION | `/pilot/ohworks/qc` | Page | Read-only QC review page, synthetic data only; owner access decision pending. |
 | KNOWN_UNPROTECTED_PENDING_OWNER_DECISION | `/pilot/ohworks/samples` | Page | Synthetic supervised pilot; owner access decision pending. |
 | PROTECTED | `/admin` | Page | Existing fail-closed demo Basic Auth policy. |
 | PROTECTED | `/admin/competencies/new` | Page | Existing fail-closed demo Basic Auth policy. |
@@ -119,7 +120,7 @@ Each row below is one discovered page or handler. Dynamic `x` values are invento
 
 ## Known unprotected: OHWorks supervised pilot
 
-These nine routes serve synthetic data only. The layout explicitly says "Demo role simulator - not authentication". They are outside the current demo protection helper and middleware matcher:
+These ten routes serve synthetic data only. The layout explicitly says "Demo role simulator - not authentication". They are outside the current demo protection helper and middleware matcher:
 
 - `/pilot/ohworks` — overview page.
 - `/pilot/ohworks/accessions` — accessions page.
@@ -129,9 +130,10 @@ These nine routes serve synthetic data only. The layout explicitly says "Demo ro
 - `/pilot/ohworks/bot/api` — POST route handler.
 - `/pilot/ohworks/instrument` — instrument page.
 - `/pilot/ohworks/personnel` — personnel page.
+- `/pilot/ohworks/qc` — read-only QC review page, synthetic data only.
 - `/pilot/ohworks/samples` — samples page.
 
-Nothing in this PR changes access. Gating these routes requires an owner decision plus a middleware change, with the protection helper kept consistent. The test compares the explicit pending list to the discovered OHWorks routes that are still unprotected. When the owner gates the entire pilot, the expected list becomes empty and the test forces all nine exceptions to be removed. A newly added pilot route also fails until explicitly classified.
+Nothing in this PR changes access. Gating these routes requires an owner decision plus a middleware change, with the protection helper kept consistent. The test compares the explicit pending list to the discovered OHWorks routes that are still unprotected. When the owner gates the entire pilot, the expected list becomes empty and the test forces all ten exceptions to be removed. A newly added pilot route also fails until explicitly classified.
 
 ## Public API GET review
 

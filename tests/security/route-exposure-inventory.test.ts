@@ -14,6 +14,7 @@ export const KNOWN_UNPROTECTED_PENDING_OWNER_DECISION: readonly string[] = [
   "/pilot/ohworks/bot/api",
   "/pilot/ohworks/instrument",
   "/pilot/ohworks/personnel",
+  "/pilot/ohworks/qc",
   "/pilot/ohworks/samples",
 ];
 
@@ -106,7 +107,7 @@ test("every discovered route has exactly one conscious exposure classification",
       + KNOWN_UNPROTECTED_PENDING_OWNER_DECISION.filter((entry) => entry === route.path).length
       + PUBLIC_BY_DESIGN.filter((entry) => entry.path === route.path).length;
     assert.equal(matches, 1,
-      `${route.path} (${path.relative(process.cwd(), route.file)}): found ${matches} classifications; classify this route in exactly one exposure bucket.`);
+      `${route.path} (${path.relative(process.cwd(), route.file)}): found ${matches} classifications; classify this route in exactly one exposure bucket. Add this path to PROTECTED coverage, PUBLIC_BY_DESIGN (with a reason) or KNOWN_UNPROTECTED_PENDING_OWNER_DECISION in tests/security/route-exposure-inventory.test.ts and docs/security/route-exposure-inventory.md`);
   }
 });
 
