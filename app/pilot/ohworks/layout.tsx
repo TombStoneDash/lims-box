@@ -10,6 +10,7 @@ const nav = [
   { href: '/pilot/ohworks/samples', label: 'Sample workflow', icon: 'flask' },
   { href: '/pilot/ohworks/accessions', label: 'Accession rejections', icon: 'shieldAlert' },
   { href: '/pilot/ohworks/instrument', label: 'Instrument discovery', icon: 'activity' },
+  { href: '/pilot/ohworks/qc', label: 'QC review', icon: 'activity' },
   { href: '/pilot/ohworks/personnel', label: 'Personnel', icon: 'users' },
   { href: '/pilot/ohworks/audit', label: 'Audit readiness', icon: 'clipboard' },
   { href: '/pilot/ohworks/bot', label: 'Expert assistant', icon: 'bot' },
