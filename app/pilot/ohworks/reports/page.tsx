@@ -1,5 +1,6 @@
 import { buildPilotReportDeliveryView } from '@/lib/ohworks-demo-report-delivery-view';
 import { resolveRoleView } from '@/lib/ohworks-pilot';
+import { SendoutCancellationCommentsPanel } from '@/app/pilot/ohworks/_components/sendout-cancellation-comments-panel';
 
 interface PageProps {
   searchParams?: Promise<{ role?: string }>;
@@ -75,6 +76,7 @@ export default async function OHWorksReportDelivery({ searchParams }: PageProps)
           </article>
         ))}</div>
       </section>
+      <SendoutCancellationCommentsPanel />
     </div>
   );
 }
