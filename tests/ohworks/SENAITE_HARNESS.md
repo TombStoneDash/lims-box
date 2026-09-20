@@ -49,3 +49,35 @@ PR #103 head `3328c86c77de417008e11ff036c979b3be649544`, ran the command above
 (83 passed, including 11 new tests), then removed the staged production file.
 The final branch still requires upstream adapter integration before this
 harness can pass. No production files, package scripts, or credentials changed.
+
+## In-process synthetic lab-day harness
+
+Run without a network adapter or additional dependencies:
+
+```sh
+node --import tsx --test tests/ohworks/synthetic-lab-day.test.ts
+```
+
+This second harness chains all eight merged rule modules with fabricated inputs:
+version resolution, unit conversion, reference classification, delta checks,
+run QC, cumulative specimen TEST_RUN consumption, autoverification, and TAT.
+It proves deterministic rule integration, ordered decision traces, hold reasons,
+and reconciled totals. QC is evaluated once per encountered run and reused;
+its supplied sequence may include fabricated historical controls. Previous
+results, delta thresholds, measurement ranges and critical limits must use the
+resolved reporting unit. Same-unit conversion is held with the converter's
+`unit-mismatched` code; no identity conversion is invented.
+
+Definition or conversion rejection stops that result. Other early holds cannot
+be overridden by autoverification. Invalid volume postings are not committed to
+the in-process ledger. Reference classification is reported independently of
+analytical measurement and critical limits; invalid reference inputs hold.
+TAT is informational, including invalid timestamp diagnostics, and a breach
+does not change release outcome. Breaches count distinct evaluated specimens;
+results stopped before TAT do not contribute. Held-by-reason counts each code
+once per held result, so multiple reasons can exceed the held-result total.
+
+This is synthetic in-process proof only: it proves no live SENAITE connection,
+persistence, instrument integration, or operational release authority. A human
+technical review is still required, including for `AUTO_RELEASE` decisions.
+The existing HTTP harness and its owner-gated adapter dependency are unchanged.
