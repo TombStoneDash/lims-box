@@ -1,3 +1,4 @@
+import { buildPilotOrderIntakeView } from '@/lib/ohworks-demo-order-intake-view';
 import { AlertTriangle, ArrowRight, ShieldAlert } from 'lucide-react';
 import {
   explainAccessionBlock,
@@ -118,6 +119,15 @@ const REJECTED_SAMPLES: SampleSubmission[] = [
 ];
 
 export default function OHWorksAccessionRejections() {
+  const intake = buildPilotOrderIntakeView();
+  const intakeStatusStyles = {
+    AUTHORIZED: 'bg-emerald-50 text-emerald-800', NEEDS_COSIGN: 'bg-amber-50 text-amber-800', REFUSED: 'bg-rose-50 text-rose-800',
+    not_applicable: 'bg-emerald-50 text-emerald-800', compliant: 'bg-emerald-50 text-emerald-800',
+    missing_readback: 'bg-rose-50 text-rose-800', readback_not_confirmed: 'bg-amber-50 text-amber-800', missing_required_fields: 'bg-rose-50 text-rose-800',
+    eligible: 'bg-emerald-50 text-emerald-800', eligible_with_buffer_warning: 'bg-amber-50 text-amber-800',
+    specimen_unavailable: 'bg-rose-50 text-rose-800', stability_expired: 'bg-rose-50 text-rose-800', insufficient_volume: 'bg-rose-50 text-rose-800',
+  };
+
   const blockedAccessions = BLOCKED_ACCESSION_SCENARIOS.map((_, index) => buildBlockedAccession(index)).filter(
     (result): result is NonNullable<typeof result> => result !== null,
   );
@@ -187,6 +197,76 @@ export default function OHWorksAccessionRejections() {
               </div>
             </article>
           ))}
+        </div>
+      </section>
+
+      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <h2 className="font-semibold">Order intake checks (fabricated orders)</h2>
+        <p className="mt-2 text-sm leading-6 text-slate-600">
+          Fabricated orders evaluated by the real rule modules at a fixed demo timestamp: {intake.asOf}.
+          In this demonstration, a refused or non-compliant order is routed to a human for review;
+          nothing is cancelled automatically. This read-only page performs no routing or writes.
+          Every value, permission, window, limit and volume below is a fabricated example, not regulatory guidance.
+          These synthetic rule outcomes do not establish system compliance or a working SENAITE connection.
+        </p>
+        <div className="mt-4 grid gap-3 text-sm sm:grid-cols-3">
+          <p className="rounded-xl bg-slate-50 p-3">Synthetic orders not authorized: <strong>{intake.counts.ordersNotAuthorized}</strong></p>
+          <p className="rounded-xl bg-slate-50 p-3">Synthetic verbal orders not compliant: <strong>{intake.counts.verbalOrdersNotCompliant}</strong></p>
+          <p className="rounded-xl bg-slate-50 p-3">Synthetic add-ons not eligible: <strong>{intake.counts.addOnsNotEligible}</strong></p>
+        </div>
+        <div className="mt-6">
+          <h3 className="font-semibold text-teal-800">Fabricated order authorization</h3>
+          <div className="mt-3 overflow-x-auto">
+            <table className="w-full text-left text-sm">
+              <thead className="border-b border-slate-200 text-slate-600"><tr>
+                <th scope="col" className="p-2">Synthetic order</th><th scope="col" className="p-2">Fabricated test class</th>
+                <th scope="col" className="p-2">Rule decision</th><th scope="col" className="p-2">Rule explanation</th>
+              </tr></thead>
+              <tbody>{intake.authorizationRows.map((row) => (
+                <tr key={row.orderId} className="border-b border-slate-100 align-top">
+                  <td className="p-2 font-mono">{row.orderId}</td><td className="p-2">{row.testClass}</td>
+                  <td className="p-2"><span className={`inline-block rounded-full px-2.5 py-1 text-xs font-semibold ${intakeStatusStyles[row.decision]}`}>{row.decision}</span></td>
+                  <td className="p-2">{row.explanation}</td>
+                </tr>
+              ))}</tbody>
+            </table>
+          </div>
+        </div>
+        <div className="mt-6">
+          <h3 className="font-semibold text-teal-800">Fabricated verbal-order read-back</h3>
+          <div className="mt-3 overflow-x-auto">
+            <table className="w-full text-left text-sm">
+              <thead className="border-b border-slate-200 text-slate-600"><tr>
+                <th scope="col" className="p-2">Synthetic order</th><th scope="col" className="p-2">Rule status</th><th scope="col" className="p-2">Issues in fabricated order</th>
+              </tr></thead>
+              <tbody>{intake.verbalRows.map((row) => (
+                <tr key={row.label} className="border-b border-slate-100 align-top">
+                  <td className="p-2 font-mono">{row.label}</td>
+                  <td className="p-2"><span className={`inline-block rounded-full px-2.5 py-1 text-xs font-semibold ${intakeStatusStyles[row.status]}`}>{row.status}</span></td>
+                  <td className="p-2">{row.issues.length ? <ul className="list-disc space-y-1 pl-4">{row.issues.map((issue) => <li key={issue}>{issue}</li>)}</ul> : 'No issues in this fabricated order.'}</td>
+                </tr>
+              ))}</tbody>
+            </table>
+          </div>
+        </div>
+        <div className="mt-6">
+          <h3 className="font-semibold text-teal-800">Fabricated add-on requests</h3>
+          <div className="mt-3 overflow-x-auto">
+            <table className="w-full text-left text-sm">
+              <thead className="border-b border-slate-200 text-slate-600"><tr>
+                <th scope="col" className="p-2">Synthetic request</th><th scope="col" className="p-2">Rule status</th>
+                <th scope="col" className="p-2">Synthetic hours since collection</th><th scope="col" className="p-2">Fabricated remaining / required (µL)</th><th scope="col" className="p-2">Issues in fabricated request</th>
+              </tr></thead>
+              <tbody>{intake.addOnRows.map((row) => (
+                <tr key={row.label} className="border-b border-slate-100 align-top">
+                  <td className="p-2 font-mono">{row.label}</td>
+                  <td className="p-2"><span className={`inline-block rounded-full px-2.5 py-1 text-xs font-semibold ${intakeStatusStyles[row.status]}`}>{row.status}</span></td>
+                  <td className="p-2">{row.hoursSinceCollection.toFixed(1)}</td><td className="p-2">{row.remainingVolumeMicroliters} / {row.requiredVolumeMicroliters}</td>
+                  <td className="p-2">{row.issues.length ? <ul className="list-disc space-y-1 pl-4">{row.issues.map((issue) => <li key={issue}>{issue}</li>)}</ul> : 'No issues in this fabricated request.'}</td>
+                </tr>
+              ))}</tbody>
+            </table>
+          </div>
         </div>
       </section>
     </div>
