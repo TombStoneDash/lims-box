@@ -2,12 +2,7 @@ import { readdirSync } from 'node:fs';
 import { spawn } from 'node:child_process';
 
 // Keep exclusions explicit and explain why each file cannot run in CI.
-const EXCLUDED = [
-  {
-    file: 'tests/senaite-demo-qc-accessibility.test.ts',
-    reason: 'FAILING ON MAIN 2026-09-19: React is not defined in QCChartsPage (app/senaite-demo/qc/page.tsx:151) during both render assertions.',
-  },
-];
+const EXCLUDED = [];
 
 function walk(directory) {
   return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
