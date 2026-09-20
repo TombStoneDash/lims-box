@@ -1,6 +1,7 @@
 import { AlertTriangle, BadgeCheck, CalendarClock, UserCheck } from 'lucide-react';
 import { getVisiblePersonnel, resolveRoleView } from '@/lib/ohworks-pilot';
 import { buildPilotReleaseAuthorizationView } from '@/lib/ohworks-demo-release-authorization-view';
+import { CapaWorksheetPanel } from '@/app/pilot/ohworks/_components/capa-worksheet-panel';
 
 interface PageProps {
   searchParams?: Promise<{ role?: string }>;
@@ -150,6 +151,8 @@ export default async function OHWorksPersonnelPilot({ searchParams }: PageProps)
           assessor and release policies, evidence retention, periodic review, and acceptance ownership.
         </p>
       </section>
+
+      <CapaWorksheetPanel />
     </div>
   );
 }
