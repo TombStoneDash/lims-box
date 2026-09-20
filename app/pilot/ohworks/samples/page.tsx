@@ -1,3 +1,4 @@
+import { buildPilotTatPriorityView } from '@/lib/ohworks-demo-tat-priority-view';
 import { AlertTriangle, CheckCircle2, Lock, ShieldOff } from 'lucide-react';
 import {
   getVisibleWorkflowCards,
@@ -23,6 +24,8 @@ export default async function OHWorksSampleWorkflow({ searchParams }: PageProps)
   const role = resolveRoleView(params?.role);
   const visibleCards = getVisibleWorkflowCards(role.id);
   const canSeeClinical = ['reviewer', 'admin'].includes(role.id);
+
+  const tatPriorityView = buildPilotTatPriorityView();
 
   return (
     <div className="space-y-7">
@@ -130,6 +133,55 @@ export default async function OHWorksSampleWorkflow({ searchParams }: PageProps)
               </div>
             </article>
           ))}
+        </div>
+      </section>
+
+      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <h2 className="font-semibold">Turnaround targets and priority escalation (fabricated orders)</h2>
+        <p className="mt-2 text-sm text-slate-600">
+          All values below are synthetic; targets use effective priority and run from the original fabricated receipt.
+          This panel has no SENAITE connection.
+        </p>
+        <p className="mt-3 text-sm font-semibold text-teal-700">
+          Synthetic escalated specimens: {tatPriorityView.escalatedCount} · Synthetic unresolved orders: {tatPriorityView.unresolvedCount}
+        </p>
+        <div className="mt-4 overflow-x-auto">
+          <table className="w-full text-left text-sm">
+            <caption className="caption-top pb-3 text-left text-xs text-slate-500">
+              Targets come from a fabricated catalogue evaluated by the real rule module at a fixed demo timestamp: {tatPriorityView.currentAt}.
+            </caption>
+            <thead className="border-b border-slate-200 text-xs text-slate-500">
+              <tr>
+                <th scope="col" className="p-3">Synthetic order / test</th>
+                <th scope="col" className="p-3">Declared priority</th>
+                <th scope="col" className="p-3">Effective priority</th>
+                <th scope="col" className="p-3">TAT target</th>
+                <th scope="col" className="p-3">Due at (UTC)</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {tatPriorityView.rows.map((row) => (
+                <tr key={row.orderId}>
+                  <th scope="row" className="p-3 font-normal">
+                    <p className="font-mono text-xs font-semibold">{row.orderId}</p>
+                    <p className="mt-1 font-mono text-xs text-slate-500">{row.testCode}</p>
+                  </th>
+                  <td className="p-3">{row.declaredPriority}</td>
+                  <td className="p-3">
+                    <span className="rounded-full bg-teal-50 px-2.5 py-1 text-xs font-semibold uppercase text-teal-700 ring-1 ring-teal-200">
+                      {row.effectivePriority}
+                    </span>
+                    {row.escalated && <p className="mt-2 text-xs text-slate-500">{row.escalationReason}</p>}
+                  </td>
+                  <td className="p-3">
+                    {row.targetHours !== null ? `${row.targetHours} hours (${row.dayType})` : 'Unresolved'}
+                    <p className="mt-1 text-xs text-slate-500">{row.unresolvedReason ?? row.tatReason}</p>
+                  </td>
+                  <td className="whitespace-nowrap p-3 text-xs">{row.dueAt ?? 'Unresolved'}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </section>
 
