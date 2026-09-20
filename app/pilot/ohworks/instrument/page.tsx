@@ -1,3 +1,4 @@
+import { buildPilotInstrumentReadinessView } from '@/lib/ohworks-demo-instrument-readiness-view';
 import { AlertOctagon, Cable, CheckCircle2, GitBranch, ShieldAlert } from 'lucide-react';
 import {
   discoveryGates,
@@ -15,6 +16,7 @@ interface PageProps {
 export default async function OHWorksInstrumentWorkbench({ searchParams }: PageProps) {
   const params = searchParams ? await searchParams : undefined;
   const role = resolveRoleView(params?.role);
+  const readiness = buildPilotInstrumentReadinessView();
 
   return (
     <div className="space-y-7">
@@ -119,6 +121,59 @@ export default async function OHWorksInstrumentWorkbench({ searchParams }: PageP
             <AlertOctagon className="h-5 w-5 text-rose-500" />
             <h3 className="mt-3 text-sm font-semibold">{fault.name}</h3>
             <p className="mt-2 text-xs leading-5 text-slate-600">{fault.action}</p>
+          </div>
+        ))}
+      </section>
+
+      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <h2 className="text-lg font-semibold text-teal-700">Run-readiness checks (fabricated instrument)</h2>
+        <p className="mt-2 text-sm leading-6 text-slate-600">
+          These checks run on a fabricated analyzer and fabricated flag vocabulary; they demonstrate fail-closed
+          behaviour and do not describe any vendor interface. Every value and outcome below is synthetic.
+          This demonstration does not use a real SENAITE server or real customer data.
+        </p>
+        <p className="mt-2 break-words text-xs text-slate-600">
+          Fabricated analyzer: {readiness.instrumentModel}. Synthetic evaluation instant: {readiness.asOf}.
+        </p>
+        <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4 text-amber-950">
+          <p className="font-semibold">{readiness.statusText}</p>
+          <p className="mt-1 text-xs">Synthetic findings count each blocking row once. Review and suppress actions require attention;
+            event-required verification blocks the fabricated run. Due-soon is advisory.</p>
+        </div>
+        {[
+          { title: 'Flag mapping', rows: readiness.flagRows },
+          { title: 'Calibration verification', rows: readiness.calibrationRows },
+          { title: 'Calibrator lot traceability', rows: readiness.traceabilityRows },
+        ].map(({ title, rows }) => (
+          <div key={title} className="mt-5 overflow-x-auto">
+            <table className="w-full min-w-[640px] text-left text-xs">
+              <caption className="pb-2 text-left text-sm font-semibold text-teal-700">{title} — fabricated inputs and synthetic outcomes</caption>
+              <thead className="bg-slate-50 text-slate-600">
+                <tr>
+                  <th scope="col" className="px-3 py-2">Synthetic identifier / details</th>
+                  <th scope="col" className="px-3 py-2">Synthetic decision</th>
+                  <th scope="col" className="px-3 py-2">Reason code / explanation</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {rows.map((row) => (
+                  <tr key={row.id}>
+                    <th scope="row" className="px-3 py-3 font-normal">
+                      <span className="font-mono font-semibold">{row.id}</span>
+                      <p className="mt-1 text-slate-600">{row.detail}</p>
+                    </th>
+                    <td className="px-3 py-3 align-top font-semibold">
+                      {row.decision}
+                      <p className="mt-1 font-normal">{row.blocking ? 'Blocking synthetic finding' : 'No blocking synthetic finding'}</p>
+                    </td>
+                    <td className="px-3 py-3 align-top text-slate-600">
+                      <span className="font-mono">{row.reasonCode}</span>
+                      <p className="mt-1">{row.explanation}</p>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         ))}
       </section>
