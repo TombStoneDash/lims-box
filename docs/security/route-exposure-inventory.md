@@ -18,7 +18,7 @@ The matcher check verifies that middleware source names each protected prefix, f
 | --- | --- | --- |
 | PROTECTED | 35 | Covered by the existing demo protection helper. |
 | PUBLIC_BY_DESIGN | 48 | Explicit public purpose recorded in the test. |
-| KNOWN_UNPROTECTED_PENDING_OWNER_DECISION | 12 | Explicit OHWorks exceptions; no implied approval to expose real data. |
+| KNOWN_UNPROTECTED_PENDING_OWNER_DECISION | 13 | Explicit OHWorks exceptions; no implied approval to expose real data. |
 
 Each row below is one discovered page or handler. Dynamic `x` values are inventory placeholders, not actual records.
 
@@ -34,6 +34,7 @@ Each row below is one discovered page or handler. Dynamic `x` values are invento
 | KNOWN_UNPROTECTED_PENDING_OWNER_DECISION | `/pilot/ohworks/instrument` | Page | Synthetic supervised pilot; owner access decision pending. |
 | KNOWN_UNPROTECTED_PENDING_OWNER_DECISION | `/pilot/ohworks/personnel` | Page | Synthetic supervised pilot; owner access decision pending. |
 | KNOWN_UNPROTECTED_PENDING_OWNER_DECISION | `/pilot/ohworks/qc` | Page | Read-only QC review page, synthetic data only; owner access decision pending. |
+| KNOWN_UNPROTECTED_PENDING_OWNER_DECISION | `/pilot/ohworks/reports` | Page | Synthetic supervised pilot; owner access decision pending. |
 | KNOWN_UNPROTECTED_PENDING_OWNER_DECISION | `/pilot/ohworks/result-review` | Page | Synthetic supervised pilot; owner access decision pending. |
 | KNOWN_UNPROTECTED_PENDING_OWNER_DECISION | `/pilot/ohworks/samples` | Page | Synthetic supervised pilot; owner access decision pending. |
 | PROTECTED | `/admin` | Page | Existing fail-closed demo Basic Auth policy. |
@@ -122,7 +123,7 @@ Each row below is one discovered page or handler. Dynamic `x` values are invento
 
 ## Known unprotected: OHWorks supervised pilot
 
-These twelve routes serve synthetic data only. The layout explicitly says "Demo role simulator - not authentication". They are outside the current demo protection helper and middleware matcher:
+These thirteen routes serve synthetic data only. The layout explicitly says "Demo role simulator - not authentication". They are outside the current demo protection helper and middleware matcher:
 
 - `/pilot/ohworks` — overview page.
 - `/pilot/ohworks/accessions` — accessions page.
@@ -134,6 +135,7 @@ These twelve routes serve synthetic data only. The layout explicitly says "Demo 
 - `/pilot/ohworks/instrument` — instrument page.
 - `/pilot/ohworks/personnel` — personnel page.
 - `/pilot/ohworks/qc` — read-only QC review page, synthetic data only.
+- `/pilot/ohworks/reports` — report-delivery page (read-only, synthetic data only, sends nothing).
 - `/pilot/ohworks/result-review` — result-review queue page (read-only, synthetic data only).
 - `/pilot/ohworks/samples` — samples page.
 
