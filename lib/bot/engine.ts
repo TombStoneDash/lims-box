@@ -20,6 +20,7 @@ export interface BotResponse {
   grounded: boolean;
   sources: BotSource[];
   followUp?: { label: string; path: string };
+  suggestions?: string[];
 }
 
 export const MAX_QUESTION_LENGTH = 500;
@@ -94,7 +95,7 @@ function responseForEntry(id: string): BotResponse {
   };
 }
 
-export function askBot(rawQuestion: unknown): BotResponse {
+function answerQuestion(rawQuestion: unknown): BotResponse {
   if (typeof rawQuestion !== 'string') return evidenceMissing();
   const question = rawQuestion.trim().slice(0, MAX_QUESTION_LENGTH);
   if (!question) return evidenceMissing();
@@ -159,4 +160,35 @@ export function askBot(rawQuestion: unknown): BotResponse {
     sources,
     followUp: LEAD_INTENT_IDS.has(top.entry.id) ? EARLY_ACCESS_FOLLOW_UP : undefined,
   };
+}
+
+// Check the actual answer path once, without recursively building suggestions.
+const ROUND_TRIPPABLE_TITLES = new Set(
+  corpus.filter((entry) => answerQuestion(entry.title).grounded).map((entry) => entry.title),
+);
+const DEFAULT_SUGGESTION_IDS = ['what-is-lims-box', 'pricing', 'pilot-program'];
+
+export function askBot(rawQuestion: unknown): BotResponse {
+  const response = answerQuestion(rawQuestion);
+  if (response.grounded) return response;
+
+  const tokens = typeof rawQuestion === 'string'
+    ? tokenize(rawQuestion.trim().slice(0, MAX_QUESTION_LENGTH))
+    : [];
+  const partialMatches = corpus
+    .map((entry, index) => ({ entry, index, score: scoreEntry(entry, tokens) }))
+    .filter(({ score }) => score >= 1)
+    .sort((a, b) => b.score - a.score || a.index - b.index)
+    .map(({ entry }) => entry);
+  const defaults = DEFAULT_SUGGESTION_IDS.flatMap((id) => {
+    const entry = corpus.find((candidate) => candidate.id === id);
+    return entry ? [entry] : [];
+  });
+  const suggestions = [...new Set(
+    [...partialMatches, ...defaults]
+      .filter((entry) => entry.id !== 'compliance-positioning' && ROUND_TRIPPABLE_TITLES.has(entry.title))
+      .map((entry) => entry.title),
+  )].slice(0, 3);
+
+  return { ...response, suggestions };
 }
