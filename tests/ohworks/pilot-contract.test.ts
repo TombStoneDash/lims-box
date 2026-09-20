@@ -19,6 +19,7 @@ const routeFiles = [
   'app/pilot/ohworks/samples/page.tsx',
   'app/pilot/ohworks/instrument/page.tsx',
   'app/pilot/ohworks/qc/page.tsx',
+  'app/pilot/ohworks/result-review/page.tsx',
   'app/pilot/ohworks/personnel/page.tsx',
   'app/pilot/ohworks/audit/page.tsx',
   'app/pilot/ohworks/bot/page.tsx',
