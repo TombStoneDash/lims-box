@@ -33,6 +33,10 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: '/start', priority: 0.6, changeFrequency: 'monthly' as const },
     // Added 2026-08-08 — water-lane funnel discoverability (issue #72 pass)
     { url: '/field-scout', priority: 0.8, changeFrequency: 'weekly' as const },
+    // Added 2026-09-20 — public CLIA product pages completeness audit
+    { url: '/clia', priority: 0.8, changeFrequency: 'monthly' as const },
+    { url: '/clia-tracker', priority: 0.8, changeFrequency: 'monthly' as const },
+    { url: '/survey-ready-export', priority: 0.8, changeFrequency: 'monthly' as const },
   ]
 
   const blogPosts = getAllPosts().map((post) => ({
