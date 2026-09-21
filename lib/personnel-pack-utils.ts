@@ -59,21 +59,28 @@ export type ReviewOutcome = (typeof REVIEW_OUTCOMES)[number];
  * Spec: calculated from `reviewedAt`, NOT from prior `nextReviewDue`.
  */
 export function calcNextReviewDue(reviewType: ReviewType, reviewedAt: Date): Date | null {
-  const d = new Date(reviewedAt);
+  let months: number;
   switch (reviewType) {
     case "initial":
     case "six_month":
-      d.setMonth(d.getMonth() + 6);
-      return d;
+      months = 6;
+      break;
     case "annual":
-      d.setFullYear(d.getFullYear() + 1);
-      return d;
+      months = 12;
+      break;
     case "corrective_action":
-      d.setMonth(d.getMonth() + 3);
-      return d;
+      months = 3;
+      break;
     case "ad_hoc":
       return null;
   }
+
+  const d = new Date(reviewedAt);
+  // Day zero of the following month is the destination month's final day.
+  // UTC setters preserve the stored time without local timezone or DST shifts.
+  d.setUTCMonth(d.getUTCMonth() + months + 1, 0);
+  d.setUTCDate(Math.min(reviewedAt.getUTCDate(), d.getUTCDate()));
+  return d;
 }
 
 /** Human-readable label for review types. */
