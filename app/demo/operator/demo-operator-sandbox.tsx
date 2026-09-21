@@ -107,6 +107,23 @@ export default function DemoOperatorSandbox() {
           </button>
         </div>
 
+        <section
+          className="mb-8 rounded-xl border border-slate-200 bg-white p-5 shadow-sm"
+          role="status"
+          aria-live="polite"
+        >
+          <h2 className="text-lg font-semibold text-slate-900">Recent activity</h2>
+          {state.activity.length > 0 ? (
+            <ul className="mt-3 list-disc space-y-2 pl-5 text-sm text-slate-600">
+              {state.activity.map((entry, index) => (
+                <li key={`${index}-${entry}`}>{entry}</li>
+              ))}
+            </ul>
+          ) : (
+            <p className="mt-3 text-sm text-slate-600">No changes yet in this tab.</p>
+          )}
+        </section>
+
         <div className="space-y-5">
           {state.people.map((person) => (
             <PersonCard key={person.id} person={person} dispatch={dispatch} />
