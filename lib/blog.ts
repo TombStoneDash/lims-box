@@ -91,6 +91,16 @@ function parseMarkdownToHtml(markdown: string): string {
     return `\n\n<${codeToken}${index}>\n\n`;
   });
 
+  // Keep inline literals opaque until surrounding markdown is fully rendered.
+  const inlineCode: string[] = [];
+  let inlineToken = 'BLOG_INLINE_CODE';
+  while (markdown.includes(inlineToken)) inlineToken += '_';
+  html = html.replace(/`([^`]+)`/g, (_, code: string) => {
+    const escaped = code.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    const index = inlineCode.push(`<code class="bg-black/5 dark:bg-white/5 px-1.5 py-0.5 rounded text-sm">${escaped}</code>`) - 1;
+    return `${inlineToken}${index}END`;
+  });
+
   html = html.replace(/^### (.*$)/gm, '<h3>$1</h3>');
   html = html.replace(/^## (.*$)/gm, '<h2>$1</h2>');
   html = html.replace(/^# (.*$)/gm, '<h1>$1</h1>');
@@ -115,8 +125,6 @@ function parseMarkdownToHtml(markdown: string): string {
 
   html = html.replace(/^> (.*$)/gm, '<blockquote class="border-l-4 border-lab-teal pl-4 italic my-4">$1</blockquote>');
 
-  html = html.replace(/`([^`]+)`/g, '<code class="bg-black/5 dark:bg-white/5 px-1.5 py-0.5 rounded text-sm">$1</code>');
-
   html = html.split('\n\n').map(block => {
     const trimmed = block.trim();
     if (!trimmed) return '';
@@ -124,6 +132,7 @@ function parseMarkdownToHtml(markdown: string): string {
     return `<p class="my-4 leading-relaxed">${trimmed.replace(/\n/g, '<br />')}</p>`;
   }).join('\n');
 
+  html = html.replace(new RegExp(`${inlineToken}(\\d+)END`, 'g'), (_, index) => inlineCode[Number(index)]);
   return html.replace(new RegExp(`<${codeToken}(\\d+)>`, 'g'), (_, index) => codeBlocks[Number(index)]);
 }
 
