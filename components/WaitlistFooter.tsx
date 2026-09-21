@@ -1,10 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useId, useState } from 'react';
 import Link from 'next/link';
 import { FlaskConical, ArrowRight, CheckCircle2 } from 'lucide-react';
 
 export function WaitlistFooter() {
+  const emailId = useId();
+  const labNameId = useId();
   const [email, setEmail] = useState('');
   const [labName, setLabName] = useState('');
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
@@ -43,13 +45,16 @@ export function WaitlistFooter() {
           </p>
 
           {status === 'success' ? (
-            <div className="flex items-center justify-center gap-2 text-green-600">
-              <CheckCircle2 className="w-5 h-5" />
+            <div role="status" className="flex items-center justify-center gap-2 text-green-600">
+              <CheckCircle2 aria-hidden="true" className="w-5 h-5" />
               <span className="font-medium">You&apos;re on the list. We&apos;ll be in touch.</span>
             </div>
           ) : (
-            <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-3 max-w-lg mx-auto">
+            <form onSubmit={handleSubmit} aria-busy={status === 'loading'} className="flex flex-col sm:flex-row gap-3 max-w-lg mx-auto">
+              <label htmlFor={emailId} className="sr-only">Email address</label>
               <input
+                id={emailId}
+                autoComplete="email"
                 type="email"
                 required
                 value={email}
@@ -57,7 +62,10 @@ export function WaitlistFooter() {
                 placeholder="your@email.com"
                 className="flex-1 px-4 py-2.5 rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-lab-teal/50 placeholder:text-slate-400"
               />
+              <label htmlFor={labNameId} className="sr-only">Lab name (optional)</label>
               <input
+                id={labNameId}
+                autoComplete="organization"
                 type="text"
                 value={labName}
                 onChange={e => setLabName(e.target.value)}
@@ -69,12 +77,12 @@ export function WaitlistFooter() {
                 disabled={status === 'loading'}
                 className="px-5 py-2.5 bg-lab-teal hover:bg-lab-teal/90 text-white font-semibold rounded-lg transition-colors disabled:opacity-50 flex items-center justify-center gap-2 text-sm"
               >
-                {status === 'loading' ? '...' : <>Join <ArrowRight className="w-4 h-4" /></>}
+                {status === 'loading' ? 'Joining…' : <>Join <ArrowRight aria-hidden="true" className="w-4 h-4" /></>}
               </button>
             </form>
           )}
           {status === 'error' && (
-            <p className="text-sm text-red-500 mt-2">Something went wrong. Please try again.</p>
+            <p role="alert" className="text-sm text-red-500 mt-2">Something went wrong. Please try again or email info@lims.bot.</p>
           )}
         </div>
       </div>
@@ -82,10 +90,10 @@ export function WaitlistFooter() {
       {/* Footer links */}
       <div className="py-8 px-4 bg-white/50 dark:bg-black/20">
         <div className="max-w-5xl mx-auto">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-8">
+          <nav aria-label="Footer" className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-8">
             <div>
               <div className="flex items-center gap-2 mb-3">
-                <FlaskConical className="w-4 h-4 text-lab-teal" />
+                <FlaskConical aria-hidden="true" className="w-4 h-4 text-lab-teal" />
                 <span className="text-sm font-bold text-slate-900 dark:text-white">LIMS BOX</span>
               </div>
               <p className="text-xs text-slate-500 dark:text-slate-400">
@@ -125,7 +133,7 @@ export function WaitlistFooter() {
                 <li><Link href="/cola" className="text-slate-600 dark:text-slate-300 hover:text-lab-teal transition-colors">COLA Forum 2026</Link></li>
               </ul>
             </div>
-          </div>
+          </nav>
           <div className="pt-6 border-t border-black/5 dark:border-white/5 text-center text-xs text-slate-500 dark:text-slate-400">
             <p>&copy; {new Date().getFullYear()} LIMS BOX by Tombstone Dash LLC.</p>
           </div>
