@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { safeParam } from '../../lib/unsubscribe-params';
 import UnsubscribeClient from './UnsubscribeClient';
 
 export const metadata: Metadata = {
@@ -12,8 +13,8 @@ interface Props {
 
 export default async function UnsubscribePage({ searchParams }: Props) {
   const resolvedSearchParams = await searchParams;
-  const email = resolvedSearchParams.email ? decodeURIComponent(resolvedSearchParams.email) : '';
-  const list = resolvedSearchParams.list ? decodeURIComponent(resolvedSearchParams.list) : 'newsletter';
+  const email = safeParam(resolvedSearchParams.email, '');
+  const list = safeParam(resolvedSearchParams.list, 'newsletter');
 
   return (
     <main className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4">
