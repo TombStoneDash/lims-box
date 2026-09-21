@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   FlaskConical, ArrowRight, CheckCircle2, Shield, Users,
   Wrench, MessageSquare, Send
@@ -11,6 +11,7 @@ import {
   EARLY_ACCESS_LIMITS,
   EARLY_ACCESS_VOLUME_OPTIONS,
 } from '@/lib/earlyAccessApplication';
+import { earlyAdopterMessage, earlyAdopterOutcome } from '@/lib/early-adopter-form-status';
 
 const benefits = [
   { icon: Wrench, title: 'Pilot onboarding plan', desc: 'We document the workflows, methods, and reporting requirements included in the pilot.' },
@@ -21,6 +22,8 @@ const benefits = [
 
 export default function EarlyAdopterPage() {
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+  const [errorMessage, setErrorMessage] = useState('');
+  const errorRef = useRef<HTMLParagraphElement>(null);
   const [isWaterLane, setIsWaterLane] = useState(false);
   const [form, setForm] = useState({
     labName: '',
@@ -47,6 +50,7 @@ export default function EarlyAdopterPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setStatus('loading');
+    setErrorMessage('');
     try {
       const res = await fetch('/api/early-access', {
         method: 'POST',
@@ -62,15 +66,24 @@ export default function EarlyAdopterPage() {
           source: 'lims.bot/early-adopter',
         }),
       });
-      if (res.ok) {
+      const outcome = earlyAdopterOutcome({ ok: res.ok, status: res.status });
+      if (outcome === 'received') {
         setStatus('success');
       } else {
         setStatus('error');
+        setErrorMessage(earlyAdopterMessage(outcome));
       }
     } catch {
       setStatus('error');
+      setErrorMessage(earlyAdopterMessage(earlyAdopterOutcome('network-error')));
     }
   };
+
+  useEffect(() => {
+    if (status === 'error' && errorMessage) {
+      errorRef.current?.focus();
+    }
+  }, [status, errorMessage]);
 
   const update = (field: string) => (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
@@ -151,7 +164,7 @@ export default function EarlyAdopterPage() {
       <section className="px-4 pb-16">
         <div className="max-w-2xl mx-auto">
           {status === 'success' ? (
-            <div className="bg-white/5 border border-[#2E8B57]/30 rounded-2xl p-8 md:p-10 text-center">
+            <div role="status" className="bg-white/5 border border-[#2E8B57]/30 rounded-2xl p-8 md:p-10 text-center">
               <CheckCircle2 className="w-16 h-16 text-[#2E8B57] mx-auto mb-4" />
               <h2 className="text-2xl font-bold text-white mb-2">Application received</h2>
               <p className="text-slate-400 mb-4">
@@ -256,14 +269,17 @@ export default function EarlyAdopterPage() {
                 </label>
               </div>
 
-              <button type="submit" disabled={status === 'loading'}
+              <button type="submit" disabled={status === 'loading'} aria-busy={status === 'loading'}
                 className="w-full flex items-center justify-center gap-2 py-3 bg-[#2E8B57] hover:bg-[#2E8B57]/90 text-white font-semibold rounded-lg transition-colors disabled:opacity-50">
                 <Send className="w-4 h-4" />
                 {status === 'loading' ? 'Submitting...' : 'Submit Application'}
               </button>
 
               {status === 'error' && (
-                <p className="text-sm text-red-400 text-center">Something went wrong. Please try again or email info@lims.bot directly.</p>
+                <p ref={errorRef} role="alert" tabIndex={-1}
+                  className="text-sm text-red-300 text-center focus:outline-none">
+                  {errorMessage}
+                </p>
               )}
 
               <p className="text-xs text-slate-600 text-center">
