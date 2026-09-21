@@ -1,25 +1,16 @@
 'use client';
 
-import React, { useId, useRef, useState } from 'react';
+import React, { useEffect, useId, useRef, useState } from 'react';
 import Link from 'next/link';
 
-interface BotSource {
-  title: string;
-  path: string;
-}
+import { parseHistory, serializeHistory, type BotSource, type ChatItem } from '../../lib/bot/chat-history';
+
+const HISTORY_KEY = 'limsbot.chat.v1';
 
 interface BotReply {
   answer: string;
   grounded: boolean;
   sources: BotSource[];
-  followUp?: { label: string; path: string };
-  suggestions?: string[];
-}
-
-interface ChatItem {
-  role: 'user' | 'bot';
-  text: string;
-  sources?: BotSource[];
   followUp?: { label: string; path: string };
   suggestions?: string[];
 }
@@ -36,10 +27,45 @@ export function BotChat() {
   const [items, setItems] = useState<ChatItem[]>([]);
   const [input, setInput] = useState('');
   const [busy, setBusy] = useState(false);
+  const [historyLoaded, setHistoryLoaded] = useState(false);
+  const conversationVersion = useRef(0);
+
+  useEffect(() => {
+    try {
+      setItems(parseHistory(sessionStorage.getItem(HISTORY_KEY)));
+    } catch {
+      // Storage may be unavailable; chatting still works in memory.
+    }
+    setHistoryLoaded(true);
+  }, []);
+
+  useEffect(() => {
+    if (!historyLoaded) return;
+    try {
+      if (items.length) sessionStorage.setItem(HISTORY_KEY, serializeHistory(items));
+      else sessionStorage.removeItem(HISTORY_KEY);
+    } catch {
+      // Storage quotas and browser privacy settings must not interrupt chat.
+    }
+  }, [items, historyLoaded]);
+
+  function clearConversation() {
+    conversationVersion.current += 1;
+    setItems([]);
+    setInput('');
+    setBusy(false);
+    try {
+      sessionStorage.removeItem(HISTORY_KEY);
+    } catch {
+      // The in-memory conversation can still be cleared without storage access.
+    }
+    inputRef.current?.focus();
+  }
 
   async function ask(question: string) {
     const q = question.trim();
     if (!q || busy) return;
+    const version = conversationVersion.current;
     setBusy(true);
     setInput('');
     setItems((prev) => [...prev, { role: 'user', text: q }]);
@@ -50,6 +76,7 @@ export function BotChat() {
         body: JSON.stringify({ question: q }),
       });
       const data: BotReply | { error: string } = await res.json();
+      if (version !== conversationVersion.current) return;
       if ('error' in data) {
         setItems((prev) => [...prev, { role: 'bot', text: data.error }]);
       } else {
@@ -65,12 +92,13 @@ export function BotChat() {
         ]);
       }
     } catch {
+      if (version !== conversationVersion.current) return;
       setItems((prev) => [
         ...prev,
         { role: 'bot', text: 'Connection problem — please try again.' },
       ]);
     } finally {
-      setBusy(false);
+      if (version === conversationVersion.current) setBusy(false);
     }
   }
 
@@ -179,6 +207,18 @@ export function BotChat() {
           Ask
         </button>
       </form>
+      {items.length > 0 && (
+        <div className="mt-3 text-xs text-slate-500 dark:text-slate-400">
+          <button
+            type="button"
+            onClick={clearConversation}
+            className="rounded-sm underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+          >
+            Clear conversation
+          </button>
+          <p>History stays in this tab’s session storage, is never sent anywhere, and is removed when you close the tab.</p>
+        </div>
+      )}
       <p className="mt-3 text-[11px] leading-relaxed text-slate-400 dark:text-slate-500">
         LIMS BOT is a prototype. It only answers from published LIMS BOX
         documentation and never stores your questions. For lab-specific
