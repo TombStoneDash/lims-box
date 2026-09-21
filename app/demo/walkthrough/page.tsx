@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useReducer, useEffect } from 'react';
+import { tick, goTo, togglePause, type WalkthroughPlayerState } from '@/lib/walkthrough-player';
 import Link from 'next/link';
 import {
   FlaskConical, ClipboardList, Shield, BarChart3, FileText,
@@ -240,45 +241,43 @@ const walkthroughSteps: WalkthroughStep[] = [
   },
 ];
 
+type PlayerAction =
+  | { type: 'tick' }
+  | { type: 'goTo'; step: number }
+  | { type: 'togglePause' }
+  | { type: 'initialize'; paused: boolean };
+
+function playerReducer(state: WalkthroughPlayerState, action: PlayerAction): WalkthroughPlayerState {
+  switch (action.type) {
+    case 'tick': return tick(state, walkthroughSteps.length, STEP_DURATION);
+    case 'goTo': return goTo(state, action.step);
+    case 'togglePause': return togglePause(state);
+    case 'initialize': return { ...state, paused: action.paused };
+  }
+}
+
 export default function WalkthroughPage() {
-  const [currentStep, setCurrentStep] = useState(0);
-  const [elapsed, setElapsed] = useState(0);
-  const [paused, setPaused] = useState(false);
+  // Stay paused through hydration until the visitor's motion preference is known.
+  const [{ step: currentStep, elapsed, paused }, dispatch] = useReducer(playerReducer, {
+    step: 0, elapsed: 0, paused: true, finished: false,
+  });
 
   const totalTime = walkthroughSteps.length * STEP_DURATION;
   const globalElapsed = currentStep * STEP_DURATION + elapsed;
 
-  const advance = useCallback(() => {
-    if (currentStep < walkthroughSteps.length - 1) {
-      setCurrentStep(s => s + 1);
-      setElapsed(0);
-    } else {
-      setPaused(true); // pause at end
-    }
-  }, [currentStep]);
-
   useEffect(() => {
-    if (paused) return;
-    const timer = setInterval(() => {
-      setElapsed(prev => {
-        if (prev + 1 >= STEP_DURATION) {
-          advance();
-          return 0;
-        }
-        return prev + 1;
-      });
-    }, 1000);
+    dispatch({ type: 'initialize', paused: window.matchMedia('(prefers-reduced-motion: reduce)').matches });
+    const timer = setInterval(() => dispatch({ type: 'tick' }), 1000);
     return () => clearInterval(timer);
-  }, [paused, advance]);
+  }, []);
 
   const step = walkthroughSteps[currentStep];
   const StepIcon = step.icon;
-  const progressPct = ((elapsed + 1) / STEP_DURATION) * 100;
-
-  const goTo = (idx: number) => { setCurrentStep(idx); setElapsed(0); };
+  const progressPct = Math.min(100, ((elapsed + 1) / STEP_DURATION) * 100);
 
   return (
     <div className="min-h-screen bg-[#0F172A] flex flex-col">
+      <h1 className="sr-only">LIMS BOX guided walkthrough</h1>
       {/* Minimal header */}
       <header className="bg-black/40 border-b border-white/5 px-4 py-3">
         <div className="max-w-5xl mx-auto flex items-center justify-between">
@@ -292,7 +291,9 @@ export default function WalkthroughPage() {
               {Math.floor(globalElapsed / 60)}:{String(globalElapsed % 60).padStart(2, '0')} / {Math.floor(totalTime / 60)}:{String(totalTime % 60).padStart(2, '0')}
             </span>
             <button
-              onClick={() => setPaused(p => !p)}
+              onClick={() => dispatch({ type: 'togglePause' })}
+              aria-label={paused ? 'Play walkthrough' : 'Pause walkthrough'}
+              aria-pressed={paused}
               className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
             >
               {paused ? <Play className="w-3.5 h-3.5 ml-0.5" /> : <Pause className="w-3.5 h-3.5" />}
@@ -307,7 +308,9 @@ export default function WalkthroughPage() {
           {walkthroughSteps.map((s, i) => (
             <button
               key={s.id}
-              onClick={() => goTo(i)}
+              onClick={() => dispatch({ type: 'goTo', step: i })}
+              aria-current={i === currentStep ? 'step' : undefined}
+              aria-label={`Step ${i + 1}: ${s.title}`}
               className="flex-1 group"
             >
               <div className={`h-1 rounded-full overflow-hidden ${i < currentStep ? 'bg-[#2E8B57]' : i === currentStep ? 'bg-white/20' : 'bg-white/5'}`}>
@@ -342,7 +345,7 @@ export default function WalkthroughPage() {
             </p>
             {currentStep < walkthroughSteps.length - 1 ? (
               <button
-                onClick={() => { advance(); setElapsed(0); }}
+                onClick={() => dispatch({ type: 'goTo', step: currentStep + 1 })}
                 className="inline-flex items-center gap-2 text-sm text-[#2E8B57] hover:text-white transition-colors font-medium"
               >
                 Next: {walkthroughSteps[currentStep + 1].title} <ChevronRight className="w-4 h-4" />
