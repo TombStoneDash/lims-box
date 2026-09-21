@@ -19,7 +19,7 @@ test('not-found page has one clear heading and accessible recovery navigation', 
   }
   // The shared layout owns the main landmark; do not nest another inside it.
   const layout = readFileSync(path.join(root, 'app/layout.tsx'), 'utf8');
-  assert.match(layout, /<main id="main-content">\s*\{children\}\s*<\/main>/);
+  assert.match(layout, /<main id=\{SKIP_LINK_TARGET_ID\}[^>]*>\s*\{children\}\s*<\/main>/);
   assert.doesNotMatch(markup, /<main\b/);
 });
 
