@@ -81,7 +81,15 @@ function parseFrontmatter(content: string): { meta: Record<string, unknown>; con
 }
 
 function parseMarkdownToHtml(markdown: string): string {
-  let html = markdown;
+  // Protect fenced code from every subsequent markdown and paragraph transform.
+  const codeBlocks: string[] = [];
+  let codeToken = 'BLOG_FENCED_CODE';
+  while (markdown.includes(codeToken)) codeToken += '_';
+  let html = markdown.replace(/^(`{3,}|~{3,})[^\n]*\n([\s\S]*?)^\1[ \t]*$/gm, (_, _fence, code: string) => {
+    const escaped = code.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    const index = codeBlocks.push(`<pre class="bg-black/5 dark:bg-white/5 p-4 rounded-lg overflow-x-auto my-4"><code>${escaped}</code></pre>`) - 1;
+    return `\n\n<${codeToken}${index}>\n\n`;
+  });
 
   html = html.replace(/^### (.*$)/gm, '<h3>$1</h3>');
   html = html.replace(/^## (.*$)/gm, '<h2>$1</h2>');
@@ -95,12 +103,17 @@ function parseMarkdownToHtml(markdown: string): string {
 
   html = html.replace(/^---$/gm, '<hr class="my-8 border-t border-black/10 dark:border-white/10" />');
 
-  html = html.replace(/^- (.*$)/gm, '<li>$1</li>');
-  html = html.replace(/(<li>.*<\/li>\n?)+/g, (match) => `<ul class="list-disc pl-6 space-y-2 my-4">${match}</ul>`);
+  // Match whole runs by list type; blank lines and other blocks end each run.
+  html = html.replace(/^\d+\.[ \t]+[^\n]*(?:\n\d+\.[ \t]+[^\n]*)*/gm, (list) => {
+    const items = list.split('\n').map(line => `<li>${line.replace(/^\d+\.[ \t]+/, '')}</li>`).join('\n');
+    return `\n\n<ol class="list-decimal pl-6 space-y-2 my-4">${items}</ol>\n\n`;
+  });
+  html = html.replace(/^- [^\n]*(?:\n- [^\n]*)*/gm, (list) => {
+    const items = list.split('\n').map(line => `<li>${line.slice(2)}</li>`).join('\n');
+    return `\n\n<ul class="list-disc pl-6 space-y-2 my-4">${items}</ul>\n\n`;
+  });
 
   html = html.replace(/^> (.*$)/gm, '<blockquote class="border-l-4 border-lab-teal pl-4 italic my-4">$1</blockquote>');
-
-  html = html.replace(/```(\w*)\n([\s\S]*?)```/g, '<pre class="bg-black/5 dark:bg-white/5 p-4 rounded-lg overflow-x-auto my-4"><code>$2</code></pre>');
 
   html = html.replace(/`([^`]+)`/g, '<code class="bg-black/5 dark:bg-white/5 px-1.5 py-0.5 rounded text-sm">$1</code>');
 
@@ -111,7 +124,7 @@ function parseMarkdownToHtml(markdown: string): string {
     return `<p class="my-4 leading-relaxed">${trimmed.replace(/\n/g, '<br />')}</p>`;
   }).join('\n');
 
-  return html;
+  return html.replace(new RegExp(`<${codeToken}(\\d+)>`, 'g'), (_, index) => codeBlocks[Number(index)]);
 }
 
 export function getAllPosts(): BlogPostMeta[] {
