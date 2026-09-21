@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { FlaskConical, Calendar, Clock, Users, Video, CheckCircle2, ArrowRight } from 'lucide-react';
 import { WaitlistFooter } from '@/components/WaitlistFooter';
 import { registrationMessage, registrationOutcome } from '@/lib/webinar-registration';
+import { formatSessionDate, upcomingOnly } from '@/lib/webinar-sessions';
 import type { Metadata } from 'next';
 
 const upcomingSessions = [
@@ -51,6 +52,7 @@ const upcomingSessions = [
 ];
 
 export default function WebinarPage() {
+  const visibleSessions = upcomingOnly(upcomingSessions, new Date());
   const [registered, setRegistered] = useState<Set<string>>(new Set());
   const [formData, setFormData] = useState({ email: '', name: '', labName: '' });
   const [activeSession, setActiveSession] = useState<string | null>(null);
@@ -129,7 +131,18 @@ export default function WebinarPage() {
         </div>
 
         <div className="max-w-3xl mx-auto space-y-6">
-          {upcomingSessions.map((session) => (
+          {visibleSessions.length === 0 && (
+            <div className="bg-white dark:bg-white/5 border border-black/5 dark:border-white/10 rounded-2xl p-6 md:p-8">
+              <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-4">
+                No live sessions are scheduled right now
+              </h2>
+              <div className="flex flex-wrap gap-4 text-sm font-semibold text-lab-teal">
+                <Link href="/contact" className="hover:underline">Request a live session</Link>
+                <Link href="/demo" className="hover:underline">Explore the demo</Link>
+              </div>
+            </div>
+          )}
+          {visibleSessions.map((session) => (
             <div
               key={session.id}
               className="bg-white dark:bg-white/5 border border-black/5 dark:border-white/10 rounded-2xl p-6 md:p-8"
@@ -157,7 +170,7 @@ export default function WebinarPage() {
               <div className="flex flex-wrap items-center gap-4 text-sm text-slate-500 dark:text-slate-400 mb-4">
                 <span className="flex items-center gap-1.5">
                   <Calendar className="w-4 h-4" />
-                  {new Date(session.date).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+                  {formatSessionDate(session.date)}
                 </span>
                 <span className="flex items-center gap-1.5">
                   <Clock className="w-4 h-4" />
