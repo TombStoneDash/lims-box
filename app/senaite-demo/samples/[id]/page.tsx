@@ -1,8 +1,12 @@
 import { featuredSample, sampleAuditTrail, sampleResults } from '@/lib/demo-data';
 import { ArrowLeft, FileText, Shield, Clock, User, CheckCircle2 } from 'lucide-react';
 import Link from 'next/link';
+import { notFound } from 'next/navigation';
 
-export default function SampleDetailPage() {
+export default async function SampleDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  if (id !== featuredSample.id) notFound();
+
   const sample = featuredSample;
   const audit = sampleAuditTrail;
   const results = sampleResults;
