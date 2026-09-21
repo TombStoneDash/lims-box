@@ -25,7 +25,8 @@ export function pagedResponse<T extends { id: string }>(
 
 /** Parse `?limit` and `?cursor` from a URL. */
 export function parsePagination(url: URL): { limit: number; cursor: string | null } {
-  const rawLimit = parseInt(url.searchParams.get("limit") ?? "20", 10);
+  const parsed = parseInt(url.searchParams.get("limit") ?? "20", 10);
+  const rawLimit = Number.isFinite(parsed) ? parsed : 20;
   const limit = Math.min(Math.max(rawLimit, 1), 100);
   const cursor = url.searchParams.get("cursor") ?? null;
   return { limit, cursor };
