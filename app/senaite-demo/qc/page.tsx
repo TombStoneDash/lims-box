@@ -110,7 +110,7 @@ function LeveyJenningsChart({ analyte, evaluation }: { analyte: QCAnalyte; evalu
           const idx = runs.indexOf(r);
           return (
             <text key={r.date} x={toX(idx)} y={h - 5} textAnchor="middle" className="text-[9px]" fill="#94a3b8">
-              {new Date(r.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+              {new Date(r.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' })}
             </text>
           );
         })}
