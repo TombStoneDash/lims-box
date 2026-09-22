@@ -102,6 +102,19 @@ function parseMarkdownToHtml(markdown: string): string {
     return `${imageToken}${index}END`;
   });
 
+  // Protect link attributes before inline transforms, while leaving labels formattable.
+  const linkTags: string[] = [];
+  let linkToken = 'BLOG_LINK';
+  while (markdown.includes(linkToken)) linkToken += '_';
+  const unescapeLinkAttribute = (value: string) => value.replace(/\\([\\"'])/g, '$1');
+  html = html.replace(/`[^`]+`|\[((?:`[^`]+`|[^\]`])+)\]\(([^)]+?)(?:[ \t]+"((?:\\.|[^"\\])*)"|[ \t]+'((?:\\.|[^'\\])*)')?[ \t]*\)/g, (match, label: string | undefined, destination: string, doubleTitle: string | undefined, singleTitle: string | undefined) => {
+    if (label === undefined) return match;
+    const title = doubleTitle ?? singleTitle;
+    const titleAttribute = title === undefined ? '' : ` title="${escapeAttribute(unescapeLinkAttribute(title))}"`;
+    const index = linkTags.push(`<a href="${escapeAttribute(unescapeLinkAttribute(destination))}"${titleAttribute} class="text-lab-teal hover:text-lab-blue underline transition-colors">`) - 1;
+    return `<${linkToken}${index}>${label}</a>`;
+  });
+
   // Use text placeholders so inline code remains part of its paragraph.
   const inlineCode: string[] = [];
   let inlineToken = 'BLOG_INLINE_CODE';
@@ -119,8 +132,6 @@ function parseMarkdownToHtml(markdown: string): string {
   html = html.replace(/\*\*\*(.*?)\*\*\*/g, '<strong><em>$1</em></strong>');
   html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
   html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
-
-  html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" class="text-lab-teal hover:text-lab-blue underline transition-colors">$1</a>');
 
   html = html.replace(/^---$/gm, '<hr class="my-8 border-t border-black/10 dark:border-white/10" />');
 
@@ -145,6 +156,7 @@ function parseMarkdownToHtml(markdown: string): string {
 
   html = html.replace(new RegExp(`${imageToken}(\\d+)END`, 'g'), (_, index) => images[Number(index)]);
   html = html.replace(new RegExp(`${inlineToken}(\\d+)END`, 'g'), (_, index) => inlineCode[Number(index)]);
+  html = html.replace(new RegExp(`<${linkToken}(\\d+)>`, 'g'), (_, index) => linkTags[Number(index)]);
   return html.replace(new RegExp(`<${codeToken}(\\d+)>`, 'g'), (_, index) => codeBlocks[Number(index)]);
 }
 
