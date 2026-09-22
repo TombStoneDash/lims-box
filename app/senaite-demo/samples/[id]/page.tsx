@@ -141,6 +141,7 @@ export default async function SampleDetailPage({ params }: { params: Promise<{ i
                 <tr key={i} className="border-b border-slate-50 hover:bg-slate-50">
                   <td className="py-2 pr-4 font-mono text-xs text-slate-500 whitespace-nowrap">
                     {new Date(entry.timestamp).toLocaleString('en-US', {
+                      timeZone: 'UTC',
                       month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit',
                     })}
                   </td>
