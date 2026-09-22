@@ -15,6 +15,7 @@ Maintains a session context (current sample) so commands like
 import re
 import logging
 from typing import Optional, Tuple
+from urllib.parse import urlencode
 
 from senaite.client import SenaiteClient
 
@@ -126,9 +127,8 @@ def _handle_start_test(args: tuple, client: SenaiteClient) -> str:
 
     # Look up the analysis for this test on the current sample
     try:
-        analyses = client.get(
-            f"Analysis?getParentUID={sample['uid']}&getKeyword={test_name}"
-        )
+        params = {"getParentUID": sample["uid"], "getKeyword": test_name}
+        analyses = client.get(f"Analysis?{urlencode(params)}")
         items = analyses.get("items", [])
         if not items:
             return f"Test '{test_name}' is not configured on sample {session.current_sample_id}."
