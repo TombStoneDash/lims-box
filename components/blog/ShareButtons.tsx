@@ -24,9 +24,11 @@ export async function copyShareLink(url: string): Promise<boolean> {
     await navigator.clipboard.writeText(url);
     return true;
   } catch {
+    const previousFocus = document.activeElement as HTMLElement | null;
     const textarea = document.createElement('textarea');
     try {
       textarea.value = url;
+      textarea.className = 'fixed left-[-9999px] top-0';
       document.body.appendChild(textarea);
       textarea.select();
       return document.execCommand('copy') === true;
@@ -34,6 +36,7 @@ export async function copyShareLink(url: string): Promise<boolean> {
       return false;
     } finally {
       textarea.remove();
+      previousFocus?.focus?.({ preventScroll: true });
     }
   }
 }
