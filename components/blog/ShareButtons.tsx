@@ -19,24 +19,37 @@ export function buildShareLinks(title: string, url: string) {
   return { twitterUrl, linkedinUrl };
 }
 
-export function ShareButtons({ title, url }: ShareButtonsProps) {
-  const [copied, setCopied] = useState(false);
-  const { twitterUrl, linkedinUrl } = buildShareLinks(title, url);
-
-  const handleCopyLink = async () => {
+export async function copyShareLink(url: string): Promise<boolean> {
+  try {
+    await navigator.clipboard.writeText(url);
+    return true;
+  } catch {
+    const textarea = document.createElement('textarea');
     try {
-      await navigator.clipboard.writeText(url);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch {
-      const textarea = document.createElement('textarea');
       textarea.value = url;
       document.body.appendChild(textarea);
       textarea.select();
-      document.execCommand('copy');
-      document.body.removeChild(textarea);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      return document.execCommand('copy') === true;
+    } catch {
+      return false;
+    } finally {
+      textarea.remove();
+    }
+  }
+}
+
+export function ShareButtons({ title, url }: ShareButtonsProps) {
+  const [copyStatus, setCopyStatus] = useState<'idle' | 'copied' | 'failed'>('idle');
+  const copied = copyStatus === 'copied';
+  const failureMessage = "Couldn't copy link. Try again.";
+  const { twitterUrl, linkedinUrl } = buildShareLinks(title, url);
+
+  const handleCopyLink = async () => {
+    setCopyStatus('idle');
+    const success = await copyShareLink(url);
+    setCopyStatus(success ? 'copied' : 'failed');
+    if (success) {
+      setTimeout(() => setCopyStatus(status => status === 'copied' ? 'idle' : status), 2000);
     }
   };
 
@@ -84,7 +97,7 @@ export function ShareButtons({ title, url }: ShareButtonsProps) {
             ? 'bg-green-100 dark:bg-green-900/30 text-green-600'
             : 'hover:bg-lab-teal/10 hover:text-lab-teal text-slate-500 dark:text-slate-400'
         }`}
-        title={copied ? 'Copied!' : 'Copy link'}
+        title={copied ? 'Copied!' : copyStatus === 'failed' ? failureMessage : 'Copy link'}
       >
         {copied ? (
           <Check aria-hidden="true" className="w-4 h-4" />
@@ -93,7 +106,7 @@ export function ShareButtons({ title, url }: ShareButtonsProps) {
         )}
       </button>
       <span className="sr-only" role="status" aria-live="polite">
-        {copied ? 'Link copied' : ''}
+        {copied ? 'Link copied' : copyStatus === 'failed' ? failureMessage : ''}
       </span>
     </div>
   );
