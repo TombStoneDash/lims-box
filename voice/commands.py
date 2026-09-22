@@ -143,7 +143,7 @@ def _handle_start_test(args: tuple, client: SenaiteClient) -> str:
         if current_state in ("verified", "published"):
             return f"Test {test_name} is already {current_state}."
 
-        return f"Test {test_name} started on sample {session.current_sample_id}. Awaiting results."
+        return f"Test {test_name} is configured on active sample {session.current_sample_id}. No workflow change was made."
 
     except Exception as e:
         logger.warning(f"Could not look up test '{test_name}': {e}")

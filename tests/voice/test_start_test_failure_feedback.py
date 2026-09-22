@@ -68,7 +68,7 @@ class StartTestFailureFeedbackTests(unittest.TestCase):
         client = FakeClient(items=[{"review_state": "sample_received"}])
         self.assertEqual(
             self.execute(client),
-            "Test pH started on sample SA-2026-001. Awaiting results.",
+            "Test pH is configured on active sample SA-2026-001. No workflow change was made.",
         )
 
     def test_missing_test_preserves_feedback(self):
