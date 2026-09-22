@@ -1,8 +1,16 @@
 import { instruments } from '@/lib/demo-data';
-import { evaluateEquipmentStatus, evaluateInstrumentCalibration } from '@/lib/senaite-demo-equipment';
+import { evaluateEquipmentStatus, evaluateInstrumentCalibration, DEMO_AS_OF_DATE } from '@/lib/senaite-demo-equipment';
+import { projectUpcomingCalibrations } from '@/lib/senaite-demo-calibration-schedule';
 import { CheckCircle2, AlertTriangle, HelpCircle, Wrench, Calendar, MapPin } from 'lucide-react';
 
 const equipmentStatus = evaluateEquipmentStatus(instruments);
+
+const CALIBRATION_HORIZON_DAYS = 30;
+const dueForCalibration = projectUpcomingCalibrations(
+  instruments,
+  new Date(`${DEMO_AS_OF_DATE}T00:00:00Z`),
+  CALIBRATION_HORIZON_DAYS,
+);
 
 const BADGE_STYLES: Record<string, { icon: typeof CheckCircle2; wrap: string; text: string; label: string }> = {
   current: { icon: CheckCircle2, wrap: 'bg-green-50 border-green-200', text: 'text-green-700', label: 'All Calibrations Current' },
@@ -30,6 +38,16 @@ function formatHeadline(): string {
   return `${totalInstruments} instruments — All calibrated`;
 }
 
+function formatDueInDays(dueInDays: number): string {
+  const rounded = Math.round(dueInDays);
+  if (rounded < 0) {
+    const overdueBy = Math.abs(rounded);
+    return `Overdue by ${overdueBy} day${overdueBy === 1 ? '' : 's'}`;
+  }
+  if (rounded === 0) return 'Due today';
+  return `Due in ${rounded} day${rounded === 1 ? '' : 's'}`;
+}
+
 export default function EquipmentPage() {
   const badge = BADGE_STYLES[equipmentStatus.status];
   const BadgeIcon = badge.icon;
@@ -45,6 +63,33 @@ export default function EquipmentPage() {
           <BadgeIcon className={`w-5 h-5 ${badge.text}`} />
           <span className={`text-sm font-medium ${badge.text}`}>{badge.label}</span>
         </div>
+      </div>
+
+      {/* Due for calibration */}
+      <div className="bg-white rounded-lg border border-slate-200 p-5">
+        <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">
+          Due for Calibration (Next {CALIBRATION_HORIZON_DAYS} Days)
+        </h2>
+        {dueForCalibration.length === 0 ? (
+          <p className="text-sm text-slate-500">No instruments overdue or due within {CALIBRATION_HORIZON_DAYS} days.</p>
+        ) : (
+          <ul className="divide-y divide-slate-100">
+            {dueForCalibration.map(({ instrument, dueInDays, evaluation }) => (
+              <li key={instrument.serialNumber} className="flex items-center justify-between py-2">
+                <span className="text-sm font-medium text-slate-900">{instrument.name}</span>
+                <span
+                  className={`text-xs font-medium px-2 py-0.5 rounded-full border ${
+                    evaluation.status === 'overdue'
+                      ? 'bg-amber-100 text-amber-700 border-amber-200'
+                      : 'bg-blue-50 text-blue-700 border-blue-200'
+                  }`}
+                >
+                  {formatDueInDays(dueInDays)}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
 
       {/* Instrument cards */}
