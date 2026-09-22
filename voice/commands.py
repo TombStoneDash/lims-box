@@ -147,8 +147,7 @@ def _handle_start_test(args: tuple, client: SenaiteClient) -> str:
 
     except Exception as e:
         logger.warning(f"Could not look up test '{test_name}': {e}")
-        # Still provide feedback even if lookup fails
-        return f"Test {test_name} noted for sample {session.current_sample_id}. Awaiting results."
+        return f"Could not look up test '{test_name}' on sample {session.current_sample_id}. Please try again."
 
 
 def _handle_record_result(args: tuple, client: SenaiteClient) -> str:
