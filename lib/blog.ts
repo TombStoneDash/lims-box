@@ -145,10 +145,12 @@ function parseMarkdownToHtml(markdown: string): string {
 
   html = html.replace(/^> (.*$)/gm, '<blockquote class="border-l-4 border-lab-teal pl-4 italic my-4">$1</blockquote>');
 
+  // Inline tags still need paragraph spacing; fenced-code placeholders stand alone.
+  const blockStart = new RegExp(`^<(?:h[1-6]|ul|ol|li|blockquote|hr|pre|div|table|p|img)(?:\\s|/?>)|^<${codeToken}\\d+>$`, 'i');
   html = html.split('\n\n').map(block => {
     const trimmed = block.trim();
     if (!trimmed) return '';
-    if (trimmed.startsWith('<')) return trimmed;
+    if (blockStart.test(trimmed)) return trimmed;
     return `<p class="my-4 leading-relaxed">${trimmed.replace(/\n/g, '<br />')}</p>`;
   }).join('\n');
 
