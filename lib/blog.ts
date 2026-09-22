@@ -112,6 +112,15 @@ function parseMarkdownToHtml(markdown: string): string {
     return `${inlineToken}${index}END`;
   });
 
+  // Keep link destinations out of prose transforms while labels remain formattable.
+  const linkDestinations: string[] = [];
+  let linkToken = 'BLOG_LINK_DESTINATION';
+  while (markdown.includes(linkToken)) linkToken += '_';
+  html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_, label: string, destination: string) => {
+    const index = linkDestinations.push(destination) - 1;
+    return `[${label}](${linkToken}${index}END)`;
+  });
+
   html = html.replace(/^### (.*$)/gm, '<h3>$1</h3>');
   html = html.replace(/^## (.*$)/gm, '<h2>$1</h2>');
   html = html.replace(/^# (.*$)/gm, '<h1>$1</h1>');
@@ -143,6 +152,7 @@ function parseMarkdownToHtml(markdown: string): string {
     return `<p class="my-4 leading-relaxed">${trimmed.replace(/\n/g, '<br />')}</p>`;
   }).join('\n');
 
+  html = html.replace(new RegExp(`${linkToken}(\\d+)END`, 'g'), (_, index) => escapeAttribute(linkDestinations[Number(index)]));
   html = html.replace(new RegExp(`${imageToken}(\\d+)END`, 'g'), (_, index) => images[Number(index)]);
   html = html.replace(new RegExp(`${inlineToken}(\\d+)END`, 'g'), (_, index) => inlineCode[Number(index)]);
   return html.replace(new RegExp(`<${codeToken}(\\d+)>`, 'g'), (_, index) => codeBlocks[Number(index)]);
