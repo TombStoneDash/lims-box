@@ -35,7 +35,7 @@ class SenaiteClient:
     def _request(self, method: str, endpoint: str, data: Optional[dict] = None) -> dict:
         """Make an authenticated JSON request to SENAITE."""
         url = f"{self.api_url}/{endpoint.lstrip('/')}"
-        body = json.dumps(data).encode() if data else None
+        body = json.dumps(data).encode() if data is not None else None
         req = Request(url, data=body, method=method)
         req.add_header("Authorization", self.auth_header)
         req.add_header("Content-Type", "application/json")
