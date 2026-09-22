@@ -1,6 +1,7 @@
 import { sampleCounts } from '@/lib/demo-data';
 import { qcSummary } from '@/lib/demo-data';
-import { equipmentSummary } from '@/lib/demo-data';
+import { equipmentSummary, instruments } from '@/lib/demo-data';
+import { evaluateEquipmentStatus, DEMO_AS_OF_DATE } from '@/lib/senaite-demo-equipment';
 import { trainingSummary } from '@/lib/demo-data';
 import { CheckCircle2, AlertTriangle, Clock, FlaskConical, Activity, Wrench, GraduationCap } from 'lucide-react';
 import Link from 'next/link';
@@ -28,6 +29,11 @@ function StatCard({ label, value, sub, icon: Icon, color, href }: {
 
 export default function DemoDashboard() {
   const { total, byStatus, byType } = sampleCounts;
+  const calibration = evaluateEquipmentStatus(instruments, DEMO_AS_OF_DATE);
+  const deadline = calibration.status !== 'invalid' ? calibration.nextCalibrationDue : null;
+  const daysRemaining = deadline
+    ? (Date.parse(`${deadline}T00:00:00Z`) - Date.parse(`${DEMO_AS_OF_DATE}T00:00:00Z`)) / 86_400_000
+    : null;
 
   return (
     <div className="space-y-6">
@@ -151,8 +157,14 @@ export default function DemoDashboard() {
           <div className="flex items-center gap-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
             <Clock className="w-5 h-5 text-blue-500 flex-shrink-0" />
             <div>
-              <p className="text-sm font-medium text-blue-800">Instrument calibration due April 28</p>
-              <p className="text-xs text-blue-600">All 5 instruments — 15 days remaining</p>
+              <p className="text-sm font-medium text-blue-800">
+                {deadline ? `Instrument calibration due ${deadline}` : 'Calibration schedule unavailable'}
+              </p>
+              <p className="text-xs text-blue-600">
+                {daysRemaining !== null
+                  ? `${calibration.nextDueInstrumentName} — ${daysRemaining} day${daysRemaining === 1 ? '' : 's'} remaining`
+                  : 'Review equipment calibration data'}
+              </p>
             </div>
             <Link href="/senaite-demo/equipment" className="ml-auto text-xs font-medium text-blue-700 hover:text-blue-900 underline">
               View
