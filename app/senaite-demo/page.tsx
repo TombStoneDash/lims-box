@@ -1,9 +1,13 @@
 import { sampleCounts } from '@/lib/demo-data';
 import { qcSummary } from '@/lib/demo-data';
-import { equipmentSummary } from '@/lib/demo-data';
+import { equipmentSummary, instruments } from '@/lib/demo-data';
 import { trainingSummary } from '@/lib/demo-data';
+import { projectUpcomingCalibrations } from '@/lib/senaite-demo-calibration-schedule';
+import { DEMO_AS_OF_DATE } from '@/lib/senaite-demo-equipment';
 import { CheckCircle2, AlertTriangle, Clock, FlaskConical, Activity, Wrench, GraduationCap } from 'lucide-react';
 import Link from 'next/link';
+
+const CALIBRATION_HORIZON_DAYS = 30;
 
 function StatCard({ label, value, sub, icon: Icon, color, href }: {
   label: string; value: string | number; sub?: string;
@@ -28,6 +32,27 @@ function StatCard({ label, value, sub, icon: Icon, color, href }: {
 
 export default function DemoDashboard() {
   const { total, byStatus, byType } = sampleCounts;
+  const nextCalibration = projectUpcomingCalibrations(
+    instruments,
+    new Date(`${DEMO_AS_OF_DATE}T00:00:00Z`),
+    CALIBRATION_HORIZON_DAYS,
+  )[0];
+  let calibrationTitle = 'No upcoming calibration reminders';
+  let calibrationDetail = `No instruments overdue or due within ${CALIBRATION_HORIZON_DAYS} days.`;
+  if (nextCalibration) {
+    const { instrument, dueInDays, evaluation } = nextCalibration;
+    const deadline = new Date(`${evaluation.nextCalibration}T00:00:00Z`).toLocaleDateString('en-US', {
+      month: 'long', day: 'numeric', year: 'numeric', timeZone: 'UTC',
+    });
+    const days = Math.abs(dueInDays);
+    const countdown = dueInDays < 0
+      ? `Overdue by ${days} day${days === 1 ? '' : 's'}`
+      : dueInDays === 0
+        ? 'Due today'
+        : `${days} day${days === 1 ? '' : 's'} remaining`;
+    calibrationTitle = `Instrument calibration ${dueInDays < 0 ? 'overdue —' : 'due'} ${deadline}`;
+    calibrationDetail = `${instrument.name} — ${countdown}`;
+  }
 
   return (
     <div className="space-y-6">
@@ -151,8 +176,8 @@ export default function DemoDashboard() {
           <div className="flex items-center gap-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
             <Clock className="w-5 h-5 text-blue-500 flex-shrink-0" />
             <div>
-              <p className="text-sm font-medium text-blue-800">Instrument calibration due April 28</p>
-              <p className="text-xs text-blue-600">All 5 instruments — 15 days remaining</p>
+              <p className="text-sm font-medium text-blue-800">{calibrationTitle}</p>
+              <p className="text-xs text-blue-600">{calibrationDetail}</p>
             </div>
             <Link href="/senaite-demo/equipment" className="ml-auto text-xs font-medium text-blue-700 hover:text-blue-900 underline">
               View
