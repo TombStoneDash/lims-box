@@ -8,20 +8,47 @@ interface BotSource {
   path: string;
 }
 
-interface BotReply {
-  answer: string;
-  grounded: boolean;
-  sources: BotSource[];
-  followUp?: { label: string; path: string };
-  suggestions?: string[];
-}
-
 interface ChatItem {
   role: 'user' | 'bot';
   text: string;
   sources?: BotSource[];
   followUp?: { label: string; path: string };
   suggestions?: string[];
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return value !== null && typeof value === 'object' && !Array.isArray(value);
+}
+
+function isNonblankString(value: unknown): value is string {
+  return typeof value === 'string' && value.trim().length > 0;
+}
+
+export function validateBotReply(ok: boolean, body: unknown): Omit<ChatItem, 'role'> {
+  const fallback = { text: 'LIMS BOT could not answer. Please try again.' };
+  if (!isRecord(body)) return fallback;
+  if (isNonblankString(body.error)) return { text: body.error };
+  if (!ok || 'error' in body || !isNonblankString(body.answer)) return fallback;
+
+  const sources: BotSource[] = [];
+  if (Array.isArray(body.sources)) {
+    for (const source of body.sources) {
+      if (isRecord(source) && isNonblankString(source.title) && isNonblankString(source.path)) {
+        sources.push({ title: source.title, path: source.path });
+      }
+    }
+  }
+  const followUp = body.followUp;
+  return {
+    text: body.answer,
+    sources,
+    followUp: isRecord(followUp) && isNonblankString(followUp.label) && isNonblankString(followUp.path)
+      ? { label: followUp.label, path: followUp.path }
+      : undefined,
+    suggestions: body.grounded !== true && Array.isArray(body.suggestions)
+      ? body.suggestions.filter(isNonblankString)
+      : undefined,
+  };
 }
 
 const SUGGESTIONS = [
@@ -49,21 +76,9 @@ export function BotChat() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ question: q }),
       });
-      const data: BotReply | { error: string } = await res.json();
-      if ('error' in data) {
-        setItems((prev) => [...prev, { role: 'bot', text: data.error }]);
-      } else {
-        setItems((prev) => [
-          ...prev,
-          {
-            role: 'bot',
-            text: data.answer,
-            sources: data.sources,
-            followUp: data.followUp,
-            suggestions: data.grounded ? undefined : data.suggestions,
-          },
-        ]);
-      }
+      const data: unknown = await res.json();
+      const reply = validateBotReply(res.ok, data);
+      setItems((prev) => [...prev, { role: 'bot', ...reply }]);
     } catch {
       setItems((prev) => [
         ...prev,
