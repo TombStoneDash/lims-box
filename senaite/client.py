@@ -8,6 +8,7 @@ can catch and queue commands for retry.
 import json
 import logging
 from typing import Optional
+from urllib.parse import urlencode
 from urllib.request import Request, urlopen
 from urllib.error import URLError, HTTPError
 from base64 import b64encode
@@ -80,12 +81,15 @@ class SenaiteClient:
         limit: int = 25,
     ) -> list:
         """Search samples by ID or list by review state."""
-        endpoint = (
-            f"AnalysisRequest?review_state={review_state}"
-            f"&sort_on=created&sort_order=descending&limit={limit}"
-        )
+        params = {
+            "review_state": review_state,
+            "sort_on": "created",
+            "sort_order": "descending",
+            "limit": limit,
+        }
         if query:
-            endpoint += f"&getId={query}"
+            params["getId"] = query
+        endpoint = f"AnalysisRequest?{urlencode(params)}"
         result = self.get(endpoint)
         return result.get("items", [])
 
@@ -121,9 +125,8 @@ class SenaiteClient:
             raise ValueError(f"Sample {sample_id} not found")
 
         # Find the analysis matching the test name
-        analyses = self.get(
-            f"Analysis?getParentUID={sample['uid']}&getKeyword={test_name}"
-        )
+        params = {"getParentUID": sample["uid"], "getKeyword": test_name}
+        analyses = self.get(f"Analysis?{urlencode(params)}")
         items = analyses.get("items", [])
         if not items:
             raise ValueError(f"Test '{test_name}' not found on sample {sample_id}")
