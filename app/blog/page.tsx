@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { ArrowLeft, FlaskConical, Clock, Calendar, ChevronRight, Tag } from 'lucide-react';
 import { getAllPosts } from '@/lib/blog';
+import { formatBlogDisplayDate } from '@/lib/blog-display-date';
 import { NewsletterSignup } from '@/components/blog/NewsletterSignup';
 import type { Metadata } from 'next';
 
@@ -39,14 +40,6 @@ const blogBreadcrumbJsonLd = {
     },
   ],
 };
-
-function formatDate(dateString: string): string {
-  return new Date(dateString).toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  });
-}
 
 export default function BlogPage() {
   const posts = getAllPosts();
@@ -142,7 +135,7 @@ export default function BlogPage() {
                       <div className="flex flex-wrap items-center gap-4 text-sm text-slate-500 dark:text-slate-400">
                         <div className="flex items-center gap-1.5">
                           <Calendar className="w-4 h-4" />
-                          <span>{formatDate(post.publishedAt)}</span>
+                          <span>{formatBlogDisplayDate(post.publishedAt)}</span>
                         </div>
                         <div className="flex items-center gap-1.5">
                           <Clock className="w-4 h-4" />

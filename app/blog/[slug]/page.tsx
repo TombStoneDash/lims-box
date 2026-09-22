@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { FlaskConical, Clock, Calendar, ChevronLeft, Tag } from 'lucide-react';
 import { getPostBySlug, getAllSlugs, getAllPosts } from '@/lib/blog';
+import { formatBlogDisplayDate } from '@/lib/blog-display-date';
 import { NewsletterSignup } from '@/components/blog/NewsletterSignup';
 import { ShareButtons } from '@/components/blog/ShareButtons';
 import { RelatedPosts } from '@/components/blog/RelatedPosts';
@@ -55,14 +56,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       description: post.description,
     },
   };
-}
-
-function formatDate(dateString: string): string {
-  return new Date(dateString).toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  });
 }
 
 export default async function BlogPostPage({ params }: Props) {
@@ -210,7 +203,7 @@ export default async function BlogPostPage({ params }: Props) {
           <div className="flex flex-wrap items-center gap-4 text-sm text-slate-500 dark:text-slate-400 pb-6 border-b border-black/10 dark:border-white/10">
             <div className="flex items-center gap-1.5">
               <Calendar className="w-4 h-4" />
-              <time dateTime={post.publishedAt}>{formatDate(post.publishedAt)}</time>
+              <time dateTime={post.publishedAt}>{formatBlogDisplayDate(post.publishedAt)}</time>
             </div>
             <div className="flex items-center gap-1.5">
               <Clock className="w-4 h-4" />
