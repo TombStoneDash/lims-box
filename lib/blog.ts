@@ -91,6 +91,17 @@ function parseMarkdownToHtml(markdown: string): string {
     return `\n\n<${codeToken}${index}>\n\n`;
   });
 
+  // Protect image attributes from later transforms, leaving inline code for its own pass.
+  const images: string[] = [];
+  let imageToken = 'BLOG_IMAGE';
+  while (markdown.includes(imageToken)) imageToken += '_';
+  const escapeAttribute = (value: string) => value.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  html = html.replace(/`[^`]+`|!\[([^\]]*)\]\(([^)]+)\)/g, (match, alt: string | undefined, src: string) => {
+    if (alt === undefined) return match;
+    const index = images.push(`<img src="${escapeAttribute(src)}" alt="${escapeAttribute(alt)}" class="max-w-full h-auto" />`) - 1;
+    return `${imageToken}${index}END`;
+  });
+
   // Use text placeholders so inline code remains part of its paragraph.
   const inlineCode: string[] = [];
   let inlineToken = 'BLOG_INLINE_CODE';
@@ -132,6 +143,7 @@ function parseMarkdownToHtml(markdown: string): string {
     return `<p class="my-4 leading-relaxed">${trimmed.replace(/\n/g, '<br />')}</p>`;
   }).join('\n');
 
+  html = html.replace(new RegExp(`${imageToken}(\\d+)END`, 'g'), (_, index) => images[Number(index)]);
   html = html.replace(new RegExp(`${inlineToken}(\\d+)END`, 'g'), (_, index) => inlineCode[Number(index)]);
   return html.replace(new RegExp(`<${codeToken}(\\d+)>`, 'g'), (_, index) => codeBlocks[Number(index)]);
 }
