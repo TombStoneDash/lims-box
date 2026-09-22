@@ -69,32 +69,40 @@ def _speak_macos(text: str) -> None:
 
 def _speak_piper(text: str) -> None:
     """Piper neural TTS — fully offline, works on Linux and Windows."""
+    proc = subprocess.Popen(
+        ["piper", "--model", PIPER_MODEL, "--output-raw"],
+        stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.DEVNULL,
+    )
+    stdout = _communicate_checked(proc, text.encode())
+
+    # Play raw audio — use aplay on Linux, ffplay as cross-platform fallback
+    if platform.system() == "Linux":
+        play_cmd = ["aplay", "-r", "22050", "-f", "S16_LE", "-c", "1"]
+    else:
+        play_cmd = [
+            "ffplay", "-nodisp", "-autoexit",
+            "-f", "s16le", "-ar", "22050", "-ac", "1", "-i", "-",
+        ]
+
+    play_proc = subprocess.Popen(
+        play_cmd, stdin=subprocess.PIPE, stderr=subprocess.DEVNULL,
+    )
+    _communicate_checked(play_proc, stdout)
+
+
+def _communicate_checked(proc: subprocess.Popen, data: bytes) -> bytes | None:
+    """Finish a Piper child, reaping it on timeout and surfacing failed exits."""
     try:
-        proc = subprocess.Popen(
-            ["piper", "--model", PIPER_MODEL, "--output-raw"],
-            stdin=subprocess.PIPE,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.DEVNULL,
-        )
-        stdout, _ = proc.communicate(input=text.encode(), timeout=30)
-
-        # Play raw audio — use aplay on Linux, ffplay as cross-platform fallback
-        if platform.system() == "Linux":
-            play_cmd = ["aplay", "-r", "22050", "-f", "S16_LE", "-c", "1"]
-        else:
-            play_cmd = [
-                "ffplay", "-nodisp", "-autoexit",
-                "-f", "s16le", "-ar", "22050", "-ac", "1", "-i", "-",
-            ]
-
-        play_proc = subprocess.Popen(
-            play_cmd, stdin=subprocess.PIPE, stderr=subprocess.DEVNULL,
-        )
-        play_proc.communicate(input=stdout, timeout=30)
-
-    except FileNotFoundError:
-        logger.error("piper not found. Install: pip install piper-tts")
-        _speak_console(text)
+        stdout, _ = proc.communicate(input=data, timeout=30)
+    except subprocess.TimeoutExpired:
+        proc.kill()
+        proc.communicate()
+        raise
+    if proc.returncode != 0:
+        raise subprocess.CalledProcessError(proc.returncode, proc.args)
+    return stdout
 
 
 def _speak_console(text: str) -> None:
