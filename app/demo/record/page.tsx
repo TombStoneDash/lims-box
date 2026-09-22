@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import {
   FlaskConical, ClipboardList, Shield, BarChart3, FileText,
   MessageSquare
@@ -161,38 +161,38 @@ const steps: RecordStep[] = [
 ];
 
 export default function RecordPage() {
-  const [current, setCurrent] = useState(0);
-  const [elapsed, setElapsed] = useState(0);
-  const [transitioning, setTransitioning] = useState(false);
+  const [playback, setPlayback] = useState({
+    current: 0, elapsed: 0, transitioning: false, finished: false,
+  });
   const [started, setStarted] = useState(false);
+  const { current, elapsed, transitioning, finished } = playback;
 
   const totalElapsed = current * STEP_DURATION + elapsed;
   const totalTime = steps.length * STEP_DURATION;
 
-  const advance = useCallback(() => {
-    if (current < steps.length - 1) {
-      setTransitioning(true);
-      setTimeout(() => {
-        setCurrent(s => s + 1);
-        setElapsed(0);
-        setTransitioning(false);
-      }, TRANSITION_MS);
-    }
-  }, [current]);
-
   useEffect(() => {
-    if (!started) return;
+    if (!started || finished) return;
+    // Each effect owns one timer; cleanup also handles Strict Mode replay.
+    if (transitioning) {
+      const timer = setTimeout(() => {
+        setPlayback(prev => {
+          if (!prev.transitioning || prev.current !== current) return prev;
+          return { ...prev, current: prev.current + 1, elapsed: 0, transitioning: false };
+        });
+      }, TRANSITION_MS);
+      return () => clearTimeout(timer);
+    }
     const timer = setInterval(() => {
-      setElapsed(prev => {
-        if (prev + 1 >= STEP_DURATION) {
-          advance();
-          return prev;
-        }
-        return prev + 1;
+      setPlayback(prev => {
+        if (prev.finished || prev.transitioning || prev.current !== current) return prev;
+        const elapsed = prev.elapsed + 1;
+        const atBoundary = elapsed === STEP_DURATION;
+        const finished = atBoundary && prev.current === steps.length - 1;
+        return { ...prev, elapsed, finished, transitioning: atBoundary && !finished };
       });
     }, 1000);
     return () => clearInterval(timer);
-  }, [started, advance]);
+  }, [started, current, transitioning, finished]);
 
   const step = steps[current];
   const StepIcon = step.icon;
