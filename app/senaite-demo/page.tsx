@@ -1,6 +1,7 @@
 import { sampleCounts } from '@/lib/demo-data';
 import { qcSummary } from '@/lib/demo-data';
-import { equipmentSummary } from '@/lib/demo-data';
+import { equipmentSummary, instruments } from '@/lib/demo-data';
+import { DEMO_AS_OF_DATE, evaluateEquipmentStatus } from '@/lib/senaite-demo-equipment';
 import { trainingSummary } from '@/lib/demo-data';
 import { CheckCircle2, AlertTriangle, Clock, FlaskConical, Activity, Wrench, GraduationCap } from 'lucide-react';
 import Link from 'next/link';
@@ -28,6 +29,27 @@ function StatCard({ label, value, sub, icon: Icon, color, href }: {
 
 export default function DemoDashboard() {
   const { total, byStatus, byType } = sampleCounts;
+  const calibration = evaluateEquipmentStatus(instruments, DEMO_AS_OF_DATE);
+  const nextDueDate = calibration.nextCalibrationDue
+    ? new Date(`${calibration.nextCalibrationDue}T00:00:00Z`)
+    : null;
+  const daysRemaining = nextDueDate
+    ? (nextDueDate.getTime() - Date.parse(`${DEMO_AS_OF_DATE}T00:00:00Z`)) / 86_400_000
+    : null;
+  const dueDateLabel = nextDueDate?.toLocaleDateString('en-US', {
+    month: 'long', day: 'numeric', year: 'numeric', timeZone: 'UTC',
+  });
+  const calibrationTitle = calibration.status === 'invalid'
+    ? 'Calibration schedule unavailable'
+    : calibration.overdueCount > 0
+      ? 'Instrument calibration overdue'
+      : `Instrument calibration due ${dueDateLabel}`;
+  const calibrationDetail = [
+    calibration.overdueCount > 0 ? `Overdue: ${calibration.overdueInstruments.join(', ')}.` : '',
+    nextDueDate
+      ? `${calibration.nextDueInstrumentName} — ${dueDateLabel} — ${daysRemaining} ${daysRemaining === 1 ? 'day' : 'days'} remaining`
+      : 'Next calibration date unavailable.',
+  ].filter(Boolean).join(' ');
 
   return (
     <div className="space-y-6">
@@ -151,8 +173,8 @@ export default function DemoDashboard() {
           <div className="flex items-center gap-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
             <Clock className="w-5 h-5 text-blue-500 flex-shrink-0" />
             <div>
-              <p className="text-sm font-medium text-blue-800">Instrument calibration due April 28</p>
-              <p className="text-xs text-blue-600">All 5 instruments — 15 days remaining</p>
+              <p className="text-sm font-medium text-blue-800">{calibrationTitle}</p>
+              <p className="text-xs text-blue-600">{calibrationDetail}</p>
             </div>
             <Link href="/senaite-demo/equipment" className="ml-auto text-xs font-medium text-blue-700 hover:text-blue-900 underline">
               View
