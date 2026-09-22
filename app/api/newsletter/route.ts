@@ -6,7 +6,7 @@ export const runtime = 'nodejs';
 export async function POST(req: NextRequest) {
   try {
     const body = (await req.json()) ?? {};
-    const { email, source } = body;
+    const { email } = body;
 
     // ── 1. Validate email format ──────────────────────────────────────────
     const normalizedEmail = normalizeEmail(email);
@@ -21,14 +21,12 @@ export async function POST(req: NextRequest) {
     const apiKey = process.env.RESEND_API_KEY;
     if (!apiKey) {
       console.warn(
-        '[newsletter-subscribe] RESEND_API_KEY not configured. Email subscription recorded but not sent. Configure RESEND_API_KEY in Vercel env to activate.',
-        { email: normalizedEmail, source: source || 'blog_newsletter' }
+        '[newsletter-subscribe] RESEND_API_KEY not configured. Newsletter service unavailable.'
       );
       // Return 503 Service Unavailable to signal config issue gracefully
       return NextResponse.json(
         {
-          error: 'Email service temporarily unavailable. Your subscription will be processed once configured.',
-          deferred: true,
+          error: 'Email service temporarily unavailable. Please try again later.',
         },
         { status: 503 }
       );
