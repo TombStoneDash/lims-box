@@ -42,7 +42,7 @@ function LeveyJenningsChart({ analyte, evaluation }: { analyte: QCAnalyte; evalu
   const plotW = w - pad.left - pad.right;
   const plotH = h - pad.top - pad.bottom;
 
-  const toX = (i: number) => pad.left + (i / (runs.length - 1)) * plotW;
+  const toX = (i: number) => pad.left + (runs.length === 1 ? 0.5 : i / (runs.length - 1)) * plotW;
   const toY = (val: number) => pad.top + ((max - val) / range) * plotH;
 
   // Build path
