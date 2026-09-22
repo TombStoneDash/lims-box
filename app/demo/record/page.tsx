@@ -198,6 +198,16 @@ export default function RecordPage() {
           <FlaskConical className="w-16 h-16 text-[#2E8B57] mx-auto mb-6" />
           <h1 className="text-4xl font-bold text-white mb-2 tracking-tight">LIMS BOX</h1>
           <p className="text-slate-500 mb-8">Recording mode — click anywhere to start</p>
+          <button
+            type="button"
+            onClick={event => {
+              event.stopPropagation();
+              setStarted(true);
+            }}
+            className="mb-6 rounded-lg bg-[#2E8B57] px-6 py-3 font-semibold text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
+          >
+            Start recording
+          </button>
           <div className="text-xs text-slate-600">
             {steps.length} screens &times; {STEP_DURATION}s = {totalTime / 60}:{String(totalTime % 60).padStart(2, '0')} total
           </div>
