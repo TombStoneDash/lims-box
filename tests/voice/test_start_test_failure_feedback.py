@@ -64,11 +64,12 @@ class StartTestFailureFeedbackTests(unittest.TestCase):
             "Could not look up test 'pH': offline lookup failure", logs.output[0]
         )
 
-    def test_successful_lookup_preserves_feedback(self):
+    def test_successful_lookup_reports_observed_state(self):
         client = FakeClient(items=[{"review_state": "sample_received"}])
         self.assertEqual(
             self.execute(client),
-            "Test pH started on sample SA-2026-001. Awaiting results.",
+            "Test pH found on sample SA-2026-001. "
+            "Observed state: sample_received. No workflow change was made.",
         )
 
     def test_missing_test_preserves_feedback(self):
