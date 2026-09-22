@@ -197,21 +197,19 @@ def _handle_print_label(args: tuple, client: SenaiteClient) -> str:
     if not sample:
         return f"Sample {sample_id} not found. Cannot print label."
 
-    # SENAITE label printing is typically handled by a sticker printer
-    # integration. We trigger the API endpoint and confirm.
+    if not sample.get("api_url") or not sample.get("uid"):
+        return f"Label printing unavailable for sample {sample_id}: required sample metadata is missing."
+
+    # A successful API call confirms request acceptance, not physical printing.
     try:
-        sticker_url = sample.get("api_url", "")
-        if sticker_url:
-            # Attempt to trigger sticker print via SENAITE's sticker action
-            client.post(
-                f"AnalysisRequest/{sample['uid']}/sticker",
-                {"template": "Code_128_1x48mm.pt"},
-            )
-        return f"Label sent to printer for sample {sample_id}."
+        client.post(
+            f"AnalysisRequest/{sample['uid']}/sticker",
+            {"template": "Code_128_1x48mm.pt"},
+        )
+        return f"Label print request accepted for sample {sample_id}."
     except Exception as e:
         logger.warning(f"Label print API call failed: {e}")
-        # Even if the API call fails, the user needs feedback
-        return f"Label print requested for {sample_id}. Check printer status."
+        return f"Label print request failed for sample {sample_id}."
 
 
 # ── Helpers ──────────────────────────────────────────────────────────────────
