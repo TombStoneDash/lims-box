@@ -66,15 +66,20 @@ session = SessionContext()
 def parse_command(text: str) -> Optional[Tuple[str, tuple]]:
     """Parse transcribed text into (command_name, args).
 
-    Returns None if no pattern matches.
+    Returns None unless the whole utterance is an affirmative command.
     """
-    cleaned = text.lower().strip()
-    # Remove filler words that whisper sometimes adds
-    cleaned = re.sub(r"\b(um|uh|like|please|okay|so)\b", "", cleaned).strip()
-    cleaned = re.sub(r"\s{2,}", " ", cleaned)
+    cleaned = text.strip()
+    # Only standalone leading fillers are optional; never edit argument words.
+    cleaned = re.sub(
+        r"^(?:(?:um|uh|like|please|okay|so)(?:\s+|,\s*))+",
+        "",
+        cleaned,
+        flags=re.IGNORECASE,
+    )
+    cleaned = cleaned.rstrip(".!?").rstrip()
 
     for pattern, cmd_name in PATTERNS:
-        match = re.search(pattern, cleaned)
+        match = re.fullmatch(pattern, cleaned, flags=re.IGNORECASE)
         if match:
             return cmd_name, match.groups()
 
