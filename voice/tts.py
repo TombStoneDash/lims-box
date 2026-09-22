@@ -56,7 +56,7 @@ def _speak_sapi(text: str) -> None:
     )
     subprocess.run(
         ["powershell", "-NoProfile", "-Command", ps_command],
-        check=False,
+        check=True,
         capture_output=True,
         timeout=30,
     )
@@ -64,7 +64,7 @@ def _speak_sapi(text: str) -> None:
 
 def _speak_macos(text: str) -> None:
     """macOS built-in TTS using the 'say' command."""
-    subprocess.run(["say", "-v", "Samantha", text], check=False, timeout=30)
+    subprocess.run(["say", "-v", "Samantha", text], check=True, timeout=30)
 
 
 def _speak_piper(text: str) -> None:
