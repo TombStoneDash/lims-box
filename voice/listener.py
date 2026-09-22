@@ -11,6 +11,7 @@ Usage:
 import sys
 import time
 import logging
+import re
 import numpy as np
 
 logging.basicConfig(
@@ -153,6 +154,8 @@ def extract_inline_command(text: str, wake_word: str) -> str | None:
     if idx < 0:
         return None
     remainder = text[idx + len(wake_word):].strip()
+    # Transcription may separate the wake phrase from the command with punctuation.
+    remainder = re.sub(r"^[\s,:.]+", "", remainder)
     # Only return if there's substantial text after the wake word
     if len(remainder) > 3:
         return remainder
