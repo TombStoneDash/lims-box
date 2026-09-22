@@ -24,16 +24,33 @@ export async function copyShareLink(url: string): Promise<boolean> {
     await navigator.clipboard.writeText(url);
     return true;
   } catch {
+    const previouslyFocused = document.activeElement;
     const textarea = document.createElement('textarea');
     try {
       textarea.value = url;
+      textarea.style.cssText = 'position: fixed; top: 0; left: 0; opacity: 0; pointer-events: none;';
       document.body.appendChild(textarea);
       textarea.select();
       return document.execCommand('copy') === true;
     } catch {
       return false;
     } finally {
-      textarea.remove();
+      try {
+        textarea.remove();
+      } catch {
+        // Cleanup must not override the copy result.
+      }
+      try {
+        if (
+          previouslyFocused?.isConnected &&
+          'focus' in previouslyFocused &&
+          typeof previouslyFocused.focus === 'function'
+        ) {
+          previouslyFocused.focus({ preventScroll: true });
+        }
+      } catch {
+        // Focus restoration is best effort and must preserve the copy result.
+      }
     }
   }
 }
