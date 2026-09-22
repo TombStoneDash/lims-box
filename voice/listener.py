@@ -80,11 +80,12 @@ def record_until_silence(
     """
     chunks: list[np.ndarray] = []
     silent_frames = 0
+    speech_detected = False
     frames_per_chunk = int(sr * 0.1)  # 100 ms chunks
     silence_count = int(SILENCE_DURATION / 0.1)
 
     def callback(indata, frames, time_info, status):
-        nonlocal silent_frames
+        nonlocal silent_frames, speech_detected
         if status:
             logger.debug(f"Audio status: {status}")
         rms = float(np.sqrt(np.mean(indata ** 2)))
@@ -92,6 +93,7 @@ def record_until_silence(
             silent_frames += 1
         else:
             silent_frames = 0
+            speech_detected = True
         chunks.append(indata.copy())
 
     try:
@@ -106,7 +108,7 @@ def record_until_silence(
             while time.time() - start < max_seconds:
                 time.sleep(0.05)
                 # Only break on silence if we have recorded some actual speech
-                if silent_frames >= silence_count and len(chunks) > silence_count:
+                if speech_detected and silent_frames >= silence_count:
                     break
     except sd.PortAudioError as e:
         logger.error(f"Microphone error: {e}")
