@@ -16,6 +16,39 @@ interface BotReply {
   suggestions?: string[];
 }
 
+const RETRY_MESSAGE = 'Unable to get a valid answer — please try again.';
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return value !== null && typeof value === 'object' && !Array.isArray(value);
+}
+
+function isNonemptyString(value: unknown): value is string {
+  return typeof value === 'string' && value.trim().length > 0;
+}
+
+function parseReply(value: unknown): BotReply | null {
+  if (!isRecord(value) || !isNonemptyString(value.answer) || typeof value.grounded !== 'boolean') {
+    return null;
+  }
+  return {
+    answer: value.answer,
+    grounded: value.grounded,
+    sources: Array.isArray(value.sources)
+      ? value.sources.flatMap((source) =>
+          isRecord(source) && isNonemptyString(source.title) && isNonemptyString(source.path)
+            ? [{ title: source.title, path: source.path }]
+            : [],
+        )
+      : [],
+    followUp: isRecord(value.followUp) && isNonemptyString(value.followUp.label) && isNonemptyString(value.followUp.path)
+      ? { label: value.followUp.label, path: value.followUp.path }
+      : undefined,
+    suggestions: Array.isArray(value.suggestions)
+      ? value.suggestions.filter(isNonemptyString)
+      : undefined,
+  };
+}
+
 interface ChatItem {
   role: 'user' | 'bot';
   text: string;
@@ -49,9 +82,12 @@ export function BotChat() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ question: q }),
       });
-      const data: BotReply | { error: string } = await res.json();
-      if ('error' in data) {
-        setItems((prev) => [...prev, { role: 'bot', text: data.error }]);
+      const payload: unknown = await res.json().catch(() => null);
+      const error = isRecord(payload) && 'error' in payload;
+      const data = res.ok && !error ? parseReply(payload) : null;
+      if (!data) {
+        const message = error && isNonemptyString(payload.error) ? payload.error : RETRY_MESSAGE;
+        setItems((prev) => [...prev, { role: 'bot', text: message }]);
       } else {
         setItems((prev) => [
           ...prev,
