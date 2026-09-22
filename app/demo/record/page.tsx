@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   FlaskConical, ClipboardList, Shield, BarChart3, FileText,
   MessageSquare
@@ -163,36 +163,29 @@ const steps: RecordStep[] = [
 export default function RecordPage() {
   const [current, setCurrent] = useState(0);
   const [elapsed, setElapsed] = useState(0);
-  const [transitioning, setTransitioning] = useState(false);
   const [started, setStarted] = useState(false);
 
   const totalElapsed = current * STEP_DURATION + elapsed;
   const totalTime = steps.length * STEP_DURATION;
-
-  const advance = useCallback(() => {
-    if (current < steps.length - 1) {
-      setTransitioning(true);
-      setTimeout(() => {
-        setCurrent(s => s + 1);
-        setElapsed(0);
-        setTransitioning(false);
-      }, TRANSITION_MS);
-    }
-  }, [current]);
+  const finished = totalElapsed === totalTime;
+  const transitioning = elapsed === STEP_DURATION && !finished;
 
   useEffect(() => {
-    if (!started) return;
+    if (!started || !transitioning) return;
+    const timer = setTimeout(() => {
+      setCurrent(current + 1);
+      setElapsed(0);
+    }, TRANSITION_MS);
+    return () => clearTimeout(timer);
+  }, [started, transitioning, current]);
+
+  useEffect(() => {
+    if (!started || transitioning || finished) return;
     const timer = setInterval(() => {
-      setElapsed(prev => {
-        if (prev + 1 >= STEP_DURATION) {
-          advance();
-          return prev;
-        }
-        return prev + 1;
-      });
+      setElapsed(prev => Math.min(prev + 1, STEP_DURATION));
     }, 1000);
     return () => clearInterval(timer);
-  }, [started, advance]);
+  }, [started, transitioning, finished]);
 
   const step = steps[current];
   const StepIcon = step.icon;
