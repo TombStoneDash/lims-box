@@ -91,6 +91,32 @@ function parseMarkdownToHtml(markdown: string): string {
     return `\n\n<${codeToken}${index}>\n\n`;
   });
 
+  // Protect image attributes from inline formatting, links, and paragraph transforms.
+  const images: string[] = [];
+  let imageToken = 'BLOG_IMAGE';
+  while (markdown.includes(imageToken)) imageToken += '_';
+  const escapeAttribute = (value: string) => value.replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  html = html.replace(/!\[([^\]\n]*)\]\(([^)\n]*)\)/g, (_, alt: string, source: string) => {
+    // Reject protocol-relative URLs, backslashes, controls, and non-HTTP schemes.
+    let safe = false;
+    if (!/[\s\\\u0000-\u001f\u007f]/.test(source)) {
+      if (/^\/(?!\/)/.test(source)) safe = true;
+      else if (/^https?:\/\//i.test(source)) {
+        try {
+          safe = Boolean(new URL(source).hostname);
+        } catch {
+          // Invalid URLs fall back to the descriptive alt text.
+        }
+      }
+    }
+    const escapedAlt = escapeAttribute(alt);
+    const image = safe
+      ? `<img src="${escapeAttribute(source)}" alt="${escapedAlt}" class="max-w-full h-auto" />`
+      : escapedAlt;
+    return `${imageToken}${images.push(image) - 1}END`;
+  });
+
   html = html.replace(/^### (.*$)/gm, '<h3>$1</h3>');
   html = html.replace(/^## (.*$)/gm, '<h2>$1</h2>');
   html = html.replace(/^# (.*$)/gm, '<h1>$1</h1>');
@@ -124,6 +150,7 @@ function parseMarkdownToHtml(markdown: string): string {
     return `<p class="my-4 leading-relaxed">${trimmed.replace(/\n/g, '<br />')}</p>`;
   }).join('\n');
 
+  html = html.replace(new RegExp(`${imageToken}(\\d+)END`, 'g'), (_, index) => images[Number(index)]);
   return html.replace(new RegExp(`<${codeToken}(\\d+)>`, 'g'), (_, index) => codeBlocks[Number(index)]);
 }
 
