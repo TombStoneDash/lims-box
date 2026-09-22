@@ -60,20 +60,27 @@ export type ReviewOutcome = (typeof REVIEW_OUTCOMES)[number];
  */
 export function calcNextReviewDue(reviewType: ReviewType, reviewedAt: Date): Date | null {
   const d = new Date(reviewedAt);
+  let targetMonth = d.getMonth();
   switch (reviewType) {
     case "initial":
     case "six_month":
-      d.setMonth(d.getMonth() + 6);
-      return d;
+      targetMonth += 6;
+      break;
     case "annual":
-      d.setFullYear(d.getFullYear() + 1);
-      return d;
+      targetMonth += 12;
+      break;
     case "corrective_action":
-      d.setMonth(d.getMonth() + 3);
-      return d;
+      targetMonth += 3;
+      break;
     case "ad_hoc":
       return null;
   }
+
+  // Clamp before setting the destination so month-end dates cannot overflow.
+  const monthEnd = new Date(d);
+  monthEnd.setFullYear(d.getFullYear(), targetMonth + 1, 0);
+  d.setFullYear(d.getFullYear(), targetMonth, Math.min(d.getDate(), monthEnd.getDate()));
+  return d;
 }
 
 /** Human-readable label for review types. */
