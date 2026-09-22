@@ -62,6 +62,7 @@ function formatDate(dateString: string): string {
     year: 'numeric',
     month: 'long',
     day: 'numeric',
+    // Publication dates are calendar dates; keep labels aligned with dateTime.
     timeZone: 'UTC',
   });
 }
