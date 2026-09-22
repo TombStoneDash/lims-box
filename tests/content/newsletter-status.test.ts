@@ -3,9 +3,9 @@ import { readFileSync } from 'node:fs';
 import test from 'node:test';
 import { newsletterMessage, newsletterOutcome } from '../../lib/newsletter-status';
 
-test('200 is subscribed and keeps the existing confirmation copy', () => {
+test('200 is subscribed and confirms newsletter membership', () => {
   assert.equal(newsletterOutcome(200, { success: true }), 'subscribed');
-  assert.equal(newsletterMessage('subscribed'), "You're in! Check your inbox.");
+  assert.equal(newsletterMessage('subscribed'), "You're subscribed to the newsletter!");
 });
 
 test('503 with deferred:true is deferred with honest confirmation copy', () => {

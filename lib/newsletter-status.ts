@@ -18,7 +18,7 @@ export function newsletterOutcome(status: number, body: unknown): NewsletterOutc
 export function newsletterMessage(outcome: NewsletterOutcome): string {
   switch (outcome) {
     case 'subscribed':
-      return "You're in! Check your inbox.";
+      return "You're subscribed to the newsletter!";
     case 'deferred':
       return 'Your email address was saved. No confirmation email is coming yet.';
     case 'error':
