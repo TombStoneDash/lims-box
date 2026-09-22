@@ -11,6 +11,7 @@ Usage:
 import sys
 import time
 import logging
+import unicodedata
 import numpy as np
 
 logging.basicConfig(
@@ -152,7 +153,15 @@ def extract_inline_command(text: str, wake_word: str) -> str | None:
     idx = lower.find(wake_word)
     if idx < 0:
         return None
-    remainder = text[idx + len(wake_word):].strip()
+    remainder = text[idx + len(wake_word):]
+    # Remove only the wake/command separator; preserve punctuation in arguments.
+    start = 0
+    while start < len(remainder) and (
+        remainder[start].isspace()
+        or unicodedata.category(remainder[start]).startswith("P")
+    ):
+        start += 1
+    remainder = remainder[start:].strip()
     # Only return if there's substantial text after the wake word
     if len(remainder) > 3:
         return remainder
