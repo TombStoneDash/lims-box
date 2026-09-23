@@ -94,9 +94,18 @@ class SenaiteClient:
         return result.get("items", [])
 
     def get_sample(self, sample_id: str) -> Optional[dict]:
-        """Get a single sample by ID. Returns None if not found."""
+        """Get one valid sample by ID, or None; reject ambiguous or malformed matches."""
         items = self.search_samples(query=sample_id, review_state="")
-        return items[0] if items else None
+        if not items:
+            return None
+        if len(items) != 1:
+            raise ValueError(f"Multiple samples match sample {sample_id}; selection is ambiguous")
+
+        sample = items[0]
+        sample_uid = sample.get("uid") if isinstance(sample, dict) else None
+        if not isinstance(sample_uid, str) or not sample_uid.strip():
+            raise ValueError(f"Sample {sample_id} has malformed metadata: invalid UID")
+        return sample
 
     def create_sample(
         self,
