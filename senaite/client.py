@@ -7,6 +7,7 @@ can catch and queue commands for retry.
 
 import json
 import logging
+from collections.abc import Mapping
 from typing import Optional
 from urllib.parse import urlencode
 from urllib.request import Request, urlopen
@@ -94,9 +95,18 @@ class SenaiteClient:
         return result.get("items", [])
 
     def get_sample(self, sample_id: str) -> Optional[dict]:
-        """Get a single sample by ID. Returns None if not found."""
+        """Get one sample, returning None if absent; reject ambiguous or invalid targets."""
         items = self.search_samples(query=sample_id, review_state="")
-        return items[0] if items else None
+        if not items:
+            return None
+        if len(items) != 1:
+            raise ValueError(f"Multiple samples match sample {sample_id}")
+
+        sample = items[0]
+        uid = sample.get("uid") if isinstance(sample, Mapping) else None
+        if not isinstance(uid, str) or not uid.strip():
+            raise ValueError(f"Sample {sample_id} has an invalid UID")
+        return sample
 
     def create_sample(
         self,
