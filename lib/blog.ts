@@ -116,10 +116,28 @@ function parseMarkdownToHtml(markdown: string): string {
   const linkDestinations: string[] = [];
   let linkToken = 'BLOG_LINK_DESTINATION';
   while (markdown.includes(linkToken)) linkToken += '_';
-  html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_, label: string, destination: string) => {
-    const index = linkDestinations.push(destination) - 1;
-    return `[${label}](${linkToken}${index}END)`;
-  });
+  const linkStart = /\[([^\]]+)\]\(/g;
+  let protectedLinks = '';
+  let copiedThrough = 0;
+  let match: RegExpExecArray | null;
+  while ((match = linkStart.exec(html)) !== null) {
+    const destinationStart = linkStart.lastIndex;
+    let end = destinationStart;
+    let depth = 1;
+    for (; end < html.length; end++) {
+      if (html[end] === '\n') break;
+      if (html[end] === '(') depth++;
+      if (html[end] === ')') depth--;
+      if (depth === 0) break;
+    }
+    // Leave empty or unclosed destinations as prose, never partial anchors.
+    if (depth !== 0 || end === destinationStart) continue;
+    const index = linkDestinations.push(html.slice(destinationStart, end)) - 1;
+    protectedLinks += html.slice(copiedThrough, match.index) + `[${match[1]}](${linkToken}${index}END)`;
+    copiedThrough = end + 1;
+    linkStart.lastIndex = copiedThrough;
+  }
+  html = protectedLinks + html.slice(copiedThrough);
 
   html = html.replace(/^### (.*$)/gm, '<h3>$1</h3>');
   html = html.replace(/^## (.*$)/gm, '<h2>$1</h2>');
@@ -129,7 +147,7 @@ function parseMarkdownToHtml(markdown: string): string {
   html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
   html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
 
-  html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" class="text-lab-teal hover:text-lab-blue underline transition-colors">$1</a>');
+  html = html.replace(new RegExp(`\\[([^\\]]+)\\]\\((${linkToken}\\d+END)\\)`, 'g'), '<a href="$2" class="text-lab-teal hover:text-lab-blue underline transition-colors">$1</a>');
 
   html = html.replace(/^---$/gm, '<hr class="my-8 border-t border-black/10 dark:border-white/10" />');
 
