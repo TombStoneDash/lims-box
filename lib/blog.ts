@@ -116,10 +116,35 @@ function parseMarkdownToHtml(markdown: string): string {
   const linkDestinations: string[] = [];
   let linkToken = 'BLOG_LINK_DESTINATION';
   while (markdown.includes(linkToken)) linkToken += '_';
-  html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_, label: string, destination: string) => {
+  const linkStart = /\[([^\]]+)\]\(/g;
+  const linkParts: string[] = [];
+  let copiedThrough = 0;
+  let linkMatch: RegExpExecArray | null;
+  while ((linkMatch = linkStart.exec(html)) !== null) {
+    let depth = 1;
+    let end = linkStart.lastIndex;
+    let destination = '';
+    for (; end < html.length; end++) {
+      const char = html[end];
+      const next = html[end + 1];
+      // Escaped delimiters are URL characters, not nesting boundaries.
+      if (char === '\\' && (next === '(' || next === ')' || next === '\\')) {
+        destination += next;
+        end++;
+        continue;
+      }
+      if (char === '\n' || char === '\r') break;
+      if (char === '(') depth++;
+      if (char === ')' && --depth === 0) break;
+      destination += char;
+    }
+    if (depth !== 0 || !destination) continue;
     const index = linkDestinations.push(destination) - 1;
-    return `[${label}](${linkToken}${index}END)`;
-  });
+    linkParts.push(html.slice(copiedThrough, linkMatch.index), `[${linkMatch[1]}](${linkToken}${index}END)`);
+    copiedThrough = end + 1;
+    linkStart.lastIndex = copiedThrough;
+  }
+  html = linkParts.join('') + html.slice(copiedThrough);
 
   html = html.replace(/^### (.*$)/gm, '<h3>$1</h3>');
   html = html.replace(/^## (.*$)/gm, '<h2>$1</h2>');
@@ -129,7 +154,7 @@ function parseMarkdownToHtml(markdown: string): string {
   html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
   html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
 
-  html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" class="text-lab-teal hover:text-lab-blue underline transition-colors">$1</a>');
+  html = html.replace(new RegExp(`\\[([^\\]]+)\\]\\((${linkToken}\\d+END)\\)`, 'g'), '<a href="$2" class="text-lab-teal hover:text-lab-blue underline transition-colors">$1</a>');
 
   html = html.replace(/^---$/gm, '<hr class="my-8 border-t border-black/10 dark:border-white/10" />');
 
