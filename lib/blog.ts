@@ -96,11 +96,39 @@ function parseMarkdownToHtml(markdown: string): string {
   let imageToken = 'BLOG_IMAGE';
   while (markdown.includes(imageToken)) imageToken += '_';
   const escapeAttribute = (value: string) => value.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-  html = html.replace(/`[^`]+`|!\[([^\]]*)\]\(([^)]+)\)/g, (match, alt: string | undefined, src: string) => {
-    if (alt === undefined) return match;
-    const index = images.push(`<img src="${escapeAttribute(src)}" alt="${escapeAttribute(alt)}" class="max-w-full h-auto" />`) - 1;
-    return `${imageToken}${index}END`;
-  });
+  const imageStart = /`[^`]+`|!\[([^\]\r\n]*)\]\(/g;
+  const imageParts: string[] = [];
+  let imageCopiedThrough = 0;
+  let imageMatch: RegExpExecArray | null;
+  while ((imageMatch = imageStart.exec(html)) !== null) {
+    if (imageMatch[1] === undefined) continue;
+    let depth = 1;
+    let end = imageStart.lastIndex;
+    let src = '';
+    for (; end < html.length; end++) {
+      const char = html[end];
+      const next = html[end + 1];
+      if (char === '\\' && (next === '(' || next === ')' || next === '\\')) {
+        src += next;
+        end++;
+        continue;
+      }
+      // Do not borrow a closing delimiter from later prose, markup, or code.
+      if (/\s/.test(char) || char === '[' || char === '`') break;
+      if (char === '(') depth++;
+      if (char === ')' && --depth === 0) break;
+      src += char;
+    }
+    const valid = depth === 0 && src !== '';
+    // Protect invalid openers too, so the link pass cannot turn them into anchors.
+    const index = images.push(valid
+      ? `<img src="${escapeAttribute(src)}" alt="${escapeAttribute(imageMatch[1])}" class="max-w-full h-auto" />`
+      : imageMatch[0]) - 1;
+    imageParts.push(html.slice(imageCopiedThrough, imageMatch.index), `${imageToken}${index}END`);
+    imageCopiedThrough = valid ? end + 1 : imageStart.lastIndex;
+    imageStart.lastIndex = imageCopiedThrough;
+  }
+  html = imageParts.join('') + html.slice(imageCopiedThrough);
 
   // Use text placeholders so inline code remains part of its paragraph.
   const inlineCode: string[] = [];
