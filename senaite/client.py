@@ -43,6 +43,8 @@ class SenaiteClient:
 
         try:
             with urlopen(req, timeout=10) as resp:
+                if resp.status == 204:
+                    return {}
                 return json.loads(resp.read().decode())
         except HTTPError as e:
             body_text = ""
