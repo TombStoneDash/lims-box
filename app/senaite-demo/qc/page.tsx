@@ -144,7 +144,7 @@ export default function QCChartsPage() {
   const summary = evaluateQCSummary(allQCData);
   const banner = BANNER_STYLE[summary.status];
   const passRate =
-    summary.totalRuns > 0
+    summary.status !== 'invalid' && summary.totalRuns > 0
       ? `${(((summary.totalRuns - summary.outOfRangeCount) / summary.totalRuns) * 100).toFixed(1)}%`
       : 'N/A';
 
