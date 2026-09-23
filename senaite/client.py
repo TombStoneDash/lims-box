@@ -118,7 +118,8 @@ class SenaiteClient:
     def record_result(self, sample_id: str, test_name: str, value: str) -> dict:
         """Record an analytical result for a specific test on a sample.
 
-        Raises ValueError if the sample or test is not found.
+        Raises ValueError if the sample or test is not found, or the analysis
+        target is ambiguous or malformed.
         """
         sample = self.get_sample(sample_id)
         if not sample:
@@ -131,7 +132,17 @@ class SenaiteClient:
         if not items:
             raise ValueError(f"Test '{test_name}' not found on sample {sample_id}")
 
-        analysis_uid = items[0]["uid"]
+        if len(items) != 1:
+            raise ValueError(
+                f"Multiple analyses match test '{test_name}' on sample {sample_id}"
+            )
+
+        target = items[0]
+        analysis_uid = target.get("uid") if isinstance(target, dict) else None
+        if not isinstance(analysis_uid, str) or not analysis_uid.strip():
+            raise ValueError(
+                f"Analysis for test '{test_name}' on sample {sample_id} has an invalid UID"
+            )
         return self.post(f"Analysis/{analysis_uid}", {"Result": value})
 
     def transition_sample(self, sample_id: str, action: str) -> dict:
