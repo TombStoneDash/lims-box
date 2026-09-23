@@ -99,14 +99,14 @@ export default async function SampleDetailPage({ params }: { params: Promise<{ i
           <dl className="space-y-3">
             {[
               ['COC Number', 'COC-2026-0847'],
-              ['Collected By', 'Ana Patel'],
+              ['Collected By', sample.collectedBy],
               ['Collection Time', '2026-04-11 08:15'],
-              ['Received By', 'Mike Torres'],
-              ['Receipt Time', '2026-04-11 09:02'],
+              ['Received By', sample.receivedBy],
+              ['Receipt Time', sample.dateReceived],
               ['Condition', 'Good — no issues noted'],
-              ['Processed By', 'Mike Torres'],
+              ['Processed By', 'Unavailable in demo'],
               ['Processing', 'Centrifuged 3000 RPM x 10 min'],
-              ['Analyzed By', 'James Kim'],
+              ['Analyzed By', sample.analyst],
               ['Analysis Time', '2026-04-11 10:22'],
             ].map(([label, value]) => (
               <div key={label as string} className="flex justify-between">
