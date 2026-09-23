@@ -123,7 +123,7 @@ def record_until_silence(
 
 def transcribe(model: WhisperModel, audio: np.ndarray) -> str:
     """Run faster-whisper on an audio array, return transcribed text."""
-    if len(audio) == 0:
+    if len(audio) == 0 or not np.any(audio):
         return ""
     segments, _info = model.transcribe(audio, language="en", beam_size=3)
     return " ".join(seg.text for seg in segments).strip()
