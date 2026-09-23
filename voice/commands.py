@@ -116,8 +116,10 @@ def _handle_log_sample(args: tuple, client: SenaiteClient) -> str:
 
     result = client.create_sample(sample_id)
     uid = result.get("uid") if isinstance(result, dict) else None
+    if not isinstance(uid, str) or not uid.strip():
+        return f"Creation of sample {sample_id} could not be confirmed."
     session.set_sample(sample_id, uid)
-    return f"Sample {sample_id} has been logged. Holding time tracking started."
+    return f"Sample {sample_id} has been logged."
 
 
 def _handle_start_test(args: tuple, client: SenaiteClient) -> str:
