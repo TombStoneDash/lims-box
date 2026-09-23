@@ -1,5 +1,6 @@
 import { sampleCounts } from '@/lib/demo-data';
-import { qcSummary } from '@/lib/demo-data';
+import { allQCData } from '@/lib/demo-data';
+import { evaluateQCSummary } from '@/lib/senaite-demo-qc';
 import { equipmentSummary, instruments } from '@/lib/demo-data';
 import { trainingSummary } from '@/lib/demo-data';
 import { projectUpcomingCalibrations } from '@/lib/senaite-demo-calibration-schedule';
@@ -30,6 +31,10 @@ function StatCard({ label, value, sub, icon: Icon, color, href }: {
 
 export default function DemoDashboard() {
   const { total, byStatus, byType } = sampleCounts;
+  const qc = evaluateQCSummary(allQCData);
+  const qcPassRate = qc.status !== 'invalid' && qc.totalRuns > 0
+    ? `${(((qc.totalRuns - qc.outOfRangeCount) / qc.totalRuns) * 100).toFixed(1)}%`
+    : 'N/A';
   // Include all valid deadlines, even beyond the equipment panel's 30-day horizon.
   const calibrations = projectUpcomingCalibrations(
     instruments, new Date(`${DEMO_AS_OF_DATE}T00:00:00Z`), Infinity,
@@ -68,10 +73,10 @@ export default function DemoDashboard() {
         />
         <StatCard
           label="QC Runs (90 days)"
-          value={qcSummary.totalRuns}
-          sub={`${qcSummary.passRate} pass rate — 0 out-of-range`}
+          value={qc.totalRuns}
+          sub={`${qcPassRate} pass rate — ${qc.outOfRangeCount} out-of-range${qc.status === 'invalid' ? ' — QC data unavailable or invalid' : ''}`}
           icon={Activity}
-          color="bg-green-500"
+          color={qc.status === 'invalid' ? 'bg-amber-500' : qc.status === 'out-of-range' ? 'bg-red-500' : 'bg-green-500'}
           href="/senaite-demo/qc"
         />
         <StatCard
