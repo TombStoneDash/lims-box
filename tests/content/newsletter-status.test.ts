@@ -3,17 +3,15 @@ import { readFileSync } from 'node:fs';
 import test from 'node:test';
 import { newsletterMessage, newsletterOutcome } from '../../lib/newsletter-status';
 
-test('200 is subscribed and keeps the existing confirmation copy', () => {
+test('200 is subscribed and confirms subscription', () => {
   assert.equal(newsletterOutcome(200, { success: true }), 'subscribed');
-  assert.equal(newsletterMessage('subscribed'), "You're in! Check your inbox.");
+  assert.equal(newsletterMessage('subscribed'), "You're subscribed!");
 });
 
-test('503 with deferred:true is deferred with honest confirmation copy', () => {
+test('503 with deferred:true is deferred and invites a later retry', () => {
   assert.equal(newsletterOutcome(503, { deferred: true }), 'deferred');
   const message = newsletterMessage('deferred');
-  assert.match(message, /address was saved/i);
-  assert.match(message, /no confirmation email is coming yet/i);
-  assert.doesNotMatch(message, /inbox/i);
+  assert.equal(message, "We couldn't complete your subscription. Please try again later.");
 });
 
 test('503 without an explicit true deferred flag is an error', () => {
