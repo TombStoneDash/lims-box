@@ -30,6 +30,43 @@ const SUGGESTIONS = [
   'How long does setup take?',
 ];
 
+export const BOT_REQUEST_TIMEOUT_MS = 15_000;
+
+class BotRequestTimeoutError extends Error {
+  constructor() {
+    super('The request timed out — please try again.');
+  }
+}
+
+export async function requestBotReply(question: string): Promise<BotReply | { error: string }> {
+  const controller = new AbortController();
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const deadline = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => {
+      reject(new BotRequestTimeoutError());
+      controller.abort();
+    }, BOT_REQUEST_TIMEOUT_MS);
+  });
+
+  try {
+    // Race the entire response body too, even if abort does not settle it.
+    return await Promise.race([
+      (async () => {
+        const res = await fetch('/api/bot', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ question }),
+          signal: controller.signal,
+        });
+        return await res.json();
+      })(),
+      deadline,
+    ]);
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 export function BotChat() {
   const inputId = useId();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -44,12 +81,7 @@ export function BotChat() {
     setInput('');
     setItems((prev) => [...prev, { role: 'user', text: q }]);
     try {
-      const res = await fetch('/api/bot', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ question: q }),
-      });
-      const data: BotReply | { error: string } = await res.json();
+      const data = await requestBotReply(q);
       if ('error' in data) {
         setItems((prev) => [...prev, { role: 'bot', text: data.error }]);
       } else {
@@ -64,10 +96,15 @@ export function BotChat() {
           },
         ]);
       }
-    } catch {
+    } catch (error) {
       setItems((prev) => [
         ...prev,
-        { role: 'bot', text: 'Connection problem — please try again.' },
+        {
+          role: 'bot',
+          text: error instanceof BotRequestTimeoutError
+            ? error.message
+            : 'Connection problem — please try again.',
+        },
       ]);
     } finally {
       setBusy(false);
