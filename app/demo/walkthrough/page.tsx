@@ -1,6 +1,6 @@
 'use client';
 
-import { useReducer, useEffect } from 'react';
+import React, { useReducer, useEffect } from 'react';
 import { tick, goTo, togglePause, type WalkthroughPlayerState } from '@/lib/walkthrough-player';
 import Link from 'next/link';
 import {
@@ -105,7 +105,12 @@ function QCDashboardScreen() {
               <span className="text-xs font-semibold text-white">{a.name}</span>
               <span className="text-[10px] px-2 py-0.5 rounded-full bg-green-500/20 text-green-300">All in range</span>
             </div>
-            <svg viewBox={`0 0 ${w} ${h}`} className="w-full" style={{ maxHeight: 100 }}>
+            <svg viewBox={`0 0 ${w} ${h}`} className="w-full" style={{ maxHeight: 100 }}
+              role="img" aria-labelledby={`walkthrough-qc-${a.name}-title`} aria-describedby={`walkthrough-qc-${a.name}-desc`}>
+              <title id={`walkthrough-qc-${a.name}-title`}>{`${a.name} QC chart`}</title>
+              <desc id={`walkthrough-qc-${a.name}-desc`}>
+                {`${a.name} walkthrough QC series of ${a.points.length} measurements. Mean: ${a.mean}. Standard deviation: ${a.sd}. Measured values in plot order: ${a.points.join(', ')}.`}
+              </desc>
               <rect x={pad} y={toY(a.mean + 2 * a.sd)} width={pw} height={toY(a.mean - 2 * a.sd) - toY(a.mean + 2 * a.sd)} fill="rgba(46,139,87,0.1)" />
               <line x1={pad} y1={toY(a.mean)} x2={w - pad} y2={toY(a.mean)} stroke="#2E8B57" strokeWidth={1} strokeDasharray="4 4" />
               <path d={d} fill="none" stroke="#3B82F6" strokeWidth={2} />
