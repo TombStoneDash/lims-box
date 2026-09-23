@@ -227,8 +227,8 @@ def _normalize_sample_id(raw: str) -> str:
     Common whisper artifacts: 'SA dash 2026 dash 0 0 1' -> 'SA-2026-001'
     """
     text = raw.strip()
-    # Collapse spoken "dash" to actual dashes
-    text = re.sub(r"\s*dash\s*", "-", text, flags=re.IGNORECASE)
+    # Replace only standalone spoken "dash" tokens; preserve identifier text.
+    text = re.sub(r"(?<!\S)dash(?!\S)", "-", text, flags=re.IGNORECASE)
     # Remove spaces around hyphens
     text = re.sub(r"\s*-\s*", "-", text)
     # Remove remaining spaces within the ID (e.g., "S A" -> "SA")
