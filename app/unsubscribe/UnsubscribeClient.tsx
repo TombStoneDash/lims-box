@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, type FormEvent } from 'react';
 
 interface Props {
   email: string;
@@ -18,8 +18,9 @@ export default function UnsubscribeClient({ email, list }: Props) {
 
   const displayList = list === 'all' ? 'all LIMS BOX emails' : 'the LIMS BOX newsletter';
 
-  async function handleUnsubscribe() {
-    if (!canUnsubscribe || state === 'loading') return;
+  async function handleUnsubscribe(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!canUnsubscribe || state === 'loading' || !event.currentTarget.checkValidity()) return;
     setState('loading');
     try {
       const res = await fetch('/api/unsubscribe', {
@@ -62,7 +63,7 @@ export default function UnsubscribeClient({ email, list }: Props) {
   }
 
   return (
-    <div>
+    <form onSubmit={handleUnsubscribe}>
       <h2 className="text-lg font-semibold text-gray-900 mb-2">
         Unsubscribe from {displayList}
       </h2>
@@ -82,6 +83,8 @@ export default function UnsubscribeClient({ email, list }: Props) {
           <input
             id="unsubscribe-email"
             type="email"
+            name="email"
+            required
             autoComplete="email"
             maxLength={320}
             value={enteredEmail}
@@ -99,7 +102,7 @@ export default function UnsubscribeClient({ email, list }: Props) {
       )}
 
       <button
-        onClick={handleUnsubscribe}
+        type="submit"
         disabled={state === 'loading' || !canUnsubscribe}
         className="w-full bg-gray-900 text-white py-3 px-4 rounded-md font-medium hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
       >
@@ -112,6 +115,6 @@ export default function UnsubscribeClient({ email, list }: Props) {
           Visit LIMS BOX
         </a>
       </p>
-    </div>
+    </form>
   );
 }
