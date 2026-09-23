@@ -8,20 +8,49 @@ interface BotSource {
   path: string;
 }
 
-interface BotReply {
-  answer: string;
-  grounded: boolean;
-  sources: BotSource[];
-  followUp?: { label: string; path: string };
-  suggestions?: string[];
-}
-
 interface ChatItem {
   role: 'user' | 'bot';
   text: string;
   sources?: BotSource[];
   followUp?: { label: string; path: string };
   suggestions?: string[];
+}
+
+const RETRY_MESSAGE = 'Connection problem — please try again.';
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return value !== null && typeof value === 'object' && !Array.isArray(value);
+}
+
+function isNonblankString(value: unknown): value is string {
+  return typeof value === 'string' && value.trim().length > 0;
+}
+
+function botItem(ok: boolean, body: unknown): ChatItem {
+  if (!isRecord(body)) return { role: 'bot', text: RETRY_MESSAGE };
+  if (isNonblankString(body.error)) return { role: 'bot', text: body.error };
+  if (!ok || !isNonblankString(body.answer)) {
+    return { role: 'bot', text: RETRY_MESSAGE };
+  }
+
+  const sources: BotSource[] = [];
+  if (Array.isArray(body.sources)) {
+    for (const source of body.sources) {
+      if (isRecord(source) && isNonblankString(source.title) && isNonblankString(source.path)) {
+        sources.push({ title: source.title, path: source.path });
+      }
+    }
+  }
+  const followUp = body.followUp;
+  return {
+    role: 'bot',
+    text: body.answer,
+    sources,
+    followUp: isRecord(followUp) && isNonblankString(followUp.label) && isNonblankString(followUp.path)
+      ? { label: followUp.label, path: followUp.path } : undefined,
+    suggestions: body.grounded === true || !Array.isArray(body.suggestions)
+      ? undefined : body.suggestions.filter(isNonblankString),
+  };
 }
 
 const SUGGESTIONS = [
@@ -49,25 +78,13 @@ export function BotChat() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ question: q }),
       });
-      const data: BotReply | { error: string } = await res.json();
-      if ('error' in data) {
-        setItems((prev) => [...prev, { role: 'bot', text: data.error }]);
-      } else {
-        setItems((prev) => [
-          ...prev,
-          {
-            role: 'bot',
-            text: data.answer,
-            sources: data.sources,
-            followUp: data.followUp,
-            suggestions: data.grounded ? undefined : data.suggestions,
-          },
-        ]);
-      }
+      const data: unknown = await res.json();
+      const reply = botItem(res.ok, data);
+      setItems((prev) => [...prev, reply]);
     } catch {
       setItems((prev) => [
         ...prev,
-        { role: 'bot', text: 'Connection problem — please try again.' },
+        { role: 'bot', text: RETRY_MESSAGE },
       ]);
     } finally {
       setBusy(false);
