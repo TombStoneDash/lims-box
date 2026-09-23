@@ -10,10 +10,31 @@ interface BotSource {
 
 interface BotReply {
   answer: string;
-  grounded: boolean;
-  sources: BotSource[];
+  grounded?: boolean;
+  sources?: BotSource[];
   followUp?: { label: string; path: string };
   suggestions?: string[];
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function isNonemptyString(value: unknown): value is string {
+  return typeof value === 'string' && value.trim().length > 0;
+}
+
+function isBotReply(value: unknown): value is BotReply {
+  return isRecord(value)
+    && isNonemptyString(value.answer)
+    && (value.grounded === undefined || typeof value.grounded === 'boolean')
+    && (value.sources === undefined || (Array.isArray(value.sources)
+      && value.sources.every((source: unknown) => isRecord(source)
+        && isNonemptyString(source.title) && isNonemptyString(source.path))))
+    && (value.followUp === undefined || (isRecord(value.followUp)
+      && isNonemptyString(value.followUp.label) && isNonemptyString(value.followUp.path)))
+    && (value.suggestions === undefined || (Array.isArray(value.suggestions)
+      && value.suggestions.every(isNonemptyString)));
 }
 
 interface ChatItem {
@@ -49,10 +70,13 @@ export function BotChat() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ question: q }),
       });
-      const data: BotReply | { error: string } = await res.json();
-      if ('error' in data) {
-        setItems((prev) => [...prev, { role: 'bot', text: data.error }]);
+      const data: unknown = await res.json();
+      if (isRecord(data) && 'error' in data) {
+        const error = data.error;
+        if (!isNonemptyString(error)) throw new Error('Invalid bot error');
+        setItems((prev) => [...prev, { role: 'bot', text: error }]);
       } else {
+        if (!res.ok || !isBotReply(data)) throw new Error('Invalid bot reply');
         setItems((prev) => [
           ...prev,
           {
