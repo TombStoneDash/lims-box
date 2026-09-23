@@ -96,11 +96,36 @@ function parseMarkdownToHtml(markdown: string): string {
   let imageToken = 'BLOG_IMAGE';
   while (markdown.includes(imageToken)) imageToken += '_';
   const escapeAttribute = (value: string) => value.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-  html = html.replace(/`[^`]+`|!\[([^\]]*)\]\(([^)]+)\)/g, (match, alt: string | undefined, src: string) => {
-    if (alt === undefined) return match;
-    const index = images.push(`<img src="${escapeAttribute(src)}" alt="${escapeAttribute(alt)}" class="max-w-full h-auto" />`) - 1;
-    return `${imageToken}${index}END`;
-  });
+  const imageStart = /`[^`]+`|!\[([^\]]*)\]\(/g;
+  const imageParts: string[] = [];
+  let imageCopiedThrough = 0;
+  let imageMatch: RegExpExecArray | null;
+  while ((imageMatch = imageStart.exec(html)) !== null) {
+    if (imageMatch[1] === undefined) continue;
+    let depth = 1;
+    let end = imageStart.lastIndex;
+    let destination = '';
+    for (; end < html.length; end++) {
+      const char = html[end];
+      const next = html[end + 1];
+      // Escaped parentheses and backslashes are literal destination characters.
+      if (char === '\\' && (next === '(' || next === ')' || next === '\\')) {
+        destination += next;
+        end++;
+        continue;
+      }
+      if (char === '\n' || char === '\r') break;
+      if (char === '(') depth++;
+      if (char === ')' && --depth === 0) break;
+      destination += char;
+    }
+    if (depth !== 0 || !destination) continue;
+    const index = images.push(`<img src="${escapeAttribute(destination)}" alt="${escapeAttribute(imageMatch[1])}" class="max-w-full h-auto" />`) - 1;
+    imageParts.push(html.slice(imageCopiedThrough, imageMatch.index), `${imageToken}${index}END`);
+    imageCopiedThrough = end + 1;
+    imageStart.lastIndex = imageCopiedThrough;
+  }
+  html = imageParts.join('') + html.slice(imageCopiedThrough);
 
   // Use text placeholders so inline code remains part of its paragraph.
   const inlineCode: string[] = [];
