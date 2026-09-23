@@ -114,10 +114,20 @@ def _handle_log_sample(args: tuple, client: SenaiteClient) -> str:
         session.set_sample(sample_id, existing.get("uid"))
         return f"Sample {sample_id} already exists. Status: {existing.get('review_state', 'unknown')}. Set as current sample."
 
-    result = client.create_sample(sample_id)
+    unconfirmed = f"Creation of sample {sample_id} was not confirmed. Current sample unchanged."
+    try:
+        result = client.create_sample(sample_id)
+    except Exception:
+        # The write may have succeeded despite the error; do not retry it.
+        logger.warning("Sample creation was not confirmed for %s", sample_id)
+        return unconfirmed
+
     uid = result.get("uid") if isinstance(result, dict) else None
+    if not isinstance(uid, str) or not uid.strip():
+        return unconfirmed
+
     session.set_sample(sample_id, uid)
-    return f"Sample {sample_id} has been logged. Holding time tracking started."
+    return f"Sample {sample_id} has been logged."
 
 
 def _handle_start_test(args: tuple, client: SenaiteClient) -> str:
