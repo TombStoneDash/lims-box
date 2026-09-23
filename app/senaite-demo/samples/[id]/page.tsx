@@ -1,11 +1,16 @@
 import { featuredSample, sampleAuditTrail, sampleResults } from '@/lib/demo-data';
+import { resolveDemoSampleId, resultFlagTone, RESULT_FLAG_TONE_CLASS } from '@/lib/senaite-demo-sample';
 import { ArrowLeft, FileText, Shield, Clock, User, CheckCircle2 } from 'lucide-react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
+export function generateStaticParams() {
+  return [{ id: featuredSample.id }];
+}
+
 export default async function SampleDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  if (id !== featuredSample.id) notFound();
+  if (resolveDemoSampleId(id, featuredSample.id) === null) notFound();
 
   const sample = featuredSample;
   const audit = sampleAuditTrail;
@@ -83,7 +88,7 @@ export default async function SampleDetailPage({ params }: { params: Promise<{ i
                   <td className="py-2 text-right font-mono font-medium text-slate-900">{r.result} {r.unit}</td>
                   <td className="py-2 text-right text-slate-500 text-xs">{r.refRange}</td>
                   <td className="py-2 text-right">
-                    <span className="text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-700">{r.flag}</span>
+                    <span className={`text-xs px-2 py-0.5 rounded-full ${RESULT_FLAG_TONE_CLASS[resultFlagTone(r.flag)]}`}>{r.flag}</span>
                   </td>
                 </tr>
               ))}
@@ -149,7 +154,7 @@ export default async function SampleDetailPage({ params }: { params: Promise<{ i
                     <span className={`inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full ${
                       entry.action.includes('Signature') ? 'bg-purple-100 text-purple-700' :
                       entry.action.includes('Status') ? 'bg-blue-100 text-blue-700' :
-                      entry.action.includes('Results') ? 'bg-green-100 text-green-700' :
+                      entry.action.includes('Results') ? RESULT_FLAG_TONE_CLASS.ok :
                       'bg-slate-100 text-slate-600'
                     }`}>
                       {entry.action}
