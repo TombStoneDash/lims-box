@@ -57,6 +57,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
+function serializeJsonLd(value: unknown): string {
+  // Prevent metadata from terminating the HTML script element.
+  return JSON.stringify(value).replace(/</g, '\\u003c');
+}
+
 function formatDate(dateString: string): string {
   return new Date(dateString).toLocaleDateString('en-US', {
     year: 'numeric',
@@ -140,11 +145,11 @@ export default async function BlogPostPage({ params }: Props) {
       {/* JSON-LD */}
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(jsonLd) }}
       />
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(breadcrumbJsonLd) }}
       />
 
       {/* Header */}
