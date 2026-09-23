@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import Image from 'next/image';
 import { Play } from 'lucide-react';
 
@@ -20,6 +20,7 @@ export function VideoSection({
   className = '',
 }: VideoSectionProps) {
   const [activated, setActivated] = useState(false);
+  const shouldFocusPlayer = useRef(false);
   const fallbackPoster = `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`;
 
   return (
@@ -28,6 +29,13 @@ export function VideoSection({
         <div className="relative aspect-video bg-slate-900 rounded-2xl overflow-hidden border border-black/5 dark:border-white/10 shadow-2xl shadow-black/20">
           {activated ? (
             <iframe
+              ref={(player) => {
+                if (player && shouldFocusPlayer.current) {
+                  // Consume the handoff on mount, never on a later iframe load.
+                  shouldFocusPlayer.current = false;
+                  player.focus();
+                }
+              }}
               src={`https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1&color=white`}
               title={title}
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
@@ -37,7 +45,11 @@ export function VideoSection({
           ) : (
             <button
               type="button"
-              onClick={() => setActivated(true)}
+              onClick={(event) => {
+                shouldFocusPlayer.current =
+                  event.currentTarget.ownerDocument.activeElement === event.currentTarget;
+                setActivated(true);
+              }}
               aria-label={`Play video: ${title}`}
               className="absolute inset-0 w-full h-full group cursor-pointer"
             >
