@@ -140,8 +140,8 @@ function findTest(question: string): SyntheticTest | undefined {
 const MATRIX_KEYS = ['serum', 'plasma', 'swab', 'urine', 'drinking_water', 'wastewater', 'surface_water'] as const;
 
 function findMatrix(question: string): string | undefined {
-  const lowerQuestion = question.toLowerCase().replaceAll('-', '_').replaceAll(' ', '_');
-  return MATRIX_KEYS.find((matrix) => lowerQuestion.includes(matrix));
+  const matrix = normalizeQuestionText(question).match(MATRIX_PARAM_PATTERN)?.[0];
+  return matrix?.replace(/[ _-]+/g, '_');
 }
 
 type NeutralIntent = 'status' | 'results' | 'tat' | 'container' | 'order';
@@ -181,16 +181,20 @@ const MATRIX_PARAM_PATTERN = new RegExp(
   'g',
 );
 
-// Normalizes the whole request to lowercase, punctuation-free words, then
-// swaps record identifiers and other known parameters for fixed sentinel
-// tokens so the intent grammar below can match against the complete,
-// parameter-normalized request instead of scanning for isolated keywords.
-function normalizeForGrammar(question: string): string {
+// Share text normalization so matrix extraction recognizes exactly the
+// same word boundaries and separators as the whole-question grammar.
+function normalizeQuestionText(question: string): string {
   return question
     .toLowerCase()
     .replace(/[?!.,]/g, ' ')
     .replace(/\s+/g, ' ')
-    .trim()
+    .trim();
+}
+
+// Swaps record identifiers and other known parameters for fixed sentinel
+// tokens so the intent grammar below matches the complete normalized request.
+function normalizeForGrammar(question: string): string {
+  return normalizeQuestionText(question)
     .replace(SAMPLE_ID_PARAM_PATTERN, PARAM_TOKEN.sampleId)
     .replace(TEST_CODE_PARAM_PATTERN, PARAM_TOKEN.testCode)
     .replace(TEST_NAME_PARAM_PATTERN, PARAM_TOKEN.testCode)
