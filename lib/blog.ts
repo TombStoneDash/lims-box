@@ -187,9 +187,10 @@ function parseMarkdownToHtml(markdown: string): string {
   html = html.replace(/^---$/gm, '<hr class="my-8 border-t border-black/10 dark:border-white/10" />');
 
   // Match whole runs by list type; blank lines and other blocks end each run.
-  html = html.replace(/^\d+\.[ \t]+[^\n]*(?:\n\d+\.[ \t]+[^\n]*)*/gm, (list) => {
+  html = html.replace(/^(\d+)\.[ \t]+[^\n]*(?:\n\d+\.[ \t]+[^\n]*)*/gm, (list, firstMarker: string) => {
+    const start = Number(firstMarker);
     const items = list.split('\n').map(line => `<li>${line.replace(/^\d+\.[ \t]+/, '')}</li>`).join('\n');
-    return `\n\n<ol class="list-decimal pl-6 space-y-2 my-4">${items}</ol>\n\n`;
+    return `\n\n<ol class="list-decimal pl-6 space-y-2 my-4"${start === 1 ? '' : ` start="${start}"`}>${items}</ol>\n\n`;
   });
   html = html.replace(/^- [^\n]*(?:\n- [^\n]*)*/gm, (list) => {
     const items = list.split('\n').map(line => `<li>${line.slice(2)}</li>`).join('\n');
