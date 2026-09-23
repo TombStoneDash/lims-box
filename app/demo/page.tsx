@@ -17,9 +17,7 @@ const steps: { id: Step; label: string; icon: React.ElementType }[] = [
   { id: 'report', label: 'Demo Report', icon: FileText },
 ];
 
-function SampleEntryStep() {
-  const [submitted, setSubmitted] = useState(false);
-
+function SampleEntryStep({ submitted, onLogSample }: { submitted: boolean; onLogSample: () => void }) {
   if (submitted) {
     return (
       <div className="text-center py-8">
@@ -88,7 +86,7 @@ function SampleEntryStep() {
       </div>
 
       <button
-        onClick={() => setSubmitted(true)}
+        onClick={onLogSample}
         className="w-full md:w-auto px-6 py-3 bg-lab-teal hover:bg-lab-teal/90 text-white font-semibold rounded-lg transition-colors flex items-center justify-center gap-2"
       >
         Log Sample <ArrowRight className="w-4 h-4" />
@@ -97,9 +95,7 @@ function SampleEntryStep() {
   );
 }
 
-function COCStep() {
-  const [signed, setSigned] = useState(false);
-
+function COCStep({ signed, onSign }: { signed: boolean; onSign: () => void }) {
   return (
     <div className="space-y-6">
       <div className="bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-lg overflow-hidden">
@@ -138,7 +134,7 @@ function COCStep() {
                     <span className="text-xs px-2 py-0.5 bg-green-100 text-green-700 rounded-full">Signed</span>
                   ) : (
                     <button
-                      onClick={() => setSigned(true)}
+                      onClick={onSign}
                       className="text-xs px-2 py-0.5 bg-lab-teal text-white rounded-full hover:bg-lab-teal/90 transition-colors"
                     >
                       Click to Sign
@@ -328,6 +324,8 @@ function CalendlyEmbed() {
 
 export default function DemoPage() {
   const [currentStep, setCurrentStep] = useState<Step>('entry');
+  const [submitted, setSubmitted] = useState(false);
+  const [signed, setSigned] = useState(false);
   const stepIndex = steps.findIndex(s => s.id === currentStep);
 
   return (
@@ -428,8 +426,8 @@ export default function DemoPage() {
             </h2>
           </div>
 
-          {currentStep === 'entry' && <SampleEntryStep />}
-          {currentStep === 'coc' && <COCStep />}
+          {currentStep === 'entry' && <SampleEntryStep submitted={submitted} onLogSample={() => setSubmitted(true)} />}
+          {currentStep === 'coc' && <COCStep signed={signed} onSign={() => setSigned(true)} />}
           {currentStep === 'report' && <ReportStep />}
 
           {/* Navigation */}
