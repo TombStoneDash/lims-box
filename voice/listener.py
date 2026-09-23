@@ -125,8 +125,12 @@ def transcribe(model: WhisperModel, audio: np.ndarray) -> str:
     """Run faster-whisper on an audio array, return transcribed text."""
     if len(audio) == 0 or not np.any(audio):
         return ""
-    segments, _info = model.transcribe(audio, language="en", beam_size=3)
-    return " ".join(seg.text for seg in segments).strip()
+    try:
+        segments, _info = model.transcribe(audio, language="en", beam_size=3)
+        return " ".join(seg.text for seg in segments).strip()
+    except Exception:
+        logger.error("Transcription failed; discarding audio capture")
+        return ""
 
 
 # ── Wake word detection ─────────────────────────────────────────────────────
