@@ -16,7 +16,8 @@ interface WalkthroughStep {
   overlay: string;
   description: string;
   icon: React.ElementType;
-  color: string;
+  tileClass: string;
+  iconClass: string;
   content: React.ReactNode;
 }
 
@@ -205,7 +206,8 @@ const walkthroughSteps: WalkthroughStep[] = [
     overlay: 'Log a sample in seconds. Holding times start automatically.',
     description: 'Sample WS-2026-0421 is logged with auto-generated ID, EPA method lookup, and automatic holding time countdown. Zero manual calculation.',
     icon: ClipboardList,
-    color: 'bg-blue-500',
+    tileClass: 'bg-blue-500/20',
+    iconClass: 'text-blue-500',
     content: <SampleIntakeScreen />,
   },
   {
@@ -214,7 +216,8 @@ const walkthroughSteps: WalkthroughStep[] = [
     overlay: 'Every action. Logged. Timestamped. Tamper-evident.',
     description: 'Complete chain of custody with electronic signatures, IP logging, and immutable timestamps. Built for ISO 17025 and 21 CFR Part 11.',
     icon: Shield,
-    color: 'bg-purple-500',
+    tileClass: 'bg-purple-500/20',
+    iconClass: 'text-purple-500',
     content: <AuditTrailScreen />,
   },
   {
@@ -223,7 +226,8 @@ const walkthroughSteps: WalkthroughStep[] = [
     overlay: 'QC trending in real time. Failures flagged before results go out.',
     description: 'Levey-Jennings charts, Westgard rules, and batch QC — all automated. Method blanks, LCS, duplicates, and matrix spikes tracked per batch.',
     icon: BarChart3,
-    color: 'bg-green-500',
+    tileClass: 'bg-green-500/20',
+    iconClass: 'text-green-500',
     content: <QCDashboardScreen />,
   },
   {
@@ -232,7 +236,8 @@ const walkthroughSteps: WalkthroughStep[] = [
     overlay: 'One-click reports. EPA-formatted. 3 hours → 12 seconds.',
     description: 'Results, QC summary, and regulatory limits auto-populated into client-ready reports. No copy-paste. No manual formatting.',
     icon: FileText,
-    color: 'bg-amber-500',
+    tileClass: 'bg-amber-500/20',
+    iconClass: 'text-amber-500',
     content: <ReportingScreen />,
   },
   {
@@ -241,7 +246,8 @@ const walkthroughSteps: WalkthroughStep[] = [
     overlay: 'Ask your LIMS in plain English.',
     description: 'Natural language queries against your lab data. Pending samples, QC status, turnaround metrics — answers in seconds, not spreadsheet sessions.',
     icon: MessageSquare,
-    color: 'bg-teal-500',
+    tileClass: 'bg-teal-500/20',
+    iconClass: 'text-teal-500',
     content: <LimsBotScreen />,
   },
 ];
@@ -336,8 +342,8 @@ export default function WalkthroughPage() {
         <div className="max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-5 gap-6 h-full">
           {/* Left: overlay + description */}
           <div className="lg:col-span-2 flex flex-col justify-center">
-            <div className={`w-10 h-10 rounded-xl ${step.color}/20 flex items-center justify-center mb-4`}>
-              <StepIcon className={`w-5 h-5 ${step.color.replace('bg-', 'text-')}`} />
+            <div className={`w-10 h-10 rounded-xl ${step.tileClass} flex items-center justify-center mb-4`}>
+              <StepIcon className={`w-5 h-5 ${step.iconClass}`} />
             </div>
             <p className="text-xs text-slate-500 uppercase tracking-wider mb-2">
               Step {currentStep + 1} of {walkthroughSteps.length}
