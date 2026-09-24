@@ -4,6 +4,7 @@ import React, { useEffect, useId, useRef, useState } from 'react';
 import Link from 'next/link';
 
 import { parseHistory, serializeHistory, type BotSource, type ChatItem } from '../../lib/bot/chat-history';
+import { readBotPrompt, type CapabilityCard } from '../../lib/bot/front-door';
 
 const HISTORY_KEY = 'limsbot.chat.v1';
 
@@ -21,7 +22,7 @@ const SUGGESTIONS = [
   'How long does setup take?',
 ];
 
-export function BotChat() {
+export function BotChat({ cards = [] }: { cards?: CapabilityCard[] } = {}) {
   const inputId = useId();
   const inputRef = useRef<HTMLInputElement>(null);
   const [items, setItems] = useState<ChatItem[]>([]);
@@ -38,6 +39,12 @@ export function BotChat() {
       // Storage may be unavailable; chatting still works in memory.
     }
     setHistoryLoaded(true);
+    // A `?bot=` deep link pre-fills the question; the visitor still presses Ask.
+    const prompt = readBotPrompt(window.location.search);
+    if (prompt) {
+      setInput(prompt);
+      inputRef.current?.focus();
+    }
     /* eslint-enable react-hooks/set-state-in-effect */
   }, []);
 
@@ -107,6 +114,25 @@ export function BotChat() {
   return (
     <div className="rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 p-4">
       <div role="log" aria-live="polite" aria-relevant="additions" aria-label="Conversation with LIMS BOT" aria-busy={busy} className="space-y-4 mb-4 min-h-24">
+        {items.length === 0 && cards.length > 0 && (
+          <div role="group" aria-label="Click to try" className="grid gap-2 sm:grid-cols-2">
+            {cards.map((card) => (
+              <button
+                key={card.question}
+                type="button"
+                onClick={() => {
+                  ask(card.question);
+                  inputRef.current?.focus();
+                }}
+                disabled={busy}
+                className="rounded-lg border border-slate-200 dark:border-white/10 p-3 text-left hover:border-slate-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+              >
+                <span className="block text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">{card.category}</span>
+                <span className="mt-1 block text-sm text-slate-900 dark:text-white">{card.question}</span>
+              </button>
+            ))}
+          </div>
+        )}
         {items.length === 0 && (
           <div className="flex flex-wrap gap-2">
             {SUGGESTIONS.map((s) => (

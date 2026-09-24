@@ -2,6 +2,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import type { Metadata } from 'next';
 import { EmailGateForm } from './EmailGateForm';
+import { botHref } from '../../lib/bot/front-door';
 import {
   FlaskConical,
   Users,
@@ -153,6 +154,11 @@ export default function PersonnelPackPage() {
               View pricing
             </Link>
           </div>
+          <p className="mt-4 text-sm">
+            <Link href={botHref('Explain the personnel pack')} className="underline text-slate-300 hover:text-white transition-colors">
+              Ask LIMS BOT about this
+            </Link>
+          </p>
         </div>
       </section>
 
