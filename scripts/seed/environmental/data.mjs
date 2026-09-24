@@ -4,10 +4,10 @@
 // contact names are invented and carry a "(SYNTHETIC)" marker.
 //
 // Status words used below:
-//   CITED       value taken from the named source table (verify against the
-//               current eCFR / method text before relying on it).
-//   UNVERIFIED  value believed correct but not checked against the source
-//               during this build. Treat as a placeholder.
+//   SOURCED     checked on 2026-09-24 against the official text named in
+//               `ref` (eCFR current text or the EPA method PDF at `url`).
+//   CITED       taken from the named table but not re-read (legacy; unused now).
+//   UNVERIFIED  not checked against the source. Treat as a placeholder.
 //   example     illustrative only (regulatory and QC limits). Not a
 //               compliance limit for any real permit or system.
 
@@ -18,11 +18,19 @@ export const SYNTHETIC_MARKER = '(SYNTHETIC)';
 const SIX_MONTHS_HOURS = 180 * 24;
 
 export const SOURCES = Object.freeze({
-  CFR136_T2: '40 CFR 136.3 Table II (Required Containers, Preservation Techniques, and Holding Times)',
-  M524_2: 'EPA Method 524.2 Rev 4.1, sample preservation and storage section',
-  SW846_CH3: 'SW-846 Chapter Three (Inorganic Analytes), holding time table',
-  SW846_CH4: 'SW-846 Chapter Four (Organic Analytes), holding time table for Method 5035 soil VOCs',
-  CFR141_TC: '40 CFR 141 Subpart Y (Revised Total Coliform Rule) 30 hour holding time for drinking water coliform samples',
+  CFR136_T2: '40 CFR 136.3(e) Table II (Required Containers, Preservation Techniques, and Holding Times), eCFR current text, section last amended 2024-06-17',
+  M524_2: 'EPA Method 524.2 Rev 4.1 (1995)',
+  SW846_CH3: 'SW-846 Update VI, Chapter Three Rev 6 (Inorganic Analytes), Table 3-1 (EPA guidance, not regulation)',
+  SW846_CH4: 'SW-846 Update V, Chapter Four Rev 5 (Organic Analytes), Table 4-1 (EPA guidance, not regulation)',
+  CFR141_TC: '40 CFR 141.852(a)(3) (Revised Total Coliform Rule, analytical methods), eCFR current text',
+});
+
+export const SOURCE_URLS = Object.freeze({
+  CFR136_T2: 'https://www.ecfr.gov/current/title-40/chapter-I/subchapter-D/part-136/section-136.3',
+  M524_2: 'https://www.epa.gov/sites/default/files/2015-06/documents/epa-524.2.pdf',
+  SW846_CH3: 'https://www.epa.gov/sites/default/files/2019-06/documents/chapter_three_update_vi_12-11-2018.pdf',
+  SW846_CH4: 'https://www.epa.gov/sites/default/files/2015-10/documents/chap4_0.pdf',
+  CFR141_TC: 'https://www.ecfr.gov/current/title-40/chapter-I/subchapter-D/part-141/subpart-Y/section-141.852',
 });
 
 export const SAMPLE_TYPES = Object.freeze([
@@ -38,7 +46,7 @@ export const CONTAINERS = Object.freeze({
   ANIONS: { title: '250 mL HDPE', preservation: 'Cool to <= 6 C, unpreserved' },
   BOD_TSS: { title: '1 L HDPE', preservation: 'Cool to <= 6 C, unpreserved' },
   COD: { title: '250 mL HDPE', preservation: 'H2SO4 to pH < 2, cool to <= 6 C' },
-  VOA_DW: { title: '2 x 40 mL glass VOA vial, PTFE septum, no headspace', preservation: 'HCl to pH < 2, ascorbic acid if chlorinated, cool to <= 6 C' },
+  VOA_DW: { title: '2 x 40 mL glass VOA vial, PTFE septum, no headspace', preservation: 'HCl to pH < 2, ascorbic acid if chlorinated, cool to <= 4 C (Method 524.2 Sec. 8.2.1)' },
   VOA_WW: { title: '2 x 40 mL glass VOA vial, PTFE septum, no headspace', preservation: 'HCl to pH < 2, cool to <= 6 C' },
   MICRO: { title: '120 mL sterile PS bottle with sodium thiosulfate', preservation: 'Cool to < 10 C, dechlorinated' },
   SOIL_JAR: { title: '4 oz glass jar, PTFE-lined lid', preservation: 'Cool to <= 6 C' },
@@ -98,77 +106,80 @@ export const METHODS = Object.freeze({
 });
 
 // Holding time statuses: CITED or UNVERIFIED. See header.
-function ht(hours, source, status, note) {
-  return Object.freeze({ hours, source, status, ...(note ? { note } : {}) });
+function ht(hours, sourceKey, status, ref, note) {
+  return Object.freeze({
+    hours, source: SOURCES[sourceKey], url: SOURCE_URLS[sourceKey], status, ref, checked: '2026-09-24',
+    ...(note ? { note } : {}),
+  });
 }
 
 export const ANALYSES = Object.freeze([
   // Metals, drinking/surface water
   { keyword: 'AS', title: 'Arsenic, total', method: 'EPA 200.8', category: 'Metals', unit: 'mg/L', rl: 0.001, matrices: ['DW', 'SW'], container: 'METALS',
-    holdingTime: ht(SIX_MONTHS_HOURS, SOURCES.CFR136_T2, 'CITED', '6 months, treated as 180 days'),
+    holdingTime: ht(SIX_MONTHS_HOURS, 'CFR136_T2', 'SOURCED', 'Table II row "Metals, except boron, chromium VI, and mercury": 6 months (footnote 19: acid at least 24 h before analysis)', '6 months, treated as 180 days'),
     regLimit: { DW: { value: 0.010, label: 'MCL', basis: 'example', hint: '40 CFR 141.62' } } },
   { keyword: 'PB', title: 'Lead, total', method: 'EPA 200.8', category: 'Metals', unit: 'mg/L', rl: 0.001, matrices: ['DW'], container: 'METALS',
-    holdingTime: ht(SIX_MONTHS_HOURS, SOURCES.CFR136_T2, 'CITED', '6 months, treated as 180 days'),
+    holdingTime: ht(SIX_MONTHS_HOURS, 'CFR136_T2', 'SOURCED', 'Table II row "Metals, except boron, chromium VI, and mercury": 6 months (footnote 19: acid at least 24 h before analysis)', '6 months, treated as 180 days'),
     regLimit: { DW: { value: 0.015, label: 'Action level', basis: 'example', hint: '40 CFR 141.80' } } },
   { keyword: 'CU', title: 'Copper, total', method: 'EPA 200.8', category: 'Metals', unit: 'mg/L', rl: 0.002, matrices: ['DW'], container: 'METALS',
-    holdingTime: ht(SIX_MONTHS_HOURS, SOURCES.CFR136_T2, 'CITED', '6 months, treated as 180 days'),
+    holdingTime: ht(SIX_MONTHS_HOURS, 'CFR136_T2', 'SOURCED', 'Table II row "Metals, except boron, chromium VI, and mercury": 6 months (footnote 19: acid at least 24 h before analysis)', '6 months, treated as 180 days'),
     regLimit: { DW: { value: 1.3, label: 'Action level', basis: 'example', hint: '40 CFR 141.80' } } },
   // Metals, soil
   { keyword: 'AS-S', title: 'Arsenic, total (soil)', method: 'SW-846 6020', category: 'Metals', unit: 'mg/kg', rl: 0.5, matrices: ['SO'], container: 'SOIL_JAR',
-    holdingTime: ht(SIX_MONTHS_HOURS, SOURCES.SW846_CH3, 'UNVERIFIED', '6 months, treated as 180 days'),
+    holdingTime: ht(SIX_MONTHS_HOURS, 'SW846_CH3', 'SOURCED', 'Table 3-1, Metals (except Hg and Cr6+), Solid, Total: 6 months', '6 months, treated as 180 days'),
     regLimit: { SO: { value: 12, label: 'Screening level', basis: 'example', hint: 'not sourced, illustrative only' } } },
   { keyword: 'PB-S', title: 'Lead, total (soil)', method: 'SW-846 6020', category: 'Metals', unit: 'mg/kg', rl: 0.5, matrices: ['SO'], container: 'SOIL_JAR',
-    holdingTime: ht(SIX_MONTHS_HOURS, SOURCES.SW846_CH3, 'UNVERIFIED', '6 months, treated as 180 days'),
+    holdingTime: ht(SIX_MONTHS_HOURS, 'SW846_CH3', 'SOURCED', 'Table 3-1, Metals (except Hg and Cr6+), Solid, Total: 6 months', '6 months, treated as 180 days'),
     regLimit: { SO: { value: 200, label: 'Screening level', basis: 'example', hint: 'not sourced, illustrative only' } } },
   // Anions
   { keyword: 'CL', title: 'Chloride', method: 'EPA 300.0', category: 'Anions', unit: 'mg/L', rl: 1, matrices: ['DW', 'SW'], container: 'ANIONS',
-    holdingTime: ht(28 * 24, SOURCES.CFR136_T2, 'CITED'),
+    holdingTime: ht(28 * 24, 'CFR136_T2', 'SOURCED', 'Table II row 16, Chloride: 28 days (preservation none required)'),
     regLimit: { DW: { value: 250, label: 'Secondary MCL', basis: 'example', hint: '40 CFR 143.3' } } },
   { keyword: 'SO4', title: 'Sulfate', method: 'EPA 300.0', category: 'Anions', unit: 'mg/L', rl: 1, matrices: ['DW'], container: 'ANIONS',
-    holdingTime: ht(28 * 24, SOURCES.CFR136_T2, 'CITED'),
+    holdingTime: ht(28 * 24, 'CFR136_T2', 'SOURCED', 'Table II row 65, Sulfate: cool <= 6 C, 28 days'),
     regLimit: { DW: { value: 250, label: 'Secondary MCL', basis: 'example', hint: '40 CFR 143.3' } } },
   { keyword: 'F', title: 'Fluoride', method: 'EPA 300.0', category: 'Anions', unit: 'mg/L', rl: 0.1, matrices: ['DW'], container: 'ANIONS',
-    holdingTime: ht(28 * 24, SOURCES.CFR136_T2, 'CITED'),
+    holdingTime: ht(28 * 24, 'CFR136_T2', 'SOURCED', 'Table II row 25, Fluoride: 28 days'),
     regLimit: { DW: { value: 4.0, label: 'MCL', basis: 'example', hint: '40 CFR 141.62' } } },
   { keyword: 'NO3N', title: 'Nitrate as N', method: 'EPA 300.0', category: 'Anions', unit: 'mg/L', rl: 0.1, matrices: ['DW', 'SW'], container: 'ANIONS',
-    holdingTime: ht(48, SOURCES.CFR136_T2, 'CITED', 'unpreserved nitrate'),
+    holdingTime: ht(48, 'CFR136_T2', 'SOURCED', 'Table II row 38, Nitrate: cool <= 6 C, 48 hours', 'unpreserved nitrate'),
     regLimit: { DW: { value: 10, label: 'MCL', basis: 'example', hint: '40 CFR 141.62' } } },
   // Conventionals
   { keyword: 'BOD5', title: 'Biochemical Oxygen Demand, 5-day', method: 'SM 5210B', category: 'Conventionals', unit: 'mg/L', rl: 2, matrices: ['WW'], container: 'BOD_TSS',
-    holdingTime: ht(48, SOURCES.CFR136_T2, 'CITED'),
+    holdingTime: ht(48, 'CFR136_T2', 'SOURCED', 'Table II row 9, Biochemical oxygen demand: cool <= 6 C, 48 hours'),
     regLimit: { WW: { value: 30, label: '30-day average, secondary treatment', basis: 'example', hint: '40 CFR 133.102' } } },
   { keyword: 'TSS', title: 'Total Suspended Solids', method: 'SM 2540D', category: 'Conventionals', unit: 'mg/L', rl: 2, matrices: ['WW', 'SW'], container: 'BOD_TSS',
-    holdingTime: ht(7 * 24, SOURCES.CFR136_T2, 'CITED'),
+    holdingTime: ht(7 * 24, 'CFR136_T2', 'SOURCED', 'Table II row 55, Residue, Nonfilterable (TSS): cool <= 6 C, 7 days'),
     regLimit: { WW: { value: 30, label: '30-day average, secondary treatment', basis: 'example', hint: '40 CFR 133.102' } } },
   { keyword: 'COD', title: 'Chemical Oxygen Demand', method: 'SM 5220D', category: 'Conventionals', unit: 'mg/L', rl: 10, matrices: ['WW'], container: 'COD',
-    holdingTime: ht(28 * 24, SOURCES.CFR136_T2, 'CITED'),
+    holdingTime: ht(28 * 24, 'CFR136_T2', 'SOURCED', 'Table II row 15, Chemical oxygen demand: cool <= 6 C, H2SO4 to pH < 2, 28 days'),
     regLimit: {} },
   // VOCs, drinking water
   { keyword: 'BENZ-DW', title: 'Benzene', method: 'EPA 524.2', category: 'Volatile Organics', unit: 'mg/L', rl: 0.0005, matrices: ['DW'], container: 'VOA_DW',
-    holdingTime: ht(14 * 24, SOURCES.M524_2, 'UNVERIFIED'),
+    holdingTime: ht(14 * 24, 'M524_2', 'SOURCED', 'Sec. 8.2.2: analyze all samples within 14 days of collection (Sec. 8.2.1: store at <= 4 C)'),
     regLimit: { DW: { value: 0.005, label: 'MCL', basis: 'example', hint: '40 CFR 141.61' } } },
   { keyword: 'TCE-DW', title: 'Trichloroethene', method: 'EPA 524.2', category: 'Volatile Organics', unit: 'mg/L', rl: 0.0005, matrices: ['DW'], container: 'VOA_DW',
-    holdingTime: ht(14 * 24, SOURCES.M524_2, 'UNVERIFIED'),
+    holdingTime: ht(14 * 24, 'M524_2', 'SOURCED', 'Sec. 8.2.2: analyze all samples within 14 days of collection (Sec. 8.2.1: store at <= 4 C)'),
     regLimit: { DW: { value: 0.005, label: 'MCL', basis: 'example', hint: '40 CFR 141.61' } } },
   { keyword: 'PCE-DW', title: 'Tetrachloroethene', method: 'EPA 524.2', category: 'Volatile Organics', unit: 'mg/L', rl: 0.0005, matrices: ['DW'], container: 'VOA_DW',
-    holdingTime: ht(14 * 24, SOURCES.M524_2, 'UNVERIFIED'),
+    holdingTime: ht(14 * 24, 'M524_2', 'SOURCED', 'Sec. 8.2.2: analyze all samples within 14 days of collection (Sec. 8.2.1: store at <= 4 C)'),
     regLimit: { DW: { value: 0.005, label: 'MCL', basis: 'example', hint: '40 CFR 141.61' } } },
   // VOCs, wastewater and soil
   { keyword: 'BENZ-W', title: 'Benzene (wastewater)', method: 'SW-846 8260', category: 'Volatile Organics', unit: 'ug/L', rl: 1, matrices: ['WW'], container: 'VOA_WW',
-    holdingTime: ht(14 * 24, SOURCES.CFR136_T2, 'CITED', 'purgeable aromatics, HCl preserved'),
+    holdingTime: ht(14 * 24, 'CFR136_T2', 'SOURCED', 'Table II rows 6, 57, 106, Purgeable aromatic hydrocarbons: HCl to pH 2, 14 days (footnote 9: 7 days if not acidified)', 'purgeable aromatics, HCl preserved'),
     regLimit: {} },
   { keyword: 'BENZ-S', title: 'Benzene (soil)', method: 'SW-846 8260', category: 'Volatile Organics', unit: 'ug/kg', rl: 5, matrices: ['SO'], container: 'SOIL_VOA',
-    holdingTime: ht(14 * 24, SOURCES.SW846_CH4, 'UNVERIFIED', 'methanol preserved per Method 5035'),
+    holdingTime: ht(14 * 24, 'SW846_CH4', 'SOURCED', 'Table 4-1, Volatile organics, Solid samples, Method 5035: 14 days', 'methanol preserved per Method 5035'),
     regLimit: { SO: { value: 1200, label: 'Screening level', basis: 'example', hint: 'not sourced, illustrative only' } } },
   // Microbiology
   { keyword: 'TC-PA', title: 'Total coliform, presence/absence', method: 'SM 9223B', category: 'Microbiology', unit: 'P/A per 100 mL', rl: null, matrices: ['DW'], container: 'MICRO',
-    holdingTime: ht(30, SOURCES.CFR141_TC, 'UNVERIFIED', 'exact CFR section not checked'),
+    holdingTime: ht(30, 'CFR141_TC', 'SOURCED', '141.852(a)(3): time from sample collection to initiation of test medium incubation may not exceed 30 hours'),
     regLimit: { DW: { value: 'Absent', label: 'Treatment technique trigger', basis: 'example', hint: '40 CFR 141 Subpart Y' } } },
   { keyword: 'EC-PA', title: 'E. coli, presence/absence', method: 'SM 9223B', category: 'Microbiology', unit: 'P/A per 100 mL', rl: null, matrices: ['DW'], container: 'MICRO',
-    holdingTime: ht(30, SOURCES.CFR141_TC, 'UNVERIFIED', 'exact CFR section not checked'),
+    holdingTime: ht(30, 'CFR141_TC', 'SOURCED', '141.852(a)(3): time from sample collection to initiation of test medium incubation may not exceed 30 hours'),
     regLimit: { DW: { value: 'Absent', label: 'MCL', basis: 'example', hint: '40 CFR 141.63' } } },
   { keyword: 'EC-MPN', title: 'E. coli, Quanti-Tray MPN', method: 'SM 9223B', category: 'Microbiology', unit: 'MPN/100 mL', rl: 1, matrices: ['WW', 'SW'], container: 'MICRO',
-    holdingTime: ht(8, SOURCES.CFR136_T2, 'CITED', 'Table II footnote also allows 2 h for processing; not modeled (UNVERIFIED)'),
+    holdingTime: ht(8, 'CFR136_T2', 'SOURCED', 'Table II rows 1-4, Coliform, total, fecal, and E. coli: cool < 10 C, 0.008% Na2S2O3, 8 hours', 'footnote 22: incubation must start no later than 8 h from collection (no extra processing allowance)'),
     regLimit: { SW: { value: 126, label: 'Recreational geometric mean', basis: 'example', hint: 'EPA 2012 Recreational Water Quality Criteria' } } },
 ]);
 

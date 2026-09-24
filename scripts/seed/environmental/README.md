@@ -79,26 +79,28 @@ samples are always created. **Run it once on a fresh snapshot.**
 
 ## Holding-time sources
 
-Primary source: **40 CFR 136.3 Table II**. Each analysis has a `holdingTime.status`:
+Every holding time was checked on 2026-09-24 against the official text. Each analysis carries `holdingTime.status = SOURCED`, the exact `ref` (row, section or footnote) and the official `url`. The validator rejects a SOURCED value without an ecfr.gov or epa.gov link.
 
-- `CITED`: taken from the named table. Still check the current eCFR text before a real lab uses it.
-- `UNVERIFIED`: believed correct, not checked against the source during this build.
+Sources read:
 
-Current values:
+- 40 CFR 136.3(e) Table II, eCFR current text (section last amended 2024-06-17): https://www.ecfr.gov/current/title-40/chapter-I/subchapter-D/part-136/section-136.3
+- 40 CFR 141.852(a)(3), eCFR current text: https://www.ecfr.gov/current/title-40/chapter-I/subchapter-D/part-141/subpart-Y/section-141.852
+- EPA Method 524.2 Rev 4.1 (1995), Sec. 8.2: https://www.epa.gov/sites/default/files/2015-06/documents/epa-524.2.pdf
+- SW-846 Update VI Chapter Three Rev 6, Table 3-1: https://www.epa.gov/sites/default/files/2019-06/documents/chapter_three_update_vi_12-11-2018.pdf
+- SW-846 Update V Chapter Four Rev 5, Table 4-1: https://www.epa.gov/sites/default/files/2015-10/documents/chap4_0.pdf
 
-- Metals (200.8): 6 months, treated as 180 days. CITED, Table II.
-- Metals (6020, soil): 180 days. UNVERIFIED, SW-846 Chapter Three.
-- Chloride, sulfate, fluoride (300.0): 28 days. CITED, Table II.
-- Nitrate as N (300.0, unpreserved): 48 h. CITED, Table II.
-- BOD (5210B): 48 h. CITED, Table II.
-- TSS (2540D): 7 days. CITED, Table II.
-- COD (5220D, H2SO4): 28 days. CITED, Table II.
-- VOCs in drinking water (524.2): 14 days. UNVERIFIED, method text.
-- Benzene in wastewater (8260, HCl): 14 days. CITED, Table II.
-- Benzene in soil (8260 via 5035, methanol): 14 days. UNVERIFIED, SW-846 Chapter Four.
-- Coliform in drinking water (9223B P/A): 30 h. UNVERIFIED, 40 CFR 141 Subpart Y section not checked.
-- E. coli MPN in surface water and wastewater (9223B): 8 h. CITED, Table II.
-  The extra 2 h processing allowance in the Table II footnote is not modeled. UNVERIFIED.
+Values:
+
+- Metals (200.8, water): 6 months, treated as 180 days. Table II, "Metals, except boron, chromium VI, and mercury"; footnote 19 (acid at least 24 h before analysis).
+- Metals (6020, soil): 6 months, treated as 180 days. SW-846 Table 3-1, Solid, Total. SW-846 holding times are EPA guidance, not regulation.
+- Chloride 28 days (row 16), sulfate 28 days (row 65), fluoride 28 days (row 25). Table II.
+- Nitrate as N, unpreserved: 48 h. Table II row 38.
+- BOD: 48 h (row 9). TSS: 7 days (row 55). COD, H2SO4: 28 days (row 15). Table II.
+- VOCs in drinking water (524.2): 14 days, Method 524.2 Sec. 8.2.2. Storage at 4 C or below (Sec. 8.2.1), so the VOA_DW container now says so.
+- Benzene in wastewater (8260, HCl): 14 days. Table II rows 6, 57, 106 (purgeable aromatics); footnote 9: 7 days if not acidified.
+- Benzene in soil (8260 via 5035, methanol): 14 days. SW-846 Table 4-1, Solid samples, Method 5035 (guidance).
+- Coliform and E. coli in drinking water (9223B P/A): 30 h from collection to start of incubation. 40 CFR 141.852(a)(3).
+- E. coli MPN in surface water and wastewater (9223B): 8 h. Table II rows 1-4; footnote 22: incubation must start no later than 8 h from collection. Correction: an earlier draft said the footnote allows 2 extra hours. It does not.
 
 ## Limits are examples
 

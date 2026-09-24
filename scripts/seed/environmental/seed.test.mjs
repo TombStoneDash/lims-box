@@ -73,9 +73,11 @@ test('unflagged blank contamination is rejected', () => {
   assert.ok(validateSeed(seed).errors.some((e) => e.includes('method_blank: QC flag false but computed pass false')));
 });
 
-test('every holding time is CITED or UNVERIFIED and every regulatory limit is labeled example', () => {
+test('every holding time is SOURCED with an official url and ref, and every regulatory limit is labeled example', () => {
   for (const a of SEED.analyses) {
-    assert.ok(['CITED', 'UNVERIFIED'].includes(a.holdingTime.status), a.keyword);
+    assert.equal(a.holdingTime.status, 'SOURCED', a.keyword);
+    assert.match(a.holdingTime.url, /^https:\/\/(www\.ecfr\.gov|www\.epa\.gov)\//, a.keyword);
+    assert.ok(a.holdingTime.ref && a.holdingTime.checked === '2026-09-24', a.keyword);
     for (const limit of Object.values(a.regLimit)) assert.equal(limit.basis, 'example', a.keyword);
   }
   const seed = clone();
@@ -139,4 +141,21 @@ test('seed folder is synthetic-clean: no private identifiers and no em dashes', 
   assert.deepEqual(findSyntheticPrivacyViolations([...dataOnly, { path: 'SEED', content: JSON.stringify(SEED) }]), []);
   for (const a of artifacts) assert.ok(!a.content.includes(String.fromCharCode(0x2014)), `${a.path} contains an em dash`);
   for (const c of SEED.clients) assert.match(c.name, /\(SYNTHETIC\)$/);
+});
+
+test('holding times match the official values read on 2026-09-24', () => {
+  // hours, from 40 CFR 136.3 Table II, 40 CFR 141.852(a)(3), Method 524.2 Sec. 8.2.2, SW-846 Tables 3-1 and 4-1.
+  const expected = {
+    AS: 4320, PB: 4320, CU: 4320, 'AS-S': 4320, 'PB-S': 4320, CL: 672, SO4: 672, F: 672, NO3N: 48,
+    BOD5: 48, TSS: 168, COD: 672, 'BENZ-DW': 336, 'TCE-DW': 336, 'PCE-DW': 336, 'BENZ-W': 336, 'BENZ-S': 336,
+    'TC-PA': 30, 'EC-PA': 30, 'EC-MPN': 8,
+  };
+  for (const a of SEED.analyses) assert.equal(a.holdingTime.hours, expected[a.keyword], a.keyword);
+  assert.equal(Object.keys(expected).length, SEED.analyses.length);
+});
+
+test('a SOURCED holding time without an official url is rejected', () => {
+  const seed = clone();
+  seed.analyses[0].holdingTime = { ...seed.analyses[0].holdingTime, url: 'https://example.com/table' };
+  assert.ok(validateSeed(seed).errors.some((e) => e.includes('official')));
 });

@@ -6,7 +6,7 @@ import { pathToFileURL } from 'node:url';
 import { FLAGS, SEED, SYNTHETIC_MARKER } from './data.mjs';
 
 const HOUR = 3_600_000;
-const HT_STATUSES = new Set(['CITED', 'UNVERIFIED']);
+const HT_STATUSES = new Set(['SOURCED', 'CITED', 'UNVERIFIED']);
 
 export function hoursBetween(startIso, endIso) {
   return (Date.parse(endIso) - Date.parse(startIso)) / HOUR;
@@ -77,7 +77,10 @@ export function validateSeed(seed = SEED) {
     if (!h || !(h.hours > 0)) err(`${a.keyword}: holding time missing`);
     else {
       if (!h.source) err(`${a.keyword}: holding time has no source`);
-      if (!HT_STATUSES.has(h.status)) err(`${a.keyword}: holding time status must be CITED or UNVERIFIED`);
+      if (!HT_STATUSES.has(h.status)) err(`${a.keyword}: holding time status must be SOURCED, CITED or UNVERIFIED`);
+      if (h.status === 'SOURCED' && !(h.ref && /^https:\/\/(www\.ecfr\.gov|www\.epa\.gov)\//.test(h.url ?? ''))) {
+        err(`${a.keyword}: SOURCED holding time needs a ref and an official ecfr.gov or epa.gov url`);
+      }
     }
     for (const [matrix, limit] of Object.entries(a.regLimit ?? {})) {
       if (limit.basis !== 'example') err(`${a.keyword}/${matrix}: regulatory limit must be labeled example`);
