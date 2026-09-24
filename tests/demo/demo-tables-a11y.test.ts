@@ -40,5 +40,7 @@ test('the sign button names the custody step it signs while keeping its visible 
   const button = source.match(/<button\s+onClick=\{\(\) => setSigned\(true\)\}[\s\S]*?<\/button>/)?.[0];
   assert.ok(button, 'sign button exists');
   assert.match(button, /aria-label="[^"]*Received at Lab[^"]*"/);
+  // Label in Name (WCAG 2.5.3): the accessible name starts with the visible text.
+  assert.match(button, /aria-label="Click to Sign[^"]*"/);
   assert.match(button, />\s*Click to Sign\s*</);
 });

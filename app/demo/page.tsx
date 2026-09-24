@@ -140,7 +140,7 @@ function COCStep() {
                   ) : (
                     <button
                       onClick={() => setSigned(true)}
-                      aria-label="Sign the Received at Lab custody step for synthetic sample WS-2026-0384"
+                      aria-label="Click to Sign: Received at Lab custody step for synthetic sample WS-2026-0384"
                       className="text-xs px-2 py-0.5 bg-lab-teal text-white rounded-full hover:bg-lab-teal/90 transition-colors"
                     >
                       Click to Sign
