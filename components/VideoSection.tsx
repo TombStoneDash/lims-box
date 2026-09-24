@@ -14,9 +14,9 @@ type VideoSectionProps = {
 
 export function VideoSection({
   videoId,
-  title = 'LIMS BOX — 2:45 commercial',
+  title = 'LIMS BOX video',
   posterSrc,
-  posterAlt = 'LIMS BOX commercial poster',
+  posterAlt = '',
   className = '',
 }: VideoSectionProps) {
   const [activated, setActivated] = useState(false);
@@ -65,7 +65,7 @@ export function VideoSection({
               <span className="absolute inset-0 bg-black/30 group-hover:bg-black/40 transition-colors" />
               <span className="absolute inset-0 flex items-center justify-center">
                 <span className="flex items-center justify-center w-20 h-20 rounded-full bg-[#2E8B57] shadow-lg shadow-[#2E8B57]/30 group-hover:scale-110 transition-transform">
-                  <Play className="w-8 h-8 text-white ml-1" fill="currentColor" />
+                  <Play className="w-8 h-8 text-white ml-1" fill="currentColor" aria-hidden="true" />
                 </span>
               </span>
             </button>

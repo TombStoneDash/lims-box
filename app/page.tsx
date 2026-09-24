@@ -91,7 +91,7 @@ export default function HomePage() {
       </section>
 
       {/* Commercial */}
-      <VideoSection videoId={COMMERCIAL_VIDEO_ID} />
+      <VideoSection videoId={COMMERCIAL_VIDEO_ID} title="The Ripple Effect — LIMS BOX commercial" />
 
       {/* SENAITE technology fact only — no partnership or endorsement claim */}
       <section className="py-16 px-4">
@@ -115,7 +115,7 @@ export default function HomePage() {
           <h2 className="text-2xl md:text-3xl font-bold tracking-tight text-slate-900 dark:text-white mb-8">
             See It In Action
           </h2>
-          <VideoSection videoId={DEMO_VIDEO_ID} />
+          <VideoSection videoId={DEMO_VIDEO_ID} title="LIMS BOX product demo (30-second cut)" />
         </div>
       </section>
 
