@@ -35,7 +35,8 @@ function isValidIsoDate(value: unknown): value is string {
   if (typeof value !== 'string' || !ISO_DATE_PATTERN.test(value)) {
     return false;
   }
-  return !Number.isNaN(new Date(`${value}T00:00:00Z`).getTime());
+  const parsedDate = new Date(`${value}T00:00:00Z`);
+  return !Number.isNaN(parsedDate.getTime()) && parsedDate.toISOString().slice(0, 10) === value;
 }
 
 function isValidInstrumentInput(instrument: InstrumentCalibrationInput): boolean {
@@ -52,7 +53,7 @@ export function evaluateInstrumentCalibration(
   instrument: InstrumentCalibrationInput,
   asOfDate: string = DEMO_AS_OF_DATE,
 ): InstrumentEvaluation {
-  if (!isValidInstrumentInput(instrument)) {
+  if (!isValidIsoDate(asOfDate) || !isValidInstrumentInput(instrument)) {
     return {
       serialNumber: instrument?.serialNumber ?? '',
       name: instrument?.name ?? '',

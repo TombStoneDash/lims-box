@@ -2,24 +2,18 @@
 
 import { useState } from 'react';
 import { AlertTriangle, Bot, CircuitBoard, ShieldCheck } from 'lucide-react';
+import {
+  ASSISTANT_UNAVAILABLE_TEXT,
+  parseAssistantReply,
+  type OHWorksAssistantReply,
+} from '@/lib/ohworks-assistant-reply';
 
 type AssistantMode = 'expert' | 'discovery';
-
-interface OHWorksAssistantResponse {
-  answer: string;
-  grounded: boolean;
-  mode: AssistantMode;
-  citations: Array<{ sourceId: string; recordId: string; corpusVersion: string }>;
-  label: string;
-  disposition: 'grounded' | 'refused' | 'evidence_missing' | 'render_blocked';
-  refusalReason?: string;
-  matchedClaimCategory?: string;
-}
 
 interface ChatItem {
   role: 'user' | 'assistant';
   text: string;
-  response?: OHWorksAssistantResponse;
+  response?: OHWorksAssistantReply;
 }
 
 interface AssistantConsoleProps {
@@ -54,7 +48,19 @@ export function AssistantConsole({
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ question: trimmed, roleId, mode }),
       });
-      const reply = (await result.json()) as OHWorksAssistantResponse;
+      const payload: unknown = await result.json();
+      const reply = parseAssistantReply(payload);
+      if (!reply) {
+        setItems((previous) => [
+          ...previous,
+          { role: 'user', text: trimmed },
+          {
+            role: 'assistant',
+            text: ASSISTANT_UNAVAILABLE_TEXT,
+          },
+        ]);
+        return;
+      }
       setItems((previous) => [
         ...previous,
         { role: 'user', text: trimmed },
@@ -66,7 +72,7 @@ export function AssistantConsole({
         { role: 'user', text: trimmed },
         {
           role: 'assistant',
-          text: 'The local synthetic assistant is unavailable. No result or integration action was attempted.',
+          text: ASSISTANT_UNAVAILABLE_TEXT,
         },
       ]);
     } finally {
@@ -84,6 +90,7 @@ export function AssistantConsole({
           <div className="mt-4 grid gap-3">
             <button
               type="button"
+              aria-pressed={mode === 'expert'}
               onClick={() => {
                 setMode('expert');
                 setItems([]);
@@ -106,6 +113,7 @@ export function AssistantConsole({
 
             <button
               type="button"
+              aria-pressed={mode === 'discovery'}
               onClick={() => {
                 setMode('discovery');
                 setItems([]);
@@ -135,7 +143,7 @@ export function AssistantConsole({
         </div>
 
         <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2" role="group" aria-label="Supported example questions">
             {suggestions.map((suggestion) => (
               <button
                 key={suggestion}
@@ -148,11 +156,17 @@ export function AssistantConsole({
             ))}
           </div>
 
-          <div className="mt-5 min-h-56 space-y-4" aria-live="polite">
+          <div className="mt-5 min-h-56 space-y-4" aria-live="polite" aria-busy={pending}>
             {items.length === 0 && (
               <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-5 text-sm leading-6 text-slate-600">
                 Synthetic demonstration data only. Ask one of the supported deterministic questions above.
               </div>
+            )}
+
+            {pending && (
+              <p role="status" className="text-sm text-slate-600">
+                Checking the synthetic sources...
+              </p>
             )}
 
             {items.map((item, index) => (
@@ -200,7 +214,11 @@ export function AssistantConsole({
             }}
             className="mt-5 flex gap-2"
           >
+            <label htmlFor="ohworks-assistant-question" className="sr-only">
+              Question for the synthetic assistant
+            </label>
             <input
+              id="ohworks-assistant-question"
               value={input}
               onChange={(event) => setInput(event.target.value)}
               placeholder={mode === 'expert' ? 'Ask a supported synthetic workflow question...' : 'Ask a supported discovery question...'}

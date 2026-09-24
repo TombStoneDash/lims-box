@@ -1,5 +1,6 @@
 import { buildPilotCriticalResultsView } from '@/lib/ohworks-demo-critical-results-view';
 import { resolveRoleView } from '@/lib/ohworks-pilot';
+import { CrossmatchCulturePanel } from '@/app/pilot/ohworks/_components/crossmatch-culture-panel';
 
 interface PageProps {
   searchParams?: Promise<{ role?: string }>;
@@ -90,6 +91,7 @@ export default async function OHWorksCriticalResults({ searchParams }: PageProps
           </tr>)}</tbody>
         </table></div>
       </section>
+      <CrossmatchCulturePanel />
     </div>
   );
 }

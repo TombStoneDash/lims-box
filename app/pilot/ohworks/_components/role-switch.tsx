@@ -1,8 +1,10 @@
 'use client';
 
-import { useTransition } from 'react';
+import { useState, useTransition } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { ShieldCheck } from 'lucide-react';
+
+import { roleChangeAnnouncement } from '../../../../lib/ohworks-pilot-nav-state';
 
 const DEMO_ROLES = [
   { id: 'worker', label: 'Receiving worker', note: 'Outcome-only operational queue. No review, release, or clinical detail.' },
@@ -16,8 +18,10 @@ export function RoleSwitch() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
+  const [hasChangedRole, setHasChangedRole] = useState(false);
   const roles = DEMO_ROLES;
   const currentRole = searchParams.get('role') ?? roles[0]?.id ?? 'worker';
+  const currentLabel = roles.find((role) => role.id === currentRole)?.label;
 
   return (
     <section className="rounded-2xl border border-teal-200 bg-teal-50/80 p-4 shadow-sm">
@@ -36,10 +40,13 @@ export function RoleSwitch() {
         <label className="flex min-w-[260px] flex-col gap-2 text-sm font-medium text-slate-700">
           Synthetic role
           <select
+            id="ohworks-synthetic-role"
+            aria-describedby="ohworks-synthetic-role-note"
             value={currentRole}
             onChange={(event) => {
               const params = new URLSearchParams(searchParams.toString());
               params.set('role', event.target.value);
+              setHasChangedRole(true);
               startTransition(() => {
                 router.replace(`${pathname}?${params.toString()}`, { scroll: false });
               });
@@ -52,11 +59,16 @@ export function RoleSwitch() {
               </option>
             ))}
           </select>
-          <span className="text-xs text-slate-500">
-            {roles.find((role) => role.id === currentRole)?.note}
-            {isPending ? ' Updating view...' : ''}
+          <span className="flex items-center gap-2">
+            <span id="ohworks-synthetic-role-note" className="text-xs text-slate-600">
+              {roles.find((role) => role.id === currentRole)?.note}
+            </span>
+            {isPending ? <span className="text-xs font-medium text-teal-800">Updating view...</span> : null}
           </span>
         </label>
+        <p role="status" aria-live="polite" className="sr-only">
+          {hasChangedRole ? roleChangeAnnouncement(currentLabel, isPending) : ''}
+        </p>
       </div>
     </section>
   );

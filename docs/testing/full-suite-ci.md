@@ -11,16 +11,12 @@ build are unchanged.
 
 Locally, with dependencies available, run `npm run test:all`.
 
-## Excluded defect — fix separately
+## Exclusions
 
-The exact `EXCLUDED` list contains one entry:
-
-| File | Reason |
-| --- | --- |
-| `tests/senaite-demo-qc-accessibility.test.ts` | FAILING ON MAIN 2026-09-19: React is not defined in QCChartsPage (app/senaite-demo/qc/page.tsx:151) during both render assertions. |
-
-This is a render failure under the plain tsx test command; repair it separately
-and remove the exclusion. No existing tests or product code were changed.
+The `EXCLUDED` list is empty. Exclusions are temporary and should be removed
+when the underlying defect is fixed. `tests/senaite-demo-qc-accessibility.test.ts`
+is included again: `QCChartsPage` now imports React explicitly for the plain tsx
+loader's classic JSX transform, with all accessibility assertions unchanged.
 `tests/security/route-exposure-inventory.test.ts` is **included**, with all six
 checks passing, including the inventory containing `/pilot/ohworks/qc`.
 
@@ -36,8 +32,8 @@ On base `5307caf523bb6add6a3b70427320949272687d36`, using Node 22.22.2:
 | Final, including runner regression test | 127 | 3126 | 3126 | 0 | 0 |
 | Standalone runner regression test | 1 | 3 | 3 | 0 | 0 |
 
-All runs reported zero skipped/cancelled/todo tests. The final walker discovers
-128 files and excludes one. Lint and typecheck passed. Local verification used
+All runs reported zero skipped/cancelled/todo tests. At that base, the final walker
+discovered 128 files and excluded one. Lint and typecheck passed. Local verification used
 an existing dependency bundle copied into this worktree and an offline Prisma
 client generation; no install, network access, or lockfile changes were made.
 The three initial Prisma import failures were local setup failures and are not

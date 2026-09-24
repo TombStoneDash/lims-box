@@ -11,6 +11,7 @@ Usage:
 import sys
 import time
 import logging
+import re
 import numpy as np
 
 logging.basicConfig(
@@ -80,17 +81,19 @@ def record_until_silence(
     """
     chunks: list[np.ndarray] = []
     silent_frames = 0
+    speech_detected = False
     frames_per_chunk = int(sr * 0.1)  # 100 ms chunks
     silence_count = int(SILENCE_DURATION / 0.1)
 
     def callback(indata, frames, time_info, status):
-        nonlocal silent_frames
+        nonlocal silent_frames, speech_detected
         if status:
             logger.debug(f"Audio status: {status}")
         rms = float(np.sqrt(np.mean(indata ** 2)))
         if rms < silence_threshold:
             silent_frames += 1
         else:
+            speech_detected = True
             silent_frames = 0
         chunks.append(indata.copy())
 
@@ -106,7 +109,7 @@ def record_until_silence(
             while time.time() - start < max_seconds:
                 time.sleep(0.05)
                 # Only break on silence if we have recorded some actual speech
-                if silent_frames >= silence_count and len(chunks) > silence_count:
+                if speech_detected and silent_frames >= silence_count:
                     break
     except sd.PortAudioError as e:
         logger.error(f"Microphone error: {e}")
@@ -120,22 +123,30 @@ def record_until_silence(
 
 def transcribe(model: WhisperModel, audio: np.ndarray) -> str:
     """Run faster-whisper on an audio array, return transcribed text."""
-    if len(audio) == 0:
+    if len(audio) == 0 or not np.any(audio):
         return ""
-    segments, _info = model.transcribe(audio, language="en", beam_size=3)
-    return " ".join(seg.text for seg in segments).strip()
+    try:
+        segments, _info = model.transcribe(audio, language="en", beam_size=3)
+        return " ".join(seg.text for seg in segments).strip()
+    except Exception:
+        logger.exception("Transcription failed; discarding transcript. Try again.")
+        return ""
 
 
 # ── Wake word detection ─────────────────────────────────────────────────────
+
+def _match_wake_phrase(text: str, wake_phrase: str) -> re.Match | None:
+    """Find a literal wake phrase with no adjacent word characters."""
+    return re.search(r"(?<!\w)" + re.escape(wake_phrase) + r"(?!\w)", text, re.IGNORECASE)
+
 
 def contains_wake_word(text: str) -> str | None:
     """Check if transcribed text contains a wake word.
 
     Returns the matched wake word, or None.
     """
-    lower = text.lower()
     for w in WAKE_WORDS:
-        if w in lower:
+        if _match_wake_phrase(text, w):
             return w
     return None
 
@@ -146,11 +157,11 @@ def extract_inline_command(text: str, wake_word: str) -> str | None:
 
     Example: "Hey LIMS show pending samples" -> "show pending samples"
     """
-    lower = text.lower()
-    idx = lower.find(wake_word)
-    if idx < 0:
+    match = _match_wake_phrase(text, wake_word)
+    if match is None:
         return None
-    remainder = text[idx + len(wake_word):].strip()
+    # Strip only the separator after the wake phrase, preserving argument punctuation.
+    remainder = re.sub(r"^[\s,.:–—-]+", "", text[match.end():]).strip()
     # Only return if there's substantial text after the wake word
     if len(remainder) > 3:
         return remainder

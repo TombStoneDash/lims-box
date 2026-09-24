@@ -4,6 +4,8 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { FlaskConical, Calendar, Clock, Users, Video, CheckCircle2, ArrowRight } from 'lucide-react';
 import { WaitlistFooter } from '@/components/WaitlistFooter';
+import { registrationMessage, registrationOutcome } from '@/lib/webinar-registration';
+import { formatSessionDate, upcomingOnly } from '@/lib/webinar-sessions';
 import type { Metadata } from 'next';
 
 const upcomingSessions = [
@@ -50,17 +52,25 @@ const upcomingSessions = [
 ];
 
 export default function WebinarPage() {
+  const visibleSessions = upcomingOnly(upcomingSessions, new Date());
   const [registered, setRegistered] = useState<Set<string>>(new Set());
   const [formData, setFormData] = useState({ email: '', name: '', labName: '' });
   const [activeSession, setActiveSession] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [registrationError, setRegistrationError] = useState('');
+
+  function openSession(sessionId: string) {
+    setRegistrationError('');
+    setActiveSession(sessionId);
+  }
 
   async function handleRegister(sessionId: string) {
     if (!formData.email || !formData.name) return;
     setSubmitting(true);
+    setRegistrationError('');
 
     try {
-      await fetch('/api/waitlist', {
+      const response = await fetch('/api/waitlist', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -69,10 +79,15 @@ export default function WebinarPage() {
           source: `webinar:${sessionId}`,
         }),
       });
-      setRegistered((prev) => new Set(prev).add(sessionId));
-      setActiveSession(null);
+      const outcome = registrationOutcome({ ok: response.ok, status: response.status });
+      if (outcome === 'registered') {
+        setRegistered((prev) => new Set(prev).add(sessionId));
+        setActiveSession(null);
+      } else {
+        setRegistrationError(registrationMessage(outcome));
+      }
     } catch {
-      // silent fail — waitlist API is best-effort
+      setRegistrationError(registrationMessage(registrationOutcome('network-error')));
     } finally {
       setSubmitting(false);
     }
@@ -116,7 +131,18 @@ export default function WebinarPage() {
         </div>
 
         <div className="max-w-3xl mx-auto space-y-6">
-          {upcomingSessions.map((session) => (
+          {visibleSessions.length === 0 && (
+            <div className="bg-white dark:bg-white/5 border border-black/5 dark:border-white/10 rounded-2xl p-6 md:p-8">
+              <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-4">
+                No live sessions are scheduled right now
+              </h2>
+              <div className="flex flex-wrap gap-4 text-sm font-semibold text-lab-teal">
+                <Link href="/contact" className="hover:underline">Request a live session</Link>
+                <Link href="/demo" className="hover:underline">Explore the demo</Link>
+              </div>
+            </div>
+          )}
+          {visibleSessions.map((session) => (
             <div
               key={session.id}
               className="bg-white dark:bg-white/5 border border-black/5 dark:border-white/10 rounded-2xl p-6 md:p-8"
@@ -144,7 +170,7 @@ export default function WebinarPage() {
               <div className="flex flex-wrap items-center gap-4 text-sm text-slate-500 dark:text-slate-400 mb-4">
                 <span className="flex items-center gap-1.5">
                   <Calendar className="w-4 h-4" />
-                  {new Date(session.date).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+                  {formatSessionDate(session.date)}
                 </span>
                 <span className="flex items-center gap-1.5">
                   <Clock className="w-4 h-4" />
@@ -167,6 +193,7 @@ export default function WebinarPage() {
                       type="text"
                       required
                       placeholder="Your name"
+                      aria-label="Your name"
                       value={formData.name}
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                       className="px-3 py-2 rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-lab-teal/50 placeholder:text-slate-400"
@@ -175,6 +202,7 @@ export default function WebinarPage() {
                       type="email"
                       required
                       placeholder="your@email.com"
+                      aria-label="your@email.com"
                       value={formData.email}
                       onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                       className="px-3 py-2 rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-lab-teal/50 placeholder:text-slate-400"
@@ -182,11 +210,17 @@ export default function WebinarPage() {
                     <input
                       type="text"
                       placeholder="Lab name (optional)"
+                      aria-label="Lab name (optional)"
                       value={formData.labName}
                       onChange={(e) => setFormData({ ...formData, labName: e.target.value })}
                       className="px-3 py-2 rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-lab-teal/50 placeholder:text-slate-400"
                     />
                   </div>
+                  {registrationError && (
+                    <p role="alert" className="text-sm text-red-600">
+                      {registrationError}
+                    </p>
+                  )}
                   <div className="flex gap-3">
                     <button
                       onClick={() => handleRegister(session.id)}
@@ -205,7 +239,7 @@ export default function WebinarPage() {
                 </div>
               ) : (
                 <button
-                  onClick={() => setActiveSession(session.id)}
+                  onClick={() => openSession(session.id)}
                   className="inline-flex items-center gap-2 px-5 py-2.5 bg-lab-teal hover:bg-lab-teal/90 text-white text-sm font-semibold rounded-lg transition-colors"
                 >
                   Register for This Session

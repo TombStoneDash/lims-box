@@ -1,5 +1,7 @@
 import { buildPilotResultReviewView } from '@/lib/ohworks-demo-result-review-view';
 import { resolveRoleView } from '@/lib/ohworks-pilot';
+import { UnitsInterferencePanel } from '@/app/pilot/ohworks/_components/units-interference-panel';
+import { ShiftHandoffPanel } from '@/app/pilot/ohworks/_components/shift-handoff-panel';
 
 interface PageProps {
   searchParams?: Promise<{ role?: string }>;
@@ -88,6 +90,9 @@ export default async function OHWorksResultReview({ searchParams }: PageProps) {
           </details>
         </section>
       ))}
+
+      <UnitsInterferencePanel />
+      <ShiftHandoffPanel />
     </div>
   );
 }

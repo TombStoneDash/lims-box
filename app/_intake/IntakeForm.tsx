@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useId, useState } from "react";
+import { intakeErrorMessage } from "@/lib/intake-form-status";
 
 const LAB_SIZES = ["1–10", "11–50", "51–200", "200+"];
 
@@ -45,6 +46,7 @@ export default function IntakeForm({
   showFieldBench,
 }: IntakeFormProps) {
   const a = ACCENT[accent];
+  const labSizeLabelId = useId();
   const [state, setState] = useState<{
     name: string;
     email: string;
@@ -89,16 +91,16 @@ export default function IntakeForm({
           fieldBenchSplit: showFieldBench ? state.fieldBenchSplit : undefined,
         }),
       });
-      const json = await res.json();
-      if (!res.ok || !json.ok) {
+      const json = await res.json().catch(() => null);
+      if (!res.ok || !json?.ok) {
         setStatus("error");
-        setErrorMsg(json.error || "Submission failed");
+        setErrorMsg(intakeErrorMessage({ status: res.status, serverError: json?.error }));
         return;
       }
       setStatus("ok");
     } catch (err) {
       setStatus("error");
-      setErrorMsg(err instanceof Error ? err.message : "Network error");
+      setErrorMsg(intakeErrorMessage({ thrown: err }));
     }
   }
 
@@ -168,13 +170,14 @@ export default function IntakeForm({
             accentRing={a.ring}
           />
 
-          <div>
-            <span className="block text-sm font-medium text-slate-700 mb-1">Lab size</span>
+          <div role="group" aria-labelledby={labSizeLabelId}>
+            <span id={labSizeLabelId} className="block text-sm font-medium text-slate-700 mb-1">Lab size</span>
             <div className="flex flex-wrap gap-2">
               {LAB_SIZES.map((s) => (
                 <button
                   key={s}
                   type="button"
+                  aria-pressed={state.labSize === s}
                   onClick={() => setState({ ...state, labSize: s })}
                   className={`rounded-md border px-3 py-1.5 text-sm ${
                     state.labSize === s
@@ -219,6 +222,8 @@ export default function IntakeForm({
               </span>
               <input
                 type="range"
+                aria-label="Field vs bench split"
+                aria-valuetext={`${state.fieldBenchSplit}% field, ${100 - state.fieldBenchSplit}% bench`}
                 min={0}
                 max={100}
                 value={state.fieldBenchSplit}
@@ -243,7 +248,7 @@ export default function IntakeForm({
           />
 
           {status === "error" && (
-            <div className="rounded-md border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-800">
+            <div role="alert" className="rounded-md border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-800">
               {errorMsg || "Something went wrong. Try again or email hudtaylor@gmail.com."}
             </div>
           )}

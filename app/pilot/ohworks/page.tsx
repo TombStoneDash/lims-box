@@ -1,4 +1,5 @@
 import { buildPilotQualityIndicatorsView } from '@/lib/ohworks-demo-quality-indicators-view';
+import { FacilityReadinessPanel } from '@/app/pilot/ohworks/_components/facility-readiness-panel';
 import Link from 'next/link';
 import { ArrowRight, Bot, Filter, ShieldAlert, Waypoints } from 'lucide-react';
 import {
@@ -211,6 +212,8 @@ export default async function OHWorksPilotOverview({ searchParams }: PageProps) 
           </details>
         ))}
       </section>
+
+      <FacilityReadinessPanel />
 
       <section className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
         <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">

@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import React, { useReducer, useEffect } from 'react';
+import { tick, goTo, togglePause, type WalkthroughPlayerState } from '@/lib/walkthrough-player';
 import Link from 'next/link';
 import {
   FlaskConical, ClipboardList, Shield, BarChart3, FileText,
@@ -104,7 +105,12 @@ function QCDashboardScreen() {
               <span className="text-xs font-semibold text-white">{a.name}</span>
               <span className="text-[10px] px-2 py-0.5 rounded-full bg-green-500/20 text-green-300">All in range</span>
             </div>
-            <svg viewBox={`0 0 ${w} ${h}`} className="w-full" style={{ maxHeight: 100 }}>
+            <svg viewBox={`0 0 ${w} ${h}`} className="w-full" style={{ maxHeight: 100 }}
+              role="img" aria-labelledby={`walkthrough-qc-${a.name}-title`} aria-describedby={`walkthrough-qc-${a.name}-desc`}>
+              <title id={`walkthrough-qc-${a.name}-title`}>{`${a.name} QC chart`}</title>
+              <desc id={`walkthrough-qc-${a.name}-desc`}>
+                {`${a.name} walkthrough QC series of ${a.points.length} measurements. Mean: ${a.mean}. Standard deviation: ${a.sd}. Measured values in plot order: ${a.points.join(', ')}.`}
+              </desc>
               <rect x={pad} y={toY(a.mean + 2 * a.sd)} width={pw} height={toY(a.mean - 2 * a.sd) - toY(a.mean + 2 * a.sd)} fill="rgba(46,139,87,0.1)" />
               <line x1={pad} y1={toY(a.mean)} x2={w - pad} y2={toY(a.mean)} stroke="#2E8B57" strokeWidth={1} strokeDasharray="4 4" />
               <path d={d} fill="none" stroke="#3B82F6" strokeWidth={2} />
@@ -240,45 +246,43 @@ const walkthroughSteps: WalkthroughStep[] = [
   },
 ];
 
+type PlayerAction =
+  | { type: 'tick' }
+  | { type: 'goTo'; step: number }
+  | { type: 'togglePause' }
+  | { type: 'initialize'; paused: boolean };
+
+function playerReducer(state: WalkthroughPlayerState, action: PlayerAction): WalkthroughPlayerState {
+  switch (action.type) {
+    case 'tick': return tick(state, walkthroughSteps.length, STEP_DURATION);
+    case 'goTo': return goTo(state, action.step);
+    case 'togglePause': return togglePause(state);
+    case 'initialize': return { ...state, paused: action.paused };
+  }
+}
+
 export default function WalkthroughPage() {
-  const [currentStep, setCurrentStep] = useState(0);
-  const [elapsed, setElapsed] = useState(0);
-  const [paused, setPaused] = useState(false);
+  // Stay paused through hydration until the visitor's motion preference is known.
+  const [{ step: currentStep, elapsed, paused }, dispatch] = useReducer(playerReducer, {
+    step: 0, elapsed: 0, paused: true, finished: false,
+  });
 
   const totalTime = walkthroughSteps.length * STEP_DURATION;
   const globalElapsed = currentStep * STEP_DURATION + elapsed;
 
-  const advance = useCallback(() => {
-    if (currentStep < walkthroughSteps.length - 1) {
-      setCurrentStep(s => s + 1);
-      setElapsed(0);
-    } else {
-      setPaused(true); // pause at end
-    }
-  }, [currentStep]);
-
   useEffect(() => {
-    if (paused) return;
-    const timer = setInterval(() => {
-      setElapsed(prev => {
-        if (prev + 1 >= STEP_DURATION) {
-          advance();
-          return 0;
-        }
-        return prev + 1;
-      });
-    }, 1000);
+    dispatch({ type: 'initialize', paused: window.matchMedia('(prefers-reduced-motion: reduce)').matches });
+    const timer = setInterval(() => dispatch({ type: 'tick' }), 1000);
     return () => clearInterval(timer);
-  }, [paused, advance]);
+  }, []);
 
   const step = walkthroughSteps[currentStep];
   const StepIcon = step.icon;
-  const progressPct = ((elapsed + 1) / STEP_DURATION) * 100;
-
-  const goTo = (idx: number) => { setCurrentStep(idx); setElapsed(0); };
+  const progressPct = Math.min(100, ((elapsed + 1) / STEP_DURATION) * 100);
 
   return (
     <div className="min-h-screen bg-[#0F172A] flex flex-col">
+      <h1 className="sr-only">LIMS BOX guided walkthrough</h1>
       {/* Minimal header */}
       <header className="bg-black/40 border-b border-white/5 px-4 py-3">
         <div className="max-w-5xl mx-auto flex items-center justify-between">
@@ -292,7 +296,9 @@ export default function WalkthroughPage() {
               {Math.floor(globalElapsed / 60)}:{String(globalElapsed % 60).padStart(2, '0')} / {Math.floor(totalTime / 60)}:{String(totalTime % 60).padStart(2, '0')}
             </span>
             <button
-              onClick={() => setPaused(p => !p)}
+              onClick={() => dispatch({ type: 'togglePause' })}
+              aria-label={paused ? 'Play walkthrough' : 'Pause walkthrough'}
+              aria-pressed={paused}
               className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
             >
               {paused ? <Play className="w-3.5 h-3.5 ml-0.5" /> : <Pause className="w-3.5 h-3.5" />}
@@ -307,7 +313,9 @@ export default function WalkthroughPage() {
           {walkthroughSteps.map((s, i) => (
             <button
               key={s.id}
-              onClick={() => goTo(i)}
+              onClick={() => dispatch({ type: 'goTo', step: i })}
+              aria-current={i === currentStep ? 'step' : undefined}
+              aria-label={`Step ${i + 1}: ${s.title}`}
               className="flex-1 group"
             >
               <div className={`h-1 rounded-full overflow-hidden ${i < currentStep ? 'bg-[#2E8B57]' : i === currentStep ? 'bg-white/20' : 'bg-white/5'}`}>
@@ -342,7 +350,7 @@ export default function WalkthroughPage() {
             </p>
             {currentStep < walkthroughSteps.length - 1 ? (
               <button
-                onClick={() => { advance(); setElapsed(0); }}
+                onClick={() => dispatch({ type: 'goTo', step: currentStep + 1 })}
                 className="inline-flex items-center gap-2 text-sm text-[#2E8B57] hover:text-white transition-colors font-medium"
               >
                 Next: {walkthroughSteps[currentStep + 1].title} <ChevronRight className="w-4 h-4" />

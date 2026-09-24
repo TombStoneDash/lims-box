@@ -25,7 +25,8 @@ export function pagedResponse<T extends { id: string }>(
 
 /** Parse `?limit` and `?cursor` from a URL. */
 export function parsePagination(url: URL): { limit: number; cursor: string | null } {
-  const rawLimit = parseInt(url.searchParams.get("limit") ?? "20", 10);
+  const parsed = parseInt(url.searchParams.get("limit") ?? "20", 10);
+  const rawLimit = Number.isFinite(parsed) ? parsed : 20;
   const limit = Math.min(Math.max(rawLimit, 1), 100);
   const cursor = url.searchParams.get("cursor") ?? null;
   return { limit, cursor };
@@ -58,21 +59,28 @@ export type ReviewOutcome = (typeof REVIEW_OUTCOMES)[number];
  * Spec: calculated from `reviewedAt`, NOT from prior `nextReviewDue`.
  */
 export function calcNextReviewDue(reviewType: ReviewType, reviewedAt: Date): Date | null {
-  const d = new Date(reviewedAt);
+  let months: number;
   switch (reviewType) {
     case "initial":
     case "six_month":
-      d.setMonth(d.getMonth() + 6);
-      return d;
+      months = 6;
+      break;
     case "annual":
-      d.setFullYear(d.getFullYear() + 1);
-      return d;
+      months = 12;
+      break;
     case "corrective_action":
-      d.setMonth(d.getMonth() + 3);
-      return d;
+      months = 3;
+      break;
     case "ad_hoc":
       return null;
   }
+
+  const d = new Date(reviewedAt);
+  const originalDay = d.getUTCDate();
+  // Day zero of the following month gives the target month's last valid day.
+  d.setUTCMonth(d.getUTCMonth() + months + 1, 0);
+  d.setUTCDate(Math.min(originalDay, d.getUTCDate()));
+  return d;
 }
 
 /** Human-readable label for review types. */

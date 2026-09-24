@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   FlaskConical, ClipboardList, Shield, BarChart3, FileText,
   MessageSquare
@@ -163,36 +163,29 @@ const steps: RecordStep[] = [
 export default function RecordPage() {
   const [current, setCurrent] = useState(0);
   const [elapsed, setElapsed] = useState(0);
-  const [transitioning, setTransitioning] = useState(false);
   const [started, setStarted] = useState(false);
 
   const totalElapsed = current * STEP_DURATION + elapsed;
   const totalTime = steps.length * STEP_DURATION;
-
-  const advance = useCallback(() => {
-    if (current < steps.length - 1) {
-      setTransitioning(true);
-      setTimeout(() => {
-        setCurrent(s => s + 1);
-        setElapsed(0);
-        setTransitioning(false);
-      }, TRANSITION_MS);
-    }
-  }, [current]);
+  const finished = totalElapsed === totalTime;
+  const transitioning = elapsed === STEP_DURATION && !finished;
 
   useEffect(() => {
-    if (!started) return;
+    if (!started || !transitioning) return;
+    const timer = setTimeout(() => {
+      setCurrent(current + 1);
+      setElapsed(0);
+    }, TRANSITION_MS);
+    return () => clearTimeout(timer);
+  }, [started, transitioning, current]);
+
+  useEffect(() => {
+    if (!started || transitioning || finished) return;
     const timer = setInterval(() => {
-      setElapsed(prev => {
-        if (prev + 1 >= STEP_DURATION) {
-          advance();
-          return prev;
-        }
-        return prev + 1;
-      });
+      setElapsed(prev => Math.min(prev + 1, STEP_DURATION));
     }, 1000);
     return () => clearInterval(timer);
-  }, [started, advance]);
+  }, [started, transitioning, finished]);
 
   const step = steps[current];
   const StepIcon = step.icon;
@@ -205,6 +198,16 @@ export default function RecordPage() {
           <FlaskConical className="w-16 h-16 text-[#2E8B57] mx-auto mb-6" />
           <h1 className="text-4xl font-bold text-white mb-2 tracking-tight">LIMS BOX</h1>
           <p className="text-slate-500 mb-8">Recording mode — click anywhere to start</p>
+          <button
+            type="button"
+            onClick={event => {
+              event.stopPropagation();
+              setStarted(true);
+            }}
+            className="mb-6 rounded-lg bg-[#2E8B57] px-6 py-3 font-semibold text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
+          >
+            Start recording
+          </button>
           <div className="text-xs text-slate-600">
             {steps.length} screens &times; {STEP_DURATION}s = {totalTime / 60}:{String(totalTime % 60).padStart(2, '0')} total
           </div>
