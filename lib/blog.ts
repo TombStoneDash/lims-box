@@ -96,6 +96,18 @@ function parseMarkdownToHtml(markdown: string): string {
   let imageToken = 'BLOG_IMAGE';
   while (markdown.includes(imageToken)) imageToken += '_';
   const escapeAttribute = (value: string) => value.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  // Only allow relative paths and http(s) URLs as image destinations; strip whitespace/control
+  // characters first so an embedded tab or NUL cannot hide a disallowed scheme like "javascript:".
+  const isSafeImageDestination = (value: string): boolean => {
+    const stripped = value.trim().replace(/[\s\u0000-\u001f\u007f]/g, '');
+    if (!stripped) return false;
+    if (stripped.startsWith('//')) return false;
+    if (stripped.startsWith('/') || stripped.startsWith('./') || stripped.startsWith('../')) return true;
+    const schemeMatch = stripped.match(/^([a-zA-Z][a-zA-Z0-9+.-]*):/);
+    if (!schemeMatch) return true;
+    const scheme = schemeMatch[1].toLowerCase();
+    return scheme === 'http' || scheme === 'https';
+  };
   const imageStart = /`[^`]+`|!\[([^\]\r\n]*)\]\(/g;
   const imageParts: string[] = [];
   let imageCopiedThrough = 0;
@@ -119,7 +131,7 @@ function parseMarkdownToHtml(markdown: string): string {
       if (char === ')' && --depth === 0) break;
       src += char;
     }
-    const valid = depth === 0 && src !== '';
+    const valid = depth === 0 && src !== '' && isSafeImageDestination(src);
     // Protect invalid openers too, so the link pass cannot turn them into anchors.
     const index = images.push(valid
       ? `<img src="${escapeAttribute(src)}" alt="${escapeAttribute(imageMatch[1])}" class="max-w-full h-auto" />`
