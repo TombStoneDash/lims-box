@@ -108,12 +108,13 @@ function COCStep() {
         </div>
         <div className="p-4">
           <table className="w-full text-sm">
+            <caption className="sr-only">Synthetic chain of custody for sample WS-2026-0384</caption>
             <thead>
               <tr className="text-xs text-slate-500 uppercase tracking-wider border-b border-slate-100 dark:border-white/10">
-                <th className="text-left py-2 pr-4">Event</th>
-                <th className="text-left py-2 pr-4">Date/Time</th>
-                <th className="text-left py-2 pr-4">Person</th>
-                <th className="text-left py-2">Signature</th>
+                <th scope="col" className="text-left py-2 pr-4">Event</th>
+                <th scope="col" className="text-left py-2 pr-4">Date/Time</th>
+                <th scope="col" className="text-left py-2 pr-4">Person</th>
+                <th scope="col" className="text-left py-2">Signature</th>
               </tr>
             </thead>
             <tbody className="text-slate-700 dark:text-slate-300">
@@ -139,6 +140,7 @@ function COCStep() {
                   ) : (
                     <button
                       onClick={() => setSigned(true)}
+                      aria-label="Click to Sign: Received at Lab custody step for synthetic sample WS-2026-0384"
                       className="text-xs px-2 py-0.5 bg-lab-teal text-white rounded-full hover:bg-lab-teal/90 transition-colors"
                     >
                       Click to Sign
@@ -233,14 +235,15 @@ function ReportStep() {
             <div>
               <h4 className="text-sm font-semibold text-slate-900 dark:text-white mb-3">Analytical Results</h4>
               <table className="w-full text-sm border border-slate-200 dark:border-white/10">
+                <caption className="sr-only">Synthetic analytical results for sample WS-2026-0384</caption>
                 <thead>
                   <tr className="bg-slate-50 dark:bg-white/5 text-xs text-slate-500 uppercase">
-                    <th className="text-left py-2 px-3">Sample ID</th>
-                    <th className="text-left py-2 px-3">Analyte</th>
-                    <th className="text-right py-2 px-3">Result</th>
-                    <th className="text-right py-2 px-3">MCL</th>
-                    <th className="text-left py-2 px-3">Method</th>
-                    <th className="text-left py-2 px-3">Status</th>
+                    <th scope="col" className="text-left py-2 px-3">Sample ID</th>
+                    <th scope="col" className="text-left py-2 px-3">Analyte</th>
+                    <th scope="col" className="text-right py-2 px-3">Result</th>
+                    <th scope="col" className="text-right py-2 px-3">MCL</th>
+                    <th scope="col" className="text-left py-2 px-3">Method</th>
+                    <th scope="col" className="text-left py-2 px-3">Status</th>
                   </tr>
                 </thead>
                 <tbody className="text-slate-700 dark:text-slate-300">
@@ -521,12 +524,12 @@ export default function DemoPage() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-slate-200 dark:border-white/10">
-                  <th className="text-left py-3 px-4 text-slate-500 font-medium">Plan</th>
-                  <th className="text-center py-3 px-4 bg-lab-teal/10 dark:bg-lab-teal/20 rounded-t-lg">
+                  <th scope="col" className="text-left py-3 px-4 text-slate-500 font-medium">Plan</th>
+                  <th scope="col" className="text-center py-3 px-4 bg-lab-teal/10 dark:bg-lab-teal/20 rounded-t-lg">
                     <span className="text-lab-teal font-bold">Starting price</span>
                   </th>
-                  <th className="text-center py-3 px-4 text-slate-500 font-medium">Users</th>
-                  <th className="text-center py-3 px-4 text-slate-500 font-medium">Notes</th>
+                  <th scope="col" className="text-center py-3 px-4 text-slate-500 font-medium">Users</th>
+                  <th scope="col" className="text-center py-3 px-4 text-slate-500 font-medium">Notes</th>
                 </tr>
               </thead>
               <tbody className="text-slate-700 dark:text-slate-300">
