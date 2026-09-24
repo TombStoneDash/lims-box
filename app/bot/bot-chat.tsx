@@ -31,12 +31,14 @@ export function BotChat() {
   const conversationVersion = useRef(0);
 
   useEffect(() => {
+    /* eslint-disable react-hooks/set-state-in-effect -- sessionStorage exists only after hydration, so saved history must load client-side. */
     try {
       setItems(parseHistory(sessionStorage.getItem(HISTORY_KEY)));
     } catch {
       // Storage may be unavailable; chatting still works in memory.
     }
     setHistoryLoaded(true);
+    /* eslint-enable react-hooks/set-state-in-effect */
   }, []);
 
   useEffect(() => {
