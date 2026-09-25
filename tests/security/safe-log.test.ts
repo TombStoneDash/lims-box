@@ -56,7 +56,7 @@ test('lead metadata contains only the allowlist and no raw contact fields', () =
 });
 
 test('route console arguments never contain bare errors or records outside recovery', () => {
-  for (const path of ['app/api/contact/route.ts', 'app/api/waitlist/route.ts', 'lib/earlyAccessHandler.ts']) {
+  for (const path of ['app/api/contact/route.ts', 'lib/waitlistHandler.ts', 'lib/earlyAccessHandler.ts']) {
     const text = readFileSync(path, 'utf8');
     const source = ts.createSourceFile(path, text, ts.ScriptTarget.Latest, true);
     let recoveries = 0;
