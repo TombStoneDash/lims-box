@@ -18,7 +18,9 @@ export const runtime = 'nodejs';
  * additive, optional freshness/anti-replay check for links this route itself
  * mints via POST. Its absence never blocks a request; once present it must
  * be well-formed, unexpired, unused, and bound to the requested asset, or the
- * request fails closed. Claim-bearing requests require a stable configured
+ * request fails closed. A claim link never uses the claim up on GET: it shows a
+ * confirm page whose button POSTs to /api/personnel-pack-download/claim, so
+ * email link scanners cannot spend it. Claim-bearing requests require a stable configured
  * signing key and a durable atomic claim store; missing infrastructure never
  * falls back to process-local state.
  */

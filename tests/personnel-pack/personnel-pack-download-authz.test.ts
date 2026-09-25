@@ -7,9 +7,12 @@ import { NextRequest } from 'next/server';
 import {
   GET as publicGet,
 } from '../../app/api/personnel-pack-download/route';
+import { POST as publicClaimPost } from '../../app/api/personnel-pack-download/claim/route';
 import {
   createDownloadClaimService,
+  createPersonnelPackClaimPostHandler,
   createPersonnelPackGetHandler,
+  DOWNLOAD_CLAIM_REDEEM_PATH,
   createPrismaDownloadClaimStore,
   type DownloadClaimPayload,
   type DownloadClaimSqlClient,
@@ -53,9 +56,19 @@ function claimedGet(store: DownloadClaimStore = new SyntheticDurableStore()) {
   const service = createDownloadClaimService({ secret: CLAIM_SECRET, store });
   return {
     GET: createPersonnelPackGetHandler(() => service),
+    POST: createPersonnelPackClaimPostHandler(() => service),
     service,
     store,
   };
+}
+
+/** The confirm page's form submission. */
+function redeemRequest(asset: string, claim: string): NextRequest {
+  return new NextRequest(`https://lims.bot${DOWNLOAD_CLAIM_REDEEM_PATH}`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({ asset, claim }).toString(),
+  });
 }
 
 function downloadRequest(query: string): NextRequest {
@@ -89,10 +102,42 @@ test('a request with no claim preserves current unauthenticated behavior', async
   );
 });
 
-test('a valid, fresh, matching claim preserves current behavior and returns the artifact', async () => {
-  const { GET } = claimedGet();
+test('a valid claim link shows a confirm page on GET and never uses the claim up', async () => {
+  const store = new SyntheticDurableStore();
+  const { GET } = claimedGet(store);
   const claim = validClaim();
-  const response = await GET(downloadRequest(`?asset=iso15189&claim=${encodeURIComponent(claim)}`));
+  const query = `?asset=iso15189&claim=${encodeURIComponent(claim)}`;
+
+  // A mail scanner, a link preview and the person all open the link.
+  const responses = [await GET(downloadRequest(query)), await GET(downloadRequest(query)), await GET(downloadRequest(query))];
+  for (const response of responses) {
+    assert.equal(response.status, 200);
+    assert.match(response.headers.get('content-type') ?? '', /^text\/html/);
+    assert.equal(response.headers.get('cache-control'), 'private, no-store');
+    assert.equal(response.headers.get('x-robots-tag'), 'noindex, nofollow');
+  }
+  assert.equal(store.consumed.size, 0);
+
+  const html = await responses[0].text();
+  assert.match(html, new RegExp(`<form method="post" action="${DOWNLOAD_CLAIM_REDEEM_PATH}">`));
+  assert.ok(html.includes(`name="claim" value="${claim}"`));
+  assert.ok(html.includes('name="asset" value="iso15189"'));
+});
+
+test('the confirm page escapes the values it echoes', async () => {
+  const { GET, service } = claimedGet();
+  const asset = 'iso15189';
+  const claim = service.issue(asset, Date.now());
+  const response = await GET(downloadRequest(`?asset=${asset}&claim=${encodeURIComponent(claim)}`));
+  const html = await response.text();
+  assert.doesNotMatch(html, /<script/i);
+  assert.equal((html.match(/<input /g) ?? []).length, 2);
+});
+
+test('the confirm page POST uses the claim once and returns the artifact', async () => {
+  const { POST } = claimedGet();
+  const claim = validClaim();
+  const response = await POST(redeemRequest('iso15189', claim));
 
   assert.equal(response.status, 200);
   assert.equal(response.headers.get('content-type'), 'application/pdf');
@@ -188,14 +233,13 @@ test('a claim minted for a different asset fails closed as mismatched', async ()
 });
 
 test('a replayed claim succeeds once and fails closed on reuse', async () => {
-  const { GET } = claimedGet();
+  const { POST } = claimedGet();
   const claim = validClaim();
-  const query = `?asset=iso15189&claim=${encodeURIComponent(claim)}`;
 
-  const first = await GET(downloadRequest(query));
+  const first = await POST(redeemRequest('iso15189', claim));
   assert.equal(first.status, 200);
 
-  const second = await GET(downloadRequest(query));
+  const second = await POST(redeemRequest('iso15189', claim));
   assert.equal(second.status, 401);
   assert.equal((await second.json()).code, 'download_claim_replayed');
 });
@@ -213,10 +257,9 @@ test('independent instances sharing durable storage accept a claim at most once 
   const firstInstance = claimedGet(store);
   const restartedInstance = claimedGet(store);
   const claim = firstInstance.service.issue('iso15189', Date.now());
-  const query = `?asset=iso15189&claim=${encodeURIComponent(claim)}`;
 
-  const first = await firstInstance.GET(downloadRequest(query));
-  const replayAfterRestart = await restartedInstance.GET(downloadRequest(query));
+  const first = await firstInstance.POST(redeemRequest('iso15189', claim));
+  const replayAfterRestart = await restartedInstance.POST(redeemRequest('iso15189', claim));
 
   assert.equal(first.status, 200);
   assert.equal(replayAfterRestart.status, 401);
@@ -228,11 +271,10 @@ test('concurrent independent instances produce exactly one successful redemption
   const firstInstance = claimedGet(createPrismaDownloadClaimStore(database.client()));
   const secondInstance = claimedGet(createPrismaDownloadClaimStore(database.client()));
   const claim = firstInstance.service.issue('iso15189', Date.now());
-  const query = `?asset=iso15189&claim=${encodeURIComponent(claim)}`;
 
   const responses = await Promise.all([
-    firstInstance.GET(downloadRequest(query)),
-    secondInstance.GET(downloadRequest(query)),
+    firstInstance.POST(redeemRequest('iso15189', claim)),
+    secondInstance.POST(redeemRequest('iso15189', claim)),
   ]);
   assert.deepEqual(responses.map((response) => response.status).sort(), [200, 401]);
 
@@ -268,11 +310,32 @@ test('unavailable durable storage fails closed before returning the artifact', a
   const instance = claimedGet(store);
   store.available = false;
   const claim = instance.service.issue('iso15189', Date.now());
-  const response = await instance.GET(
-    downloadRequest(`?asset=iso15189&claim=${encodeURIComponent(claim)}`),
-  );
+  const response = await instance.POST(redeemRequest('iso15189', claim));
 
   assert.equal(response.status, 503);
   assert.equal(response.headers.get('content-type'), 'application/json');
   assert.equal((await response.json()).code, 'download_claim_unavailable');
+});
+
+test('missing signing configuration also fails closed on the confirm POST', async () => {
+  const POST = createPersonnelPackClaimPostHandler(() => null);
+  const response = await POST(redeemRequest('iso15189', validClaim()));
+  assert.equal(response.status, 503);
+  assert.equal((await response.json()).code, 'download_claim_unavailable');
+});
+
+test('a confirm POST with no claim, or a claim for another asset, never returns the artifact', async () => {
+  const { POST } = claimedGet();
+  const empty = await POST(redeemRequest('iso15189', ''));
+  assert.equal(empty.status, 401);
+  assert.equal((await empty.json()).code, 'download_claim_malformed');
+  const other = await POST(redeemRequest('iso15189', validClaim({ asset: 'some-other-asset' })));
+  assert.equal(other.status, 401);
+  assert.equal((await other.json()).code, 'download_claim_mismatched');
+});
+
+test('the confirm POST route is wired to the claim handler', async () => {
+  const response = await publicClaimPost(redeemRequest('iso15189', 'not-a-real-claim'));
+  assert.ok([401, 503].includes(response.status));
+  assert.notEqual(response.headers.get('content-type'), 'application/pdf');
 });

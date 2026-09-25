@@ -28,6 +28,8 @@ export interface DownloadClaimStore {
 
 export interface DownloadClaimService {
   issue(asset: string, now?: number): string;
+  /** Checks signature, expiry and asset binding without using the claim up. */
+  verify(token: string, asset: string, now?: number): DownloadClaimResult;
   verifyAndConsume(token: string, asset: string, now?: number): Promise<DownloadClaimResult>;
 }
 
@@ -112,6 +114,10 @@ export function createDownloadClaimService(input: {
       return `${body}.${signature}`;
     },
 
+    verify(token: string, asset: string, now = Date.now()): DownloadClaimResult {
+      return parseAndVerifyClaim(token, asset, input.secret, now);
+    },
+
     async verifyAndConsume(token: string, asset: string, now = Date.now()): Promise<DownloadClaimResult> {
       const verified = parseAndVerifyClaim(token, asset, input.secret, now);
       if (!verified.ok) return verified;
@@ -150,10 +156,92 @@ export function configuredDownloadClaimService(): DownloadClaimService | null {
 
 type DownloadClaimServiceResolver = () => DownloadClaimService | null;
 
+const UNAVAILABLE_MESSAGE = 'This download link is temporarily unavailable. Request a new one from the Personnel Pack form.';
+const INVALID_MESSAGE = 'This download link is invalid or has expired. Request a new one from the Personnel Pack form.';
+export const DOWNLOAD_CLAIM_REDEEM_PATH = '/api/personnel-pack-download/claim';
+
+function claimUnavailable() {
+  return NextResponse.json({ error: UNAVAILABLE_MESSAGE, code: 'download_claim_unavailable' }, { status: 503 });
+}
+
+function claimRejected(asset: string, code: DownloadClaimFailureCode) {
+  console.error('[personnel-pack-download]', 'download_claim_rejected', JSON.stringify({ asset, stage: 'authorization', code }));
+  const unavailable = code === 'download_claim_unavailable';
+  return NextResponse.json(
+    { error: unavailable ? UNAVAILABLE_MESSAGE : INVALID_MESSAGE, code },
+    { status: unavailable ? 503 : 401 },
+  );
+}
+
+async function assetResponse(key: string) {
+  let result;
+  try {
+    result = await loadDownloadableAsset(key);
+  } catch (error) {
+    console.error('[personnel-pack-download]', 'asset_unavailable', JSON.stringify({
+      asset: key,
+      stage: 'download',
+      error: error instanceof Error ? error.message : String(error),
+    }));
+    return NextResponse.json(
+      { error: 'Automatic fulfillment is temporarily unavailable. Email info@lims.bot directly.', code: 'asset_unavailable' },
+      { status: 503 },
+    );
+  }
+
+  if (!result) {
+    return NextResponse.json(
+      { error: 'Automatic fulfillment is currently available only for the reviewed ISO 15189 pack.', code: 'unsupported_pack_selection' },
+      { status: 404 },
+    );
+  }
+
+  return new NextResponse(result.bytes, {
+    status: 200,
+    headers: {
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': `attachment; filename="${result.asset.downloadFilename}"`,
+      'Cache-Control': 'private, no-store',
+      'X-Content-Type-Options': 'nosniff',
+    },
+  });
+}
+
+function escapeHtml(value: string): string {
+  return value.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]!));
+}
+
+// Link scanners and previews fetch with GET. A claim link therefore only shows
+// this page; the one-time claim is used up by the button's POST.
+function confirmPage(asset: string, claim: string) {
+  const html = `<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow"><title>Download your Personnel Pack | LIMS BOX</title></head>
+<body style="font-family:system-ui,sans-serif;max-width:32rem;margin:4rem auto;padding:0 1rem;color:#0f172a;">
+<h1 style="font-size:1.5rem;">Your Personnel Pack is ready</h1>
+<p>This link works once. Press the button to download the PDF.</p>
+<form method="post" action="${DOWNLOAD_CLAIM_REDEEM_PATH}">
+<input type="hidden" name="asset" value="${escapeHtml(asset)}">
+<input type="hidden" name="claim" value="${escapeHtml(claim)}">
+<button type="submit" style="font-size:1rem;padding:.75rem 1.25rem;background:#2E8B57;color:#fff;border:0;border-radius:.5rem;">Download the PDF</button>
+</form>
+</body></html>`;
+  return new NextResponse(html, {
+    status: 200,
+    headers: {
+      'Content-Type': 'text/html; charset=utf-8',
+      'Cache-Control': 'private, no-store',
+      'X-Robots-Tag': 'noindex, nofollow',
+      'X-Content-Type-Options': 'nosniff',
+      'Referrer-Policy': 'no-referrer',
+    },
+  });
+}
+
 /**
  * Builds the GET implementation outside the App Router module so that tests can
  * inject independent claim-store instances without adding an unsupported route
- * export. Claim authorization always completes before asset bytes are loaded.
+ * export. A claim link is verified but never consumed on GET.
  */
 export function createPersonnelPackGetHandler(
   resolveClaims: DownloadClaimServiceResolver = configuredDownloadClaimService,
@@ -164,62 +252,37 @@ export function createPersonnelPackGetHandler(
 
     if (claimToken !== null) {
       const claims = resolveClaims();
-      if (!claims) {
-        return NextResponse.json(
-          { error: 'This download link is temporarily unavailable. Request a new one from the Personnel Pack form.', code: 'download_claim_unavailable' },
-          { status: 503 },
-        );
-      }
-      const claimResult = await claims.verifyAndConsume(claimToken, key, Date.now());
-      if (claimResult.ok === false) {
-        console.error('[personnel-pack-download]', 'download_claim_rejected', JSON.stringify({
-          asset: key,
-          stage: 'authorization',
-          code: claimResult.code,
-        }));
-        const unavailable = claimResult.code === 'download_claim_unavailable';
-        return NextResponse.json(
-          {
-            error: unavailable
-              ? 'This download link is temporarily unavailable. Request a new one from the Personnel Pack form.'
-              : 'This download link is invalid or has expired. Request a new one from the Personnel Pack form.',
-            code: claimResult.code,
-          },
-          { status: unavailable ? 503 : 401 },
-        );
-      }
+      if (!claims) return claimUnavailable();
+      const checked = claims.verify(claimToken, key, Date.now());
+      if (checked.ok === false) return claimRejected(key, checked.code);
+      return confirmPage(key, claimToken);
     }
 
-    let result;
+    return assetResponse(key);
+  };
+}
+
+/** POST from the confirm page: uses the one-time claim up, then returns the PDF. */
+export function createPersonnelPackClaimPostHandler(
+  resolveClaims: DownloadClaimServiceResolver = configuredDownloadClaimService,
+) {
+  return async function personnelPackClaimPost(request: NextRequest) {
+    let key = 'iso15189';
+    let claimToken = '';
     try {
-      result = await loadDownloadableAsset(key);
-    } catch (error) {
-      console.error('[personnel-pack-download]', 'asset_unavailable', JSON.stringify({
-        asset: key,
-        stage: 'download',
-        error: error instanceof Error ? error.message : String(error),
-      }));
-      return NextResponse.json(
-        { error: 'Automatic fulfillment is temporarily unavailable. Email info@lims.bot directly.', code: 'asset_unavailable' },
-        { status: 503 },
-      );
+      const form = await request.formData();
+      const asset = form.get('asset');
+      const claim = form.get('claim');
+      if (typeof asset === 'string' && asset) key = asset;
+      if (typeof claim === 'string') claimToken = claim;
+    } catch {
+      return claimRejected(key, 'download_claim_malformed');
     }
 
-    if (!result) {
-      return NextResponse.json(
-        { error: 'Automatic fulfillment is currently available only for the reviewed ISO 15189 pack.', code: 'unsupported_pack_selection' },
-        { status: 404 },
-      );
-    }
-
-    return new NextResponse(result.bytes, {
-      status: 200,
-      headers: {
-        'Content-Type': 'application/pdf',
-        'Content-Disposition': `attachment; filename="${result.asset.downloadFilename}"`,
-        'Cache-Control': 'private, no-store',
-        'X-Content-Type-Options': 'nosniff',
-      },
-    });
+    const claims = resolveClaims();
+    if (!claims) return claimUnavailable();
+    const claimResult = await claims.verifyAndConsume(claimToken, key, Date.now());
+    if (claimResult.ok === false) return claimRejected(key, claimResult.code);
+    return assetResponse(key);
   };
 }
