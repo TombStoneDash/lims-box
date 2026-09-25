@@ -95,6 +95,7 @@ def record_until_silence(
         else:
             speech_detected = True
             silent_frames = 0
+            speech_detected = True
         chunks.append(indata.copy())
 
     try:
