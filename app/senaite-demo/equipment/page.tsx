@@ -1,6 +1,7 @@
 import { instruments } from '@/lib/demo-data';
 import { evaluateEquipmentStatus, evaluateInstrumentCalibration, DEMO_AS_OF_DATE } from '@/lib/senaite-demo-equipment';
 import { projectUpcomingCalibrations } from '@/lib/senaite-demo-calibration-schedule';
+import { nextCalibrationDisplay } from '@/lib/senaite-demo-equipment-display';
 import { CheckCircle2, AlertTriangle, HelpCircle, Wrench, Calendar, MapPin } from 'lucide-react';
 
 const equipmentStatus = evaluateEquipmentStatus(instruments);
@@ -96,6 +97,7 @@ export default function EquipmentPage() {
       <div className="space-y-4">
         {instruments.map(inst => {
           const evaluation = evaluateInstrumentCalibration(inst);
+          const calibrationDisplay = nextCalibrationDisplay(evaluation.status);
           return (
           <div key={inst.serialNumber} className="bg-white rounded-lg border border-slate-200 overflow-hidden">
             <div className="p-5">
@@ -125,10 +127,13 @@ export default function EquipmentPage() {
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Calendar className="w-4 h-4 text-blue-400" />
+                  <Calendar className={`w-4 h-4 ${calibrationDisplay.iconClass}`} />
                   <div>
                     <p className="text-xs text-slate-500">Next Calibration</p>
-                    <p className="font-medium text-blue-700">{inst.nextCalibration}</p>
+                    <p className={calibrationDisplay.textClass}>
+                      {inst.nextCalibration}
+                      {calibrationDisplay.srSuffix}
+                    </p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
@@ -144,45 +149,48 @@ export default function EquipmentPage() {
             {/* Maintenance log */}
             <div className="border-t border-slate-100 bg-slate-50 px-5 py-3">
               <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Maintenance Log</p>
-              <table className="w-full text-xs">
-                <thead>
-                  <tr className="text-slate-400">
-                    <th className="text-left py-1 pr-4">Date</th>
-                    <th className="text-left py-1 pr-4">Type</th>
-                    <th className="text-left py-1 pr-4">Performed By</th>
-                    <th className="text-left py-1 pr-4">Notes</th>
-                    <th className="text-left py-1">Result</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {inst.maintenanceLog.map((entry, i) => (
-                    <tr key={i} className="border-t border-slate-100">
-                      <td className="py-1.5 pr-4 text-slate-600 font-mono">{entry.date}</td>
-                      <td className="py-1.5 pr-4">
-                        <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${
-                          entry.type === 'Calibration' ? 'bg-blue-100 text-blue-700' :
-                          entry.type === 'Preventive Maintenance' ? 'bg-purple-100 text-purple-700' :
-                          entry.type === 'Verification' ? 'bg-teal-100 text-teal-700' :
-                          'bg-red-100 text-red-700'
-                        }`}>
-                          {entry.type}
-                        </span>
-                      </td>
-                      <td className="py-1.5 pr-4 text-slate-600">{entry.performedBy}</td>
-                      <td className="py-1.5 pr-4 text-slate-500 max-w-[300px] truncate">{entry.notes}</td>
-                      <td className="py-1.5">
-                        <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${
-                          entry.result === 'Pass' ? 'bg-green-100 text-green-700' :
-                          entry.result === 'Adjusted' ? 'bg-amber-100 text-amber-700' :
-                          'bg-red-100 text-red-700'
-                        }`}>
-                          {entry.result}
-                        </span>
-                      </td>
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs">
+                  <caption className="sr-only">Maintenance log for {inst.name}</caption>
+                  <thead>
+                    <tr className="text-slate-400">
+                      <th scope="col" className="text-left py-1 pr-4">Date</th>
+                      <th scope="col" className="text-left py-1 pr-4">Type</th>
+                      <th scope="col" className="text-left py-1 pr-4">Performed By</th>
+                      <th scope="col" className="text-left py-1 pr-4">Notes</th>
+                      <th scope="col" className="text-left py-1">Result</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {inst.maintenanceLog.map((entry, i) => (
+                      <tr key={`${entry.date}-${entry.type}-${i}`} className="border-t border-slate-100">
+                        <td className="py-1.5 pr-4 text-slate-600 font-mono">{entry.date}</td>
+                        <td className="py-1.5 pr-4">
+                          <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${
+                            entry.type === 'Calibration' ? 'bg-blue-100 text-blue-700' :
+                            entry.type === 'Preventive Maintenance' ? 'bg-purple-100 text-purple-700' :
+                            entry.type === 'Verification' ? 'bg-teal-100 text-teal-700' :
+                            'bg-red-100 text-red-700'
+                          }`}>
+                            {entry.type}
+                          </span>
+                        </td>
+                        <td className="py-1.5 pr-4 text-slate-600">{entry.performedBy}</td>
+                        <td className="py-1.5 pr-4 text-slate-500 min-w-[12rem] whitespace-normal break-words">{entry.notes}</td>
+                        <td className="py-1.5">
+                          <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${
+                            entry.result === 'Pass' ? 'bg-green-100 text-green-700' :
+                            entry.result === 'Adjusted' ? 'bg-amber-100 text-amber-700' :
+                            'bg-red-100 text-red-700'
+                          }`}>
+                            {entry.result}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
           );
