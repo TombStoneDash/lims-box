@@ -1,17 +1,12 @@
 'use client';
 
 import Link from 'next/link';
-import { useState } from 'react';
+import { useId, useRef, useState } from 'react';
+import { replyText } from '@/lib/demo-assistant-chat';
 
 interface BotSource {
   title: string;
   path: string;
-}
-
-interface BotReply {
-  answer: string;
-  grounded: boolean;
-  sources: BotSource[];
 }
 
 interface ChatItem {
@@ -29,6 +24,8 @@ const SUGGESTIONS = [
 ];
 
 export function DemoAssistantChat() {
+  const inputId = useId();
+  const inputRef = useRef<HTMLInputElement>(null);
   const [items, setItems] = useState<ChatItem[]>([]);
   const [input, setInput] = useState('');
   const [busy, setBusy] = useState(false);
@@ -47,19 +44,18 @@ export function DemoAssistantChat() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ question: trimmed }),
       });
-      const data: BotReply | { error: string } = await response.json();
+      const reply = replyText(response.ok, await response.json());
       setItems((previous) => [
         ...previous,
         {
           role: 'assistant',
-          text: 'error' in data ? data.error : data.answer,
-          sources: 'sources' in data ? data.sources : undefined,
+          ...reply,
         },
       ]);
     } catch {
       setItems((previous) => [
         ...previous,
-        { role: 'assistant', text: 'The local demo could not answer. Try again.' },
+        { role: 'assistant', ...replyText(false, null) },
       ]);
     } finally {
       setBusy(false);
@@ -68,22 +64,7 @@ export function DemoAssistantChat() {
 
   return (
     <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-white/5">
-      <div className="mb-5 flex min-h-28 flex-col gap-4" aria-live="polite">
-        {items.length === 0 && (
-          <div className="flex flex-wrap gap-2">
-            {SUGGESTIONS.map((suggestion) => (
-              <button
-                key={suggestion}
-                type="button"
-                onClick={() => ask(suggestion)}
-                className="rounded-full border border-slate-200 px-3 py-2 text-left text-xs text-slate-700 transition hover:border-teal-500 hover:text-teal-700 dark:border-white/10 dark:text-slate-200"
-              >
-                {suggestion}
-              </button>
-            ))}
-          </div>
-        )}
-
+      <div className="mb-5 flex min-h-28 flex-col gap-4" role="log" aria-busy={busy}>
         {items.map((item, index) => (
           <div key={`${item.role}-${index}`} className={item.role === 'user' ? 'text-right' : 'text-left'}>
             <div
@@ -93,7 +74,12 @@ export function DemoAssistantChat() {
                   : 'inline-block max-w-[88%] rounded-xl bg-slate-100 px-4 py-3 text-sm text-slate-900 dark:bg-white/10 dark:text-white'
               }
             >
-              <p>{item.text}</p>
+              <p>
+                <span className="sr-only">
+                  {item.role === 'user' ? 'You asked: ' : 'Demo assistant answered: '}
+                </span>
+                {item.text}
+              </p>
               {item.sources && item.sources.length > 0 && (
                 <div className="mt-3 border-t border-slate-200 pt-2 text-xs text-slate-500 dark:border-white/10 dark:text-slate-400">
                   <span className="font-semibold">Sources: </span>
@@ -114,6 +100,23 @@ export function DemoAssistantChat() {
         {busy && <p className="text-xs text-slate-400">Checking synthetic records…</p>}
       </div>
 
+      <div className="mb-5 flex flex-wrap gap-2">
+        {SUGGESTIONS.map((suggestion) => (
+          <button
+            key={suggestion}
+            type="button"
+            disabled={busy}
+            onClick={() => {
+              inputRef.current?.focus();
+              ask(suggestion);
+            }}
+            className="rounded-full border border-slate-200 px-3 py-2 text-left text-xs text-slate-700 transition hover:border-teal-500 hover:text-teal-700 disabled:opacity-40 dark:border-white/10 dark:text-slate-200"
+          >
+            {suggestion}
+          </button>
+        ))}
+      </div>
+
       <form
         onSubmit={(event) => {
           event.preventDefault();
@@ -121,7 +124,10 @@ export function DemoAssistantChat() {
         }}
         className="flex gap-2"
       >
+        <label htmlFor={inputId} className="sr-only">Ask about a synthetic sample or test</label>
         <input
+          id={inputId}
+          ref={inputRef}
           value={input}
           onChange={(event) => setInput(event.target.value)}
           maxLength={500}

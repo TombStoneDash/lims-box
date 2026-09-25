@@ -1,56 +1,39 @@
-# Applicant confirmation outcome
+# Waitlist applicant confirmation
 
-`sendApplicantConfirmationOutcome(email, name)` in `lib/notify.ts` sends the
-"we got your application" email to a waitlist applicant and always resolves —
-it never throws. It returns:
+A waitlist signup (`POST /api/waitlist`, used by the site footer and the
+webinar page) sends the applicant one "We got your LIMS Box application"
+email through `sendApplicantConfirmation` in `lib/notify.ts`.
 
-```ts
-{
-  status: 'sent' | 'blocked_domain_unverified' | 'not_configured' | 'failed';
-  httpStatus?: number;
-  reason?: string;
-}
-```
+Hudson approved this on 2026-09-24 for **new signups only**, with no backfill
+to the existing list.
 
-- `sent` — the provider accepted the send.
-- `blocked_domain_unverified` — the `lims.bot` sending domain is not yet
-  verified in Resend (HTTP 403, `shouldDomainFallback` matches). Applicant
-  mail has no fallback sender (Resend's shared test sender only delivers to
-  the account owner), so this remains blocked until the domain is verified.
-- `not_configured` — `RESEND_API_KEY` is not set.
-- `failed` — any other provider error or a network/fetch exception.
-  `httpStatus` is present when the provider returned a response.
+## When it sends
 
-`reason` is a short, human-readable message. It is derived from the HTTP
-status or a caught error's message — never from the raw provider response
-body, and never from the applicant's email address. Log lines in
-`sendApplicantConfirmationOutcome` mask the applicant address (e.g.
-`s***@example.com`) instead of printing it in full.
+`lib/waitlistHandler.ts` sends only when all three are true:
 
-`sendApplicantConfirmation(email, name)` remains the throwing wrapper used by
-existing callers/tests: it awaits `sendApplicantConfirmationOutcome` and
-throws when the status is not `sent`, preserving the original error message
-shape (`Applicant confirmation delivery failed (<status>)`, or the
-`not_configured`/network-failure reason when there is no HTTP status).
+1. The lookup for an earlier prospect with the same email (case-insensitive)
+   succeeded and found none.
+2. This request saved the new prospect record.
+3. The email is valid.
 
-## Waitlist route integration
+A repeat signup, a failed lookup or a failed save sends nothing. There is no
+code path that reads the prospect list in bulk, and no script that emails
+existing prospects.
 
-`app/api/waitlist/route.ts` calls `sendApplicantConfirmationOutcome`
-non-fatally after the prospect record is saved (or attempted). The outcome:
+## What Hudson sees
 
-- is rendered as an `Applicant confirmation` line in the internal
-  "New waitlist signup" submission notice (e.g. `sent`, `blocked (domain not
-  verified)`, `not configured`, `failed (422)`);
-- is returned to the caller as `confirmation` in the JSON response body,
-  as the same `{ status, httpStatus?, reason? }` shape — no provider
-  response bodies are included.
+The internal "New waitlist signup" notice gets an `Applicant confirmation`
+line: `sent`, `blocked (domain not verified)`, `not configured`,
+`failed (<http status>)`, `failed`, `skipped (already on the list)`,
+`skipped (could not check the list)` or `skipped (signup not saved)`.
 
-The route's existing `dbSaved` / `noticeSent` / 500-on-total-failure
-semantics, `shouldDomainFallback`, and the submission-notice fallback path
-are unchanged by this feature.
+The browser response is unchanged (`{ success, saved }`). No delivery detail
+is returned to the public caller.
 
-## What remains outside this change
+A failed confirmation never fails the signup. Errors are logged through
+`safeErrorMeta`, so provider bodies and addresses are not logged.
 
-Resend domain verification for `lims.bot` (which would allow
-`blocked_domain_unverified` to become `sent` for applicant mail) and running
-the production end-to-end send test remain with Hudson.
+## Prerequisite outside this change
+
+Applicant mail has no fallback sender. Until `lims.bot` is verified in Resend,
+the status is `blocked (domain not verified)` and nothing reaches applicants.

@@ -3,9 +3,9 @@
 import Link from 'next/link';
 import { FlaskConical, ArrowRight, Shield, Award, FileText } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
+import { COMMERCIAL_VIDEO_ID, resolveCommercialVideoId } from '@/lib/commercial-video';
 
-// TODO: Replace with actual YouTube video ID when ready
-const YOUTUBE_VIDEO_ID = 'dQw4w9WgXcQ';
+const videoId = resolveCommercialVideoId(COMMERCIAL_VIDEO_ID);
 
 export default function CommercialPage() {
   const [playing, setPlaying] = useState(false);
@@ -14,6 +14,7 @@ export default function CommercialPage() {
 
   // Autoplay on scroll into view
   useEffect(() => {
+    if (!videoId) return;
     const el = videoRef.current;
     if (!el) return;
     const observer = new IntersectionObserver(
@@ -65,13 +66,22 @@ export default function CommercialPage() {
       <section className="px-4 pt-8 pb-4">
         <div className="max-w-4xl mx-auto" ref={videoRef}>
           <div className="relative aspect-video bg-[#1E3A5F] rounded-2xl overflow-hidden border border-white/10 shadow-2xl shadow-black/50">
-            {!playing ? (
+            {!videoId ? (
+              <div className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-[#1E3A5F] to-[#0F172A] p-4 text-center">
+                <p className="text-2xl md:text-4xl font-bold text-white mb-2 tracking-tight">Video coming soon</p>
+                <p className="text-sm text-slate-400 mb-4">Explore the demo or pricing while we prepare our video.</p>
+                <div className="flex items-center justify-center gap-6 text-sm font-medium">
+                  <Link href="/demo" className="text-white hover:text-slate-300 transition-colors">Demo</Link>
+                  <Link href="/pricing" className="text-white hover:text-slate-300 transition-colors">Pricing</Link>
+                </div>
+              </div>
+            ) : !playing ? (
               <button
                 onClick={() => setPlaying(true)}
                 className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-[#1E3A5F] to-[#0F172A] group cursor-pointer"
               >
                 <FlaskConical className="w-16 h-16 text-[#2E8B57] mb-4" />
-                <h2 className="text-2xl md:text-4xl font-bold text-white mb-2 tracking-tight">LIMS BOX</h2>
+                <p className="text-2xl md:text-4xl font-bold text-white mb-2 tracking-tight">LIMS BOX</p>
                 <p className="text-sm text-slate-400 mb-8">Right-sized for regulated labs.</p>
                 <div className="w-20 h-20 rounded-full bg-[#2E8B57] group-hover:bg-[#2E8B57]/90 flex items-center justify-center transition-all group-hover:scale-105 shadow-lg shadow-[#2E8B57]/30">
                   <svg className="w-8 h-8 text-white ml-1" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
@@ -80,7 +90,7 @@ export default function CommercialPage() {
             ) : (
               <iframe
                 ref={playerRef}
-                src={`https://www.youtube.com/embed/${YOUTUBE_VIDEO_ID}?autoplay=1&rel=0&modestbranding=1&color=white`}
+                src={`https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1&color=white`}
                 title="LIMS BOX Commercial"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen

@@ -33,10 +33,15 @@ function PersonCard({
           <p className="mt-1 text-sm text-slate-600">
             Status: <strong>{person.competency.status}</strong> · Reviews: {person.competency.reviewCount}
           </p>
+          {person.competency.lastReviewedAt !== null ? (
+            <p className="mt-1 text-sm text-slate-600">
+              Last reviewed: <strong>{person.competency.lastReviewedAt}</strong>
+            </p>
+          ) : null}
           <button
             type="button"
-            className="mt-4 rounded-md bg-slate-900 px-3 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:bg-slate-400"
-            disabled={person.competency.status === "current"}
+            className="mt-4 rounded-md bg-slate-900 px-3 py-2 text-sm font-semibold text-white"
+            aria-label={`Record a synthetic competency review for ${person.name}`}
             onClick={() =>
               dispatch({
                 type: "record_competency_review",
@@ -58,6 +63,7 @@ function PersonCard({
           <button
             type="button"
             className="mt-4 rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-900"
+            aria-label={`${person.authorization.active ? "Revoke" : "Grant"} synthetic authorisation for ${person.name}`}
             onClick={() =>
               dispatch({
                 type: "set_authorization",
@@ -106,6 +112,23 @@ export default function DemoOperatorSandbox() {
             Reset synthetic baseline
           </button>
         </div>
+
+        <section
+          className="mb-8 rounded-xl border border-slate-200 bg-white p-5 shadow-sm"
+          role="status"
+          aria-live="polite"
+        >
+          <h2 className="text-lg font-semibold text-slate-900">Recent activity</h2>
+          {state.activity.length > 0 ? (
+            <ul className="mt-3 list-disc space-y-2 pl-5 text-sm text-slate-600">
+              {state.activity.map((entry, index) => (
+                <li key={`${index}-${entry}`}>{entry}</li>
+              ))}
+            </ul>
+          ) : (
+            <p className="mt-3 text-sm text-slate-600">No changes yet in this tab.</p>
+          )}
+        </section>
 
         <div className="space-y-5">
           {state.people.map((person) => (

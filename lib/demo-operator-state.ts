@@ -26,6 +26,7 @@ export type DemoPerson = {
 export type DemoOperatorState = {
   datasetId: typeof DEMO_DATASET_ID;
   people: DemoPerson[];
+  activity: string[];
 };
 
 export type DemoOperatorAction =
@@ -35,6 +36,7 @@ export type DemoOperatorAction =
 
 const BASELINE: DemoOperatorState = {
   datasetId: DEMO_DATASET_ID,
+  activity: [],
   people: [
     {
       id: "demo-person-alice",
@@ -94,15 +96,23 @@ export function demoOperatorReducer(
   action: DemoOperatorAction,
 ): DemoOperatorState {
   if (!isSyntheticDemoState(state)) return createDemoOperatorBaseline();
-  if (action.type === "reset") return createDemoOperatorBaseline();
+  if (action.type === "reset") {
+    return { ...createDemoOperatorBaseline(), activity: ["Reset to the synthetic baseline."] };
+  }
 
   const target = state.people.find((person) => person.id === action.personId);
   if (!target) return state;
+  const fixture = BASELINE.people.find((person) => person.id === target.id);
+  if (!fixture) return state;
 
   if (action.type === "record_competency_review") {
     if (target.competency.id !== action.competencyId) return state;
     return {
       ...state,
+      activity: [
+        `Recorded a synthetic competency review for ${fixture.name} (review ${target.competency.reviewCount + 1}).`,
+        ...state.activity,
+      ].slice(0, 5),
       people: state.people.map((person) =>
         person.id === action.personId
           ? {
@@ -120,8 +130,13 @@ export function demoOperatorReducer(
   }
 
   if (target.authorization.id !== action.authorizationId) return state;
+  if (target.authorization.active === action.active) return state;
   return {
     ...state,
+    activity: [
+      `${action.active ? "Granted" : "Revoked"} synthetic authorisation: ${fixture.authorization.procedure} for ${fixture.name}.`,
+      ...state.activity,
+    ].slice(0, 5),
     people: state.people.map((person) =>
       person.id === action.personId
         ? {

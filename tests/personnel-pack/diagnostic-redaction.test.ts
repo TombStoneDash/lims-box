@@ -1,0 +1,241 @@
+import assert from 'node:assert/strict';
+import test from 'node:test';
+import { NextRequest } from 'next/server';
+import {
+  createPersonnelPackPostHandler,
+  PERSONNEL_PACK_PUBLIC_ASSETS,
+} from '../../lib/personnelPackFulfillment';
+
+// Canary values that must never survive into diagnostics, errors, or asset resolution.
+const CANARY_EMAIL = 'canary-victim@example.com';
+const CANARY_SECRET = 'canary-secret-9f3a1c-do-not-log';
+const CANARY_LONG_STRING = `iso15189-${CANARY_SECRET}-${'x'.repeat(5000)}`;
+// Built from char codes (NUL, BEL) rather than literal control bytes in source,
+// so the test file itself stays plain text with no raw control bytes.
+const CANARY_CONTROL_CHARS = `iso15189${String.fromCharCode(0, 7)}${CANARY_SECRET}\ndrop-table`;
+const CANARY_EMAIL_SHAPED = `${CANARY_SECRET}@evil.example`;
+const CANARY_JSON_SHAPED = `{"nested":"${CANARY_SECRET}"}`;
+
+function request(body: unknown) {
+  return new NextRequest('https://lims.bot/api/personnel-pack-download', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+}
+
+function rawRequest(rawBody: string) {
+  return new NextRequest('https://lims.bot/api/personnel-pack-download', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: rawBody,
+  });
+}
+
+function createHandler(overrides: Partial<Parameters<typeof createPersonnelPackPostHandler>[0]> = {}) {
+  const leads: unknown[] = [];
+  const notices: unknown[] = [];
+  const deliveries: Array<{ email: string; delivery: unknown }> = [];
+  const diagnostics: Array<{ code: string; meta: Record<string, unknown> }> = [];
+  const resolveAssetCalls: Array<string | null> = [];
+
+  const handler = createPersonnelPackPostHandler({
+    createLead: async (record) => { leads.push(record); },
+    sendSubmissionNotice: async (notice) => { notices.push(notice); },
+    sendApplicantDelivery: async (email, delivery) => { deliveries.push({ email, delivery }); },
+    resolveAsset: async (accredType, origin) => {
+      resolveAssetCalls.push(accredType);
+      return accredType === 'iso15189'
+        ? {
+            assetUrl: new URL('/personnel-pack-assets/iso-15189-personnel-pack-v1-5-customer-20260827.pdf', origin).toString(),
+            emailed: false,
+            label: 'ISO 15189 Personnel Pack v1.5',
+          }
+        : null;
+    },
+    logDiagnostic: (code, meta) => { diagnostics.push({ code, meta }); },
+    now: () => '2026-09-12T00:00:00.000Z',
+    requestId: () => 'req-diag-test-1',
+    ...overrides,
+  });
+
+  return { handler, leads, notices, deliveries, diagnostics, resolveAssetCalls };
+}
+
+function assertNoCanaries(...haystacks: unknown[]) {
+  const joined = haystacks.map((value) => JSON.stringify(value)).join('\n');
+  for (const canary of [CANARY_EMAIL, CANARY_SECRET, CANARY_EMAIL_SHAPED, CANARY_JSON_SHAPED]) {
+    assert.doesNotMatch(joined, new RegExp(canary.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
+  }
+  assert.doesNotMatch(joined, /x{100}/);
+}
+
+test('valid iso15189 selection still resolves and delivers with clean diagnostics', async () => {
+  const { handler, leads, notices, deliveries, diagnostics, resolveAssetCalls } = createHandler();
+
+  const response = await handler(request({
+    email: CANARY_EMAIL,
+    accredType: '  ISO15189  ',
+  }));
+
+  assert.equal(response.status, 200);
+  const body = await response.json();
+  assert.equal(body.success, true);
+  assert.equal(body.delivery.label, 'ISO 15189 Personnel Pack v1.5');
+  assert.deepEqual(resolveAssetCalls, ['iso15189']);
+  assert.deepEqual(leads, [{
+    email: CANARY_EMAIL,
+    accred_type: 'iso15189',
+    source: 'personnel-pack-download',
+  }]);
+  assert.equal(notices.length, 1);
+  assert.equal(deliveries.length, 1);
+  assert.equal(diagnostics.length, 0);
+});
+
+test('overly long accreditation text is bounded before logging or asset resolution', async () => {
+  const { handler, leads, notices, deliveries, diagnostics, resolveAssetCalls } = createHandler();
+
+  const response = await handler(request({
+    email: CANARY_EMAIL,
+    accredType: CANARY_LONG_STRING,
+  }));
+
+  assert.equal(response.status, 409);
+  assert.deepEqual(resolveAssetCalls, [null]);
+  assert.equal(leads.length, 0);
+  assert.equal(notices.length, 0);
+  assert.equal(deliveries.length, 0);
+  assert.equal(diagnostics.length, 1);
+  assert.equal(diagnostics[0].code, 'unsupported_pack_selection');
+  assert.equal(diagnostics[0].meta.accredType, 'not_provided');
+  assertNoCanaries(diagnostics, await response.clone().json());
+});
+
+test('control characters in accreditation text are bounded before logging or asset resolution', async () => {
+  const { handler, leads, notices, deliveries, diagnostics, resolveAssetCalls } = createHandler();
+
+  const response = await handler(request({
+    email: CANARY_EMAIL,
+    accredType: CANARY_CONTROL_CHARS,
+  }));
+
+  assert.equal(response.status, 409);
+  assert.deepEqual(resolveAssetCalls, [null]);
+  assert.equal(leads.length, 0);
+  assert.equal(notices.length, 0);
+  assert.equal(deliveries.length, 0);
+  assert.equal(diagnostics[0].code, 'unsupported_pack_selection');
+  assert.equal(diagnostics[0].meta.accredType, 'not_provided');
+  assertNoCanaries(diagnostics, await response.clone().json());
+});
+
+test('email-shaped accreditation text is bounded before logging or asset resolution', async () => {
+  const { handler, leads, notices, deliveries, diagnostics, resolveAssetCalls } = createHandler();
+
+  const response = await handler(request({
+    email: CANARY_EMAIL,
+    accredType: CANARY_EMAIL_SHAPED,
+  }));
+
+  assert.equal(response.status, 409);
+  assert.deepEqual(resolveAssetCalls, [null]);
+  assert.equal(leads.length, 0);
+  assert.equal(notices.length, 0);
+  assert.equal(deliveries.length, 0);
+  assert.equal(diagnostics[0].code, 'unsupported_pack_selection');
+  assert.equal(diagnostics[0].meta.accredType, 'not_provided');
+  assertNoCanaries(diagnostics, await response.clone().json());
+});
+
+test('json-shaped accreditation text is bounded before logging or asset resolution', async () => {
+  const { handler, leads, notices, deliveries, diagnostics, resolveAssetCalls } = createHandler();
+
+  const response = await handler(request({
+    email: CANARY_EMAIL,
+    accredType: CANARY_JSON_SHAPED,
+  }));
+
+  assert.equal(response.status, 409);
+  assert.deepEqual(resolveAssetCalls, [null]);
+  assert.equal(leads.length, 0);
+  assert.equal(notices.length, 0);
+  assert.equal(deliveries.length, 0);
+  assert.equal(diagnostics[0].code, 'unsupported_pack_selection');
+  assert.equal(diagnostics[0].meta.accredType, 'not_provided');
+  assertNoCanaries(diagnostics, await response.clone().json());
+});
+
+test('malformed JSON request bodies fail closed without incorporating request content into diagnostics', async () => {
+  const { handler, leads, notices, deliveries, diagnostics } = createHandler();
+
+  const response = await handler(rawRequest(`{"email":"${CANARY_EMAIL}", "accredType": ${CANARY_SECRET}`));
+
+  assert.equal(response.status, 400);
+  assert.deepEqual(await response.json(), {
+    error: 'Invalid request',
+    code: 'invalid_request',
+  });
+  assert.equal(leads.length, 0);
+  assert.equal(notices.length, 0);
+  assert.equal(deliveries.length, 0);
+  assert.equal(diagnostics.length, 1);
+  assert.equal(diagnostics[0].code, 'invalid_request');
+  assert.equal('accredType' in diagnostics[0].meta, false);
+  assertNoCanaries(diagnostics);
+});
+
+test('unmapped-but-inherited property names (e.g. "constructor") do not resolve via prototype lookup', async () => {
+  // Uses the real resolveBundledAsset/resolvePersonnelPackAsset path (not the mock) to prove the
+  // lookup itself, not just the mock, fails closed for keys inherited from Object.prototype.
+  const { handler, leads, notices, deliveries, diagnostics } = createHandler({
+    resolveAsset: undefined,
+  });
+
+  const response = await handler(request({
+    email: CANARY_EMAIL,
+    accredType: 'constructor',
+  }));
+
+  assert.equal(response.status, 409);
+  assert.deepEqual(await response.json(), {
+    error: 'Automatic fulfillment is currently available only for the reviewed ISO 15189 pack.',
+    code: 'unsupported_pack_selection',
+  });
+  assert.equal(leads.length, 0);
+  assert.equal(notices.length, 0);
+  assert.equal(deliveries.length, 0);
+  assert.equal(diagnostics[0].code, 'unsupported_pack_selection');
+  assert.equal(diagnostics[0].meta.accredType, 'unsupported');
+});
+
+test('missing accreditation type is classified distinctly from an unsupported one', async () => {
+  const { handler, diagnostics } = createHandler();
+
+  const response = await handler(request({ email: CANARY_EMAIL }));
+
+  assert.equal(response.status, 409);
+  assert.equal(diagnostics[0].meta.accredType, 'not_provided');
+});
+
+test('a supported-but-mismatched selection is classified with its own known key, never raw text', async () => {
+  const { handler, diagnostics } = createHandler({
+    resolveAsset: async () => {
+      throw new Error('reviewed asset hash mismatch');
+    },
+  });
+
+  const response = await handler(request({
+    email: CANARY_EMAIL,
+    accredType: 'iso15189',
+  }));
+
+  assert.equal(response.status, 503);
+  assert.equal(diagnostics[0].code, 'asset_unavailable');
+  assert.equal(diagnostics[0].meta.accredType, 'iso15189');
+  assertNoCanaries(diagnostics);
+});
+
+test('every PERSONNEL_PACK_PUBLIC_ASSETS key stays reachable through normalization and lookup', () => {
+  assert.deepEqual(Object.keys(PERSONNEL_PACK_PUBLIC_ASSETS), ['iso15189']);
+});

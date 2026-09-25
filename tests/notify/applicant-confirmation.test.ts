@@ -1,182 +1,159 @@
 import { test, beforeEach, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
-import {
-  sendApplicantConfirmation,
-  sendApplicantConfirmationOutcome,
-} from '../../lib/notify';
+import { readFileSync } from 'node:fs';
+import path from 'node:path';
+import { NextRequest } from 'next/server';
+import { sendApplicantConfirmation } from '../../lib/notify';
+import { createWaitlistPostHandler, type WaitlistRecord } from '../../lib/waitlistHandler';
 
-// RESEND_API_KEY is read inside sendApplicantConfirmationOutcome at call
-// time, so setting it after the static import (hoisted) is safe.
-process.env.RESEND_API_KEY = 'test-key';
-
-interface MockCall {
-  url: string;
-  init: { body?: string } & Record<string, unknown>;
-}
-
-let calls: MockCall[] = [];
+// Mocked email transport: every Resend call is captured here and nothing leaves
+// the process. All addresses are synthetic (example.com / example.test).
+interface Sent { to: string[]; subject: string; from: string }
+let sent: Sent[] = [];
 let responses: Array<{ ok: boolean; status: number; body: string }> = [];
 const origFetch = globalThis.fetch;
-
-const APPLICANT_EMAIL = 'someone-secret@example.com';
+const origKey = process.env.RESEND_API_KEY;
 
 beforeEach(() => {
-  calls = [];
+  sent = [];
   responses = [];
-  (globalThis as unknown as { fetch: unknown }).fetch = async (
-    url: unknown,
-    init: MockCall['init'],
-  ) => {
-    calls.push({ url: String(url), init });
+  process.env.RESEND_API_KEY = 'synthetic-test-key';
+  (globalThis as unknown as { fetch: unknown }).fetch = async (url: unknown, init: { body?: string }) => {
+    assert.equal(String(url), 'https://api.resend.com/emails');
+    sent.push(JSON.parse(init.body ?? '{}'));
     const r = responses.shift() ?? { ok: true, status: 200, body: '{}' };
-    return {
-      ok: r.ok,
-      status: r.status,
-      text: async () => r.body,
-      json: async () => JSON.parse(r.body || '{}'),
-    };
+    return { ok: r.ok, status: r.status, text: async () => r.body };
   };
 });
 
 afterEach(() => {
-  (globalThis as unknown as { fetch: unknown }).fetch = origFetch;
+  globalThis.fetch = origFetch;
+  if (origKey === undefined) delete process.env.RESEND_API_KEY;
+  else process.env.RESEND_API_KEY = origKey;
 });
 
-test('outcome is sent after a successful provider response', async () => {
-  responses.push({ ok: true, status: 200, body: '{"id":"confirmation-ok"}' });
+const APPLICANT_SUBJECT = 'We got your LIMS Box application';
 
-  const outcome = await sendApplicantConfirmationOutcome(APPLICANT_EMAIL, 'Test Applicant');
+function setup(existing: string[] = [], overrides: { lookupFails?: boolean; saveFails?: boolean } = {}) {
+  const list = new Set(existing);
+  const records: WaitlistRecord[] = [];
+  let noticeLines: Array<[string, string | null | undefined]> = [];
+  const handler = createWaitlistPostHandler({
+    hasExistingSignup: async (email) => {
+      if (overrides.lookupFails) throw new Error('synthetic lookup outage');
+      return list.has(email);
+    },
+    createProspect: async (record) => {
+      if (overrides.saveFails) throw new Error('synthetic save outage');
+      records.push(record);
+      list.add(record.email);
+    },
+    sendSubmissionNotice: async (notice) => { noticeLines = notice.lines; },
+    sendApplicantConfirmation,
+    now: () => '2026-09-25T00:00:00.000Z',
+  });
+  const confirmationLine = () => noticeLines.find(([label]) => label === 'Applicant confirmation')?.[1];
+  return { handler, records, confirmationLine };
+}
 
-  assert.deepEqual(outcome, { status: 'sent' });
-  assert.equal(calls.length, 1);
-  const body = JSON.parse(String(calls[0].init.body));
-  assert.deepEqual(body.to, [APPLICANT_EMAIL]);
+function post(body: unknown) {
+  return new NextRequest('https://lims.bot/api/waitlist', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+}
+
+const applicantMail = () => sent.filter((m) => m.subject === APPLICANT_SUBJECT);
+
+test('a new signup gets exactly one confirmation, addressed only to that applicant', async () => {
+  const { handler, records, confirmationLine } = setup(['existing-1@example.com', 'existing-2@example.com']);
+  const res = await handler(post({ email: 'New.Person@Example.test', name: 'Synthetic Person' }));
+  assert.equal(res.status, 200);
+  assert.deepEqual(await res.json(), { success: true, saved: true });
+  assert.equal(records.length, 1);
+  assert.equal(applicantMail().length, 1);
+  assert.deepEqual(applicantMail()[0].to, ['new.person@example.test']);
+  assert.equal(confirmationLine(), 'sent');
 });
 
-test('outcome is not_configured without a provider call when RESEND_API_KEY is missing', async () => {
-  const previous = process.env.RESEND_API_KEY;
-  delete process.env.RESEND_API_KEY;
-  try {
-    const outcome = await sendApplicantConfirmationOutcome(APPLICANT_EMAIL, 'Test Applicant');
-    assert.equal(outcome.status, 'not_configured');
-    assert.equal(outcome.reason, 'Applicant confirmation delivery is not configured');
-    assert.equal(calls.length, 0);
-  } finally {
-    process.env.RESEND_API_KEY = previous;
+test('no backfill: existing list members are never emailed', async () => {
+  const existing = ['existing-1@example.com', 'existing-2@example.com', 'existing-3@example.com'];
+  const { handler } = setup(existing);
+  await handler(post({ email: 'brand-new@example.test' }));
+  const recipients = applicantMail().flatMap((m) => m.to);
+  for (const address of existing) assert.ok(!recipients.includes(address), address);
+  assert.deepEqual(recipients, ['brand-new@example.test']);
+});
+
+test('a repeat signup from an address already on the list sends no confirmation', async () => {
+  const { handler, confirmationLine } = setup(['existing-1@example.com']);
+  const res = await handler(post({ email: 'EXISTING-1@example.com' }));
+  assert.equal(res.status, 200);
+  assert.equal(applicantMail().length, 0);
+  assert.equal(confirmationLine(), 'skipped (already on the list)');
+});
+
+test('submitting twice emails the applicant once', async () => {
+  const { handler } = setup();
+  await handler(post({ email: 'twice@example.test' }));
+  await handler(post({ email: 'twice@example.test' }));
+  assert.equal(applicantMail().length, 1);
+});
+
+test('if the list cannot be checked, nothing is sent to the applicant', async () => {
+  const { handler, confirmationLine } = setup([], { lookupFails: true });
+  const res = await handler(post({ email: 'unknown@example.test' }));
+  assert.equal(res.status, 200);
+  assert.equal(applicantMail().length, 0);
+  assert.equal(confirmationLine(), 'skipped (could not check the list)');
+});
+
+test('if the signup is not saved, nothing is sent to the applicant', async () => {
+  const { handler, confirmationLine } = setup([], { saveFails: true });
+  const res = await handler(post({ email: 'unsaved@example.test' }));
+  assert.equal(res.status, 200);
+  assert.equal(applicantMail().length, 0);
+  assert.equal(confirmationLine(), 'skipped (signup not saved)');
+});
+
+test('an invalid email sends nothing at all', async () => {
+  const { handler } = setup();
+  const res = await handler(post({ email: 'not-an-email' }));
+  assert.equal(res.status, 400);
+  assert.equal(sent.length, 0);
+});
+
+test('delivery failures are reported to Hudson and never fail the signup', async () => {
+  const cases: Array<[{ ok: boolean; status: number; body: string } | 'no-key', string]> = [
+    [{ ok: false, status: 403, body: 'The lims.bot domain is not verified' }, 'blocked (domain not verified)'],
+    [{ ok: false, status: 422, body: 'provider detail that must not leak' }, 'failed (422)'],
+    ['no-key', 'not configured'],
+  ];
+  for (const [response, expected] of cases) {
+    const { handler, confirmationLine } = setup();
+    if (response === 'no-key') delete process.env.RESEND_API_KEY;
+    else responses.push(response);
+    const res = await handler(post({ email: `case-${expected.length}@example.test` }));
+    assert.equal(res.status, 200, expected);
+    const body = await res.json();
+    assert.deepEqual(body, { success: true, saved: true }, 'no delivery detail is returned to the browser');
+    assert.equal(confirmationLine(), expected);
+    process.env.RESEND_API_KEY = 'synthetic-test-key';
   }
 });
 
-test('outcome is blocked_domain_unverified on a 403 domain-not-verified response', async () => {
-  responses.push({ ok: false, status: 403, body: 'The lims.bot domain is not verified' });
-
-  const outcome = await sendApplicantConfirmationOutcome(APPLICANT_EMAIL, 'Test Applicant');
-
-  assert.equal(outcome.status, 'blocked_domain_unverified');
-  assert.equal(outcome.httpStatus, 403);
-  assert.equal(calls.length, 1, 'applicant mail has no fallback path — only the original attempt');
+test('applicant mail never uses the shared fallback sender', async () => {
+  const { handler } = setup();
+  responses.push({ ok: false, status: 403, body: 'domain is not verified' });
+  await handler(post({ email: 'fallback-check@example.test' }));
+  assert.ok(sent.every((m) => !m.from.includes('onboarding@resend.dev') || m.subject !== APPLICANT_SUBJECT));
+  assert.equal(applicantMail().length, 1, 'one attempt, no retry to another address');
 });
 
-test('outcome is failed with httpStatus on other provider errors', async () => {
-  responses.push({ ok: false, status: 422, body: 'Invalid recipient' });
-
-  const outcome = await sendApplicantConfirmationOutcome(APPLICANT_EMAIL, 'Test Applicant');
-
-  assert.equal(outcome.status, 'failed');
-  assert.equal(outcome.httpStatus, 422);
-  assert.equal(calls.length, 1);
-});
-
-test('outcome is failed without throwing when fetch itself rejects', async () => {
-  (globalThis as unknown as { fetch: unknown }).fetch = async () => {
-    throw new Error('network down');
-  };
-
-  const outcome = await sendApplicantConfirmationOutcome(APPLICANT_EMAIL, 'Test Applicant');
-
-  assert.equal(outcome.status, 'failed');
-  assert.equal(outcome.reason, 'Applicant confirmation delivery failed (unexpected error)');
-});
-
-test('a secret in a thrown provider error never reaches the outcome, the wrapper rejection, or logs', async () => {
-  const CANARY = 'SECRET-CANARY-9f3a1c7e';
-  (globalThis as unknown as { fetch: unknown }).fetch = async () => {
-    throw new Error(`connection reset: leaked-credential=${CANARY}`);
-  };
-
-  const origLog = console.log;
-  const origError = console.error;
-  const logged: string[] = [];
-  console.log = (...args: unknown[]) => { logged.push(args.map(String).join(' ')); };
-  console.error = (...args: unknown[]) => { logged.push(args.map(String).join(' ')); };
-
-  let outcome: Awaited<ReturnType<typeof sendApplicantConfirmationOutcome>>;
-  try {
-    outcome = await sendApplicantConfirmationOutcome(APPLICANT_EMAIL, 'Test Applicant');
-
-    assert.equal(outcome.status, 'failed');
-    assert.equal(outcome.reason, 'Applicant confirmation delivery failed (unexpected error)');
-    assert.equal(JSON.stringify(outcome).includes(CANARY), false, 'canary leaked into outcome');
-
-    await assert.rejects(
-      sendApplicantConfirmation(APPLICANT_EMAIL, 'Test Applicant'),
-      (err: unknown) => {
-        assert.ok(err instanceof Error);
-        assert.equal(err.message.includes(CANARY), false, 'canary leaked into thrown wrapper error');
-        return true;
-      },
-    );
-  } finally {
-    console.log = origLog;
-    console.error = origError;
-  }
-
-  for (const line of logged) {
-    assert.equal(line.includes(CANARY), false, `canary leaked into logs: ${line}`);
-  }
-});
-
-test('outcome never logs the full applicant address', async () => {
-  responses.push({ ok: false, status: 422, body: 'Invalid recipient' });
-  const origLog = console.log;
-  const origError = console.error;
-  const logged: string[] = [];
-  console.log = (...args: unknown[]) => { logged.push(args.map(String).join(' ')); };
-  console.error = (...args: unknown[]) => { logged.push(args.map(String).join(' ')); };
-  try {
-    await sendApplicantConfirmationOutcome(APPLICANT_EMAIL, 'Test Applicant');
-  } finally {
-    console.log = origLog;
-    console.error = origError;
-  }
-  for (const line of logged) {
-    assert.equal(line.includes(APPLICANT_EMAIL), false, `log line leaked full address: ${line}`);
-  }
-});
-
-test('sendApplicantConfirmation resolves when the outcome is sent', async () => {
-  responses.push({ ok: true, status: 200, body: '{"id":"confirmation-ok"}' });
-  await sendApplicantConfirmation(APPLICANT_EMAIL, 'Test Applicant');
-  assert.equal(calls.length, 1);
-});
-
-test('sendApplicantConfirmation rejects when the outcome is not sent', async () => {
-  responses.push({ ok: false, status: 422, body: 'Invalid recipient' });
-  await assert.rejects(
-    sendApplicantConfirmation(APPLICANT_EMAIL, 'Test Applicant'),
-    /Applicant confirmation delivery failed \(422\)/,
-  );
-});
-
-test('sendApplicantConfirmation rejects with the not_configured reason', async () => {
-  const previous = process.env.RESEND_API_KEY;
-  delete process.env.RESEND_API_KEY;
-  try {
-    await assert.rejects(
-      sendApplicantConfirmation(APPLICANT_EMAIL, 'Test Applicant'),
-      /Applicant confirmation delivery is not configured/,
-    );
-    assert.equal(calls.length, 0);
-  } finally {
-    process.env.RESEND_API_KEY = previous;
+test('no bulk path: the waitlist code never reads the whole prospect list', () => {
+  for (const file of ['lib/waitlistHandler.ts', 'app/api/waitlist/route.ts']) {
+    const source = readFileSync(path.join(process.cwd(), file), 'utf8');
+    assert.doesNotMatch(source, /findMany|\$queryRaw|\$executeRaw/, file);
   }
 });

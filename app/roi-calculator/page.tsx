@@ -3,76 +3,7 @@
 import Link from 'next/link';
 import { useState } from 'react';
 import { FlaskConical, ArrowRight, Calculator, DollarSign, Clock, TrendingDown } from 'lucide-react';
-
-type CurrentTool = 'excel' | 'paper' | 'other-lims';
-
-function calculateROI(samplesPerMonth: number, staffCount: number, currentTool: CurrentTool) {
-  // Time per sample (minutes) by current tool
-  const timePerSample: Record<CurrentTool, number> = {
-    'excel': 12,
-    'paper': 18,
-    'other-lims': 6,
-  };
-
-  // LIMS BOX time per sample (minutes)
-  const limsBoxTimePerSample = 4;
-
-  // Error rates (% of samples with data entry errors)
-  const errorRates: Record<CurrentTool, number> = {
-    'excel': 3.5,
-    'paper': 6.0,
-    'other-lims': 1.5,
-  };
-  const limsBoxErrorRate = 0.2;
-
-  // Monthly reporting hours by tool
-  const reportingHoursPerBatch: Record<CurrentTool, number> = {
-    'excel': 3,
-    'paper': 4.5,
-    'other-lims': 1.5,
-  };
-  const limsBoxReportingHoursPerBatch = 0.25;
-  const batchesPerMonth = Math.ceil(samplesPerMonth / 20);
-
-  // Calculations
-  const currentMinutesPerMonth = samplesPerMonth * timePerSample[currentTool];
-  const limsBoxMinutesPerMonth = samplesPerMonth * limsBoxTimePerSample;
-  const dataMgmtHoursSaved = Math.round((currentMinutesPerMonth - limsBoxMinutesPerMonth) / 60);
-
-  const currentReportingHours = batchesPerMonth * reportingHoursPerBatch[currentTool];
-  const limsBoxReportingHours = batchesPerMonth * limsBoxReportingHoursPerBatch;
-  const reportingHoursSaved = Math.round(currentReportingHours - limsBoxReportingHours);
-
-  const totalHoursSaved = dataMgmtHoursSaved + reportingHoursSaved;
-
-  const errorReduction = Math.round(((errorRates[currentTool] - limsBoxErrorRate) / errorRates[currentTool]) * 100);
-
-  // Cost calculation (avg lab tech rate $35/hr)
-  const hourlyRate = 35;
-  const monthlySavings = totalHoursSaved * hourlyRate;
-
-  // Current tool cost estimate
-  const currentToolCost: Record<CurrentTool, number> = {
-    'excel': 0,
-    'paper': 50,
-    'other-lims': 2500,
-  };
-
-  const limsBoxCost = staffCount <= 3 ? 500 : staffCount <= 10 ? 1200 : 2500;
-  const netMonthlySavings = monthlySavings - limsBoxCost + currentToolCost[currentTool];
-
-  return {
-    totalHoursSaved,
-    dataMgmtHoursSaved,
-    reportingHoursSaved,
-    errorReduction,
-    monthlySavings,
-    limsBoxCost,
-    netMonthlySavings,
-    currentToolCost: currentToolCost[currentTool],
-    annualSavings: netMonthlySavings * 12,
-  };
-}
+import { calculateROI, formatNetSavings, type CurrentTool } from '@/lib/roi-calculator';
 
 export default function ROICalculatorPage() {
   const [samples, setSamples] = useState(200);
@@ -80,6 +11,8 @@ export default function ROICalculatorPage() {
   const [tool, setTool] = useState<CurrentTool>('excel');
 
   const roi = calculateROI(samples, staff, tool);
+  const netMonthly = formatNetSavings(roi.netMonthlySavings);
+  const netAnnual = formatNetSavings(roi.annualSavings);
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] dark:bg-[#0F172A]">
@@ -141,16 +74,18 @@ export default function ROICalculatorPage() {
 
             <div className="space-y-6">
               <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                <label htmlFor="roi-samples" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
                   Samples per month
                 </label>
                 <input
+                  id="roi-samples"
                   type="range"
                   min={50}
                   max={2000}
                   step={50}
                   value={samples}
                   onChange={e => setSamples(Number(e.target.value))}
+                  aria-valuetext={`${samples} samples per month`}
                   className="w-full accent-[#0D9488]"
                 />
                 <div className="flex justify-between text-sm mt-1">
@@ -161,16 +96,18 @@ export default function ROICalculatorPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                <label htmlFor="roi-staff" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
                   Number of staff
                 </label>
                 <input
+                  id="roi-staff"
                   type="range"
                   min={1}
                   max={50}
                   step={1}
                   value={staff}
                   onChange={e => setStaff(Number(e.target.value))}
+                  aria-valuetext={`${staff} staff`}
                   className="w-full accent-[#0D9488]"
                 />
                 <div className="flex justify-between text-sm mt-1">
@@ -181,10 +118,10 @@ export default function ROICalculatorPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                <label id="roi-tool-label" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
                   Current tool
                 </label>
-                <div className="grid grid-cols-3 gap-2">
+                <div className="grid grid-cols-3 gap-2" role="group" aria-labelledby="roi-tool-label">
                   {([
                     { id: 'excel' as const, label: 'Excel / Sheets' },
                     { id: 'paper' as const, label: 'Paper / Manual' },
@@ -192,7 +129,9 @@ export default function ROICalculatorPage() {
                   ]).map(opt => (
                     <button
                       key={opt.id}
+                      type="button"
                       onClick={() => setTool(opt.id)}
+                      aria-pressed={tool === opt.id}
                       className={`py-2.5 px-3 rounded-lg text-sm font-medium transition-colors border ${
                         tool === opt.id
                           ? 'bg-lab-teal text-white border-lab-teal'
@@ -208,7 +147,7 @@ export default function ROICalculatorPage() {
           </div>
 
           {/* Results */}
-          <div className="space-y-4">
+          <div className="space-y-4" aria-live="polite">
             <div className="bg-white dark:bg-white/5 rounded-2xl border border-black/5 dark:border-white/10 p-6 md:p-8">
               <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-6">Your estimated savings</h2>
 
@@ -239,16 +178,23 @@ export default function ROICalculatorPage() {
                   <div className="flex items-center gap-3">
                     <DollarSign className="w-5 h-5 text-blue-600" />
                     <div>
-                      <p className="text-sm font-medium text-slate-900 dark:text-white">Net monthly savings</p>
+                      <p className="text-sm font-medium text-slate-900 dark:text-white">
+                        {netMonthly.negative ? 'Net monthly cost' : 'Net monthly savings'}
+                      </p>
                       <p className="text-xs text-slate-500">Labor savings minus LIMS BOX cost</p>
                     </div>
                   </div>
-                  <p className={`text-2xl font-bold ${roi.netMonthlySavings >= 0 ? 'text-blue-600' : 'text-red-500'}`}>
-                    ${Math.abs(roi.netMonthlySavings).toLocaleString()}
-                    {roi.netMonthlySavings < 0 ? '*' : ''}
+                  <p className={`text-2xl font-bold ${netMonthly.negative ? 'text-red-500' : 'text-blue-600'}`}>
+                    {netMonthly.text}
                   </p>
                 </div>
               </div>
+
+              {netMonthly.negative && (
+                <p className="text-sm text-slate-600 dark:text-slate-300 mt-4">
+                  At this size LIMS BOX would cost more than the time it saves. It pays off at higher sample volumes - try the slider, or talk to us.
+                </p>
+              )}
             </div>
 
             {/* Breakdown */}
@@ -278,9 +224,9 @@ export default function ROICalculatorPage() {
                   <span className="font-medium text-red-500">-${roi.limsBoxCost.toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between pt-2 border-t border-slate-100 dark:border-white/10 font-semibold text-slate-900 dark:text-white">
-                  <span>Annual net savings</span>
-                  <span className={roi.annualSavings >= 0 ? 'text-green-600' : 'text-red-500'}>
-                    ${Math.abs(roi.annualSavings).toLocaleString()}/yr
+                  <span>{netAnnual.negative ? 'Annual net cost' : 'Annual net savings'}</span>
+                  <span className={netAnnual.negative ? 'text-red-500' : 'text-green-600'}>
+                    {netAnnual.text}/yr
                   </span>
                 </div>
               </div>

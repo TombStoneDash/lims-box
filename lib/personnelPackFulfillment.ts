@@ -1,3 +1,4 @@
+import type { DeliveryResult } from './notify';
 import { createHash, randomUUID } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
@@ -48,7 +49,7 @@ export interface PersonnelPackDelivery {
 
 export interface PersonnelPackDependencies {
   createLead: (record: PersonnelPackRecord) => Promise<void>;
-  sendSubmissionNotice: (notice: SubmissionNotice) => Promise<void>;
+  sendSubmissionNotice: (notice: SubmissionNotice) => Promise<void | DeliveryResult>;
   sendApplicantDelivery: (email: string, delivery: PersonnelPackDelivery) => Promise<void>;
   resolveAsset?: (accredType: string | null, origin: string) => Promise<PersonnelPackDelivery | null>;
   logDiagnostic?: (code: string, meta: Record<string, unknown>) => void;
@@ -60,14 +61,34 @@ function defaultLogDiagnostic(code: string, meta: Record<string, unknown>) {
   console.error('[personnel-pack-download]', code, JSON.stringify(meta));
 }
 
+/** Accreditation type selections are short fixed tokens (e.g. "iso15189"), never free text. */
+const ACCRED_TYPE_MAX_LENGTH = 64;
+const ACCRED_TYPE_PATTERN = /^[a-z0-9][a-z0-9-]*$/;
+
 function normalizeAccredType(value: unknown): string | null {
   if (typeof value !== 'string') return null;
-  const normalized = value.trim().toLowerCase();
-  return normalized.length > 0 ? normalized : null;
+  const trimmed = value.trim();
+  if (trimmed.length === 0 || trimmed.length > ACCRED_TYPE_MAX_LENGTH) return null;
+  const normalized = trimmed.toLowerCase();
+  if (!ACCRED_TYPE_PATTERN.test(normalized)) return null;
+  return normalized;
+}
+
+/**
+ * Fixed, privacy-safe classification for diagnostics: either a known supported asset key
+ * or one of two fixed sentinels. Never echoes applicant-supplied text, so a request cannot
+ * use the accreditation-type field to smuggle arbitrary content into logs.
+ */
+function classifyAccredTypeForDiagnostics(accredType: string | null): string {
+  if (accredType === null) return 'not_provided';
+  return Object.prototype.hasOwnProperty.call(PERSONNEL_PACK_PUBLIC_ASSETS, accredType)
+    ? accredType
+    : 'unsupported';
 }
 
 export function resolvePersonnelPackAsset(accredType: string | null): PersonnelPackAsset | null {
   if (!accredType) return null;
+  if (!Object.prototype.hasOwnProperty.call(PERSONNEL_PACK_PUBLIC_ASSETS, accredType)) return null;
   return PERSONNEL_PACK_PUBLIC_ASSETS[accredType] ?? null;
 }
 
@@ -145,12 +166,11 @@ export function createPersonnelPackPostHandler(dependencies: PersonnelPackDepend
       let delivery: PersonnelPackDelivery | null;
       try {
         delivery = await resolveAsset(accredType, request.nextUrl.origin);
-      } catch (error) {
+      } catch {
         logDiagnostic('asset_unavailable', {
           requestId,
-          accredType,
+          accredType: classifyAccredTypeForDiagnostics(accredType),
           stage: 'asset-selection',
-          error: error instanceof Error ? error.message : String(error),
         });
         return failure(
           503,
@@ -162,7 +182,7 @@ export function createPersonnelPackPostHandler(dependencies: PersonnelPackDepend
       if (!delivery) {
         logDiagnostic('unsupported_pack_selection', {
           requestId,
-          accredType,
+          accredType: classifyAccredTypeForDiagnostics(accredType),
           stage: 'asset-selection',
         });
         return failure(
@@ -178,12 +198,11 @@ export function createPersonnelPackPostHandler(dependencies: PersonnelPackDepend
           accred_type: accredType,
           source: 'personnel-pack-download',
         });
-      } catch (error) {
+      } catch {
         logDiagnostic('lead_store_failed', {
           requestId,
-          accredType,
+          accredType: classifyAccredTypeForDiagnostics(accredType),
           stage: 'lead-store',
-          error: error instanceof Error ? error.message : String(error),
         });
         return failure(
           503,
@@ -192,41 +211,36 @@ export function createPersonnelPackPostHandler(dependencies: PersonnelPackDepend
         );
       }
 
+      // Internal alert delivery must not gate applicant fulfillment: the lead is
+      // already persisted and the PDF has passed integrity verification.
       try {
         await dependencies.sendSubmissionNotice({
           subject: `New Personnel Pack lead — ${delivery.label}`,
           lines: [
             ['Email', normalizedEmail],
             ['Accreditation type', accredType ?? 'not provided'],
-            ['Pack delivered', delivery.label],
+            ['Pack available', delivery.label],
             ['Pack URL', delivery.assetUrl],
             ['Source', 'lims.bot/personnel-pack'],
             ['Received', (dependencies.now ?? (() => new Date().toISOString()))()],
           ],
         });
-      } catch (error) {
+      } catch {
         logDiagnostic('operator_notice_failed', {
           requestId,
-          accredType,
+          accredType: classifyAccredTypeForDiagnostics(accredType),
           stage: 'operator-notice',
-          error: error instanceof Error ? error.message : String(error),
         });
-        return failure(
-          503,
-          'Automatic fulfillment is temporarily unavailable. Email info@lims.bot directly.',
-          'operator_notice_failed',
-        );
       }
 
       try {
         await dependencies.sendApplicantDelivery(normalizedEmail, delivery);
         delivery = { ...delivery, emailed: true };
-      } catch (error) {
+      } catch {
         logDiagnostic('applicant_delivery_failed', {
           requestId,
-          accredType,
+          accredType: classifyAccredTypeForDiagnostics(accredType),
           stage: 'applicant-delivery',
-          error: error instanceof Error ? error.message : String(error),
         });
       }
 
@@ -235,13 +249,155 @@ export function createPersonnelPackPostHandler(dependencies: PersonnelPackDepend
         saved: true,
         delivery,
       });
-    } catch (error) {
+    } catch {
       logDiagnostic('invalid_request', {
         requestId,
         stage: 'request-parse',
-        error: error instanceof Error ? error.message : String(error),
       });
       return failure(400, 'Invalid request', 'invalid_request');
     }
   };
+}
+
+/**
+ * Explicit lifecycle for a single Personnel Pack fulfillment request, tracked independently
+ * of the HTTP handler above. This store never sends email or calls a provider — it only
+ * records which state a request is in, so callers can decide whether a duplicate request
+ * should re-attempt side effects, retry, or be blocked outright.
+ *
+ * `pending` and `retryable-failure` both permit another attempt (retry-able, including the
+ * first try); `fulfilled` and `terminal-failure` are absorbing — once reached, a duplicate
+ * request is a no-op rather than a re-send or a second attempt.
+ */
+export type PersonnelPackFulfillmentState = 'pending' | 'fulfilled' | 'retryable-failure' | 'terminal-failure';
+
+export interface PersonnelPackFulfillmentRecord {
+  readonly state: PersonnelPackFulfillmentState;
+  readonly attempts: number;
+  readonly reason: string | null;
+  readonly updatedAt: string;
+}
+
+export interface PersonnelPackFulfillmentAttempt {
+  /** False when the key is already fulfilled, already in flight, or terminally failed. */
+  readonly allowed: boolean;
+  readonly record: PersonnelPackFulfillmentRecord;
+}
+
+export interface PersonnelPackFulfillmentStateStore {
+  get(key: string): PersonnelPackFulfillmentRecord | undefined;
+  beginAttempt(key: string): PersonnelPackFulfillmentAttempt;
+  markFulfilled(key: string): PersonnelPackFulfillmentRecord;
+  markRetryableFailure(key: string, reason: unknown): PersonnelPackFulfillmentRecord;
+  markTerminalFailure(key: string, reason: unknown): PersonnelPackFulfillmentRecord;
+}
+
+/** Stable key for deduplicating repeated fulfillment requests for the same applicant + pack selection. */
+export function buildPersonnelPackFulfillmentKey(email: string, accredType: string | null): string {
+  return `${email.trim().toLowerCase()}::${accredType ?? 'unspecified'}`;
+}
+
+const FAILURE_REASON_MAX_LENGTH = 64;
+const FAILURE_REASON_PATTERN = /^[a-z0-9][a-z0-9_-]*$/;
+
+/**
+ * Failure reasons are reduced to a fixed, safe code, matching the diagnostic-redaction
+ * contract elsewhere in this file. Raw caught-error text, stack traces, and control bytes
+ * are never accepted as a reason; anything that is not already a clean fixed token becomes
+ * the 'unknown' sentinel instead of being stored verbatim.
+ */
+function sanitizeFailureReason(reason: unknown): string {
+  if (typeof reason !== 'string') return 'unknown';
+  const trimmed = reason.trim().toLowerCase();
+  if (trimmed.length === 0 || trimmed.length > FAILURE_REASON_MAX_LENGTH) return 'unknown';
+  if (!FAILURE_REASON_PATTERN.test(trimmed)) return 'unknown';
+  return trimmed;
+}
+
+function requirePersonnelPackFulfillmentRecord(
+  records: Map<string, PersonnelPackFulfillmentRecord>,
+  key: string,
+): PersonnelPackFulfillmentRecord {
+  const record = records.get(key);
+  if (!record) {
+    throw new Error('Cannot transition a Personnel Pack fulfillment key before beginAttempt() has started it');
+  }
+  return record;
+}
+
+/** In-memory, dependency-free state machine for idempotent Personnel Pack fulfillment attempts. */
+export function createPersonnelPackFulfillmentStateStore(
+  now: () => string = () => new Date().toISOString(),
+): PersonnelPackFulfillmentStateStore {
+  const records = new Map<string, PersonnelPackFulfillmentRecord>();
+
+  function get(key: string) {
+    return records.get(key);
+  }
+
+  function beginAttempt(key: string): PersonnelPackFulfillmentAttempt {
+    const existing = records.get(key);
+    if (existing && existing.state !== 'retryable-failure') {
+      // Already fulfilled, already in flight, or terminally failed: a duplicate request
+      // must not re-trigger fulfillment, so report the unchanged record as-is.
+      return { allowed: false, record: existing };
+    }
+    const record: PersonnelPackFulfillmentRecord = {
+      state: 'pending',
+      attempts: (existing?.attempts ?? 0) + 1,
+      reason: null,
+      updatedAt: now(),
+    };
+    records.set(key, record);
+    return { allowed: true, record };
+  }
+
+  function markFulfilled(key: string): PersonnelPackFulfillmentRecord {
+    const existing = requirePersonnelPackFulfillmentRecord(records, key);
+    if (existing.state === 'fulfilled') return existing;
+    if (existing.state !== 'pending') {
+      throw new Error(`Cannot mark Personnel Pack fulfillment key as fulfilled from state "${existing.state}"`);
+    }
+    const record: PersonnelPackFulfillmentRecord = {
+      state: 'fulfilled',
+      attempts: existing.attempts,
+      reason: null,
+      updatedAt: now(),
+    };
+    records.set(key, record);
+    return record;
+  }
+
+  function markRetryableFailure(key: string, reason: unknown): PersonnelPackFulfillmentRecord {
+    const existing = requirePersonnelPackFulfillmentRecord(records, key);
+    if (existing.state !== 'pending') {
+      throw new Error(`Cannot mark Personnel Pack fulfillment key as retryable-failure from state "${existing.state}"`);
+    }
+    const record: PersonnelPackFulfillmentRecord = {
+      state: 'retryable-failure',
+      attempts: existing.attempts,
+      reason: sanitizeFailureReason(reason),
+      updatedAt: now(),
+    };
+    records.set(key, record);
+    return record;
+  }
+
+  function markTerminalFailure(key: string, reason: unknown): PersonnelPackFulfillmentRecord {
+    const existing = requirePersonnelPackFulfillmentRecord(records, key);
+    if (existing.state === 'terminal-failure') return existing;
+    if (existing.state !== 'pending') {
+      throw new Error(`Cannot mark Personnel Pack fulfillment key as terminal-failure from state "${existing.state}"`);
+    }
+    const record: PersonnelPackFulfillmentRecord = {
+      state: 'terminal-failure',
+      attempts: existing.attempts,
+      reason: sanitizeFailureReason(reason),
+      updatedAt: now(),
+    };
+    records.set(key, record);
+    return record;
+  }
+
+  return { get, beginAttempt, markFulfilled, markRetryableFailure, markTerminalFailure };
 }

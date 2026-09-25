@@ -1,15 +1,10 @@
 'use client';
 
-import { useState } from 'react';
 import Link from 'next/link';
-import { FlaskConical, ChevronDown } from 'lucide-react';
+import { FlaskConical } from 'lucide-react';
 import { WaitlistFooter } from '@/components/WaitlistFooter';
 
-interface FAQ {
-  question: string;
-  answer: string;
-  category: string;
-}
+import { FAQItem, type FAQ } from './faq-item';
 
 const faqs: FAQ[] = [
   {
@@ -103,29 +98,6 @@ const faqJsonLd = {
     },
   })),
 };
-
-function FAQItem({ faq }: { faq: FAQ }) {
-  const [open, setOpen] = useState(false);
-
-  return (
-    <div className="border-b border-black/5 dark:border-white/5">
-      <button
-        onClick={() => setOpen(!open)}
-        className="w-full flex items-start justify-between py-5 text-left"
-      >
-        <span className="font-medium text-slate-900 dark:text-white pr-4 text-sm">{faq.question}</span>
-        <ChevronDown
-          className={`w-5 h-5 text-slate-400 shrink-0 transition-transform ${open ? 'rotate-180' : ''}`}
-        />
-      </button>
-      {open && (
-        <div className="pb-5 text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
-          {faq.answer}
-        </div>
-      )}
-    </div>
-  );
-}
 
 export default function FAQPage() {
   return (
