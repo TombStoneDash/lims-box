@@ -20,6 +20,10 @@ function slugify(value: string): string {
     .replace(/^-+|-+$/g, '');
 }
 
+function formatRunDate(iso: string): string {
+  return new Date(`${iso}T00:00:00Z`).toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' });
+}
+
 function LeveyJenningsChart({ analyte, evaluation }: { analyte: QCAnalyte; evaluation: QCAnalyteEvaluation }) {
   const { runs, mean, sd, name, unit } = analyte;
   const badge = STATUS_BADGE[evaluation.status];
@@ -106,20 +110,19 @@ function LeveyJenningsChart({ analyte, evaluation }: { analyte: QCAnalyte; evalu
         ))}
 
         {/* X axis labels (every 15 days) */}
-        {runs.filter((_, i) => i % 15 === 0).map((r, _, arr) => {
-          const idx = runs.indexOf(r);
-          return (
-            <text key={r.date} x={toX(idx)} y={h - 5} textAnchor="middle" className="text-[9px]" fill="#94a3b8">
-              {new Date(r.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' })}
-            </text>
-          );
-        })}
+        {runs.map((_, i) => i).filter((i) => i % 15 === 0).map((i) => (
+          <text key={`tick-${i}`} x={toX(i)} y={h - 5} textAnchor="middle" className="text-[9px]" fill="#94a3b8">
+            {formatRunDate(runs[i].date)}
+          </text>
+        ))}
       </svg>
       <div className="flex gap-6 mt-2 text-xs text-slate-500">
         <span>Mean: {mean} {unit}</span>
         <span>SD: {sd} {unit}</span>
         <span>N: {runs.length} runs</span>
-        <span>Period: Jan 14 – Apr 13, 2026</span>
+        {runs.length > 0 && (
+          <span>Period: {formatRunDate(runs[0].date)} - {formatRunDate(runs[runs.length - 1].date)}, {runs[runs.length - 1].date.slice(0, 4)}</span>
+        )}
       </div>
     </div>
   );
@@ -153,7 +156,7 @@ export default function QCChartsPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">QC Control Charts</h1>
-          <p className="text-sm text-slate-500 mt-1">Levey-Jennings plots — 90-day trending</p>
+          <p className="text-sm text-slate-500 mt-1">Levey-Jennings plots - synthetic control data, {allQCData[0]?.runs.length ?? 0} runs per analyte</p>
         </div>
         <div className="flex items-center gap-3">
           <label htmlFor="qc-analyte-filter" className="sr-only">
