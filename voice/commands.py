@@ -66,15 +66,20 @@ session = SessionContext()
 def parse_command(text: str) -> Optional[Tuple[str, tuple]]:
     """Parse transcribed text into (command_name, args).
 
-    Returns None if no pattern matches.
+    Returns None unless the whole utterance is an affirmative command.
     """
-    cleaned = text.lower().strip()
-    # Remove filler words that whisper sometimes adds
-    cleaned = re.sub(r"\b(um|uh|like|please|okay|so)\b", "", cleaned).strip()
-    cleaned = re.sub(r"\s{2,}", " ", cleaned)
+    cleaned = text.strip()
+    # Only standalone leading fillers are optional; never edit argument words.
+    cleaned = re.sub(
+        r"^(?:(?:um|uh|like|please|okay|so)(?:\s+|,\s*))+",
+        "",
+        cleaned,
+        flags=re.IGNORECASE,
+    )
+    cleaned = cleaned.rstrip(".!?").rstrip()
 
     for pattern, cmd_name in PATTERNS:
-        match = re.search(pattern, cleaned)
+        match = re.fullmatch(pattern, cleaned, flags=re.IGNORECASE)
         if match:
             return cmd_name, match.groups()
 
@@ -111,8 +116,10 @@ def _handle_log_sample(args: tuple, client: SenaiteClient) -> str:
 
     result = client.create_sample(sample_id)
     uid = result.get("uid") if isinstance(result, dict) else None
+    if not isinstance(uid, str) or not uid.strip():
+        return f"Creation of sample {sample_id} could not be confirmed."
     session.set_sample(sample_id, uid)
-    return f"Sample {sample_id} has been logged. Holding time tracking started."
+    return f"Sample {sample_id} has been logged."
 
 
 def _handle_start_test(args: tuple, client: SenaiteClient) -> str:
@@ -134,16 +141,18 @@ def _handle_start_test(args: tuple, client: SenaiteClient) -> str:
             return f"Test '{test_name}' is not configured on sample {session.current_sample_id}."
 
         analysis = items[0]
-        current_state = analysis.get("review_state", "")
+        current_state = analysis.get("review_state") or "unknown"
         if current_state in ("verified", "published"):
             return f"Test {test_name} is already {current_state}."
 
-        return f"Test {test_name} started on sample {session.current_sample_id}. Awaiting results."
+        return (
+            f"Test {test_name} found on sample {session.current_sample_id}. "
+            f"Observed state: {current_state}. No workflow change was made."
+        )
 
     except Exception as e:
         logger.warning(f"Could not look up test '{test_name}': {e}")
-        # Still provide feedback even if lookup fails
-        return f"Test {test_name} noted for sample {session.current_sample_id}. Awaiting results."
+        return f"Could not look up test '{test_name}' on sample {session.current_sample_id}. Please try again."
 
 
 def _handle_record_result(args: tuple, client: SenaiteClient) -> str:
@@ -220,8 +229,8 @@ def _normalize_sample_id(raw: str) -> str:
     Common whisper artifacts: 'SA dash 2026 dash 0 0 1' -> 'SA-2026-001'
     """
     text = raw.strip()
-    # Collapse spoken "dash" to actual dashes
-    text = re.sub(r"\s*dash\s*", "-", text, flags=re.IGNORECASE)
+    # Replace standalone spoken "dash", preserving literal identifier tokens.
+    text = re.sub(r"(?<!\S)dash(?!\S)", "-", text, flags=re.IGNORECASE)
     # Remove spaces around hyphens
     text = re.sub(r"\s*-\s*", "-", text)
     # Remove remaining spaces within the ID (e.g., "S A" -> "SA")

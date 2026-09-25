@@ -31,18 +31,26 @@ async function readBoundedBody(request: NextRequest): Promise<string | null> {
   let bytesRead = 0;
   let body = '';
 
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    bytesRead += value.byteLength;
-    if (bytesRead > DEMO_MAX_REQUEST_BYTES) {
-      await reader.cancel();
-      return null;
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      bytesRead += value.byteLength;
+      if (bytesRead > DEMO_MAX_REQUEST_BYTES) {
+        try {
+          await reader.cancel();
+        } catch {
+          // Cancellation failure must not replace the oversized-body response.
+        }
+        return null;
+      }
+      body += decoder.decode(value, { stream: true });
     }
-    body += decoder.decode(value, { stream: true });
-  }
 
-  return body + decoder.decode();
+    return body + decoder.decode();
+  } finally {
+    reader.releaseLock();
+  }
 }
 
 export async function POST(request: NextRequest) {
@@ -51,7 +59,12 @@ export async function POST(request: NextRequest) {
     return jsonError('Content-Type must be application/json.', 415);
   }
 
-  const rawBody = await readBoundedBody(request);
+  let rawBody: string | null;
+  try {
+    rawBody = await readBoundedBody(request);
+  } catch {
+    return jsonError('Unable to read request body.', 400);
+  }
   if (rawBody === null) {
     return jsonError(`Request body exceeds ${DEMO_MAX_REQUEST_BYTES} bytes.`, 413);
   }

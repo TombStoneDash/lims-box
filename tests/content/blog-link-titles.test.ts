@@ -22,16 +22,18 @@ function render(t: TestContext, markdown: string, slug = 'fixture'): string {
   return post.content;
 }
 
+// Main wraps inline-starting blocks in a paragraph (see lib/blog.ts blockStart).
+const paragraph = (inner: string) => `<p class="my-4 leading-relaxed">${inner}</p>`;
 const link = (href: string, label: string, title?: string) => `<a href="${href}"${title === undefined ? '' : ` title="${title}"`} class="text-lab-teal hover:text-lab-blue underline transition-colors">${label}</a>`;
 
 test('keeps plain destinations and separates double- and single-quoted titles', (t) => {
   const html = render(t, `[Plain](/plain) [Guide](https://example.com/guide "Lab guide") [Next](/next 'Next guide') [Empty](/empty "")`);
-  assert.equal(html, [link('/plain', 'Plain'), link('https://example.com/guide', 'Guide', 'Lab guide'), link('/next', 'Next', 'Next guide'), link('/empty', 'Empty', '')].join(' '));
+  assert.equal(html, paragraph([link('/plain', 'Plain'), link('https://example.com/guide', 'Guide', 'Lab guide'), link('/next', 'Next', 'Next guide'), link('/empty', 'Empty', '')].join(' ')));
 });
 
 test('escapes destination and title attributes, including ampersands and escaped quotes', (t) => {
   const html = render(t, String.raw`[Guide](/guide?q=\"lab\"&tag=<sample> "Lab \"guide\" & <sample>") [Next](/next?team=lab&n=2 'Lab\'s "guide" & <next>')`);
-  assert.equal(html, link('/guide?q=&quot;lab&quot;&amp;tag=&lt;sample&gt;', 'Guide', 'Lab &quot;guide&quot; &amp; &lt;sample&gt;') + ' ' + link('/next?team=lab&amp;n=2', 'Next', 'Lab\'s &quot;guide&quot; &amp; &lt;next&gt;'));
+  assert.equal(html, paragraph(link('/guide?q=&quot;lab&quot;&amp;tag=&lt;sample&gt;', 'Guide', 'Lab &quot;guide&quot; &amp; &lt;sample&gt;') + ' ' + link('/next?team=lab&amp;n=2', 'Next', 'Lab\'s &quot;guide&quot; &amp; &lt;next&gt;')));
 });
 
 test('protects Markdown in attributes while formatting link labels and adjacent images', (t) => {
@@ -47,7 +49,7 @@ test('keeps titled links literal inside inline and fenced code', (t) => {
   assert.ok(html.includes(`<code class="bg-black/5 dark:bg-white/5 px-1.5 py-0.5 rounded text-sm">${escaped}</code>`));
   assert.ok(html.includes(`<code>${escaped}\n</code></pre>`));
   assert.equal((html.match(/<a\b/g) || []).length, 1);
-  assert.ok(html.endsWith(link('/real', 'Real', 'Real guide')));
+  assert.ok(html.endsWith(paragraph(link('/real', 'Real', 'Real guide'))));
 });
 
 test('preserves placeholder-like text and links within headings and lists', (t) => {

@@ -21,7 +21,7 @@ export function NewsletterSignup() {
       const body: unknown = await res.json().catch(() => null);
       const outcome = newsletterOutcome(res.status, body);
       setStatus(outcome);
-      if (outcome !== 'error') {
+      if (outcome === 'subscribed') {
         setEmail('');
       }
     } catch {
@@ -39,7 +39,7 @@ export function NewsletterSignup() {
           Practical advice for running a small testing lab. No spam, no enterprise sales pitches.
         </p>
 
-        {status === 'subscribed' || status === 'deferred' ? (
+        {status === 'subscribed' ? (
           <p role="status" className="text-lab-teal font-medium">{newsletterMessage(status)}</p>
         ) : (
           <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
@@ -60,6 +60,10 @@ export function NewsletterSignup() {
               {status === 'loading' ? 'Subscribing…' : 'Subscribe'}
             </button>
           </form>
+        )}
+
+        {status === 'deferred' && (
+          <p role="status" className="text-lab-teal text-sm mt-2">{newsletterMessage(status)}</p>
         )}
 
         {status === 'error' && (

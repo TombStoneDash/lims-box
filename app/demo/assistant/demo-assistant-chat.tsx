@@ -59,7 +59,6 @@ export function DemoAssistantChat() {
       ]);
     } finally {
       setBusy(false);
-      inputRef.current?.focus();
     }
   }
 
@@ -107,7 +106,10 @@ export function DemoAssistantChat() {
             key={suggestion}
             type="button"
             disabled={busy}
-            onClick={() => ask(suggestion)}
+            onClick={() => {
+              inputRef.current?.focus();
+              ask(suggestion);
+            }}
             className="rounded-full border border-slate-200 px-3 py-2 text-left text-xs text-slate-700 transition hover:border-teal-500 hover:text-teal-700 disabled:opacity-40 dark:border-white/10 dark:text-slate-200"
           >
             {suggestion}

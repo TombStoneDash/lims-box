@@ -1,11 +1,16 @@
 import { featuredSample, sampleAuditTrail, sampleResults } from '@/lib/demo-data';
+import { resolveDemoSampleId, resultFlagTone, RESULT_FLAG_TONE_CLASS } from '@/lib/senaite-demo-sample';
 import { ArrowLeft, FileText, Shield, Clock, User, CheckCircle2 } from 'lucide-react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
+export function generateStaticParams() {
+  return [{ id: featuredSample.id }];
+}
+
 export default async function SampleDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  if (id !== featuredSample.id) notFound();
+  if (resolveDemoSampleId(id, featuredSample.id) === null) notFound();
 
   const sample = featuredSample;
   const audit = sampleAuditTrail;
@@ -83,7 +88,7 @@ export default async function SampleDetailPage({ params }: { params: Promise<{ i
                   <td className="py-2 text-right font-mono font-medium text-slate-900">{r.result} {r.unit}</td>
                   <td className="py-2 text-right text-slate-500 text-xs">{r.refRange}</td>
                   <td className="py-2 text-right">
-                    <span className="text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-700">{r.flag}</span>
+                    <span className={`text-xs px-2 py-0.5 rounded-full ${RESULT_FLAG_TONE_CLASS[resultFlagTone(r.flag)]}`}>{r.flag}</span>
                   </td>
                 </tr>
               ))}
@@ -99,14 +104,14 @@ export default async function SampleDetailPage({ params }: { params: Promise<{ i
           <dl className="space-y-3">
             {[
               ['COC Number', 'COC-2026-0847'],
-              ['Collected By', 'Ana Patel'],
+              ['Collected By', sample.collectedBy],
               ['Collection Time', '2026-04-11 08:15'],
-              ['Received By', 'Mike Torres'],
-              ['Receipt Time', '2026-04-11 09:02'],
+              ['Received By', sample.receivedBy],
+              ['Receipt Time', sample.dateReceived],
               ['Condition', 'Good — no issues noted'],
-              ['Processed By', 'Mike Torres'],
+              ['Processed By', 'Unavailable in demo'],
               ['Processing', 'Centrifuged 3000 RPM x 10 min'],
-              ['Analyzed By', 'James Kim'],
+              ['Analyzed By', sample.analyst],
               ['Analysis Time', '2026-04-11 10:22'],
             ].map(([label, value]) => (
               <div key={label as string} className="flex justify-between">
@@ -141,6 +146,7 @@ export default async function SampleDetailPage({ params }: { params: Promise<{ i
                 <tr key={i} className="border-b border-slate-50 hover:bg-slate-50">
                   <td className="py-2 pr-4 font-mono text-xs text-slate-500 whitespace-nowrap">
                     {new Date(entry.timestamp).toLocaleString('en-US', {
+                      timeZone: 'UTC',
                       month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit',
                     })}
                   </td>
@@ -148,7 +154,7 @@ export default async function SampleDetailPage({ params }: { params: Promise<{ i
                     <span className={`inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full ${
                       entry.action.includes('Signature') ? 'bg-purple-100 text-purple-700' :
                       entry.action.includes('Status') ? 'bg-blue-100 text-blue-700' :
-                      entry.action.includes('Results') ? 'bg-green-100 text-green-700' :
+                      entry.action.includes('Results') ? RESULT_FLAG_TONE_CLASS.ok :
                       'bg-slate-100 text-slate-600'
                     }`}>
                       {entry.action}

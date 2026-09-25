@@ -42,7 +42,7 @@ function LeveyJenningsChart({ analyte, evaluation }: { analyte: QCAnalyte; evalu
   const plotW = w - pad.left - pad.right;
   const plotH = h - pad.top - pad.bottom;
 
-  const toX = (i: number) => pad.left + (i / (runs.length - 1)) * plotW;
+  const toX = (i: number) => pad.left + (runs.length > 1 ? i / (runs.length - 1) : 0.5) * plotW;
   const toY = (val: number) => pad.top + ((max - val) / range) * plotH;
 
   // Build path
@@ -110,7 +110,7 @@ function LeveyJenningsChart({ analyte, evaluation }: { analyte: QCAnalyte; evalu
           const idx = runs.indexOf(r);
           return (
             <text key={r.date} x={toX(idx)} y={h - 5} textAnchor="middle" className="text-[9px]" fill="#94a3b8">
-              {new Date(r.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+              {new Date(r.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' })}
             </text>
           );
         })}
@@ -144,7 +144,7 @@ export default function QCChartsPage() {
   const summary = evaluateQCSummary(allQCData);
   const banner = BANNER_STYLE[summary.status];
   const passRate =
-    summary.totalRuns > 0
+    summary.status !== 'invalid' && summary.totalRuns > 0
       ? `${(((summary.totalRuns - summary.outOfRangeCount) / summary.totalRuns) * 100).toFixed(1)}%`
       : 'N/A';
 
