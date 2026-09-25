@@ -144,9 +144,11 @@ function parseMarkdownToHtml(markdown: string): string {
 
   // Use text placeholders so inline code remains part of its paragraph.
   const inlineCode: string[] = [];
+  const inlineRaw: string[] = [];
   let inlineToken = 'BLOG_INLINE_CODE';
   while (markdown.includes(inlineToken)) inlineToken += '_';
-  html = html.replace(/`([^`]+)`/g, (_, code: string) => {
+  html = html.replace(/`([^`]+)`/g, (raw: string, code: string) => {
+    inlineRaw.push(raw);
     const escaped = code.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     const index = inlineCode.push(`<code class="bg-black/5 dark:bg-white/5 px-1.5 py-0.5 rounded text-sm">${escaped}</code>`) - 1;
     return `${inlineToken}${index}END`;
@@ -154,6 +156,12 @@ function parseMarkdownToHtml(markdown: string): string {
 
   // Keep link destinations out of prose transforms while labels remain formattable.
   const linkDestinations: string[] = [];
+  const linkTitles: Array<string | undefined> = [];
+  // Link attributes are literal: put inline code back as its source text and drop quote escapes.
+  const restoreInlineRaw = (value: string) =>
+    value.replace(new RegExp(`${inlineToken}(\\d+)END`, 'g'), (_, index) => inlineRaw[Number(index)]);
+  const unescapeQuotes = (value: string) => value.replace(/\\(["'])/g, '$1');
+  const linkTitle = /^([\s\S]*?)[ \t]+(?:"((?:\\.|[^"\\])*)"|'((?:\\.|[^'\\])*)')[ \t]*$/;
   let linkToken = 'BLOG_LINK_DESTINATION';
   while (markdown.includes(linkToken)) linkToken += '_';
   const linkStart = /\[([^\]]+)\]\(/g;
@@ -179,7 +187,12 @@ function parseMarkdownToHtml(markdown: string): string {
       destination += char;
     }
     if (depth !== 0 || !destination) continue;
-    const index = linkDestinations.push(destination) - 1;
+    // An optional "title" or 'title' follows the URL inside the parentheses.
+    const titled = destination.match(linkTitle);
+    const url = titled ? titled[1] : destination;
+    const title = titled ? (titled[2] ?? titled[3]) : undefined;
+    const index = linkDestinations.push(unescapeQuotes(restoreInlineRaw(url))) - 1;
+    linkTitles.push(title === undefined ? undefined : unescapeQuotes(restoreInlineRaw(title)));
     linkParts.push(html.slice(copiedThrough, linkMatch.index), `[${linkMatch[1]}](${linkToken}${index}END)`);
     copiedThrough = end + 1;
     linkStart.lastIndex = copiedThrough;
@@ -194,7 +207,11 @@ function parseMarkdownToHtml(markdown: string): string {
   html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
   html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
 
-  html = html.replace(new RegExp(`\\[([^\\]]+)\\]\\((${linkToken}\\d+END)\\)`, 'g'), '<a href="$2" class="text-lab-teal hover:text-lab-blue underline transition-colors">$1</a>');
+  html = html.replace(new RegExp(`\\[([^\\]]+)\\]\\((${linkToken}(\\d+)END)\\)`, 'g'), (_, label: string, token: string, index: string) => {
+    const title = linkTitles[Number(index)];
+    const titleAttribute = title === undefined ? '' : ` title="${escapeAttribute(title)}"`;
+    return `<a href="${token}"${titleAttribute} class="text-lab-teal hover:text-lab-blue underline transition-colors">${label}</a>`;
+  });
 
   html = html.replace(/^---$/gm, '<hr class="my-8 border-t border-black/10 dark:border-white/10" />');
 
