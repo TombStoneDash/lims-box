@@ -1,0 +1,557 @@
+import assert from 'node:assert/strict';
+import test from 'node:test';
+
+import {
+  validateOHWorksAccessionRequest,
+  explainAccessionFieldError,
+  explainAccessionFieldNextAction,
+  AccessionValidationInputError,
+  type AccessionValidationRequest,
+} from '../lib/ohworks/accession-validation';
+
+/**
+ * All fabricated: synthetic accession, tenant, specimen, order, and
+ * reference identifiers. No real patient, sample, or customer data, no
+ * network call, and no SENAITE instance is ever touched by this test.
+ */
+function baselineRequest(): AccessionValidationRequest {
+  return {
+    accessionRequestId: 'accession-synthetic-0001',
+    tenantId: 'tenant-synthetic-a',
+    specimen: {
+      specimenId: 'specimen-synthetic-0001',
+      specimenType: 'urine',
+    },
+    order: {
+      orderId: 'order-synthetic-0001',
+      orderedAt: '2026-01-01T08:00:00.000Z',
+    },
+    collection: {
+      collectedAt: '2026-01-01T09:00:00.000Z',
+      receivedAt: '2026-01-01T11:00:00.000Z',
+    },
+    patientReference: {
+      referenceId: 'ref-synthetic-0001',
+    },
+  };
+}
+
+function findError(errors: readonly { field: string; code: string }[], field: string) {
+  return errors.find((error) => error.field === field);
+}
+
+test('accepts a well-formed baseline request and normalizes dates to canonical UTC', () => {
+  const result = validateOHWorksAccessionRequest(baselineRequest());
+  assert.equal(result.valid, true);
+  if (!result.valid) {
+    throw new Error('expected valid result');
+  }
+  assert.deepEqual(result.errors, []);
+  assert.equal(result.normalized.accessionRequestId, 'accession-synthetic-0001');
+  assert.equal(result.normalized.order.orderedAt, '2026-01-01T08:00:00.000Z');
+  assert.equal(result.normalized.collection.collectedAt, '2026-01-01T09:00:00.000Z');
+  assert.equal(result.normalized.collection.receivedAt, '2026-01-01T11:00:00.000Z');
+});
+
+test('normalizes safe surrounding and internal whitespace in identifiers and non-Z date offsets', () => {
+  const request = baselineRequest();
+  request.accessionRequestId = '  accession-synthetic-0001  ';
+  request.specimen.specimenId = 'specimen-synthetic-0001';
+  request.order.orderedAt = '2026-01-01T03:00:00.000-05:00';
+
+  const result = validateOHWorksAccessionRequest(request);
+  assert.equal(result.valid, true);
+  if (!result.valid) {
+    throw new Error('expected valid result');
+  }
+  assert.equal(result.normalized.accessionRequestId, 'accession-synthetic-0001');
+  assert.equal(result.normalized.order.orderedAt, '2026-01-01T08:00:00.000Z');
+});
+
+test('reports field-missing for every required field when given an empty object', () => {
+  const result = validateOHWorksAccessionRequest({});
+  assert.equal(result.valid, false);
+  if (result.valid) {
+    throw new Error('expected invalid result');
+  }
+  const requiredFields = [
+    'accessionRequestId',
+    'tenantId',
+    'specimen.specimenId',
+    'specimen.specimenType',
+    'order.orderId',
+    'order.orderedAt',
+    'collection.collectedAt',
+    'collection.receivedAt',
+    'patientReference.referenceId',
+  ];
+  for (const field of requiredFields) {
+    const error = findError(result.errors, field);
+    assert.ok(error, `expected a field error for ${field}`);
+    assert.equal(error!.code, 'field-missing');
+  }
+});
+
+test('reports field-not-string and field-empty distinctly from field-missing', () => {
+  const request = baselineRequest();
+  (request as unknown as Record<string, unknown>).accessionRequestId = 42;
+  request.tenantId = '   ';
+
+  const result = validateOHWorksAccessionRequest(request);
+  assert.equal(result.valid, false);
+  if (result.valid) {
+    throw new Error('expected invalid result');
+  }
+  assert.equal(findError(result.errors, 'accessionRequestId')?.code, 'field-not-string');
+  assert.equal(findError(result.errors, 'tenantId')?.code, 'field-empty');
+});
+
+test('rejects an identifier containing internal whitespace as ambiguous even after normalization', () => {
+  const request = baselineRequest();
+  request.specimen.specimenId = 'specimen synthetic 0001';
+
+  const result = validateOHWorksAccessionRequest(request);
+  assert.equal(result.valid, false);
+  if (result.valid) {
+    throw new Error('expected invalid result');
+  }
+  assert.equal(findError(result.errors, 'specimen.specimenId')?.code, 'identifier-ambiguous');
+});
+
+test('rejects an identifier bundling multiple candidate values with a delimiter', () => {
+  const request = baselineRequest();
+  request.order.orderId = 'order-synthetic-0001,order-synthetic-0002';
+
+  const result = validateOHWorksAccessionRequest(request);
+  assert.equal(result.valid, false);
+  if (result.valid) {
+    throw new Error('expected invalid result');
+  }
+  assert.equal(findError(result.errors, 'order.orderId')?.code, 'identifier-ambiguous');
+});
+
+test('rejects a patient reference identifier shaped like an SSN without echoing the value', () => {
+  const request = baselineRequest();
+  request.patientReference.referenceId = '123-45-6789';
+
+  const result = validateOHWorksAccessionRequest(request);
+  assert.equal(result.valid, false);
+  if (result.valid) {
+    throw new Error('expected invalid result');
+  }
+  const error = findError(result.errors, 'patientReference.referenceId');
+  assert.equal(error?.code, 'identifier-suspected-phi');
+  assert.equal(JSON.stringify(result.errors).includes('123-45-6789'), false);
+});
+
+test('rejects a patient reference identifier carrying a name-like keyword', () => {
+  const request = baselineRequest();
+  request.patientReference.referenceId = 'patientname-jane-doe';
+
+  const result = validateOHWorksAccessionRequest(request);
+  assert.equal(result.valid, false);
+  if (result.valid) {
+    throw new Error('expected invalid result');
+  }
+  assert.equal(findError(result.errors, 'patientReference.referenceId')?.code, 'identifier-suspected-phi');
+});
+
+test('rejects an unparseable date as date-invalid', () => {
+  const request = baselineRequest();
+  request.collection.collectedAt = 'not-a-real-timestamp';
+
+  const result = validateOHWorksAccessionRequest(request);
+  assert.equal(result.valid, false);
+  if (result.valid) {
+    throw new Error('expected invalid result');
+  }
+  assert.equal(findError(result.errors, 'collection.collectedAt')?.code, 'date-invalid');
+});
+
+test('rejects impossible chronology: specimen received before it was collected', () => {
+  const request = baselineRequest();
+  request.collection.collectedAt = '2026-01-01T11:00:00.000Z';
+  request.collection.receivedAt = '2026-01-01T09:00:00.000Z';
+
+  const result = validateOHWorksAccessionRequest(request);
+  assert.equal(result.valid, false);
+  if (result.valid) {
+    throw new Error('expected invalid result');
+  }
+  assert.equal(findError(result.errors, 'collection.receivedAt')?.code, 'date-chronology-impossible');
+});
+
+test('rejects impossible chronology: specimen collected before the order was placed', () => {
+  const request = baselineRequest();
+  request.order.orderedAt = '2026-01-01T10:00:00.000Z';
+  request.collection.collectedAt = '2026-01-01T09:00:00.000Z';
+
+  const result = validateOHWorksAccessionRequest(request);
+  assert.equal(result.valid, false);
+  if (result.valid) {
+    throw new Error('expected invalid result');
+  }
+  assert.equal(findError(result.errors, 'collection.collectedAt')?.code, 'date-chronology-impossible');
+});
+
+test('allows equal timestamps across order, collection, and receipt', () => {
+  const request = baselineRequest();
+  const sameInstant = '2026-01-01T09:00:00.000Z';
+  request.order.orderedAt = sameInstant;
+  request.collection.collectedAt = sameInstant;
+  request.collection.receivedAt = sameInstant;
+
+  const result = validateOHWorksAccessionRequest(request);
+  assert.equal(result.valid, true);
+});
+
+test('reports every broken field at once instead of stopping at the first error', () => {
+  const result = validateOHWorksAccessionRequest({
+    accessionRequestId: 'accession-synthetic-0002',
+    tenantId: 'tenant-synthetic-a',
+    specimen: { specimenId: '', specimenType: 'urine' },
+    order: { orderId: 'order-synthetic-0002', orderedAt: 'garbage' },
+    collection: { collectedAt: '2026-01-01T09:00:00.000Z', receivedAt: '2026-01-01T08:00:00.000Z' },
+    patientReference: { referenceId: '999-99-9999' },
+  });
+
+  assert.equal(result.valid, false);
+  if (result.valid) {
+    throw new Error('expected invalid result');
+  }
+  assert.equal(findError(result.errors, 'specimen.specimenId')?.code, 'field-empty');
+  assert.equal(findError(result.errors, 'order.orderedAt')?.code, 'date-invalid');
+  assert.equal(findError(result.errors, 'collection.receivedAt')?.code, 'date-chronology-impossible');
+  assert.equal(findError(result.errors, 'patientReference.referenceId')?.code, 'identifier-suspected-phi');
+});
+
+test('throws AccessionValidationInputError for non-object input instead of guessing at field errors', () => {
+  assert.throws(() => validateOHWorksAccessionRequest(null), AccessionValidationInputError);
+  assert.throws(() => validateOHWorksAccessionRequest('not-an-object'), AccessionValidationInputError);
+  assert.throws(() => validateOHWorksAccessionRequest(['array', 'input']), AccessionValidationInputError);
+});
+
+test('treats a missing section as field-missing for each of its leaf fields', () => {
+  const request = baselineRequest();
+  delete (request as unknown as Record<string, unknown>).order;
+
+  const result = validateOHWorksAccessionRequest(request);
+  assert.equal(result.valid, false);
+  if (result.valid) {
+    throw new Error('expected invalid result');
+  }
+  assert.equal(findError(result.errors, 'order.orderId')?.code, 'field-missing');
+  assert.equal(findError(result.errors, 'order.orderedAt')?.code, 'field-missing');
+});
+
+test('explainAccessionFieldError returns deterministic, value-free text for every code', () => {
+  const codes = [
+    'field-missing',
+    'field-not-string',
+    'field-empty',
+    'identifier-ambiguous',
+    'identifier-suspected-phi',
+    'date-invalid',
+    'date-chronology-impossible',
+  ] as const;
+  for (const code of codes) {
+    const message = explainAccessionFieldError({ field: 'accessionRequestId', code });
+    assert.equal(typeof message, 'string');
+    assert.ok(message.length > 0);
+  }
+});
+
+test('explainAccessionFieldNextAction returns deterministic, value-free text distinct from the explanation for every code', () => {
+  const codes = [
+    'field-missing',
+    'field-not-string',
+    'field-empty',
+    'identifier-ambiguous',
+    'identifier-suspected-phi',
+    'date-invalid',
+    'date-chronology-impossible',
+  ] as const;
+  for (const code of codes) {
+    const error = { field: 'accessionRequestId', code } as const;
+    const explanation = explainAccessionFieldError(error);
+    const nextAction = explainAccessionFieldNextAction(error);
+    assert.equal(typeof nextAction, 'string');
+    assert.ok(nextAction.length > 0);
+    assert.notEqual(nextAction, explanation);
+  }
+});
+
+test('a rejected accession request never has its raw field values echoed in the field errors or next actions', () => {
+  const result = validateOHWorksAccessionRequest({
+    accessionRequestId: 'accession-synthetic-0003',
+    tenantId: 'tenant-synthetic-a',
+    specimen: { specimenId: 'specimen-synthetic-0003', specimenType: 'urine' },
+    order: { orderId: 'order-synthetic-0003', orderedAt: '2026-01-01T08:00:00.000Z' },
+    collection: { collectedAt: '2026-01-01T09:00:00.000Z', receivedAt: '2026-01-01T11:00:00.000Z' },
+    patientReference: { referenceId: 'jane.synthetic@example.com' },
+  });
+  assert.equal(result.valid, false);
+  if (result.valid) {
+    throw new Error('expected invalid result');
+  }
+  const serialized = JSON.stringify(
+    result.errors.map((error) => ({ ...error, next: explainAccessionFieldNextAction(error) })),
+  );
+  assert.doesNotMatch(serialized, /jane\.synthetic@example\.com/);
+});
+
+test('rejects a date-only timestamp as date-invalid', () => {
+  const request = baselineRequest();
+  request.order.orderedAt = '2026-01-01';
+  const result = validateOHWorksAccessionRequest(request);
+  assert.equal(result.valid, false);
+  if (result.valid) throw new Error('expected invalid result');
+  assert.equal(findError(result.errors, 'order.orderedAt')?.code, 'date-invalid');
+});
+
+test('rejects a locale-style date as date-invalid', () => {
+  const request = baselineRequest();
+  request.collection.receivedAt = '01/02/2026';
+  const result = validateOHWorksAccessionRequest(request);
+  assert.equal(result.valid, false);
+  if (result.valid) throw new Error('expected invalid result');
+  assert.equal(findError(result.errors, 'collection.receivedAt')?.code, 'date-invalid');
+});
+
+test('rejects a space-separated timestamp as date-invalid', () => {
+  const request = baselineRequest();
+  request.collection.collectedAt = '2026-01-01 08:00:00Z';
+  const result = validateOHWorksAccessionRequest(request);
+  assert.equal(result.valid, false);
+  if (result.valid) throw new Error('expected invalid result');
+  assert.equal(findError(result.errors, 'collection.collectedAt')?.code, 'date-invalid');
+});
+
+test('accepts explicit Z and numeric-offset timestamps and normalizes to UTC', () => {
+  const request = baselineRequest();
+  request.order.orderedAt = '2026-01-01T08:00:00.000Z';
+  request.collection.collectedAt = '2026-01-01T03:00:00.000-05:00';
+  const result = validateOHWorksAccessionRequest(request);
+  assert.equal(result.valid, true);
+  if (!result.valid) throw new Error('expected valid result');
+  assert.equal(result.normalized.order.orderedAt, '2026-01-01T08:00:00.000Z');
+  assert.equal(result.normalized.collection.collectedAt, '2026-01-01T08:00:00.000Z');
+});
+
+test('rejects 2026-02-30T09:00:00.000Z as date-invalid instead of rolling over to March 2', () => {
+  const request = baselineRequest();
+  request.collection.collectedAt = '2026-02-30T09:00:00.000Z';
+  const result = validateOHWorksAccessionRequest(request);
+  assert.equal(result.valid, false);
+  if (result.valid) throw new Error('expected invalid result');
+  assert.equal(findError(result.errors, 'collection.collectedAt')?.code, 'date-invalid');
+});
+
+test('rejects February 30 with a numeric offset as date-invalid instead of rolling over', () => {
+  const request = baselineRequest();
+  request.order.orderedAt = '2026-02-30T09:00:00.000-05:00';
+  const result = validateOHWorksAccessionRequest(request);
+  assert.equal(result.valid, false);
+  if (result.valid) throw new Error('expected invalid result');
+  assert.equal(findError(result.errors, 'order.orderedAt')?.code, 'date-invalid');
+});
+
+test('rejects February 29 in a non-leap year as date-invalid', () => {
+  const request = baselineRequest();
+  request.collection.collectedAt = '2025-02-29T09:00:00.000Z';
+  const result = validateOHWorksAccessionRequest(request);
+  assert.equal(result.valid, false);
+  if (result.valid) throw new Error('expected invalid result');
+  assert.equal(findError(result.errors, 'collection.collectedAt')?.code, 'date-invalid');
+});
+
+test('accepts February 29 in a leap year and normalizes it unchanged in UTC', () => {
+  const request = baselineRequest();
+  request.order.orderedAt = '2023-01-01T00:00:00.000Z';
+  request.collection.collectedAt = '2024-02-29T09:00:00.000Z';
+  request.collection.receivedAt = '2024-02-29T10:00:00.000Z';
+  const result = validateOHWorksAccessionRequest(request);
+  assert.equal(result.valid, true);
+  if (!result.valid) throw new Error('expected valid result');
+  assert.equal(result.normalized.collection.collectedAt, '2024-02-29T09:00:00.000Z');
+});
+
+test('rejects February 29 in a century year that is not divisible by 400', () => {
+  const request = baselineRequest();
+  request.collection.collectedAt = '2100-02-29T09:00:00.000Z';
+  const result = validateOHWorksAccessionRequest(request);
+  assert.equal(result.valid, false);
+  if (result.valid) throw new Error('expected invalid result');
+  assert.equal(findError(result.errors, 'collection.collectedAt')?.code, 'date-invalid');
+});
+
+test('accepts February 29 in a century year that is divisible by 400', () => {
+  const request = baselineRequest();
+  request.order.orderedAt = '2000-01-01T00:00:00.000Z';
+  request.collection.collectedAt = '2000-02-29T09:00:00.000Z';
+  request.collection.receivedAt = '2000-02-29T10:00:00.000Z';
+  const result = validateOHWorksAccessionRequest(request);
+  assert.equal(result.valid, true);
+  if (!result.valid) throw new Error('expected valid result');
+  assert.equal(result.normalized.collection.collectedAt, '2000-02-29T09:00:00.000Z');
+});
+
+test('rejects month 00 and month 13 as date-invalid', () => {
+  const request1 = baselineRequest();
+  request1.collection.collectedAt = '2026-00-15T09:00:00.000Z';
+  const result1 = validateOHWorksAccessionRequest(request1);
+  assert.equal(result1.valid, false);
+  if (result1.valid) throw new Error('expected invalid result');
+  assert.equal(findError(result1.errors, 'collection.collectedAt')?.code, 'date-invalid');
+
+  const request2 = baselineRequest();
+  request2.collection.collectedAt = '2026-13-15T09:00:00.000Z';
+  const result2 = validateOHWorksAccessionRequest(request2);
+  assert.equal(result2.valid, false);
+  if (result2.valid) throw new Error('expected invalid result');
+  assert.equal(findError(result2.errors, 'collection.collectedAt')?.code, 'date-invalid');
+});
+
+test('rejects day 00 and day 31 in a 30-day month as date-invalid', () => {
+  const request1 = baselineRequest();
+  request1.collection.collectedAt = '2026-04-00T09:00:00.000Z';
+  const result1 = validateOHWorksAccessionRequest(request1);
+  assert.equal(result1.valid, false);
+  if (result1.valid) throw new Error('expected invalid result');
+  assert.equal(findError(result1.errors, 'collection.collectedAt')?.code, 'date-invalid');
+
+  const request2 = baselineRequest();
+  request2.collection.collectedAt = '2026-04-31T09:00:00.000Z';
+  const result2 = validateOHWorksAccessionRequest(request2);
+  assert.equal(result2.valid, false);
+  if (result2.valid) throw new Error('expected invalid result');
+  assert.equal(findError(result2.errors, 'collection.collectedAt')?.code, 'date-invalid');
+});
+
+test('accepts day 31 in a 31-day month at the last valid boundary', () => {
+  const request = baselineRequest();
+  request.order.orderedAt = '2026-01-01T00:00:00.000Z';
+  request.collection.collectedAt = '2026-01-31T23:59:59.999Z';
+  request.collection.receivedAt = '2026-01-31T23:59:59.999Z';
+  const result = validateOHWorksAccessionRequest(request);
+  assert.equal(result.valid, true);
+  if (!result.valid) throw new Error('expected valid result');
+  assert.equal(result.normalized.collection.collectedAt, '2026-01-31T23:59:59.999Z');
+});
+
+test('rejects hour 24 as date-invalid', () => {
+  const request = baselineRequest();
+  request.collection.collectedAt = '2026-01-01T24:00:00.000Z';
+  const result = validateOHWorksAccessionRequest(request);
+  assert.equal(result.valid, false);
+  if (result.valid) throw new Error('expected invalid result');
+  assert.equal(findError(result.errors, 'collection.collectedAt')?.code, 'date-invalid');
+});
+
+test('accepts hour 23 as the last valid hour boundary', () => {
+  const request = baselineRequest();
+  request.order.orderedAt = '2026-01-01T00:00:00.000Z';
+  request.collection.collectedAt = '2026-01-01T23:00:00.000Z';
+  request.collection.receivedAt = '2026-01-01T23:00:00.000Z';
+  const result = validateOHWorksAccessionRequest(request);
+  assert.equal(result.valid, true);
+  if (!result.valid) throw new Error('expected valid result');
+  assert.equal(result.normalized.collection.collectedAt, '2026-01-01T23:00:00.000Z');
+});
+
+test('rejects minute 60 and second 60 as date-invalid', () => {
+  const request1 = baselineRequest();
+  request1.collection.collectedAt = '2026-01-01T09:60:00.000Z';
+  const result1 = validateOHWorksAccessionRequest(request1);
+  assert.equal(result1.valid, false);
+  if (result1.valid) throw new Error('expected invalid result');
+  assert.equal(findError(result1.errors, 'collection.collectedAt')?.code, 'date-invalid');
+
+  const request2 = baselineRequest();
+  request2.collection.collectedAt = '2026-01-01T09:00:60.000Z';
+  const result2 = validateOHWorksAccessionRequest(request2);
+  assert.equal(result2.valid, false);
+  if (result2.valid) throw new Error('expected invalid result');
+  assert.equal(findError(result2.errors, 'collection.collectedAt')?.code, 'date-invalid');
+});
+
+test('rejects an out-of-range numeric offset as date-invalid', () => {
+  const request1 = baselineRequest();
+  request1.order.orderedAt = '2026-01-01T09:00:00.000+24:00';
+  const result1 = validateOHWorksAccessionRequest(request1);
+  assert.equal(result1.valid, false);
+  if (result1.valid) throw new Error('expected invalid result');
+  assert.equal(findError(result1.errors, 'order.orderedAt')?.code, 'date-invalid');
+
+  const request2 = baselineRequest();
+  request2.order.orderedAt = '2026-01-01T09:00:00.000-12:60';
+  const result2 = validateOHWorksAccessionRequest(request2);
+  assert.equal(result2.valid, false);
+  if (result2.valid) throw new Error('expected invalid result');
+  assert.equal(findError(result2.errors, 'order.orderedAt')?.code, 'date-invalid');
+});
+
+test('accepts a valid numeric offset that rolls the UTC date and hour backward across midnight', () => {
+  const request = baselineRequest();
+  request.order.orderedAt = '2026-01-01T00:00:00.000Z';
+  request.collection.collectedAt = '2026-01-02T00:30:00.000+02:00';
+  request.collection.receivedAt = '2026-01-02T00:30:00.000+02:00';
+  const result = validateOHWorksAccessionRequest(request);
+  assert.equal(result.valid, true);
+  if (!result.valid) throw new Error('expected valid result');
+  assert.equal(result.normalized.collection.collectedAt, '2026-01-01T22:30:00.000Z');
+});
+
+test('accepts a valid numeric offset that rolls the UTC date and hour forward across midnight', () => {
+  const request = baselineRequest();
+  request.order.orderedAt = '2026-01-01T00:00:00.000Z';
+  request.collection.collectedAt = '2026-01-01T23:30:00.000-02:00';
+  request.collection.receivedAt = '2026-01-01T23:30:00.000-02:00';
+  const result = validateOHWorksAccessionRequest(request);
+  assert.equal(result.valid, true);
+  if (!result.valid) throw new Error('expected valid result');
+  assert.equal(result.normalized.collection.collectedAt, '2026-01-02T01:30:00.000Z');
+});
+
+test('truncates sub-millisecond precision without rounding the normalized instant forward', () => {
+  const cases = [
+    ['2026-02-28T09:00:00.1235Z', '2026-02-28T09:00:00.123Z'],
+    ['2026-02-28T23:59:59.9999Z', '2026-02-28T23:59:59.999Z'],
+    ['2026-12-31T23:59:59.9999Z', '2026-12-31T23:59:59.999Z'],
+    ['2026-02-28T23:59:59.9999+02:00', '2026-02-28T21:59:59.999Z'],
+  ] as const;
+
+  for (const [input, expected] of cases) {
+    const request = baselineRequest();
+    request.order.orderedAt = input;
+    request.collection.collectedAt = input;
+    request.collection.receivedAt = input;
+    const result = validateOHWorksAccessionRequest(request);
+    assert.equal(result.valid, true, input);
+    if (!result.valid) throw new Error(`expected valid result for ${input}`);
+    assert.equal(result.normalized.order.orderedAt, expected, input);
+    assert.equal(result.normalized.collection.collectedAt, expected, input);
+    assert.equal(result.normalized.collection.receivedAt, expected, input);
+  }
+});
+
+test('still rejects chronology violations once dates carry real calendar instants across offsets', () => {
+  const request = baselineRequest();
+  request.order.orderedAt = '2026-01-02T00:00:00.000Z';
+  request.collection.collectedAt = '2026-01-01T20:30:00.000-02:00';
+  request.collection.receivedAt = '2026-01-01T20:30:00.000-02:00';
+  const result = validateOHWorksAccessionRequest(request);
+  assert.equal(result.valid, false);
+  if (result.valid) throw new Error('expected invalid result');
+  assert.equal(findError(result.errors, 'collection.collectedAt')?.code, 'date-chronology-impossible');
+});
+
+test('a rejected calendar-invalid date never has its raw value echoed in the field error', () => {
+  const request = baselineRequest();
+  request.collection.collectedAt = '2026-02-30T09:00:00.000Z';
+  const result = validateOHWorksAccessionRequest(request);
+  assert.equal(result.valid, false);
+  if (result.valid) throw new Error('expected invalid result');
+  const serialized = JSON.stringify(result.errors);
+  assert.doesNotMatch(serialized, /2026-02-30/);
+});

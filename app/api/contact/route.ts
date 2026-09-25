@@ -1,3 +1,4 @@
+import { leadLogMeta, safeErrorMeta } from '@/lib/safeLog';
 import { NextRequest, NextResponse } from 'next/server';
 import { sendSubmissionNotice } from '@/lib/notify';
 import { getSupabase } from '@/lib/supabase';
@@ -31,7 +32,7 @@ export async function POST(request: NextRequest) {
     };
 
     // Audit log (kept for Vercel runtime trace)
-    console.log('[contact] submission received:', record);
+    console.log('[contact] submission received:', leadLogMeta(record));
 
     // ── 1. DB persistence — durability backstop (W165) ───────────────────────
     // Runs BEFORE email so the lead is saved even if Resend fails.
@@ -56,7 +57,7 @@ export async function POST(request: NextRequest) {
           source: 'contact_form',
         });
         if (dbError) {
-          console.error('[contact] DB save failed (non-fatal):', dbError.message);
+          console.error('[contact] DB save failed (non-fatal):', safeErrorMeta(dbError));
         } else {
           dbSaved = true;
           console.log('[contact] DB save succeeded');
@@ -65,7 +66,7 @@ export async function POST(request: NextRequest) {
         console.warn('[contact] Supabase not configured — skipping DB save');
       }
     } catch (dbErr) {
-      console.error('[contact] DB save threw (non-fatal):', dbErr);
+      console.error('[contact] DB save threw (non-fatal):', safeErrorMeta(dbErr));
     }
 
     // ── 2. Email notification — primary notification path ────────────────────
@@ -86,11 +87,13 @@ export async function POST(request: NextRequest) {
       emailSent = true;
       console.log('[contact] email notification sent');
     } catch (emailErr) {
-      console.error('[contact] email send failed (non-fatal):', emailErr);
+      console.error('[contact] email send failed (non-fatal):', safeErrorMeta(emailErr));
     }
 
     // ── 3. Respond — 200 if EITHER path succeeded; 500 only if both failed ───
     if (!dbSaved && !emailSent) {
+      // Both durable sinks failed: retain the full lead here as the last recovery copy.
+      console.error('[contact] LEAD-RECOVERY (both sinks failed):', record);
       console.error('[contact] both DB save and email send failed — returning 500');
       return NextResponse.json(
         { error: 'Failed to process submission' },
@@ -100,7 +103,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true });
   } catch (err) {
-    console.error('[contact] handler threw', err);
+    console.error('[contact] handler threw', safeErrorMeta(err));
     return NextResponse.json(
       { error: 'Invalid request' },
       { status: 400 },

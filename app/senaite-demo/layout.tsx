@@ -1,12 +1,13 @@
-import Link from 'next/link';
-import { FlaskConical, LayoutDashboard, TestTubes, Activity, Wrench, GraduationCap } from 'lucide-react';
+import { FlaskConical } from 'lucide-react';
+
+import { DemoNavLink } from '@/components/senaite-demo/DemoNavLink';
 
 const navItems = [
-  { href: '/senaite-demo', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/senaite-demo/samples/SA-2026-0847', label: 'Sample Detail', icon: TestTubes },
-  { href: '/senaite-demo/qc', label: 'QC Charts', icon: Activity },
-  { href: '/senaite-demo/equipment', label: 'Equipment', icon: Wrench },
-  { href: '/senaite-demo/training', label: 'Training', icon: GraduationCap },
+  { href: '/senaite-demo', label: 'Dashboard', icon: 'dashboard' as const },
+  { href: '/senaite-demo/samples/SA-2026-0847', label: 'Sample Detail', icon: 'sample' as const },
+  { href: '/senaite-demo/qc', label: 'QC Charts', icon: 'qc' as const },
+  { href: '/senaite-demo/equipment', label: 'Equipment', icon: 'equipment' as const },
+  { href: '/senaite-demo/training', label: 'Training', icon: 'training' as const },
 ];
 
 export default function DemoLayout({ children }: { children: React.ReactNode }) {
@@ -29,17 +30,10 @@ export default function DemoLayout({ children }: { children: React.ReactNode }) 
       </header>
 
       {/* Navigation */}
-      <nav className="bg-[#34495e] border-b border-[#2c3e50]">
-        <div className="max-w-[1400px] mx-auto px-4 flex gap-1">
+      <nav className="bg-[#34495e] border-b border-[#2c3e50]" aria-label="SENAITE demo sections">
+        <div className="max-w-[1400px] mx-auto px-4 flex gap-1 overflow-x-auto">
           {navItems.map(item => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className="flex items-center gap-2 px-4 py-2.5 text-sm text-slate-300 hover:text-white hover:bg-[#2c3e50] transition-colors"
-            >
-              <item.icon className="w-4 h-4" />
-              {item.label}
-            </Link>
+            <DemoNavLink key={item.href} href={item.href} label={item.label} icon={item.icon} />
           ))}
         </div>
       </nav>

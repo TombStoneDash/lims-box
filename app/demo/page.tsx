@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { stepTabLabel } from '@/lib/demo-steps';
 import { useState, useEffect } from 'react';
 import {
   FlaskConical, ArrowRight, ArrowLeft, Check, ClipboardList,
@@ -41,44 +42,44 @@ function SampleEntryStep() {
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <dl className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Sample ID</label>
-          <div className="px-3 py-2 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-lg text-sm text-slate-900 dark:text-white font-mono">
+          <dt className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Sample ID</dt>
+          <dd className="px-3 py-2 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-lg text-sm text-slate-900 dark:text-white font-mono">
             WS-2026-0384 <span className="text-slate-400">(auto-generated)</span>
-          </div>
+          </dd>
         </div>
         <div>
-          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Sample Type</label>
-          <div className="px-3 py-2 bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-lg text-sm text-slate-900 dark:text-white flex items-center gap-2">
+          <dt className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Sample Type</dt>
+          <dd className="px-3 py-2 bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-lg text-sm text-slate-900 dark:text-white flex items-center gap-2">
             <Droplets className="w-4 h-4 text-blue-500" /> Drinking Water
-          </div>
+          </dd>
         </div>
         <div>
-          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Client</label>
-          <div className="px-3 py-2 bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-lg text-sm text-slate-900 dark:text-white">
+          <dt className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Client</dt>
+          <dd className="px-3 py-2 bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-lg text-sm text-slate-900 dark:text-white">
             Mesa County Water District
-          </div>
+          </dd>
         </div>
         <div>
-          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Collection Date/Time</label>
-          <div className="px-3 py-2 bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-lg text-sm text-slate-900 dark:text-white">
+          <dt className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Collection Date/Time</dt>
+          <dd className="px-3 py-2 bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-lg text-sm text-slate-900 dark:text-white">
             April 13, 2026 — 10:30 AM
-          </div>
+          </dd>
         </div>
         <div>
-          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Analysis Requested</label>
-          <div className="px-3 py-2 bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-lg text-sm text-slate-900 dark:text-white">
+          <dt className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Analysis Requested</dt>
+          <dd className="px-3 py-2 bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-lg text-sm text-slate-900 dark:text-white">
             Nitrate (NO₃) — EPA Method 300.0
-          </div>
+          </dd>
         </div>
         <div>
-          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Collected By</label>
-          <div className="px-3 py-2 bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-lg text-sm text-slate-900 dark:text-white flex items-center gap-2">
+          <dt className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Collected By</dt>
+          <dd className="px-3 py-2 bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-lg text-sm text-slate-900 dark:text-white flex items-center gap-2">
             <User className="w-4 h-4 text-slate-400" /> Maria Gonzalez (Field Tech)
-          </div>
+          </dd>
         </div>
-      </div>
+      </dl>
 
       <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
         <p className="text-sm text-blue-800 dark:text-blue-200">
@@ -107,12 +108,13 @@ function COCStep() {
         </div>
         <div className="p-4">
           <table className="w-full text-sm">
+            <caption className="sr-only">Synthetic chain of custody for sample WS-2026-0384</caption>
             <thead>
               <tr className="text-xs text-slate-500 uppercase tracking-wider border-b border-slate-100 dark:border-white/10">
-                <th className="text-left py-2 pr-4">Event</th>
-                <th className="text-left py-2 pr-4">Date/Time</th>
-                <th className="text-left py-2 pr-4">Person</th>
-                <th className="text-left py-2">Signature</th>
+                <th scope="col" className="text-left py-2 pr-4">Event</th>
+                <th scope="col" className="text-left py-2 pr-4">Date/Time</th>
+                <th scope="col" className="text-left py-2 pr-4">Person</th>
+                <th scope="col" className="text-left py-2">Signature</th>
               </tr>
             </thead>
             <tbody className="text-slate-700 dark:text-slate-300">
@@ -138,6 +140,7 @@ function COCStep() {
                   ) : (
                     <button
                       onClick={() => setSigned(true)}
+                      aria-label="Click to Sign: Received at Lab custody step for synthetic sample WS-2026-0384"
                       className="text-xs px-2 py-0.5 bg-lab-teal text-white rounded-full hover:bg-lab-teal/90 transition-colors"
                     >
                       Click to Sign
@@ -232,14 +235,15 @@ function ReportStep() {
             <div>
               <h4 className="text-sm font-semibold text-slate-900 dark:text-white mb-3">Analytical Results</h4>
               <table className="w-full text-sm border border-slate-200 dark:border-white/10">
+                <caption className="sr-only">Synthetic analytical results for sample WS-2026-0384</caption>
                 <thead>
                   <tr className="bg-slate-50 dark:bg-white/5 text-xs text-slate-500 uppercase">
-                    <th className="text-left py-2 px-3">Sample ID</th>
-                    <th className="text-left py-2 px-3">Analyte</th>
-                    <th className="text-right py-2 px-3">Result</th>
-                    <th className="text-right py-2 px-3">MCL</th>
-                    <th className="text-left py-2 px-3">Method</th>
-                    <th className="text-left py-2 px-3">Status</th>
+                    <th scope="col" className="text-left py-2 px-3">Sample ID</th>
+                    <th scope="col" className="text-left py-2 px-3">Analyte</th>
+                    <th scope="col" className="text-right py-2 px-3">Result</th>
+                    <th scope="col" className="text-right py-2 px-3">MCL</th>
+                    <th scope="col" className="text-left py-2 px-3">Method</th>
+                    <th scope="col" className="text-left py-2 px-3">Status</th>
                   </tr>
                 </thead>
                 <tbody className="text-slate-700 dark:text-slate-300">
@@ -311,9 +315,16 @@ function CalendlyEmbed() {
     <div className="bg-white dark:bg-white/5 border border-black/5 dark:border-white/10 rounded-2xl overflow-hidden">
       <div
         className="calendly-inline-widget"
+        aria-label="Schedule a demo"
         data-url={CALENDLY_URL}
         style={{ minWidth: '320px', height: '700px' }}
       />
+      <p className="p-4 text-sm text-slate-600 dark:text-slate-300">
+        Calendar not loading?{' '}
+        <a href={CALENDLY_URL} target="_blank" rel="noopener noreferrer" className="text-lab-teal underline">
+          Open the scheduling page in a new tab
+        </a>
+      </p>
     </div>
   );
 }
@@ -383,6 +394,8 @@ export default function DemoPage() {
             {steps.map((step, i) => (
               <button
                 key={step.id}
+                aria-label={stepTabLabel(i, step.label, currentStep === step.id)}
+                aria-current={currentStep === step.id ? 'step' : undefined}
                 onClick={() => setCurrentStep(step.id)}
                 className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-lg text-sm font-medium transition-colors ${
                   currentStep === step.id
@@ -511,12 +524,12 @@ export default function DemoPage() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-slate-200 dark:border-white/10">
-                  <th className="text-left py-3 px-4 text-slate-500 font-medium">Plan</th>
-                  <th className="text-center py-3 px-4 bg-lab-teal/10 dark:bg-lab-teal/20 rounded-t-lg">
+                  <th scope="col" className="text-left py-3 px-4 text-slate-500 font-medium">Plan</th>
+                  <th scope="col" className="text-center py-3 px-4 bg-lab-teal/10 dark:bg-lab-teal/20 rounded-t-lg">
                     <span className="text-lab-teal font-bold">Starting price</span>
                   </th>
-                  <th className="text-center py-3 px-4 text-slate-500 font-medium">Users</th>
-                  <th className="text-center py-3 px-4 text-slate-500 font-medium">Notes</th>
+                  <th scope="col" className="text-center py-3 px-4 text-slate-500 font-medium">Users</th>
+                  <th scope="col" className="text-center py-3 px-4 text-slate-500 font-medium">Notes</th>
                 </tr>
               </thead>
               <tbody className="text-slate-700 dark:text-slate-300">

@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
+  alternates: { canonical: "/environmental" },
   title: "LIMS BOX for environmental labs — field-to-bench continuity",
   description:
     "Local-first documentation layer for NELAP/ELAP environmental labs. Field-to-bench continuity. Audit-trail organization. Human-reviewed drafting. Not a LIMS replacement.",
@@ -92,6 +93,7 @@ function Footer() {
       <div className="max-w-3xl mx-auto px-6 py-8 text-xs text-slate-500 flex flex-wrap gap-4">
         <Link href="/start" className="hover:text-slate-900">Choose lab type</Link>
         <Link href="/about" className="hover:text-slate-900">About</Link>
+        <Link href="/field-scout" className="hover:text-slate-900">Field Scout preview</Link>
         <span className="ml-auto">Workflow documentation support · Human-reviewed drafting · Local-first lab records.</span>
       </div>
     </footer>

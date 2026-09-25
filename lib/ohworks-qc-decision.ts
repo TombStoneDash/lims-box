@@ -209,20 +209,34 @@ function toFiniteNumber(rawValue: unknown): number | undefined {
   return undefined;
 }
 
+/**
+ * Canonicalize a unit for comparison and dedupe purposes only: trim outer
+ * whitespace and case-fold. Never infers or performs a unit conversion, so
+ * "mg/L" and "g/L" remain distinct. Returns undefined for anything that is
+ * not a non-blank string, so blank, missing, and non-string units all fail
+ * closed the same way as before canonicalization.
+ */
+function canonicalizeUnit(unit: unknown): string | undefined {
+  if (typeof unit !== 'string') {
+    return undefined;
+  }
+  const trimmed = unit.trim();
+  return trimmed.length > 0 ? trimmed.toLowerCase() : undefined;
+}
+
 function isValidLimit(limit: QCReferenceLimit): boolean {
   return (
     Number.isFinite(limit.lowerBound) &&
     Number.isFinite(limit.upperBound) &&
     limit.lowerBound <= limit.upperBound &&
-    typeof limit.unit === 'string' &&
-    limit.unit.length > 0
+    canonicalizeUnit(limit.unit) !== undefined
   );
 }
 
 function dedupeLimits(limits: QCReferenceLimit[]): QCReferenceLimit[] {
   const seen = new Map<string, QCReferenceLimit>();
   for (const limit of limits) {
-    const key = `${limit.lowerBound}|${limit.upperBound}|${limit.unit}`;
+    const key = `${limit.lowerBound}|${limit.upperBound}|${canonicalizeUnit(limit.unit)}`;
     if (!seen.has(key)) {
       seen.set(key, limit);
     }
@@ -266,7 +280,8 @@ function evaluateSingleRecord(
     flag('value-non-numeric');
   }
 
-  const hasUnit = typeof record.unit === 'string' && record.unit.length > 0;
+  const canonicalUnit = canonicalizeUnit(record.unit);
+  const hasUnit = canonicalUnit !== undefined;
   if (!hasUnit) {
     flag('unit-missing');
   }
@@ -287,7 +302,7 @@ function evaluateSingleRecord(
       flag('reference-limits-conflicting');
     } else {
       const [limit] = distinctLimits;
-      if (hasUnit && record.unit !== limit.unit) {
+      if (hasUnit && canonicalUnit !== canonicalizeUnit(limit.unit)) {
         flag('unit-mismatched');
       } else if (numericValue !== undefined && (numericValue < limit.lowerBound || numericValue > limit.upperBound)) {
         flag('value-out-of-reference-range');

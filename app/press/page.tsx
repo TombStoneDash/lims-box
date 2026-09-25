@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { FlaskConical, Download, Image as ImageIcon, FileText, User } from 'lucide-react';
+import { pressDownloadLabel } from '@/lib/press-download-label';
 
 const logos = [
   { name: 'Logo — Dark Background', file: '/press/logo-dark.svg', desc: 'White text on dark. For dark backgrounds.' },
@@ -131,11 +132,12 @@ export default function PressPage() {
                 key={logo.file}
                 href={logo.file}
                 download
+                aria-label={pressDownloadLabel(logo.name, logo.file)}
                 className="bg-white dark:bg-white/5 border border-black/5 dark:border-white/10 rounded-xl p-4 hover:shadow-md transition-shadow group"
               >
                 <div className="aspect-[4/1] bg-slate-100 dark:bg-white/5 rounded-lg flex items-center justify-center mb-3 overflow-hidden">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={logo.file} alt={logo.name} className="max-h-12" />
+                  <img src={logo.file} alt="" className="max-h-12" />
                 </div>
                 <p className="text-sm font-medium text-slate-900 dark:text-white group-hover:text-lab-teal transition-colors">{logo.name}</p>
                 <p className="text-xs text-slate-500">{logo.desc}</p>
@@ -157,11 +159,12 @@ export default function PressPage() {
                 key={ss.file}
                 href={ss.file}
                 download
+                aria-label={pressDownloadLabel(ss.name, ss.file)}
                 className="bg-white dark:bg-white/5 border border-black/5 dark:border-white/10 rounded-xl overflow-hidden hover:shadow-md transition-shadow group"
               >
                 <div className="aspect-video bg-slate-100 dark:bg-white/5 flex items-center justify-center">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={ss.file} alt={ss.name} className="w-full h-full object-cover" />
+                  <img src={ss.file} alt="" className="w-full h-full object-cover" />
                 </div>
                 <div className="p-3">
                   <p className="text-sm font-medium text-slate-900 dark:text-white group-hover:text-lab-teal transition-colors">{ss.name}</p>

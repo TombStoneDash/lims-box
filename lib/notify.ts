@@ -26,6 +26,77 @@ export function shouldDomainFallback(status: number, body: string): boolean {
   return status === 403 && /domain is not verified/i.test(body);
 }
 
+export type DeliveryResult = { status: 'sent' } | { status: 'sent_via_fallback' };
+export type DeliveryKind = 'applicant_confirmation' | 'submission_notice';
+export type DeliveryFailureReason = 'not_configured' | 'domain_not_verified' | 'provider_error' | 'transport_error';
+
+// Failures continue to reject so existing callers cannot mistake them for success.
+// Only bounded metadata is retained: provider bodies and exceptions may contain PII.
+export class NotificationDeliveryError extends Error {
+  readonly status = 'failed' as const;
+
+  constructor(
+    readonly kind: DeliveryKind,
+    readonly reason: DeliveryFailureReason,
+    readonly stage: 'primary' | 'fallback',
+    readonly httpStatus?: number,
+  ) {
+    const label = kind === 'applicant_confirmation' ? 'Applicant confirmation' : 'Submission notice';
+    super(reason === 'not_configured'
+      ? `${label} delivery is not configured`
+      : `${label}${stage === 'fallback' ? ' fallback' : ''} delivery failed${httpStatus === undefined ? '' : ` (${httpStatus})`}`);
+    this.name = 'NotificationDeliveryError';
+  }
+}
+
+type Email = { from: string; to: string[]; subject: string; html: string };
+
+async function deliver(kind: DeliveryKind, email: Email): Promise<DeliveryResult> {
+  let stage: 'primary' | 'fallback' = 'primary';
+  try {
+    const apiKey = process.env.RESEND_API_KEY;
+    if (!apiKey) throw new NotificationDeliveryError(kind, 'not_configured', stage);
+    const send = (message: Email) => fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify(message),
+    });
+    const response = await send(email);
+    if (response.ok) return { status: 'sent' };
+
+    const domainUnverified = shouldDomainFallback(response.status, await response.text());
+    if (kind === 'submission_notice' && domainUnverified) {
+      stage = 'fallback';
+      const retry = await send({
+        ...email,
+        from: FALLBACK_FROM,
+        to: [FALLBACK_TO],
+        subject: `[FALLBACK DELIVERY] ${email.subject}`,
+      });
+      if (retry.ok) {
+        console.warn('[notify] [FALLBACK DELIVERY] submission notice accepted by fallback sender', {
+          kind, status: 'sent_via_fallback', reason: 'domain_not_verified',
+        });
+        return { status: 'sent_via_fallback' };
+      }
+      const reason = shouldDomainFallback(retry.status, await retry.text())
+        ? 'domain_not_verified' : 'provider_error';
+      throw new NotificationDeliveryError(kind, reason, stage, retry.status);
+    }
+    throw new NotificationDeliveryError(kind,
+      domainUnverified ? 'domain_not_verified' : 'provider_error', stage, response.status);
+  } catch (err) {
+    const failure = err instanceof NotificationDeliveryError
+      ? err : new NotificationDeliveryError(kind, 'transport_error', stage);
+    console.error('[notify] [DELIVERY FAILED]', {
+      kind: failure.kind, status: failure.status, reason: failure.reason,
+      stage: failure.stage, httpStatus: failure.httpStatus,
+      ...(kind === 'applicant_confirmation' ? { fallbackAvailable: false } : {}),
+    });
+    throw failure;
+  }
+}
+
 type NotifyPayload = {
   subject: string;
   lines: Array<[string, string | null | undefined]>;
@@ -43,11 +114,7 @@ function escape(s: string) {
   return s.replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]!));
 }
 
-export async function sendApplicantConfirmation(email: string, name: string): Promise<void> {
-  const apiKey = process.env.RESEND_API_KEY;
-  if (!apiKey) {
-    throw new Error('Applicant confirmation delivery is not configured');
-  }
+export async function sendApplicantConfirmation(email: string, name: string): Promise<DeliveryResult> {
 
   const html = `
 <div style="font-family:system-ui,sans-serif;max-width:560px;color:#0f172a;">
@@ -74,86 +141,19 @@ export async function sendApplicantConfirmation(email: string, name: string): Pr
   </p>
 </div>`;
 
-  try {
-    const res = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        from: NOTIFY_FROM,
-        to: [email],
-        subject: 'We got your LIMS Box application',
-        html,
-      }),
-    });
-    if (!res.ok) {
-      const body = await res.text();
-      console.error('[notify] Resend applicant confirmation error', res.status, body);
-      if (shouldDomainFallback(res.status, body)) {
-        console.error('[notify] applicant confirmation blocked: lims.bot domain not verified in Resend — no fallback possible for external recipients');
-      }
-      throw new Error(`Applicant confirmation delivery failed (${res.status})`);
-    } else {
-      console.log('[notify] Applicant confirmation sent to', email);
-    }
-  } catch (err) {
-    console.error('[notify] Resend applicant confirmation threw', err);
-    throw err;
-  }
+  return deliver('applicant_confirmation', {
+    from: NOTIFY_FROM,
+    to: [email],
+    subject: 'We got your LIMS Box application',
+    html,
+  });
 }
 
-export async function sendSubmissionNotice(payload: NotifyPayload): Promise<void> {
-  const apiKey = process.env.RESEND_API_KEY;
-  if (!apiKey) {
-    throw new Error('Submission notice delivery is not configured');
-  }
-
-  try {
-    const res = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        from: NOTIFY_FROM,
-        to: [NOTIFY_TO],
-        subject: payload.subject,
-        html: renderBody(payload),
-      }),
-    });
-    if (!res.ok) {
-      const body = await res.text();
-      console.error('[notify] Resend error', res.status, body);
-      if (shouldDomainFallback(res.status, body)) {
-        const retry = await fetch('https://api.resend.com/emails', {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${apiKey}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            from: FALLBACK_FROM,
-            to: [FALLBACK_TO],
-            subject: `[FALLBACK DELIVERY] ${payload.subject}`,
-            html: renderBody(payload),
-          }),
-        });
-        if (retry.ok) {
-          console.log('[notify] domain-unverified fallback delivered submission notice to', FALLBACK_TO);
-          return;
-        } else {
-          const retryBody = await retry.text();
-          console.error('[notify] fallback send failed', retry.status, retryBody);
-          throw new Error(`Submission notice fallback delivery failed (${retry.status})`);
-        }
-      }
-      throw new Error(`Submission notice delivery failed (${res.status})`);
-    }
-  } catch (err) {
-    console.error('[notify] Resend threw', err);
-    throw err;
-  }
+export async function sendSubmissionNotice(payload: NotifyPayload): Promise<DeliveryResult> {
+  return deliver('submission_notice', {
+    from: NOTIFY_FROM,
+    to: [NOTIFY_TO],
+    subject: payload.subject,
+    html: renderBody(payload),
+  });
 }

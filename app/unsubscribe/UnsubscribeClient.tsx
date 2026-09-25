@@ -12,16 +12,20 @@ type State = 'idle' | 'loading' | 'success' | 'error';
 export default function UnsubscribeClient({ email, list }: Props) {
   const [state, setState] = useState<State>('idle');
   const [errorMsg, setErrorMsg] = useState('');
+  const [enteredEmail, setEnteredEmail] = useState('');
+  const unsubscribeEmail = email || enteredEmail.trim();
+  const canUnsubscribe = Boolean(email) || unsubscribeEmail.includes('@');
 
   const displayList = list === 'all' ? 'all LIMS BOX emails' : 'the LIMS BOX newsletter';
 
   async function handleUnsubscribe() {
+    if (!canUnsubscribe || state === 'loading') return;
     setState('loading');
     try {
       const res = await fetch('/api/unsubscribe', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, list }),
+        body: JSON.stringify({ email: unsubscribeEmail, list }),
       });
       if (res.ok) {
         setState('success');
@@ -38,13 +42,13 @@ export default function UnsubscribeClient({ email, list }: Props) {
 
   if (state === 'success') {
     return (
-      <div className="text-center">
+      <div role="status" className="text-center">
         <div className="text-4xl mb-4">✓</div>
         <h2 className="text-xl font-semibold text-gray-900 mb-2">You&apos;re unsubscribed</h2>
         <p className="text-gray-600 text-sm">
-          {email ? (
+          {unsubscribeEmail ? (
             <>
-              <strong>{email}</strong> has been removed from {displayList}.
+              <strong>{unsubscribeEmail}</strong> has been removed from {displayList}.
             </>
           ) : (
             <>You have been removed from {displayList}.</>
@@ -68,20 +72,35 @@ export default function UnsubscribeClient({ email, list }: Props) {
           Click below to unsubscribe <strong>{email}</strong> from {displayList}.
         </p>
       ) : (
-        <p className="text-gray-600 text-sm mb-6">
-          Click below to unsubscribe from {displayList}.
-        </p>
+        <div className="mb-6">
+          <p className="text-gray-600 text-sm mb-4">
+            Enter your email address to unsubscribe from {displayList}.
+          </p>
+          <label htmlFor="unsubscribe-email" className="block text-sm font-medium text-gray-900 mb-2">
+            Email address
+          </label>
+          <input
+            id="unsubscribe-email"
+            type="email"
+            autoComplete="email"
+            maxLength={320}
+            value={enteredEmail}
+            onChange={(event) => setEnteredEmail(event.target.value)}
+            disabled={state === 'loading'}
+            className="w-full rounded-md border border-gray-300 px-3 py-2"
+          />
+        </div>
       )}
 
       {state === 'error' && (
-        <div className="bg-red-50 border border-red-200 rounded p-3 mb-4 text-sm text-red-700">
+        <div role="alert" className="bg-red-50 border border-red-200 rounded p-3 mb-4 text-sm text-red-700">
           {errorMsg}
         </div>
       )}
 
       <button
         onClick={handleUnsubscribe}
-        disabled={state === 'loading'}
+        disabled={state === 'loading' || !canUnsubscribe}
         className="w-full bg-gray-900 text-white py-3 px-4 rounded-md font-medium hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
       >
         {state === 'loading' ? 'Processing…' : 'Confirm Unsubscribe'}

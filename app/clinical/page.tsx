@@ -2,10 +2,23 @@ import Link from "next/link";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
+  alternates: { canonical: "/clinical" },
   title: "LIMS BOX for clinical labs — local-first documentation continuity",
   description:
-    "Local-first documentation layer for CLIA-certified clinical labs. Survey-readiness organization. Human-reviewed drafting. Not a LIMS replacement.",
+    "Local-first documentation layer for CLIA-certified clinical labs. Survey-readiness organization. Human-reviewed drafting. Not a LIMS replacement. See a synthetic demo — no customer data, no live LIS integration.",
 };
+
+const DEMONSTRATED_TODAY = [
+  "Sample status dashboard, QC charts, and equipment calibration tracking — synthetic data only.",
+  "Personnel training records and survey-readiness document organization.",
+  "PDF bundle export for survey visits, run against local fictional seed data.",
+] as const;
+
+const COMING_SOON = [
+  "Direct LIS or EHR integration — not built, and the demo below is not connected to any lab's live system.",
+  "Native instrument integrations beyond CSV/XML file import.",
+  "Automated compliance submission — drafts are always human-reviewed before approval, not auto-filed.",
+] as const;
 
 export default function ClinicalLandingPage() {
   return (
@@ -40,6 +53,55 @@ export default function ClinicalLandingPage() {
             <strong className="font-medium">Built by Hud Taylor.</strong> MS Biochem UCSD/Salk · 15+ years in LIMS · Former Senior LIMS Developer at the State of Alaska Department of Health public health lab (5M+ test results/year).
           </p>
         </div>
+      </section>
+
+      <section className="max-w-3xl mx-auto px-6 py-16 text-center">
+        <p className="text-xs uppercase tracking-widest text-teal-700 font-medium mb-3">See it before you talk to us</p>
+        <h2 className="text-2xl font-semibold text-slate-900">A synthetic lab, running now</h2>
+        <p className="mt-3 text-base text-slate-700 leading-relaxed max-w-2xl mx-auto">
+          Explore a fictional SENAITE-based lab dashboard — sample status, QC charts, equipment calibration, and
+          training records. Synthetic data only. No PHI, no customer data, and not connected to any live production
+          system.
+        </p>
+        <Link
+          href="/senaite-demo"
+          className="mt-6 inline-flex items-center rounded-md bg-teal-600 text-white px-6 py-3 text-sm font-medium hover:bg-teal-700"
+        >
+          View the synthetic demo →
+        </Link>
+      </section>
+
+      <section className="max-w-3xl mx-auto px-6 pb-16">
+        <h2 className="text-xl font-semibold text-slate-900 mb-6">What&apos;s demonstrated today vs. what&apos;s coming</h2>
+        <div className="grid gap-8 md:grid-cols-2">
+          <div>
+            <p className="text-sm font-medium text-teal-700 uppercase tracking-wide mb-3">Demonstrated today</p>
+            <ul className="space-y-3">
+              {DEMONSTRATED_TODAY.map((item) => (
+                <li key={item} className="text-sm text-slate-700 leading-relaxed">
+                  {item}
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div>
+            <p className="text-sm font-medium text-slate-500 uppercase tracking-wide mb-3">Coming soon / integration-dependent</p>
+            <ul className="space-y-3">
+              {COMING_SOON.map((item) => (
+                <li key={item} className="text-sm text-slate-600 leading-relaxed">
+                  {item}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+        <p className="mt-6 text-xs text-slate-500">
+          Full record of what&apos;s verified, demonstrated, and on the roadmap: {" "}
+          <Link href="/evidence" className="underline hover:text-slate-900">
+            Capability Evidence Matrix
+          </Link>
+          .
+        </p>
       </section>
 
       <section className="max-w-3xl mx-auto px-6 py-16 text-center">

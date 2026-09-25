@@ -405,3 +405,27 @@ const BLOCK_MESSAGES: Record<AccessionBlockCode, string> = {
 export function explainAccessionBlock(blockCode: AccessionBlockCode): string {
   return BLOCK_MESSAGES[blockCode];
 }
+
+/** The concrete corrective step a caller can take to move a blocked event forward, keyed by block code. */
+const BLOCK_NEXT_ACTIONS: Record<AccessionBlockCode, string> = {
+  'unsupported-event-kind': 'Resubmit using one of the supported event kinds: receive, accession, hold, reject, or cancel.',
+  'unknown-actor-class': 'Resubmit the event with a recognized actor class: submitter, accessioner, quality-reviewer, or system.',
+  'unknown-reason-code': 'Resubmit the event with one of the reason codes defined for this workflow.',
+  'reason-code-not-allowed-for-kind': 'Choose a reason code that is permitted for this event kind, or change the event kind to match the reason.',
+  'accession-scope-violation': 'Remove any testing or release language from the note and resubmit as a plain accession event.',
+  'tenant-mismatch': 'Confirm the tenant identifier matches the workflow context and resubmit under the correct tenant.',
+  'sample-id-mismatch': 'Confirm the sample identifier matches the workflow context and resubmit for the correct sample.',
+  'timestamp-invalid': 'Resupply a parsable timestamp for the event.',
+  'timestamp-not-utc': 'Resupply the timestamp as an explicit UTC value ending in "Z".',
+  'timestamp-backwards': 'Resupply a timestamp that comes after the most recent event already recorded for this sample.',
+  'duplicate-event-id-conflict': 'Use a new, unused event identifier and resubmit.',
+  'duplicate-event-id-replay': 'This event was already applied; no resubmission is needed.',
+  'note-suspected-pii': 'Remove personal information from the note field and resubmit.',
+  'terminal-state': 'This sample has reached a terminal state; open a new accession record if further action is required.',
+  'skipped-transition': 'Resubmit an event kind that matches the sample\'s current state instead of skipping a required transition.',
+};
+
+/** Deterministic, privacy-safe next corrective action for a block code, suitable for UI display alongside the explanation. */
+export function explainAccessionBlockNextAction(blockCode: AccessionBlockCode): string {
+  return BLOCK_NEXT_ACTIONS[blockCode];
+}
