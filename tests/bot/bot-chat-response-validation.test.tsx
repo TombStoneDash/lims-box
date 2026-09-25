@@ -4,7 +4,7 @@ import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { BotChat } from '../../app/bot/bot-chat';
 
-const retry = 'Unable to get a valid answer — please try again.';
+const retry = 'Unable to get a valid answer. Please try again.';
 const valid = {
   answer: 'LIMS BOX works offline.',
   grounded: true,
@@ -24,6 +24,8 @@ function harness(t: TestContext, respond: () => Promise<Response>) {
     }];
   });
   t.mock.method(React, 'useId', () => 'question');
+  // Session-history effects (#292) need a browser; this harness renders the component as a function.
+  t.mock.method(React, 'useEffect', () => {});
   const focus = t.mock.fn();
   t.mock.method(React, 'useRef', () => ({ current: { focus } }));
   const fetch = t.mock.method(globalThis, 'fetch', respond);

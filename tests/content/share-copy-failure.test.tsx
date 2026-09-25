@@ -10,6 +10,7 @@ function browserMocks(t: TestContext, modernSucceeds: boolean, legacyResult: boo
   const children = new Set<unknown>();
   const textarea = {
     value: '',
+    style: { cssText: '' },
     select: t.mock.fn(),
     remove: t.mock.fn(() => children.delete(textarea)),
   };

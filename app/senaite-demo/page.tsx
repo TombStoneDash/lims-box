@@ -1,7 +1,10 @@
 import { sampleCounts } from '@/lib/demo-data';
-import { qcSummary } from '@/lib/demo-data';
-import { equipmentSummary } from '@/lib/demo-data';
+import { allQCData } from '@/lib/demo-data';
+import { evaluateQCSummary } from '@/lib/senaite-demo-qc';
+import { equipmentSummary, instruments } from '@/lib/demo-data';
 import { trainingSummary } from '@/lib/demo-data';
+import { projectUpcomingCalibrations } from '@/lib/senaite-demo-calibration-schedule';
+import { DEMO_AS_OF_DATE } from '@/lib/senaite-demo-equipment';
 import { CheckCircle2, AlertTriangle, Clock, FlaskConical, Activity, Wrench, GraduationCap } from 'lucide-react';
 import Link from 'next/link';
 
@@ -28,6 +31,22 @@ function StatCard({ label, value, sub, icon: Icon, color, href }: {
 
 export default function DemoDashboard() {
   const { total, byStatus, byType } = sampleCounts;
+  const qc = evaluateQCSummary(allQCData);
+  const qcPassRate = qc.status !== 'invalid' && qc.totalRuns > 0
+    ? `${(((qc.totalRuns - qc.outOfRangeCount) / qc.totalRuns) * 100).toFixed(1)}%`
+    : 'N/A';
+  // Include all valid deadlines, even beyond the equipment panel's 30-day horizon.
+  const calibrations = projectUpcomingCalibrations(
+    instruments, new Date(`${DEMO_AS_OF_DATE}T00:00:00Z`), Infinity,
+  );
+  const earliest = calibrations[0];
+  const earliestInstruments = calibrations.filter(item => item.dueInDays === earliest?.dueInDays);
+  const deadline = earliest && new Date(`${earliest.evaluation.nextCalibration}T00:00:00Z`)
+    .toLocaleDateString('en-US', { month: 'long', day: 'numeric', timeZone: 'UTC' });
+  const days = earliest ? Math.abs(earliest.dueInDays) : 0;
+  const timing = earliest?.dueInDays < 0
+    ? `${days} ${days === 1 ? 'day' : 'days'} overdue`
+    : days === 0 ? 'Due today' : `${days} ${days === 1 ? 'day' : 'days'} remaining`;
 
   return (
     <div className="space-y-6">
@@ -54,10 +73,10 @@ export default function DemoDashboard() {
         />
         <StatCard
           label="QC Runs (90 days)"
-          value={qcSummary.totalRuns}
-          sub={`${qcSummary.passRate} pass rate — 0 out-of-range`}
+          value={qc.totalRuns}
+          sub={`${qcPassRate} pass rate — ${qc.outOfRangeCount} out-of-range${qc.status === 'invalid' ? ' — QC data unavailable or invalid' : ''}`}
           icon={Activity}
-          color="bg-green-500"
+          color={qc.status === 'invalid' ? 'bg-amber-500' : qc.status === 'out-of-range' ? 'bg-red-500' : 'bg-green-500'}
           href="/senaite-demo/qc"
         />
         <StatCard
@@ -151,8 +170,16 @@ export default function DemoDashboard() {
           <div className="flex items-center gap-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
             <Clock className="w-5 h-5 text-blue-500 flex-shrink-0" />
             <div>
-              <p className="text-sm font-medium text-blue-800">Instrument calibration due April 28</p>
-              <p className="text-xs text-blue-600">All 5 instruments — 15 days remaining</p>
+              <p className="text-sm font-medium text-blue-800">
+                {earliest
+                  ? `Instrument ${earliestInstruments.length === 1 ? 'calibration' : 'calibrations'} due ${deadline}`
+                  : 'No calibration deadline available'}
+              </p>
+              <p className="text-xs text-blue-600">
+                {earliest
+                  ? `${earliestInstruments.map(item => item.instrument.name).join(', ')} — ${earliestInstruments.length} ${earliestInstruments.length === 1 ? 'instrument' : 'instruments'} — ${timing}`
+                  : 'No valid instrument calibration deadlines in demo data'}
+              </p>
             </div>
             <Link href="/senaite-demo/equipment" className="ml-auto text-xs font-medium text-blue-700 hover:text-blue-900 underline">
               View
