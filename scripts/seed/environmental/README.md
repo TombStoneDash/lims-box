@@ -18,7 +18,8 @@ No customer data, no PHI, and nothing OHWorks-specific.
   - 4 synthetic clients, 30 synthetic samples, 9 QC batches (method blank, LCS, MS/MSD).
 - `validate.mjs`: pure validator. No network, no writes.
 - `load.mjs`: SENAITE JSON API loader. **Dry run is the default.**
-- `seed.test.mjs`: unit tests.
+- `results.mjs`: enters synthetic results and the two remarks. **Dry run is the default.**
+- `seed.test.mjs`, `results.test.mjs`: unit tests.
 
 ## The two seeded problems
 
@@ -71,8 +72,31 @@ The script cannot check it.
 In order: analysis categories, methods, sample types, analysis services, clients,
 contacts, then samples (AnalysisRequest) with their analyses.
 
-It does **not** enter results or QC values. Those stay in `data.mjs` for the validator
-and for a later results step.
+It does **not** enter results. `results.mjs` does that (next section).
+
+## Results step (results.mjs)
+
+After `load.mjs --apply`, `results.mjs` enters one synthetic result per sample analysis
+(150), then submits each one for review. It never verifies or publishes: a person
+does that on camera.
+
+- Results are deterministic. Numeric results stay below every example limit, and
+  presence/absence tests read `Absent`, so the only problems on screen are the two seeded ones.
+- Remarks, computed from the validator's own math:
+  - `SYN-ENV-WW-0003` BOD5: "HOLDING TIME EXCEEDED: set up 55.0 h after collection; limit 48 h ...".
+  - Every lead result in `SYN-QC-01` (5 drinking water samples): "QC BATCH SYN-QC-01 FAILED: LCS recovery 121.0% vs 85-115% (example limits). Hold this result for review."
+- Dry run is the default: `node scripts/seed/environmental/results.mjs`. `--apply` uses the
+  same gate and env vars as `load.mjs`. Run it once.
+- QC batch values themselves are not entered as SENAITE reference samples; the remarks carry the QC outcome.
+
+SENAITE calls: `analysis?getRequestID=`, `update {uid, Result}` and the `submit` transition
+match the LIAISON importer that worked on the London demo box (lims-bot-demo
+`tools/import_results.py`). UNVERIFIED on this build: the `getClientSampleID` lookup,
+writing `Remarks`, and a text result (`Absent`) on a service with no result options.
+Dry-run review first.
+
+Tests: `node --test scripts/seed/environmental/*.test.mjs`. CI runs them through
+`tests/seed/environmental.test.ts`.
 
 Setup objects and clients are looked up by title first and reused. Contacts and
 samples are always created. **Run it once on a fresh snapshot.**
