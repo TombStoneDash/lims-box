@@ -7,15 +7,24 @@ import { allQCData, instruments, sampleCounts } from '../lib/demo-data';
 import { evaluateEquipmentStatus } from '../lib/senaite-demo-equipment';
 import { evaluateQCSummary } from '../lib/senaite-demo-qc';
 
+// tsx compiles this repository's preserved JSX in classic mode.
+Object.assign(globalThis, { React });
+
 const markup = renderToStaticMarkup(React.createElement(DemoDashboard));
 const equipment = evaluateEquipmentStatus(instruments);
 const qc = evaluateQCSummary(allQCData);
 
-test('calibration action item is derived from the real equipment evaluator', () => {
+test('Instruments card is derived from the real equipment evaluator', () => {
+  // The calibration action item itself is #339's reminder, covered by
+  // tests/senaite-demo-dashboard-calibration-reminder.test.tsx.
   assert.equal(equipment.nextCalibrationDue, '2026-04-20');
-  assert.equal(equipment.nextDueInstrumentName, 'pH Meter Mettler Toledo S220');
-  assert.ok(markup.includes(equipment.nextCalibrationDue as string));
-  assert.ok(markup.includes(equipment.nextDueInstrumentName as string));
+  const start = markup.indexOf('>Instruments<');
+  const end = markup.indexOf('>Staff<');
+  assert.ok(start >= 0 && end > start, 'Instruments card precedes the Staff card');
+  const card = markup.slice(start, end);
+  assert.ok(card.includes(`>${equipment.totalInstruments}<`));
+  assert.ok(card.includes(`${equipment.currentCount} of ${equipment.totalInstruments} calibrated, next due ${equipment.nextCalibrationDue}`));
+  assert.ok(!markup.includes('All calibrated'));
   assert.ok(!markup.includes('April 28'));
   assert.ok(!markup.includes('15 days remaining'));
   assert.ok(!markup.includes('All 5 instruments'));

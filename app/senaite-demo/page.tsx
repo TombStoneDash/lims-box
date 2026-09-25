@@ -1,10 +1,10 @@
-import React from 'react';
 import { sampleCounts } from '@/lib/demo-data';
 import { allQCData } from '@/lib/demo-data';
 import { evaluateQCSummary } from '@/lib/senaite-demo-qc';
 import { instruments } from '@/lib/demo-data';
-import { evaluateEquipmentStatus } from '@/lib/senaite-demo-equipment';
 import { trainingSummary } from '@/lib/demo-data';
+import { projectUpcomingCalibrations } from '@/lib/senaite-demo-calibration-schedule';
+import { DEMO_AS_OF_DATE, evaluateEquipmentStatus } from '@/lib/senaite-demo-equipment';
 import { CheckCircle2, AlertTriangle, Clock, FlaskConical, Activity, Wrench, GraduationCap } from 'lucide-react';
 import Link from 'next/link';
 
@@ -35,7 +35,19 @@ export default function DemoDashboard() {
   const qcPassRate = qc.status !== 'invalid' && qc.totalRuns > 0
     ? `${(((qc.totalRuns - qc.outOfRangeCount) / qc.totalRuns) * 100).toFixed(1)}%`
     : 'N/A';
-  const equipment = evaluateEquipmentStatus(instruments);
+  // Include all valid deadlines, even beyond the equipment panel's 30-day horizon.
+  const calibrations = projectUpcomingCalibrations(
+    instruments, new Date(`${DEMO_AS_OF_DATE}T00:00:00Z`), Infinity,
+  );
+  const earliest = calibrations[0];
+  const earliestInstruments = calibrations.filter(item => item.dueInDays === earliest?.dueInDays);
+  const deadline = earliest && new Date(`${earliest.evaluation.nextCalibration}T00:00:00Z`)
+    .toLocaleDateString('en-US', { month: 'long', day: 'numeric', timeZone: 'UTC' });
+  const days = earliest ? Math.abs(earliest.dueInDays) : 0;
+  const timing = earliest?.dueInDays < 0
+    ? `${days} ${days === 1 ? 'day' : 'days'} overdue`
+    : days === 0 ? 'Due today' : `${days} ${days === 1 ? 'day' : 'days'} remaining`;
+  const equipment = evaluateEquipmentStatus(instruments, DEMO_AS_OF_DATE);
 
   return (
     <div className="space-y-6">
@@ -43,11 +55,11 @@ export default function DemoDashboard() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Laboratory Dashboard</h1>
-          <p className="text-sm text-slate-500 mt-1">Synthetic laboratory snapshot — fixed demo date April 13, 2026</p>
+          <p className="text-sm text-slate-500 mt-1">Synthetic laboratory snapshot: fixed demo date April 13, 2026</p>
         </div>
         <div className="flex items-center gap-2 bg-green-50 border border-green-200 rounded-lg px-4 py-2">
           <CheckCircle2 className="w-5 h-5 text-green-600" />
-          <span className="text-sm font-medium text-green-700">Synthetic fixture — not a live system</span>
+          <span className="text-sm font-medium text-green-700">Synthetic fixture, not a live system</span>
         </div>
       </div>
 
@@ -71,7 +83,7 @@ export default function DemoDashboard() {
         <StatCard
           label="Instruments"
           value={equipment.totalInstruments}
-          sub={`${equipment.currentCount} of ${equipment.totalInstruments} calibrated — next due ${equipment.nextCalibrationDue ?? 'unknown'}`}
+          sub={`${equipment.currentCount} of ${equipment.totalInstruments} calibrated, next due ${equipment.nextCalibrationDue ?? 'unknown'}`}
           icon={Wrench}
           color="bg-purple-500"
           href="/senaite-demo/equipment"
@@ -160,12 +172,14 @@ export default function DemoDashboard() {
             <Clock className="w-5 h-5 text-blue-500 flex-shrink-0" />
             <div>
               <p className="text-sm font-medium text-blue-800">
-                {equipment.nextCalibrationDue
-                  ? `Next calibration due ${equipment.nextCalibrationDue} — ${equipment.nextDueInstrumentName}`
-                  : 'No calibration due date available'}
+                {earliest
+                  ? `Instrument ${earliestInstruments.length === 1 ? 'calibration' : 'calibrations'} due ${deadline}`
+                  : 'No calibration deadline available'}
               </p>
               <p className="text-xs text-blue-600">
-                {equipment.totalInstruments} instruments, {equipment.currentCount} calibrated, {equipment.overdueCount} overdue (synthetic, as of April 13, 2026)
+                {earliest
+                  ? `${earliestInstruments.map(item => item.instrument.name).join(', ')} — ${earliestInstruments.length} ${earliestInstruments.length === 1 ? 'instrument' : 'instruments'} — ${timing}`
+                  : 'No valid instrument calibration deadlines in demo data'}
               </p>
             </div>
             <Link href="/senaite-demo/equipment" className="ml-auto text-xs font-medium text-blue-700 hover:text-blue-900 underline">
