@@ -1,10 +1,10 @@
 import { sampleCounts } from '@/lib/demo-data';
 import { allQCData } from '@/lib/demo-data';
 import { evaluateQCSummary } from '@/lib/senaite-demo-qc';
-import { equipmentSummary, instruments } from '@/lib/demo-data';
+import { instruments } from '@/lib/demo-data';
 import { trainingSummary } from '@/lib/demo-data';
 import { projectUpcomingCalibrations } from '@/lib/senaite-demo-calibration-schedule';
-import { DEMO_AS_OF_DATE } from '@/lib/senaite-demo-equipment';
+import { DEMO_AS_OF_DATE, evaluateEquipmentStatus } from '@/lib/senaite-demo-equipment';
 import { CheckCircle2, AlertTriangle, Clock, FlaskConical, Activity, Wrench, GraduationCap } from 'lucide-react';
 import Link from 'next/link';
 
@@ -47,6 +47,7 @@ export default function DemoDashboard() {
   const timing = earliest?.dueInDays < 0
     ? `${days} ${days === 1 ? 'day' : 'days'} overdue`
     : days === 0 ? 'Due today' : `${days} ${days === 1 ? 'day' : 'days'} remaining`;
+  const equipment = evaluateEquipmentStatus(instruments, DEMO_AS_OF_DATE);
 
   return (
     <div className="space-y-6">
@@ -54,11 +55,11 @@ export default function DemoDashboard() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Laboratory Dashboard</h1>
-          <p className="text-sm text-slate-500 mt-1">Real-time overview — April 13, 2026</p>
+          <p className="text-sm text-slate-500 mt-1">Synthetic laboratory snapshot: fixed demo date April 13, 2026</p>
         </div>
         <div className="flex items-center gap-2 bg-green-50 border border-green-200 rounded-lg px-4 py-2">
           <CheckCircle2 className="w-5 h-5 text-green-600" />
-          <span className="text-sm font-medium text-green-700">All Systems Operational</span>
+          <span className="text-sm font-medium text-green-700">Synthetic fixture, not a live system</span>
         </div>
       </div>
 
@@ -81,8 +82,8 @@ export default function DemoDashboard() {
         />
         <StatCard
           label="Instruments"
-          value={equipmentSummary.totalInstruments}
-          sub={`All calibrated — next due ${equipmentSummary.nextCalibrationDue}`}
+          value={equipment.totalInstruments}
+          sub={`${equipment.currentCount} of ${equipment.totalInstruments} calibrated, next due ${equipment.nextCalibrationDue ?? 'unknown'}`}
           icon={Wrench}
           color="bg-purple-500"
           href="/senaite-demo/equipment"
@@ -132,10 +133,10 @@ export default function DemoDashboard() {
             {Object.entries(byType).map(([type, count]) => {
               const pct = Math.round((count / total) * 100);
               const colors: Record<string, string> = {
-                Blood: 'bg-red-500',
-                Urine: 'bg-amber-500',
-                Swab: 'bg-sky-500',
-                Tissue: 'bg-pink-500',
+                'Drinking Water': 'bg-sky-500',
+                Groundwater: 'bg-blue-600',
+                Wastewater: 'bg-amber-500',
+                Soil: 'bg-stone-500',
               };
               return (
                 <div key={type}>
@@ -188,8 +189,8 @@ export default function DemoDashboard() {
           <div className="flex items-center gap-3 p-3 bg-green-50 border border-green-200 rounded-lg">
             <CheckCircle2 className="w-5 h-5 text-green-500 flex-shrink-0" />
             <div>
-              <p className="text-sm font-medium text-green-800">CAP audit readiness: PASS</p>
-              <p className="text-xs text-green-600">All QC, training, calibration, and documentation requirements met</p>
+              <p className="text-sm font-medium text-green-800">CAP audit readiness: PASS (fabricated demo outcome)</p>
+              <p className="text-xs text-green-600">Illustrative only. This panel evaluates no real QC, training, calibration or documentation record and is not an accreditation finding.</p>
             </div>
           </div>
         </div>

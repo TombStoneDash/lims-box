@@ -140,8 +140,9 @@ function findTest(question: string): SyntheticTest | undefined {
 const MATRIX_KEYS = ['serum', 'plasma', 'swab', 'urine', 'drinking_water', 'wastewater', 'surface_water'] as const;
 
 function findMatrix(question: string): string | undefined {
-  const lowerQuestion = question.toLowerCase().replaceAll('-', '_').replaceAll(' ', '_');
-  return MATRIX_KEYS.find((matrix) => lowerQuestion.includes(matrix));
+  const lowerQuestion = question.toLowerCase().replace(/\s+/g, ' ');
+  const matrix = lowerQuestion.match(MATRIX_PARAM_PATTERN)?.[0];
+  return matrix?.replace(/[ _-]+/g, '_');
 }
 
 type NeutralIntent = 'status' | 'results' | 'tat' | 'container' | 'order';

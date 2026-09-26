@@ -5,6 +5,7 @@ import {
   FlaskConical, ClipboardList, Shield, BarChart3, FileText,
   MessageSquare
 } from 'lucide-react';
+import { formatClock, advancePlayer } from '@/lib/demo-record-player';
 
 const STEP_DURATION = 30;
 const TRANSITION_MS = 800;
@@ -164,28 +165,42 @@ export default function RecordPage() {
   const [current, setCurrent] = useState(0);
   const [elapsed, setElapsed] = useState(0);
   const [started, setStarted] = useState(false);
+  const [finished, setFinished] = useState(false);
+  // Read the visitor's motion preference once; skip the fade when they asked for it.
+  const [prefersReducedMotion] = useState(
+    typeof window !== 'undefined' && !!window.matchMedia
+      && window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  );
 
   const totalElapsed = current * STEP_DURATION + elapsed;
   const totalTime = steps.length * STEP_DURATION;
-  const finished = totalElapsed === totalTime;
   const transitioning = elapsed === STEP_DURATION && !finished;
+  const transitionDuration = prefersReducedMotion ? 0 : TRANSITION_MS;
 
   useEffect(() => {
     if (!started || !transitioning) return;
     const timer = setTimeout(() => {
       setCurrent(current + 1);
       setElapsed(0);
-    }, TRANSITION_MS);
+    }, transitionDuration);
     return () => clearTimeout(timer);
-  }, [started, transitioning, current]);
+  }, [started, transitioning, current, transitionDuration]);
 
   useEffect(() => {
     if (!started || transitioning || finished) return;
     const timer = setInterval(() => {
-      setElapsed(prev => Math.min(prev + 1, STEP_DURATION));
+      const next = advancePlayer({ step: current, elapsed }, steps.length, STEP_DURATION);
+      if (next.finished) {
+        setElapsed(next.elapsed);
+        setFinished(true);
+      } else if (next.step !== current) {
+        setElapsed(STEP_DURATION);
+      } else {
+        setElapsed(next.elapsed);
+      }
     }, 1000);
     return () => clearInterval(timer);
-  }, [started, transitioning, finished]);
+  }, [started, transitioning, finished, current, elapsed]);
 
   const step = steps[current];
   const StepIcon = step.icon;
@@ -197,7 +212,7 @@ export default function RecordPage() {
         <div className="text-center">
           <FlaskConical className="w-16 h-16 text-[#2E8B57] mx-auto mb-6" />
           <h1 className="text-4xl font-bold text-white mb-2 tracking-tight">LIMS BOX</h1>
-          <p className="text-slate-500 mb-8">Recording mode — click anywhere to start</p>
+          <p className="text-slate-500 mb-8">Recording mode — click anywhere to start, or press Enter</p>
           <button
             type="button"
             onClick={event => {
@@ -209,7 +224,7 @@ export default function RecordPage() {
             Start recording
           </button>
           <div className="text-xs text-slate-600">
-            {steps.length} screens &times; {STEP_DURATION}s = {totalTime / 60}:{String(totalTime % 60).padStart(2, '0')} total
+            {steps.length} screens &times; {STEP_DURATION}s = {formatClock(totalTime)} total
           </div>
         </div>
       </div>
@@ -222,11 +237,11 @@ export default function RecordPage() {
       <div className="absolute top-4 right-4 z-10 bg-black/60 backdrop-blur-sm rounded-lg px-3 py-1.5 flex items-center gap-3 border border-white/10">
         <span className="text-xs text-slate-400">Setup</span>
         <span className="font-mono text-sm text-white">
-          {Math.floor(totalElapsed / 60)}:{String(totalElapsed % 60).padStart(2, '0')}
+          {formatClock(totalElapsed)}
         </span>
         <span className="text-xs text-slate-600">/</span>
         <span className="font-mono text-xs text-slate-500">
-          {Math.floor(totalTime / 60)}:{String(totalTime % 60).padStart(2, '0')}
+          {formatClock(totalTime)}
         </span>
       </div>
 
@@ -257,6 +272,25 @@ export default function RecordPage() {
           <div className="bg-[#1E293B] border border-white/10 rounded-2xl p-6">
             {step.content}
           </div>
+
+          {finished && (
+            <div className="mt-6 text-center space-y-3">
+              <p role="status" className="text-xs text-slate-500">
+                Recording walkthrough complete - {steps.length} of {steps.length} screens.
+              </p>
+              <button
+                type="button"
+                onClick={() => {
+                  setCurrent(0);
+                  setElapsed(0);
+                  setFinished(false);
+                }}
+                className="rounded-lg bg-[#2E8B57] px-4 py-2 text-xs font-semibold text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
+              >
+                Replay from the first screen
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
