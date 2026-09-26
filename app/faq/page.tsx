@@ -60,7 +60,7 @@ const faqs: FAQ[] = [
   {
     category: 'Technical',
     question: 'Can LIMS BOX integrate with our instruments?',
-    answer: 'Yes. LIMS BOX supports direct instrument integration via CSV, XML, and common data formats. ICP-MS, GC-MS, IC, UV-Vis, and other instruments that export data files can be connected. The Growth and Enterprise plans include instrument integration setup.',
+    answer: 'Not yet as a general feature. Today there is a CSV reader for one analyzer, used in testing only. Importing results from other instruments and file formats is planned. Tell us which instruments you run and we will say what that would take.',
   },
   {
     category: 'Technical',

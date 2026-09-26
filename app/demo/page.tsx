@@ -603,9 +603,9 @@ export default function DemoPage() {
             Clinical and diagnostics labs too
           </h2>
           <p className="text-sm text-slate-600 dark:text-slate-300 mb-4">
-            Guided demos can also run on two made-up labs: ABC Clinical (chemistry and hematology) and ABC Diagnostics
-            (PCR and urine culture). Every sample is synthetic, with no patient data. Each lab has one late specimen and
-            one failed control, so you can watch LIMS BOX flag them before a result goes out.
+            Planned, not live yet: synthetic seed data for two made-up labs, ABC Clinical (chemistry and hematology) and
+            ABC Diagnostics (PCR and urine culture), with no patient data. It is not shown on this page, and it does not
+            yet include results or QC runs. Today, clinical and diagnostics labs can review the Personnel Pack.
           </p>
           <p className="text-sm">
             <Link href="/for/clinical-labs" className="text-lab-teal hover:underline">LIMS for clinical labs</Link>

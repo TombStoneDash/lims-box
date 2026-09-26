@@ -1,71 +1,79 @@
 import Link from 'next/link';
 import {
-  FlaskConical, ArrowRight, Clock, FileText, Users,
-  Shield, AlertTriangle, CheckCircle2, Activity, BarChart3, Upload
+  FlaskConical, ArrowRight, Clock, FileText, Users, GraduationCap,
+  Shield, AlertTriangle, CheckCircle2, BarChart3, Activity
 } from 'lucide-react';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'LIMS for Clinical Labs: Chemistry and Hematology Lab Software | LIMS BOX',
-  description: 'LIMS for small clinical labs. Specimen tracking, QC with Westgard rules, personnel competency records and survey-ready exports, designed to support workflows under CLIA and ISO 15189. Starting at $500/mo.',
+  title: 'Personnel and QC Documentation for Clinical Labs | LIMS BOX',
+  description: 'Personnel competency records, training, authorizations and survey-ready exports for small clinical labs, designed to support workflows under CLIA and ISO 15189. A documentation layer next to your LIS, not a LIS replacement.',
   alternates: { canonical: '/for/clinical-labs' },
   openGraph: {
-    title: 'LIMS for Clinical Labs That Run Lean',
-    description: 'Specimen tracking, QC review and personnel competency records for small clinical labs.',
+    title: 'Personnel and QC Documentation for Small Clinical Labs',
+    description: 'Competency records, training, authorizations and survey-ready exports, next to your LIS.',
     url: 'https://lims.bot/for/clinical-labs',
   },
-  keywords: ['clinical LIMS', 'clinical lab software', 'chemistry lab LIMS', 'hematology LIMS', 'QC Westgard rules', 'personnel competency tracking'],
+  keywords: ['clinical lab documentation', 'personnel competency records', 'CLIA personnel records', 'ISO 15189 competency', 'survey readiness', 'clinical lab QC review'],
 };
 
 const painPoints = [
   {
-    icon: Clock,
-    title: 'Specimen stability',
-    description: 'Potassium drifts in an unspun tube. Urine sits too long on the counter. When the stability window closes quietly, the result goes out anyway, and nobody notices until a clinician calls.',
+    icon: Users,
+    title: 'Competency paperwork',
+    description: 'Records per person and per test system, dated and signed. Keeping them current by hand is a job on its own, and the gaps show up during the survey, not before.',
   },
   {
     icon: AlertTriangle,
-    title: 'QC that lives in binders',
-    description: 'Control results on paper or in a spreadsheet mean a 3 SD glucose control can slip past a busy morning. Reviewing the run later does not stop the results that already went out.',
+    title: 'Records in too many places',
+    description: 'Training in one binder, sign-offs in another, authorizations in a spreadsheet. Assembling the file for one person takes an afternoon.',
   },
   {
-    icon: Users,
-    title: 'Competency paperwork',
-    description: 'Six elements per person per test system, dated and signed. Keeping them current by hand is a job on its own, and the gaps show up during the survey, not before.',
+    icon: Clock,
+    title: 'Survey prep at the last minute',
+    description: 'A survey notice lands and the lab stops to rebuild its personnel files. The work repeats every cycle because nothing kept the files current.',
   },
 ];
 
 const features = [
   {
-    icon: Clock,
-    title: 'Stability tracking from collection',
-    description: 'Collection time is captured at login, so every specimen carries its own clock. Specimens tested past their window are flagged instead of silently reported.',
-  },
-  {
-    icon: BarChart3,
-    title: 'QC review with Westgard rules',
-    description: 'Levey-Jennings charts and Westgard rules per control level. A failed control holds its run for a person to review before results are released.',
-  },
-  {
     icon: Users,
-    title: 'Personnel Pack included',
-    description: 'Competency, training, authorizations and director sign-offs in one place, documented for CLIA 493.1407 and ISO 15189 clause 6.2.2.',
+    title: 'Personnel competency records',
+    description: 'Competency records per person and test system, documented for CLIA 493.1407 and ISO 15189 clause 6.2.2. Part of the Personnel Pack.',
   },
   {
-    icon: FileText,
-    title: 'Survey-ready exports',
-    description: 'One consolidated PDF or a ZIP bundle of personnel records, ready when a surveyor asks. Every export is stamped for human review.',
-  },
-  {
-    icon: Upload,
-    title: 'Instrument data by file',
-    description: 'Import results from analyzers that export CSV or XML, so numbers are not typed twice. Every import is logged.',
+    icon: GraduationCap,
+    title: 'Training log and director sign-offs',
+    description: 'Training entries and director sign-offs kept with each person, so the file a surveyor asks for is already in one place.',
   },
   {
     icon: Shield,
-    title: 'An audit trail on every record',
-    description: 'Who changed what, and when, on samples, results and personnel records. A person verifies every result; the software never releases one on its own.',
+    title: 'Procedure authorizations',
+    description: 'Which person is authorized for which procedure, recorded per person and exportable as PDF.',
   },
+  {
+    icon: FileText,
+    title: 'Survey-ready export',
+    description: 'One consolidated PDF or a ZIP bundle of personnel records. Every export is stamped for human review before it goes anywhere.',
+  },
+  {
+    icon: BarChart3,
+    title: 'QC review, in the synthetic demo',
+    description: 'The demo compares each QC run with its mean and SD and flags any run at or beyond 3 SD as out of range. Demo data only.',
+  },
+  {
+    icon: Clock,
+    title: 'Calibration reminders, in the synthetic demo',
+    description: 'The demo dashboard lists the next instrument calibration due, overdue or due today, from the equipment records. Demo data only.',
+  },
+];
+
+// Not built yet. Listed so the page never implies these exist.
+export const planned = [
+  'Specimen stability timers from collection to testing',
+  'Analyzer result import (today there is only a CSV reader for one analyzer, used in testing)',
+  'LIS or EHR integration',
+  'Result release rules (a person verifies every result)',
 ];
 
 export default function ClinicalLabsPage() {
@@ -111,10 +119,10 @@ export default function ClinicalLabsPage() {
             <Activity className="w-4 h-4" /> For Clinical Chemistry and Hematology Labs
           </div>
           <h1 className="text-4xl md:text-6xl font-bold text-slate-900 dark:text-white mb-6 tracking-tight leading-tight">
-            LIMS for Clinical Labs That Run Lean
+            Personnel and QC Documentation for Small Clinical Labs
           </h1>
           <p className="text-lg md:text-xl text-slate-600 dark:text-slate-300 mb-8 max-w-2xl mx-auto">
-            Your lab turns specimens into results that someone acts on the same day. Your software should track every tube, flag every out-of-range control, and keep your people records ready for the next survey.
+            LIMS BOX keeps the records a survey asks for in one place: competency, training, authorizations and sign-offs, ready to export. It sits next to your LIS. It does not replace it.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link
@@ -140,7 +148,7 @@ export default function ClinicalLabsPage() {
             Sound familiar?
           </h2>
           <p className="text-slate-600 dark:text-slate-300 text-center mb-12 max-w-2xl mx-auto">
-            Small clinical labs carry the same obligations as big hospital labs, with a fraction of the staff.
+            Small clinical labs carry the same documentation obligations as big hospital labs, with a fraction of the staff.
           </p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {painPoints.map(point => (
@@ -160,10 +168,10 @@ export default function ClinicalLabsPage() {
       <section className="py-16 px-4">
         <div className="max-w-5xl mx-auto">
           <h2 className="text-3xl font-bold text-slate-900 dark:text-white text-center mb-4">
-            Built for clinical labs
+            What LIMS BOX does for clinical labs today
           </h2>
           <p className="text-slate-600 dark:text-slate-300 text-center mb-12 max-w-2xl mx-auto">
-            Here is how LIMS BOX handles each of these. Ask for a walkthrough on made-up data.
+            Everything below exists today. The last two are shown on synthetic demo data only.
           </p>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {features.map(feature => (
@@ -179,6 +187,17 @@ export default function ClinicalLabsPage() {
         </div>
       </section>
 
+      {/* Planned, not built yet */}
+      <section className="py-12 px-4" aria-labelledby="planned-heading">
+        <div className="max-w-3xl mx-auto">
+          <h2 id="planned-heading" className="text-xl font-bold text-slate-900 dark:text-white mb-3">Not built yet</h2>
+          <p className="text-sm text-slate-600 dark:text-slate-300 mb-3">These are planned. None of them exists in LIMS BOX today.</p>
+          <ul className="list-disc pl-6 space-y-1 text-sm text-slate-600 dark:text-slate-300">
+            {planned.map(item => <li key={item}>{item}</li>)}
+          </ul>
+        </div>
+      </section>
+
       {/* Social proof */}
       <section className="py-12 px-4 bg-lab-teal/5 dark:bg-lab-teal/10">
         <div className="max-w-3xl mx-auto text-center">
@@ -191,9 +210,9 @@ export default function ClinicalLabsPage() {
             <span className="text-slate-300">|</span>
             <span>ISO 15189 personnel documentation</span>
             <span className="text-slate-300">|</span>
-            <span>Human review before release</span>
+            <span>Not a LIS replacement</span>
             <span className="text-slate-300">|</span>
-            <span>Synthetic demo data</span>
+            <span>Human review before export</span>
           </div>
         </div>
       </section>
@@ -213,7 +232,7 @@ export default function ClinicalLabsPage() {
           >
             Start Your 30-Day Pilot <ArrowRight className="w-5 h-5" />
           </Link>
-          <p className="text-sm text-slate-500 mt-4">Starting at $500/mo. See <Link href="/pricing" className="text-lab-teal hover:underline">pricing</Link> for details.</p>
+          <p className="text-sm text-slate-500 mt-4">The Personnel Pack is part of the Growth plan at $1,200/mo. See <Link href="/pricing" className="text-lab-teal hover:underline">pricing</Link> for what each plan includes.</p>
         </div>
       </section>
 

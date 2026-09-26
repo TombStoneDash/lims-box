@@ -1,71 +1,80 @@
 import Link from 'next/link';
 import {
-  FlaskConical, ArrowRight, Clock, FileText, Users,
-  Shield, AlertTriangle, CheckCircle2, Microscope, BarChart3, Dna
+  FlaskConical, ArrowRight, Clock, FileText, Users, GraduationCap,
+  Shield, AlertTriangle, CheckCircle2, BarChart3, Microscope
 } from 'lucide-react';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'LIMS for Diagnostics Labs: Molecular and Microbiology Lab Software | LIMS BOX',
-  description: 'LIMS for small molecular and microbiology labs. Run controls that hold results for review, specimen stability tracking, culture workflows and audit trails, designed to support workflows under CLIA and ISO 15189. Starting at $500/mo.',
+  title: 'Personnel and QC Documentation for Diagnostics Labs | LIMS BOX',
+  description: 'Personnel competency records, training, authorizations and survey-ready exports for small molecular and microbiology labs, designed to support workflows under CLIA and ISO 15189. A documentation layer next to your LIS, not a LIS replacement.',
   alternates: { canonical: '/for/diagnostics-labs' },
   openGraph: {
-    title: 'LIMS for Diagnostics Labs Where Every Control Counts',
-    description: 'Run controls, specimen stability and culture workflows for small molecular and microbiology labs.',
+    title: 'Personnel and QC Documentation for Small Diagnostics Labs',
+    description: 'Competency records, training, authorizations and survey-ready exports for molecular and microbiology labs.',
     url: 'https://lims.bot/for/diagnostics-labs',
   },
-  keywords: ['diagnostics LIMS', 'molecular lab software', 'PCR lab LIMS', 'microbiology LIMS', 'run control review', 'specimen stability tracking'],
+  keywords: ['diagnostics lab documentation', 'molecular lab personnel records', 'microbiology lab competency', 'CLIA personnel records', 'ISO 15189 competency', 'survey readiness'],
 };
 
 const painPoints = [
   {
+    icon: Users,
+    title: 'Qualified staff, documented',
+    description: 'Each person needs training and authorization for each test system, and the records to show it when the surveyor asks.',
+  },
+  {
     icon: AlertTriangle,
-    title: 'Contaminated runs',
-    description: 'When a negative control amplifies, every result on that run is in question. Catching it depends on someone checking the controls before the results leave the bench.',
+    title: 'Records in too many places',
+    description: 'Training in one binder, sign-offs in another, authorizations in a spreadsheet. Pulling the file for one person takes far too long.',
   },
   {
     icon: Clock,
-    title: 'Specimen age',
-    description: 'Swabs in transport medium and urine for culture each have a window. Courier delays and weekend backlogs push specimens past it without anyone seeing the clock.',
-  },
-  {
-    icon: Users,
-    title: 'Qualified staff, documented',
-    description: 'Molecular and culture work need trained, authorized people, and the records to prove it when the surveyor asks.',
+    title: 'Survey prep at the last minute',
+    description: 'A survey notice lands and the lab stops to rebuild its personnel files, every cycle.',
   },
 ];
 
 const features = [
   {
-    icon: Dna,
-    title: 'Run controls that hold results',
-    description: 'Positive and negative controls recorded per run. A control that reads wrong holds the run for review instead of letting results through.',
-  },
-  {
-    icon: Clock,
-    title: 'Stability tracking from collection',
-    description: 'Collection time is captured at login, and specimens tested past their window are flagged instead of silently reported.',
-  },
-  {
-    icon: BarChart3,
-    title: 'Culture and molecular workflows',
-    description: 'Qualitative results, colony counts and repeat testing tracked per specimen, with the original and the repeat both kept.',
-  },
-  {
     icon: Users,
-    title: 'Personnel Pack included',
-    description: 'Competency, training and authorizations per person and test system, documented for CLIA 493.1407 and ISO 15189 clause 6.2.2.',
+    title: 'Personnel competency records',
+    description: 'Competency records per person and test system, documented for CLIA 493.1407 and ISO 15189 clause 6.2.2. Part of the Personnel Pack.',
   },
   {
-    icon: FileText,
-    title: 'Survey-ready exports',
-    description: 'One consolidated PDF or a ZIP bundle of personnel records, ready when a surveyor asks. Every export is stamped for human review.',
+    icon: GraduationCap,
+    title: 'Training log and director sign-offs',
+    description: 'Training entries and director sign-offs kept with each person, so the file a surveyor asks for is already in one place.',
   },
   {
     icon: Shield,
-    title: 'An audit trail on every record',
-    description: 'Who changed what, and when, on specimens, runs and results. A person verifies every result; the software never releases one on its own.',
+    title: 'Procedure authorizations',
+    description: 'Which person is authorized for which procedure, recorded per person and exportable as PDF.',
   },
+  {
+    icon: FileText,
+    title: 'Survey-ready export',
+    description: 'One consolidated PDF or a ZIP bundle of personnel records. Every export is stamped for human review before it goes anywhere.',
+  },
+  {
+    icon: BarChart3,
+    title: 'QC review, in the synthetic demo',
+    description: 'The demo compares each QC run with its mean and SD and flags any run at or beyond 3 SD as out of range. Demo data only.',
+  },
+  {
+    icon: Clock,
+    title: 'Calibration reminders, in the synthetic demo',
+    description: 'The demo dashboard lists the next instrument calibration due, overdue or due today, from the equipment records. Demo data only.',
+  },
+];
+
+// Not built yet. Listed so the page never implies these exist.
+export const planned = [
+  'Per-run positive and negative control checks',
+  'Culture workflows with colony counts',
+  'Specimen stability timers from collection to testing',
+  'Analyzer result import (today there is only a CSV reader for one analyzer, used in testing)',
+  'LIS or EHR integration',
 ];
 
 export default function DiagnosticsLabsPage() {
@@ -111,10 +120,10 @@ export default function DiagnosticsLabsPage() {
             <Microscope className="w-4 h-4" /> For Molecular and Microbiology Labs
           </div>
           <h1 className="text-4xl md:text-6xl font-bold text-slate-900 dark:text-white mb-6 tracking-tight leading-tight">
-            LIMS for Diagnostics Labs Where Every Control Counts
+            Personnel and QC Documentation for Small Diagnostics Labs
           </h1>
           <p className="text-lg md:text-xl text-slate-600 dark:text-slate-300 mb-8 max-w-2xl mx-auto">
-            A positive negative control can mean a whole run is suspect. A urine culture plated a day late can mean a wrong answer. Your software should catch both before anyone reads a report.
+            Molecular and microbiology work needs trained, authorized people and the records to prove it. LIMS BOX keeps those records current and ready to export. It sits next to your LIS. It does not replace it.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link
@@ -140,7 +149,7 @@ export default function DiagnosticsLabsPage() {
             Sound familiar?
           </h2>
           <p className="text-slate-600 dark:text-slate-300 text-center mb-12 max-w-2xl mx-auto">
-            Molecular and microbiology labs live and die by their controls and their specimen handling.
+            Molecular and microbiology labs carry heavy documentation obligations with small teams.
           </p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {painPoints.map(point => (
@@ -160,10 +169,10 @@ export default function DiagnosticsLabsPage() {
       <section className="py-16 px-4">
         <div className="max-w-5xl mx-auto">
           <h2 className="text-3xl font-bold text-slate-900 dark:text-white text-center mb-4">
-            Built for diagnostics labs
+            What LIMS BOX does for diagnostics labs today
           </h2>
           <p className="text-slate-600 dark:text-slate-300 text-center mb-12 max-w-2xl mx-auto">
-            Here is how LIMS BOX handles each of these. Ask for a walkthrough on made-up data.
+            Everything below exists today. The last two are shown on synthetic demo data only.
           </p>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {features.map(feature => (
@@ -179,6 +188,17 @@ export default function DiagnosticsLabsPage() {
         </div>
       </section>
 
+      {/* Planned, not built yet */}
+      <section className="py-12 px-4" aria-labelledby="planned-heading">
+        <div className="max-w-3xl mx-auto">
+          <h2 id="planned-heading" className="text-xl font-bold text-slate-900 dark:text-white mb-3">Not built yet</h2>
+          <p className="text-sm text-slate-600 dark:text-slate-300 mb-3">These are planned. None of them exists in LIMS BOX today.</p>
+          <ul className="list-disc pl-6 space-y-1 text-sm text-slate-600 dark:text-slate-300">
+            {planned.map(item => <li key={item}>{item}</li>)}
+          </ul>
+        </div>
+      </section>
+
       {/* Social proof */}
       <section className="py-12 px-4 bg-lab-teal/5 dark:bg-lab-teal/10">
         <div className="max-w-3xl mx-auto text-center">
@@ -191,9 +211,9 @@ export default function DiagnosticsLabsPage() {
             <span className="text-slate-300">|</span>
             <span>ISO 15189 personnel documentation</span>
             <span className="text-slate-300">|</span>
-            <span>Human review before release</span>
+            <span>Not a LIS replacement</span>
             <span className="text-slate-300">|</span>
-            <span>Synthetic demo data</span>
+            <span>Human review before export</span>
           </div>
         </div>
       </section>
@@ -213,7 +233,7 @@ export default function DiagnosticsLabsPage() {
           >
             Start Your 30-Day Pilot <ArrowRight className="w-5 h-5" />
           </Link>
-          <p className="text-sm text-slate-500 mt-4">Starting at $500/mo. See <Link href="/pricing" className="text-lab-teal hover:underline">pricing</Link> for details.</p>
+          <p className="text-sm text-slate-500 mt-4">The Personnel Pack is part of the Growth plan at $1,200/mo. See <Link href="/pricing" className="text-lab-teal hover:underline">pricing</Link> for what each plan includes.</p>
         </div>
       </section>
 
