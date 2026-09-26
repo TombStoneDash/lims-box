@@ -118,6 +118,8 @@ export function WaitlistFooter() {
               <ul className="space-y-2 text-sm">
                 <li><Link href="/for/environmental-labs" className="text-slate-600 dark:text-slate-300 hover:text-lab-teal transition-colors">Environmental Labs</Link></li>
                 <li><Link href="/for/cannabis-labs" className="text-slate-600 dark:text-slate-300 hover:text-lab-teal transition-colors">Cannabis Labs</Link></li>
+                <li><Link href="/for/clinical-labs" className="text-slate-600 dark:text-slate-300 hover:text-lab-teal transition-colors">Clinical Labs</Link></li>
+                <li><Link href="/for/diagnostics-labs" className="text-slate-600 dark:text-slate-300 hover:text-lab-teal transition-colors">Diagnostics Labs</Link></li>
                 <li><Link href="/clinical" className="text-slate-600 dark:text-slate-300 hover:text-lab-teal transition-colors">Clinical Labs</Link></li>
               </ul>
             </div>

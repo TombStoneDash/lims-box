@@ -110,6 +110,8 @@ Each row below is one discovered page or handler. Dynamic `x` values are invento
 | PUBLIC_BY_DESIGN | `/faq` | Page | Public product questions and answers. |
 | PUBLIC_BY_DESIGN | `/field-scout` | Page | Public field-workflow examples and interest form. |
 | PUBLIC_BY_DESIGN | `/for/cannabis-labs` | Page | Public cannabis-lab product information. |
+| PUBLIC_BY_DESIGN | `/for/clinical-labs` | Page | Public clinical-lab product information. |
+| PUBLIC_BY_DESIGN | `/for/diagnostics-labs` | Page | Public diagnostics-lab product information. |
 | PUBLIC_BY_DESIGN | `/for/environmental-labs` | Page | Public environmental-lab product information. |
 | PUBLIC_BY_DESIGN | `/partners` | Page | Public partnership information. |
 | PUBLIC_BY_DESIGN | `/personnel-pack` | Page | Public documentation-pack request form. |

@@ -596,6 +596,27 @@ export default function DemoPage() {
         </div>
       </section>
 
+      {/* Clinical and diagnostics demo data */}
+      <section className="py-12 px-4" aria-labelledby="multi-lab-demo-heading">
+        <div className="max-w-3xl mx-auto text-center">
+          <h2 id="multi-lab-demo-heading" className="text-2xl font-bold text-slate-900 dark:text-white mb-3">
+            Clinical and diagnostics labs too
+          </h2>
+          <p className="text-sm text-slate-600 dark:text-slate-300 mb-4">
+            Guided demos can also run on two made-up labs: ABC Clinical (chemistry and hematology) and ABC Diagnostics
+            (PCR and urine culture). Every sample is synthetic, with no patient data. Each lab has one late specimen and
+            one failed control, so you can watch LIMS BOX flag them before a result goes out.
+          </p>
+          <p className="text-sm">
+            <Link href="/for/clinical-labs" className="text-lab-teal hover:underline">LIMS for clinical labs</Link>
+            <span className="text-slate-300 mx-2">|</span>
+            <Link href="/for/diagnostics-labs" className="text-lab-teal hover:underline">LIMS for diagnostics labs</Link>
+            <span className="text-slate-300 mx-2">|</span>
+            <a href="#schedule" className="text-lab-teal hover:underline">Book a guided demo</a>
+          </p>
+        </div>
+      </section>
+
       {/* Calendly Scheduling Section */}
       <section id="schedule" className="py-16 px-4">
         <div className="max-w-4xl mx-auto">

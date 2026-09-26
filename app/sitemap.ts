@@ -14,6 +14,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: '/blog', priority: 0.8, changeFrequency: 'daily' as const },
     { url: '/for/environmental-labs', priority: 0.9, changeFrequency: 'weekly' as const },
     { url: '/for/cannabis-labs', priority: 0.9, changeFrequency: 'weekly' as const },
+    { url: '/for/clinical-labs', priority: 0.9, changeFrequency: 'weekly' as const },
+    { url: '/for/diagnostics-labs', priority: 0.9, changeFrequency: 'weekly' as const },
     { url: '/case-study', priority: 0.8, changeFrequency: 'monthly' as const },
     { url: '/roi-calculator', priority: 0.8, changeFrequency: 'monthly' as const },
     // Added 2026-06-02 — sitemap completeness audit (fix/sitemap-completeness-2026-06-02)
