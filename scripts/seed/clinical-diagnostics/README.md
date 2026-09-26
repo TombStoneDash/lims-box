@@ -12,7 +12,8 @@ Seed data for two made-up labs in the multi-lab LIMS BOX demo, next to the envir
   - 4 synthetic clients, 27 samples, 5 QC batches.
 - `validate.mjs`: pure validator. No network, no writes.
 - `load.mjs`: SENAITE loader. **Dry run is the default.** `--apply` reuses the environmental loader's gate and API code.
-- `seed.test.mjs`: unit tests. CI runs them through `tests/seed/clinical-diagnostics.test.ts`.
+- `results.mjs`: results step after `load.mjs`, plus a report of the QC runs and calibration dates. **Dry run is the default.**
+- `seed.test.mjs`, `results.test.mjs`: unit tests. CI runs them through `tests/seed/clinical-diagnostics.test.ts`.
 
 ## The seeded problems (exactly one of each per lab)
 
@@ -23,9 +24,30 @@ The validator recomputes each one from timestamps and QC values. It fails if a f
 | ABC Clinical | `SYN-CLN-SER-0004` potassium tested 7 h after collection; example limit 4 h (an unspun tube can falsely raise K) | `SYN-QC-CLN-01` glucose Level 2 control at 268 vs 250 +/- 5 mg/dL (3.6 SD, Westgard 1-3s) |
 | ABC Diagnostics | `SYN-DX-UC-0003` urine culture plated 30 h after collection; example limit 24 h | `SYN-QC-DX-01` SARS-CoV-2 negative control read Detected (possible contamination) |
 
+## Results, QC runs, delta check and calibration (results.mjs)
+
+After `load.mjs --apply`, `results.mjs` enters the synthetic result for each of the 43 sample analyses, submits each one for review (it never verifies), and adds remarks for these problems:
+
+| Problem | Where | Results with the remark |
+|---|---|---|
+| Holding-time breach | the two samples in the table above | 2 |
+| Failed QC control | every glucose result (`SYN-QC-CLN-01`) and every SARS-CoV-2 result (`SYN-QC-DX-01`) is held for review | 6 + 6 |
+| Delta check | `SYN-CLN-SER-0005` creatinine 0.9 vs 0.5 mg/dL for the same synthetic subject 24 h earlier; example limit 0.3 within 48 h | 1 |
+| Overdue calibration | `SYN-INST-HEME-01` hematology analyzer, last calibrated 2026-08-15 with an example 30-day interval, due 2026-09-14; every WBC and HbA1c result ran after that | 8 |
+
+The validator recomputes the delta check and the calibration from `priorResults`, `deltaRules` and `instruments`, and requires exactly one delta failure and exactly one overdue instrument. Two other prior results are there on purpose: one moves 0.1 (inside the limit), one moves 0.4 but is 5 days older (outside the window).
+
+The dry run also prints each QC run (PASS, or FAIL with the failing control) and each instrument's due date. QC runs and instruments are reported only. They are not created as SENAITE reference samples or instruments; the remarks carry the outcome.
+
+`--apply` uses the same gate as `load.mjs`. The SENAITE calls are the environmental results step's (`../environmental/results.mjs`); the same items are UNVERIFIED on this build.
+
+```sh
+node scripts/seed/clinical-diagnostics/results.mjs   # DRY RUN: 43 results (23 with remarks), QC runs, calibration dates
+```
+
 ## Limits are examples
 
-Stability times, reference intervals and control targets are illustrative values for a demo, labelled `basis: 'example'` and `UNVERIFIED`. They are not clinical guidance. A real lab uses its own validated limits and its manufacturers' instructions.
+Stability times, reference intervals, control targets, the delta limit and calibration intervals are illustrative values for a demo, labelled `basis: 'example'` and `UNVERIFIED`. They are not clinical guidance. A real lab uses its own validated limits and its manufacturers' instructions.
 
 ## How to run (safe, local, no network)
 
@@ -37,6 +59,6 @@ node --test scripts/seed/clinical-diagnostics/seed.test.mjs  # unit tests
 
 ## --apply is gated
 
-Same gate as `../environmental/README.md`: only on the approved, patched demo copy, with `SENAITE_URL`, `SENAITE_USER`, `SENAITE_PASS` and `SENAITE_PATCHED_ACK=GHSA-jrw6-7x4q-w25j` set in the shell. Run it once, on a fresh copy. The loader creates setup, clients, contacts and samples. It does not enter results. Result values are in `data.mjs` for the validator and for a later results step, like `../environmental/results.mjs`.
+Same gate as `../environmental/README.md`: only on the approved, patched demo copy, with `SENAITE_URL`, `SENAITE_USER`, `SENAITE_PASS` and `SENAITE_PATCHED_ACK=GHSA-jrw6-7x4q-w25j` set in the shell. Run it once, on a fresh copy. The loader creates setup, clients, contacts and samples. It does not enter results; `results.mjs` does that, once, after the loader.
 
 The SENAITE JSON API paths are the ones the environmental loader uses; the same items are UNVERIFIED on this build (see that README's "Known unknowns").
