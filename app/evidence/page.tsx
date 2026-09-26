@@ -68,7 +68,7 @@ const proposed: Row[] = [
   },
   {
     claim: 'Native instrument integrations',
-    detail: 'Direct connections to common platforms (e.g. Roche, Abbott) beyond today\'s CSV/XML file-based import. Roadmap item.',
+    detail: 'Direct connections to common platforms (e.g. Roche, Abbott), and file import beyond today\'s CSV reader for one analyzer (used in testing). Roadmap item.',
   },
   {
     claim: 'Mobile check-ins',
