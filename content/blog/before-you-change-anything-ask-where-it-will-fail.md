@@ -29,10 +29,10 @@ Peter Bevelin's book about Buffett and Munger takes its title from a line attrib
 
 The idea is called inversion. Instead of asking only "how do we make this work?", you also ask "how would this fail?", and then you steer away from those paths.
 
-Bevelin sums up the lesson this way:
+The book sums up the lesson this way:
 
 > "The major lesson is 'ignorance removal'... decision-making is not about making brilliant decisions, but avoiding terrible ones."
-> (Bevelin, Introduction)
+> (Bevelin, front matter)
 
 ## Why This Fits Labs So Well
 
@@ -72,4 +72,4 @@ When you choose new software, including ours, run the same exercise. Ask the ven
 
 ---
 
-*Quotes are from Peter Bevelin, All I Want to Know Is Where I'm Going to Die So I'll Never Go There (2016), a study of Buffett and Munger: the title line and the Introduction.*
+*Quotes are from Peter Bevelin, All I Want to Know Is Where I'm Going to Die So I'll Never Go There (2016), a study of Buffett and Munger: the title line, the front matter and the Introduction.*
