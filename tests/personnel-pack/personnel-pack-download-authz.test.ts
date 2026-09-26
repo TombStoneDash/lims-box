@@ -13,6 +13,7 @@ import {
   createPersonnelPackClaimPostHandler,
   createPersonnelPackGetHandler,
   DOWNLOAD_CLAIM_REDEEM_PATH,
+  PERSONNEL_PACK_FORM_PATH,
   createPrismaDownloadClaimStore,
   type DownloadClaimPayload,
   type DownloadClaimSqlClient,
@@ -339,3 +340,78 @@ test('the confirm POST route is wired to the claim handler', async () => {
   assert.ok([401, 503].includes(response.status));
   assert.notEqual(response.headers.get('content-type'), 'application/pdf');
 });
+
+// Browsers send Accept: text/html for link opens and form posts.
+const BROWSER_ACCEPT = 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8';
+
+function browserGet(query: string): NextRequest {
+  return new NextRequest(`https://lims.bot/api/personnel-pack-download${query}`, { headers: { accept: BROWSER_ACCEPT } });
+}
+
+function browserRedeem(asset: string, claim: string): NextRequest {
+  return new NextRequest(`https://lims.bot${DOWNLOAD_CLAIM_REDEEM_PATH}`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/x-www-form-urlencoded', accept: BROWSER_ACCEPT },
+    body: new URLSearchParams({ asset, claim }).toString(),
+  });
+}
+
+async function assertFriendlyPage(response: Response, status: number, heading: RegExp) {
+  assert.equal(response.status, status);
+  assert.match(response.headers.get('content-type') ?? '', /^text\/html/);
+  assert.equal(response.headers.get('cache-control'), 'private, no-store');
+  assert.equal(response.headers.get('x-robots-tag'), 'noindex, nofollow');
+  const html = await response.text();
+  assert.match(html, heading);
+  assert.ok(html.includes(`<a href="${PERSONNEL_PACK_FORM_PATH}"`), 'offers a way to request a new link');
+  assert.doesNotMatch(html, /<script/i);
+  assert.doesNotMatch(html, /^\s*\{/, 'not raw JSON');
+  return html;
+}
+
+test('a browser pressing Download on an already-used link gets a readable page, still 401', async () => {
+  const { POST } = claimedGet();
+  const claim = validClaim();
+  assert.equal((await POST(browserRedeem('iso15189', claim))).status, 200);
+  const html = await assertFriendlyPage(await POST(browserRedeem('iso15189', claim)), 401, /expired or was already used/);
+  assert.ok(html.includes('download_claim_replayed'));
+  assert.ok(!html.includes(claim), 'the spent claim is not echoed');
+});
+
+test('a browser opening an expired or tampered link gets the readable page on GET, still 401', async () => {
+  const { GET } = claimedGet();
+  await assertFriendlyPage(await GET(browserGet(`?asset=iso15189&claim=${encodeURIComponent(validClaim({ exp: Date.now() - 1_000 }))}`)), 401, /expired or was already used/);
+  await assertFriendlyPage(await GET(browserGet('?asset=iso15189&claim=not-a-real-claim')), 401, /expired or was already used/);
+});
+
+test('a browser gets a readable 503 page when downloads are unavailable', async () => {
+  const unconfigured = createPersonnelPackClaimPostHandler(() => null);
+  await assertFriendlyPage(await unconfigured(browserRedeem('iso15189', validClaim())), 503, /temporarily unavailable/);
+  const store = new SyntheticDurableStore();
+  const instance = claimedGet(store);
+  store.available = false;
+  await assertFriendlyPage(await instance.POST(browserRedeem('iso15189', instance.service.issue('iso15189', Date.now()))), 503, /temporarily unavailable/);
+});
+
+test('the readable page never uses a claim up and a fresh valid claim still downloads', async () => {
+  const store = new SyntheticDurableStore();
+  const { GET, POST, service } = claimedGet(store);
+  const claim = service.issue('iso15189', Date.now());
+  const confirm = await GET(browserGet(`?asset=iso15189&claim=${encodeURIComponent(claim)}`));
+  assert.equal(confirm.status, 200);
+  assert.equal(store.consumed.size, 0);
+  const pdf = await POST(browserRedeem('iso15189', claim));
+  assert.equal(pdf.status, 200);
+  assert.equal(pdf.headers.get('content-type'), 'application/pdf');
+});
+
+test('API callers without text/html keep the JSON error body', async () => {
+  const { POST } = claimedGet();
+  const claim = validClaim();
+  await POST(redeemRequest('iso15189', claim));
+  const replay = await POST(redeemRequest('iso15189', claim));
+  assert.equal(replay.status, 401);
+  assert.equal(replay.headers.get('content-type'), 'application/json');
+  assert.equal((await replay.json()).code, 'download_claim_replayed');
+});
+
