@@ -83,6 +83,7 @@ Each row below is one discovered page or handler. Dynamic `x` values are invento
 | PUBLIC_BY_DESIGN | `/api/health` | Route handler | Stateless service health and timestamp; no personal data. |
 | PUBLIC_BY_DESIGN | `/api/newsletter` | Route handler | Public newsletter signup submission. |
 | PUBLIC_BY_DESIGN | `/api/personnel-pack-download` | Route handler | Public pack request; GET serves a fixed reviewed documentation PDF, no personal data. |
+| PUBLIC_BY_DESIGN | `/api/personnel-pack-download/claim` | Route handler | Public confirm-page POST; redeems a signed one-time claim for the same fixed reviewed PDF, no personal data. |
 | PUBLIC_BY_DESIGN | `/api/prospects` | Route handler | Public lab-interest intake submission. |
 | PUBLIC_BY_DESIGN | `/api/unsubscribe` | Route handler | Public opt-out; GET changes suppression state but returns a generic confirmation with no personal data. |
 | PUBLIC_BY_DESIGN | `/api/waitlist` | Route handler | Public waitlist signup submission. |
