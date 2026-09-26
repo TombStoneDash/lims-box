@@ -7,8 +7,8 @@ import path from 'node:path';
 import test from 'node:test';
 import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
-import ClinicalLabsPage, { metadata as clinicalMeta, planned as clinicalPlanned } from '../../app/for/clinical-labs/page';
-import DiagnosticsLabsPage, { metadata as diagnosticsMeta, planned as diagnosticsPlanned } from '../../app/for/diagnostics-labs/page';
+import ClinicalLabsPage, { metadata as clinicalMeta } from '../../app/for/clinical-labs/page';
+import DiagnosticsLabsPage, { metadata as diagnosticsMeta } from '../../app/for/diagnostics-labs/page';
 import sitemap from '../../app/sitemap';
 import { matchCommercialClaim } from '../../lib/bot/commercial-claims';
 import { corpus } from '../../lib/bot/corpus';
@@ -38,8 +38,8 @@ const UNBUILT = [
 ];
 
 const pages = [
-  { slug: 'clinical-labs', Page: ClinicalLabsPage, meta: clinicalMeta, planned: clinicalPlanned },
-  { slug: 'diagnostics-labs', Page: DiagnosticsLabsPage, meta: diagnosticsMeta, planned: diagnosticsPlanned },
+  { slug: 'clinical-labs', Page: ClinicalLabsPage, meta: clinicalMeta },
+  { slug: 'diagnostics-labs', Page: DiagnosticsLabsPage, meta: diagnosticsMeta },
 ];
 
 function split(html: string) {
@@ -54,7 +54,7 @@ function split(html: string) {
   };
 }
 
-for (const { slug, Page, meta, planned } of pages) {
+for (const { slug, Page, meta } of pages) {
   const html = renderToStaticMarkup(React.createElement(Page));
   const parts = split(html);
 
@@ -72,7 +72,8 @@ for (const { slug, Page, meta, planned } of pages) {
   test(`/for/${slug}: unbuilt features appear only in the Not built yet list`, () => {
     for (const pattern of UNBUILT) assert.doesNotMatch(text(parts.outsidePlanned), pattern);
     assert.doesNotMatch(`${meta.title} ${meta.description} ${JSON.stringify(meta.keywords)}`, /xml|westgard|colony|run control/i);
-    for (const item of planned) assert.ok(text(parts.planned).includes(item), item);
+    const items = [...parts.planned.matchAll(/<li>([^<]+)<\/li>/g)].map((m) => m[1].trim());
+    assert.ok(items.length >= 4, 'the Not built yet list is populated');
     assert.match(text(parts.planned), /None of them exists in LIMS BOX today/);
   });
 
@@ -87,6 +88,14 @@ for (const { slug, Page, meta, planned } of pages) {
     const growth = pricing.slice(pricing.indexOf("name: 'Growth'"), pricing.indexOf("name: 'Enterprise'"));
     assert.match(growth, /price: '\$1,200'/);
     assert.match(growth, /Personnel competency records/);
+  });
+
+  test(`/for/${slug}: only Next.js page exports, and no test-system claim`, () => {
+    const source = read(`app/for/${slug}/page.tsx`);
+    const exported = [...source.matchAll(/^export\s+(?:default\s+function\s+(\w+)|const\s+(\w+))/gm)].map((m) => m[1] ? 'default' : m[2]);
+    assert.deepEqual(exported.sort(), ['default', 'metadata']);
+    assert.doesNotMatch(text(parts.features), /test system/i, 'the Competency model has no test-system field');
+    assert.match(read('prisma/schema.prisma'), /model Competency \{[^}]*\btype\b[^}]*\bexpiresAt\b/);
   });
 
   test(`/for/${slug}: canonical, breadcrumb, links, no forbidden claim, no em dash`, () => {
@@ -130,4 +139,25 @@ test('sitemap lists both pages and footer link labels are unique', () => {
   const labels = [...footer.matchAll(/<Link href="[^"]+"[^>]*>([^<]+)<\/Link>/g)].map((m) => m[1].trim());
   assert.equal(new Set(labels).size, labels.length, `duplicate footer labels: ${labels.join(', ')}`);
   assert.ok(footer.includes('href="/for/clinical-labs"') && footer.includes('href="/for/diagnostics-labs"'));
+});
+
+test('Growth "instrument integration" is labelled planned everywhere and absent from structured data', () => {
+  const faq = read('app/faq/page.tsx');
+  const pricing = read('app/pricing/page.tsx');
+  const pricingEntry = corpus.find((c) => c.id === 'pricing');
+  assert.ok(pricingEntry);
+  for (const [name, source] of [['faq', faq], ['pricing', pricing], ['corpus pricing', pricingEntry.text]] as const) {
+    for (const m of source.matchAll(/[^.'\n]*instrument integration[^.'\n]*/gi)) {
+      assert.match(m[0], /planned/i, `${name}: "${m[0].trim()}" must be labelled planned`);
+    }
+  }
+  assert.ok(faq.includes(pricingEntry.text), 'the bot pricing answer stays verbatim with /faq');
+  assert.doesNotMatch(read('app/layout.tsx'), /Instrument integration/i, 'structured data must not list a planned feature');
+});
+
+test('/demo links to the new pages with accurate text', () => {
+  const source = read('app/demo/page.tsx');
+  assert.ok(source.includes('>Personnel records for clinical labs</Link>'));
+  assert.ok(source.includes('>Personnel records for diagnostics labs</Link>'));
+  assert.doesNotMatch(source, />LIMS for (clinical|diagnostics) labs</);
 });

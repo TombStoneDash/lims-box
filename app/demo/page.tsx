@@ -608,9 +608,9 @@ export default function DemoPage() {
             yet include results or QC runs. Today, clinical and diagnostics labs can review the Personnel Pack.
           </p>
           <p className="text-sm">
-            <Link href="/for/clinical-labs" className="text-lab-teal hover:underline">LIMS for clinical labs</Link>
+            <Link href="/for/clinical-labs" className="text-lab-teal hover:underline">Personnel records for clinical labs</Link>
             <span className="text-slate-300 mx-2">|</span>
-            <Link href="/for/diagnostics-labs" className="text-lab-teal hover:underline">LIMS for diagnostics labs</Link>
+            <Link href="/for/diagnostics-labs" className="text-lab-teal hover:underline">Personnel records for diagnostics labs</Link>
             <span className="text-slate-300 mx-2">|</span>
             <a href="#schedule" className="text-lab-teal hover:underline">Book a guided demo</a>
           </p>

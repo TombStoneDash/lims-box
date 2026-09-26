@@ -39,7 +39,7 @@ const features = [
   {
     icon: Users,
     title: 'Personnel competency records',
-    description: 'Competency records per person and test system, documented for CLIA 493.1407 and ISO 15189 clause 6.2.2. Part of the Personnel Pack.',
+    description: 'Competency records per person, with competency type, status, completion and expiry dates, documented for CLIA 493.1407 and ISO 15189 clause 6.2.2. Part of the Personnel Pack.',
   },
   {
     icon: GraduationCap,
@@ -69,7 +69,8 @@ const features = [
 ];
 
 // Not built yet. Listed so the page never implies these exist.
-export const planned = [
+// Not exported: a Next.js page file may only export the page and its config.
+const planned = [
   'Per-run positive and negative control checks',
   'Culture workflows with colony counts',
   'Specimen stability timers from collection to testing',
