@@ -12,6 +12,7 @@ import sys
 import time
 import logging
 import unicodedata
+import re
 import numpy as np
 
 logging.basicConfig(
@@ -95,6 +96,7 @@ def record_until_silence(
         else:
             speech_detected = True
             silent_frames = 0
+            speech_detected = True
         chunks.append(indata.copy())
 
     try:
@@ -123,22 +125,30 @@ def record_until_silence(
 
 def transcribe(model: WhisperModel, audio: np.ndarray) -> str:
     """Run faster-whisper on an audio array, return transcribed text."""
-    if len(audio) == 0:
+    if len(audio) == 0 or not np.any(audio):
         return ""
-    segments, _info = model.transcribe(audio, language="en", beam_size=3)
-    return " ".join(seg.text for seg in segments).strip()
+    try:
+        segments, _info = model.transcribe(audio, language="en", beam_size=3)
+        return " ".join(seg.text for seg in segments).strip()
+    except Exception:
+        logger.exception("Transcription failed; discarding transcript. Try again.")
+        return ""
 
 
 # ── Wake word detection ─────────────────────────────────────────────────────
+
+def _match_wake_phrase(text: str, wake_phrase: str) -> re.Match | None:
+    """Find a literal wake phrase with no adjacent word characters."""
+    return re.search(r"(?<!\w)" + re.escape(wake_phrase) + r"(?!\w)", text, re.IGNORECASE)
+
 
 def contains_wake_word(text: str) -> str | None:
     """Check if transcribed text contains a wake word.
 
     Returns the matched wake word, or None.
     """
-    lower = text.lower()
     for w in WAKE_WORDS:
-        if w in lower:
+        if _match_wake_phrase(text, w):
             return w
     return None
 
@@ -149,11 +159,10 @@ def extract_inline_command(text: str, wake_word: str) -> str | None:
 
     Example: "Hey LIMS show pending samples" -> "show pending samples"
     """
-    lower = text.lower()
-    idx = lower.find(wake_word)
-    if idx < 0:
+    match = _match_wake_phrase(text, wake_word)
+    if match is None:
         return None
-    remainder = text[idx + len(wake_word):]
+    remainder = text[match.end():]
     # Remove only the wake/command separator; preserve punctuation in arguments.
     start = 0
     while start < len(remainder) and (

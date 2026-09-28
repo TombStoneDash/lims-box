@@ -53,7 +53,8 @@ class StartTestQueryEncodingTests(unittest.TestCase):
                 )
                 self.assertEqual(
                     feedback,
-                    f"Test {test_name} started on sample SA-001. Awaiting results.",
+                    f"Test {test_name} found on sample SA-001. "
+                    "Observed state: sample_received. No workflow change was made.",
                 )
                 self.assertEqual(context.current_sample_id, "SA-001")
                 self.assertEqual(context.current_sample_uid, "cached-uid")

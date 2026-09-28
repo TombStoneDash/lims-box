@@ -81,7 +81,7 @@ export function evaluateQCSummary(analytes: QCAnalyteInput[]): QCEvaluationSumma
   const outOfRangeCount = evaluations.reduce((n, e) => n + e.outOfRangeCount, 0);
 
   const status: QCAnalyteStatusValue =
-    invalidAnalytes.length > 0 ? 'invalid' : outOfRangeAnalytes.length > 0 ? 'out-of-range' : 'in-range';
+    analytes.length === 0 || invalidAnalytes.length > 0 ? 'invalid' : outOfRangeAnalytes.length > 0 ? 'out-of-range' : 'in-range';
 
   return {
     status,

@@ -53,7 +53,7 @@ export function evaluateInstrumentCalibration(
   instrument: InstrumentCalibrationInput,
   asOfDate: string = DEMO_AS_OF_DATE,
 ): InstrumentEvaluation {
-  if (!isValidInstrumentInput(instrument)) {
+  if (!isValidIsoDate(asOfDate) || !isValidInstrumentInput(instrument)) {
     return {
       serialNumber: instrument?.serialNumber ?? '',
       name: instrument?.name ?? '',
