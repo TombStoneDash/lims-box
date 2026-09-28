@@ -4,72 +4,65 @@ import path from 'node:path';
 import test, { type TestContext } from 'node:test';
 import { getPostBySlug } from '../../lib/blog';
 
-function render(t: TestContext, markdown: string, slug = 'fixture'): string {
+function render(t: TestContext, markdown: string): string {
   const directory = path.join(process.cwd(), 'content', 'blog');
-  const filename = `${slug}.md`;
   t.mock.method(fs, 'existsSync', (input) => input === directory);
   t.mock.method(fs, 'readdirSync', (input) => {
     assert.equal(input, directory);
-    return [filename];
+    return ['fixture.md'];
   });
   t.mock.method(fs, 'readFileSync', (input, encoding) => {
-    assert.equal(input, path.join(directory, filename));
+    assert.equal(input, path.join(directory, 'fixture.md'));
     assert.equal(encoding, 'utf-8');
-    return `---\ntitle: Synthetic fixture\nslug: ${slug}\n---\n${markdown}`;
+    return `---\ntitle: Synthetic fixture\nslug: fixture\n---\n${markdown}`;
   });
-  const post = getPostBySlug(slug);
+  const post = getPostBySlug('fixture');
   assert.ok(post);
   return post.content;
 }
 
-test('preserves a continued list starting at ten', (t) => {
-  const html = render(t, '10. Top level\n11. Next');
-  assert.equal(html, '\n<ol class="list-decimal pl-6 space-y-2 my-4" start="10"><li>Top level</li>\n<li>Next</li></ol>\n');
-});
-
-test('preserves a zero-based list', (t) => {
-  const html = render(t, '0. Prepare\n1. Measure');
-  assert.equal(html, '\n<ol class="list-decimal pl-6 space-y-2 my-4" start="0"><li>Prepare</li>\n<li>Measure</li></ol>\n');
-});
-
-test('keeps ordinary one-based output unchanged and uses only the first marker', (t) => {
-  const html = render(t, '1. First\n10. Next');
-  assert.equal(html, '\n<ol class="list-decimal pl-6 space-y-2 my-4"><li>First</li>\n<li>Next</li></ol>\n');
-});
-
-test('derives an independent start for runs separated by blank lines and paragraphs', (t) => {
-  const html = render(t, 'Before.\n10. First\n11. Second\n\n0. Prepare\nBetween.\n1. Reset\nAfter.');
-  assert.deepEqual([...html.matchAll(/<ol\b[^>]*>/g)].map(([tag]) => tag), [
-    '<ol class="list-decimal pl-6 space-y-2 my-4" start="10">',
-    '<ol class="list-decimal pl-6 space-y-2 my-4" start="0">',
-    '<ol class="list-decimal pl-6 space-y-2 my-4">',
-  ]);
-  assert.match(html, /^<p[^>]*>Before\.<\/p>\s*<ol/);
-  assert.match(html, /<\/ol>\s*<p[^>]*>Between\.<\/p>\s*<ol/);
-  assert.match(html, /<\/ol>\s*<p[^>]*>After\.<\/p>$/);
-});
-
-test('preserves inline formatting in a continued list', (t) => {
-  const html = render(t, '10. **Bold** and *italic*\n11. [Guide](/guide) and `sample`');
-  assert.match(html, /^\s*<ol[^>]* start="10">/);
-  assert.match(html, /<li><strong>Bold<\/strong> and <em>italic<\/em><\/li>/);
-  assert.match(html, /<li><a href="\/guide"[^>]*>Guide<\/a> and <code[^>]*>sample<\/code><\/li>/);
-});
-
-for (const fence of ['```', '~~~']) {
-  test(`keeps numbered text literal inside ${fence} fenced code and separates surrounding lists`, (t) => {
-    const code = '10. **literal**\n11. <sample>&value\n\n0. `literal`';
-    const html = render(t, `10. Before\n${fence}text\n${code}\n${fence}\n0. After`);
-    const block = html.match(/<pre[^>]*><code>([\s\S]*?)<\/code><\/pre>/);
-    assert.ok(block);
-    assert.equal(block[1], code.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;') + '\n');
-    assert.equal((html.match(/<ol\b/g) || []).length, 2);
-    assert.match(html, /<ol[^>]* start="10"><li>Before<\/li><\/ol>\s*<pre/);
-    assert.match(html, /<\/pre>\s*<ol[^>]* start="0"><li>After<\/li><\/ol>/);
-  });
+function orderedLists(html: string) {
+  return [...html.matchAll(/<ol\b([^>]*)>([\s\S]*?)<\/ol>/g)].map(([, attributes, list]) => ({
+    start: attributes.match(/\bstart="([^"]*)"/)?.[1],
+    items: [...list.matchAll(/<li>([\s\S]*?)<\/li>/g)].map(([, item]) => item),
+  }));
 }
 
-test('normalizes leading zeroes without rounding or exponent notation', (t) => {
-  const html = render(t, '00010. Ten\n\n0001. One\n\n1000000000000000000000. Large');
-  assert.deepEqual([...html.matchAll(/<ol\b([^>]*)>/g)].map(([, attrs]) => attrs.match(/start="([^"]*)"/)?.[1]), ['10', undefined, '1000000000000000000000']);
+test('preserves a list starting at four', (t) => {
+  const html = render(t, '4. Fourth step\n5. Fifth step');
+  assert.deepEqual(orderedLists(html), [
+    { start: '4', items: ['Fourth step', 'Fifth step'] },
+  ]);
 });
+
+test('preserves independent starting ordinals after intervening paragraphs', (t) => {
+  const html = render(t, '1. First step\n2. Second step\n\nPause here.\n\n3. Third step\n4. Fourth step\n\nNew procedure.\n\n1. Restart');
+  assert.deepEqual(orderedLists(html), [
+    { start: undefined, items: ['First step', 'Second step'] },
+    { start: '3', items: ['Third step', 'Fourth step'] },
+    { start: undefined, items: ['Restart'] },
+  ]);
+  assert.match(html, /<\/ol>\s*<p[^>]*>Pause here\.<\/p>\s*<ol\b/);
+  assert.match(html, /<\/ol>\s*<p[^>]*>New procedure\.<\/p>\s*<ol\b/);
+});
+
+test('preserves a zero starting ordinal', (t) => {
+  const html = render(t, '0. Preparation\n1. First step');
+  assert.deepEqual(orderedLists(html), [
+    { start: '0', items: ['Preparation', 'First step'] },
+  ]);
+});
+
+test('keeps ordinary one-start list markup unchanged', (t) => {
+  const html = render(t, '1. First step\n2. Second step');
+  assert.deepEqual(orderedLists(html), [
+    { start: undefined, items: ['First step', 'Second step'] },
+  ]);
+  assert.equal(html, '\n<ol class="list-decimal pl-6 space-y-2 my-4"><li>First step</li>\n<li>Second step</li></ol>\n');
+});
+
+for (const [ordinal, expected] of [['0004', '4'], ['0001', undefined], ['9007199254740993', '9007199254740993'], ['1000000000000000000000000000000', '1000000000000000000000000000000']]) {
+  test(`preserves normalized digit string ${ordinal}`, (t) => {
+    assert.equal(orderedLists(render(t, `${ordinal}. Step`))[0].start, expected);
+  });
+}

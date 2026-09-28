@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { resolveDemoLimit } from "../../app/api/demo/route";
+import { resolveDemoLimit } from "../../lib/demo-route-limit";
 
 test("a missing limit defaults to 10", () => {
   assert.equal(resolveDemoLimit(null), 10);

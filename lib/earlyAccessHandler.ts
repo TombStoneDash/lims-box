@@ -16,11 +16,15 @@ export interface EarlyAccessDependencies {
   createProspect: (record: EarlyAccessRecord) => Promise<unknown>;
   sendSubmissionNotice: (notice: SubmissionNotice) => Promise<void | DeliveryResult>;
   sendApplicantConfirmation: (email: string, name: string) => Promise<void | DeliveryResult>;
+  /** First-contact dry run (read-only, logs a hashed decision); optional. */
+  firstContactDryRun?: (input: { email: string; requestStartedAt: Date; coveredByTransactional: boolean }) => Promise<void>;
   now?: () => string;
 }
 
 export function createEarlyAccessPostHandler(dependencies: EarlyAccessDependencies) {
   return async function handleEarlyAccessPost(request: NextRequest) {
+    // Taken before this request writes anything (first-contact dry run).
+    const requestStartedAt = new Date();
     try {
       const body = await request.json();
       const source = resolveEarlyAdopterSource(
@@ -76,6 +80,13 @@ export function createEarlyAccessPostHandler(dependencies: EarlyAccessDependenci
         await dependencies.sendApplicantConfirmation(record.email, record.name);
       } catch (err) {
         console.error('[early-access] Applicant confirmation failed (non-fatal)', safeErrorMeta(err));
+      }
+
+      // The applicant confirmation above is this inbound's first contact (spec 1.5).
+      try {
+        await dependencies.firstContactDryRun?.({ email: record.email, requestStartedAt, coveredByTransactional: true });
+      } catch {
+        // The dry run must never affect the signup.
       }
 
       return NextResponse.json({ success: true, saved: dbSaved });

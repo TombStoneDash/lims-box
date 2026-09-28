@@ -20,7 +20,7 @@ const tiers = [
     period: '/mo',
     description: 'For labs getting off spreadsheets and into a real LIMS.',
     icon: Zap,
-    color: 'lab-teal',
+    iconClass: 'text-lab-teal',
     features: [
       'Up to 3 users',
       'Sample tracking & chain of custody',
@@ -41,13 +41,13 @@ const tiers = [
     period: '/mo',
     description: 'For labs scaling up and needing the full platform.',
     icon: Users,
-    color: 'lab-blue',
+    iconClass: 'text-lab-blue',
     features: [
       'Up to 10 users',
       'Everything in Starter, plus:',
       'All modules unlocked',
       'Automated EPA & state reporting',
-      'Instrument integration',
+      'Instrument integration (planned, not built yet)',
       'Custom report templates',
       'Dedicated onboarding call',
       'Priority email & chat support',
@@ -65,7 +65,7 @@ const tiers = [
     period: '',
     description: 'For multi-site labs and organizations with specific requirements.',
     icon: Shield,
-    color: 'lab-sky',
+    iconClass: 'text-lab-sky',
     features: [
       'Unlimited users',
       'Everything in Growth, plus:',
@@ -100,7 +100,7 @@ const faqs = [
   },
   {
     q: 'What modules are included in Starter?',
-    a: 'Starter includes the 4 core modules: Sample Tracking, Chain of Custody, QA/QC Management, and Basic Reporting. Growth unlocks all modules including instrument integration, automated regulatory reporting, and advanced analytics.',
+    a: 'Starter includes the 4 core modules: Sample Tracking, Chain of Custody, QA/QC Management, and Basic Reporting. Growth unlocks all modules, including automated regulatory reporting and advanced analytics. Instrument integration is planned and not built yet.',
   },
   {
     q: 'Can I upgrade or downgrade anytime?',
@@ -214,7 +214,7 @@ export default function PricingPage() {
               )}
               <div className="p-6 md:p-8 flex-1 flex flex-col">
                 <div className="flex items-center gap-2 mb-4">
-                  <tier.icon className={`w-5 h-5 text-${tier.color}`} />
+                  <tier.icon className={`w-5 h-5 ${tier.iconClass}`} />
                   <h2 className="text-xl font-bold text-slate-900 dark:text-white">{tier.name}</h2>
                 </div>
                 <div className="mb-2">

@@ -98,7 +98,6 @@ export default function RootLayout({
                   "Sample tracking and chain of custody",
                   "Environmental and water testing workflows",
                   "Automated reporting and compliance",
-                  "Instrument integration",
                   "Quality assurance and quality control",
                   "Client portal and result delivery",
                   "Built for labs under 50 people"

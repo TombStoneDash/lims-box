@@ -3,10 +3,14 @@ import { NextRequest, NextResponse } from 'next/server';
 import { sendSubmissionNotice } from '@/lib/notify';
 import { getSupabase } from '@/lib/supabase';
 import { normalizeEmail } from '@/lib/emailValidation';
+import { limsFirstContactDryRun } from '@/lib/first-contact-lims';
+import { limsHistorySources } from '@/lib/first-contact-lims-sources';
 
 export const runtime = 'nodejs';
 
 export async function POST(request: NextRequest) {
+  // Taken before this request writes anything (first-contact dry run).
+  const requestStartedAt = new Date();
   try {
     const body = await request.json();
     const { name, labName, email, labSize, currentSystem, message, phone, instruments } = body ?? {};
@@ -100,6 +104,15 @@ export async function POST(request: NextRequest) {
         { status: 500 },
       );
     }
+
+    // The contact form sends no email to the person today, only Hudson's notice.
+    await limsFirstContactDryRun({
+      endpoint: 'contact',
+      email: record.email,
+      sources: limsHistorySources,
+      requestStartedAt,
+      coveredByTransactional: false,
+    });
 
     return NextResponse.json({ success: true });
   } catch (err) {

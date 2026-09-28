@@ -1,12 +1,11 @@
 'use client';
 
-import React, { useId, useRef, useState } from 'react';
+import React, { useEffect, useId, useRef, useState } from 'react';
 import Link from 'next/link';
 
-interface BotSource {
-  title: string;
-  path: string;
-}
+import { parseHistory, serializeHistory, type BotSource, type ChatItem } from '../../lib/bot/chat-history';
+
+const HISTORY_KEY = 'limsbot.chat.v1';
 
 interface BotReply {
   answer: string;
@@ -16,12 +15,37 @@ interface BotReply {
   suggestions?: string[];
 }
 
-interface ChatItem {
-  role: 'user' | 'bot';
-  text: string;
-  sources?: BotSource[];
-  followUp?: { label: string; path: string };
-  suggestions?: string[];
+const RETRY_MESSAGE = 'Unable to get a valid answer. Please try again.';
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return value !== null && typeof value === 'object' && !Array.isArray(value);
+}
+
+function isNonemptyString(value: unknown): value is string {
+  return typeof value === 'string' && value.trim().length > 0;
+}
+
+function parseReply(value: unknown): BotReply | null {
+  if (!isRecord(value) || !isNonemptyString(value.answer) || typeof value.grounded !== 'boolean') {
+    return null;
+  }
+  return {
+    answer: value.answer,
+    grounded: value.grounded,
+    sources: Array.isArray(value.sources)
+      ? value.sources.flatMap((source) =>
+          isRecord(source) && isNonemptyString(source.title) && isNonemptyString(source.path)
+            ? [{ title: source.title, path: source.path }]
+            : [],
+        )
+      : [],
+    followUp: isRecord(value.followUp) && isNonemptyString(value.followUp.label) && isNonemptyString(value.followUp.path)
+      ? { label: value.followUp.label, path: value.followUp.path }
+      : undefined,
+    suggestions: Array.isArray(value.suggestions)
+      ? value.suggestions.filter(isNonemptyString)
+      : undefined,
+  };
 }
 
 const SUGGESTIONS = [
@@ -36,10 +60,47 @@ export function BotChat() {
   const [items, setItems] = useState<ChatItem[]>([]);
   const [input, setInput] = useState('');
   const [busy, setBusy] = useState(false);
+  const [historyLoaded, setHistoryLoaded] = useState(false);
+  const conversationVersion = useRef(0);
+
+  useEffect(() => {
+    /* eslint-disable react-hooks/set-state-in-effect -- sessionStorage exists only after hydration, so saved history must load client-side. */
+    try {
+      setItems(parseHistory(sessionStorage.getItem(HISTORY_KEY)));
+    } catch {
+      // Storage may be unavailable; chatting still works in memory.
+    }
+    setHistoryLoaded(true);
+    /* eslint-enable react-hooks/set-state-in-effect */
+  }, []);
+
+  useEffect(() => {
+    if (!historyLoaded) return;
+    try {
+      if (items.length) sessionStorage.setItem(HISTORY_KEY, serializeHistory(items));
+      else sessionStorage.removeItem(HISTORY_KEY);
+    } catch {
+      // Storage quotas and browser privacy settings must not interrupt chat.
+    }
+  }, [items, historyLoaded]);
+
+  function clearConversation() {
+    conversationVersion.current += 1;
+    setItems([]);
+    setInput('');
+    setBusy(false);
+    try {
+      sessionStorage.removeItem(HISTORY_KEY);
+    } catch {
+      // The in-memory conversation can still be cleared without storage access.
+    }
+    inputRef.current?.focus();
+  }
 
   async function ask(question: string) {
     const q = question.trim();
     if (!q || busy) return;
+    const version = conversationVersion.current;
     setBusy(true);
     setInput('');
     setItems((prev) => [...prev, { role: 'user', text: q }]);
@@ -49,9 +110,13 @@ export function BotChat() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ question: q }),
       });
-      const data: BotReply | { error: string } = await res.json();
-      if ('error' in data) {
-        setItems((prev) => [...prev, { role: 'bot', text: data.error }]);
+      const payload: unknown = await res.json().catch(() => null);
+      if (version !== conversationVersion.current) return;
+      const error = isRecord(payload) && 'error' in payload;
+      const data = res.ok && !error ? parseReply(payload) : null;
+      if (!data) {
+        const message = error && isNonemptyString(payload.error) ? payload.error : RETRY_MESSAGE;
+        setItems((prev) => [...prev, { role: 'bot', text: message }]);
       } else {
         setItems((prev) => [
           ...prev,
@@ -65,12 +130,13 @@ export function BotChat() {
         ]);
       }
     } catch {
+      if (version !== conversationVersion.current) return;
       setItems((prev) => [
         ...prev,
         { role: 'bot', text: 'Connection problem — please try again.' },
       ]);
     } finally {
-      setBusy(false);
+      if (version === conversationVersion.current) setBusy(false);
     }
   }
 
@@ -179,6 +245,18 @@ export function BotChat() {
           Ask
         </button>
       </form>
+      {items.length > 0 && (
+        <div className="mt-3 text-xs text-slate-500 dark:text-slate-400">
+          <button
+            type="button"
+            onClick={clearConversation}
+            className="rounded-sm underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+          >
+            Clear conversation
+          </button>
+          <p>History stays in this tab’s session storage, is never sent anywhere, and is removed when you close the tab.</p>
+        </div>
+      )}
       <p className="mt-3 text-[11px] leading-relaxed text-slate-400 dark:text-slate-500">
         LIMS BOT is a prototype. It only answers from published LIMS BOX
         documentation and never stores your questions. For lab-specific

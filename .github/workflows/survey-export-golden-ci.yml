@@ -23,7 +23,7 @@ concurrency:
 
 jobs:
   verify:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, daisy]
     timeout-minutes: 15
     env:
       DATABASE_URL: postgresql://fixture:fixture@127.0.0.1:1/fixture?connect_timeout=1

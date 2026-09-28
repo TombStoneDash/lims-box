@@ -82,6 +82,9 @@ for (const [mode, result] of [
     // A minimal state harness exercises the actual handler and rendered feedback
     // without adding a DOM or renderer dependency.
     let state: unknown = 'idle';
+    const feedback = { current: { timer: null, attempt: 0 } };
+    t.mock.method(React, 'useRef', () => feedback);
+    t.mock.method(React, 'useEffect', () => {});
     t.mock.method(React, 'useState', () => [state, (next: unknown) => {
       state = typeof next === 'function' ? next(state) : next;
     }]);
