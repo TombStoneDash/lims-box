@@ -28,6 +28,7 @@ export interface WaitlistDependencies {
   sendApplicantConfirmation: (email: string, name: string) => Promise<void | DeliveryResult>;
   /** First-contact dry run (read-only, logs a hashed decision); optional. */
   firstContactDryRun?: (input: { email: string; requestStartedAt: Date; coveredByTransactional: boolean }) => Promise<void>;
+  recordAcceptedTransactional?: (email: string) => Promise<void>;
   now?: () => string;
 }
 
@@ -45,7 +46,11 @@ async function confirmNewSignup(
   if (isNewSignup === null) return 'skipped (could not check the list)';
   if (!dbSaved) return 'skipped (signup not saved)';
   try {
-    await dependencies.sendApplicantConfirmation(record.email, record.name);
+    const delivery = await dependencies.sendApplicantConfirmation(record.email, record.name);
+        if (delivery && delivery.status === 'sent') {
+          try { await dependencies.recordAcceptedTransactional?.(record.email); }
+          catch { console.warn('[first-contact] transactional_receipt_unavailable'); }
+        }
     return 'sent';
   } catch (err) {
     console.error('[waitlist] applicant confirmation failed (non-fatal):', safeErrorMeta(err));

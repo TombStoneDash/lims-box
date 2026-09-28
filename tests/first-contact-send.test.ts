@@ -47,3 +47,17 @@ test('signed unsubscribe rejects tampering',()=>{
   const h='a'.repeat(64), token=unsubscribeToken(h,'key');
   assert.equal(validUnsubscribe(h,token,'key'),true); assert.equal(validUnsubscribe('b'.repeat(64),token,'key'),false);
 });
+
+test('source identifier accompanies atomic reservation without recipient plaintext',async()=>{
+  const f=fixture(); let source:string|undefined;
+  const original=f.store.reserve;
+  f.store.reserve=async(h,id)=>{source=id;return original(h,id);};
+  await sendFirstContact({email:'person@example.test',sourceId:'contact-id',known:false,env,...f});
+  assert.equal(source,'contact-id');
+});
+test('permanent recipient rejection requires a draft, definite quota rejection records failed',async()=>{
+  for(const [name,status,expected] of [['invalid_recipient',422,'draft_required'],['rate_limit_exceeded',429,'failed']] as const){
+    const f=fixture();const fetcher=(async()=>new Response(JSON.stringify({name}),{status})) as typeof fetch;
+    assert.equal(await sendFirstContact({email:'person@example.test',known:false,env,...f,fetcher}),expected);
+  }
+});

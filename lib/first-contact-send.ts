@@ -2,7 +2,7 @@ import { createHmac, timingSafeEqual } from 'node:crypto';
 import { emailHmac, normalizeEmail, classifySendResult } from './first-contact';
 
 export interface ContactStore {
-  reserve(hmac: string): Promise<boolean>;
+  reserve(hmac: string, sourceId?: string): Promise<boolean>;
   finish(hmac: string, outcome: string, code: string | null, messageId: string | null): Promise<void>;
 }
 export function unsubscribeToken(hmac: string, key: string) {
@@ -21,9 +21,9 @@ export function sendBlockers(env: Record<string, string | undefined>): string[] 
     ...['FIRST_CONTACT_COPY_APPROVED', 'FIRST_CONTACT_DOMAIN_VERIFIED', 'FIRST_CONTACT_QUOTA_APPROVED', 'FIRST_CONTACT_SCHEMA_READY'].filter(k => env[k] !== 'true'),
   ];
 }
-/** No retries: pending, unresolved and even rejected reservations require operator reconciliation. */
+/** Inbound never retries. Maintenance may inject a failed-only bounded CAS store; ambiguous rows stay blocked. */
 export async function sendFirstContact(input: {
-  email: string; known: boolean; covered?: boolean; env: Record<string, string | undefined>;
+  email: string; sourceId?: string; known: boolean; covered?: boolean; env: Record<string, string | undefined>;
   store: ContactStore; fetcher?: typeof fetch;
 }) {
   const { env, store } = input;
@@ -33,7 +33,7 @@ export async function sendFirstContact(input: {
   const known = new Set((env.FIRST_CONTACT_KNOWN_HMACS ?? '').split(',').map(x => x.trim()));
   const notable = new Set((env.FIRST_CONTACT_NOTABLE_HMACS ?? '').split(',').map(x => x.trim()));
   const domains = new Set((env.FIRST_CONTACT_NOTABLE_DOMAINS ?? '').toLowerCase().split(',').map(x => x.trim()));
-  if (!(await store.reserve(hmac))) return 'already_logged';
+  if (!(await store.reserve(hmac, input.sourceId))) return 'already_logged';
   const suppressed = input.covered ? 'covered_by_transactional' :
     notable.has(hmac) || domains.has(normalizeEmail(input.email).split('@')[1]) ? 'draft_required' :
     input.known || known.has(hmac) ? 'skipped_known' : null;
@@ -54,7 +54,8 @@ export async function sendFirstContact(input: {
     const body = await response.json().catch(() => null);
     id = response.ok && typeof body?.id === 'string' ? body.id : null;
     // Never copy provider text, which can include recipient data, into the receipt.
-    outcome = classifySendResult({ status: response.status, messageId: id });
+    outcome = classifySendResult({ status: response.status, messageId: id, errorName: typeof body?.name === 'string' ? body.name : null });
+    if (outcome === 'permanent') outcome = 'draft_required';
     code = outcome === 'sent' ? null : outcome === 'unresolved' ? 'UNRESOLVED_SEND' : `HTTP_${response.status}`;
   } catch { /* A transport failure may already have delivered: never retry. */ }
   await store.finish(hmac, outcome, code, id);

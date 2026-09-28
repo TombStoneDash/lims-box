@@ -87,9 +87,9 @@ export async function POST(req: NextRequest) {
     }
 
     const resendData = await resendResponse.json();
-    if (firstContactKnown !== null) {
+    if (firstContactKnown !== null && typeof resendData.id === 'string' && resendData.id) {
       try {
-        await sendFirstContact({ email: normalizedEmail, known: firstContactKnown, env: process.env, store: firstContactStore });
+        await sendFirstContact({ email: normalizedEmail, sourceId: resendData.id, known: firstContactKnown, env: process.env, store: firstContactStore });
       } catch {
         // Durable pending receipt remains fail-closed after any persistence error.
         console.warn('[first-contact] receipt_or_history_unavailable');
