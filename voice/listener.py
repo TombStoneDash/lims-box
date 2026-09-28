@@ -11,6 +11,7 @@ Usage:
 import sys
 import time
 import logging
+import unicodedata
 import re
 import numpy as np
 
@@ -161,8 +162,15 @@ def extract_inline_command(text: str, wake_word: str) -> str | None:
     match = _match_wake_phrase(text, wake_word)
     if match is None:
         return None
-    # Strip only the separator after the wake phrase, preserving argument punctuation.
-    remainder = re.sub(r"^[\s,.:–—-]+", "", text[match.end():]).strip()
+    remainder = text[match.end():]
+    # Remove only the wake/command separator; preserve punctuation in arguments.
+    start = 0
+    while start < len(remainder) and (
+        remainder[start].isspace()
+        or unicodedata.category(remainder[start]).startswith("P")
+    ):
+        start += 1
+    remainder = remainder[start:].strip()
     # Only return if there's substantial text after the wake word
     if len(remainder) > 3:
         return remainder
