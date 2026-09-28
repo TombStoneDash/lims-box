@@ -2,7 +2,7 @@ import { createHmac, timingSafeEqual } from 'node:crypto';
 import { emailHmac, normalizeEmail, classifySendResult } from './first-contact';
 
 export interface ContactStore {
-  reserve(hmac: string, sourceId?: string): Promise<boolean>;
+  reserve(hmac: string, sourceId?: string, sourceKind?: string): Promise<boolean>;
   finish(hmac: string, outcome: string, code: string | null, messageId: string | null): Promise<void>;
 }
 export function unsubscribeToken(hmac: string, key: string) {
@@ -23,7 +23,7 @@ export function sendBlockers(env: Record<string, string | undefined>): string[] 
 }
 /** Inbound never retries. Maintenance may inject a failed-only bounded CAS store; ambiguous rows stay blocked. */
 export async function sendFirstContact(input: {
-  email: string; sourceId?: string; known: boolean; covered?: boolean; env: Record<string, string | undefined>;
+  email: string; sourceId?: string; sourceKind?: 'newsletter' | 'contact'; known: boolean; covered?: boolean; env: Record<string, string | undefined>;
   store: ContactStore; fetcher?: typeof fetch;
 }) {
   const { env, store } = input;
@@ -33,7 +33,7 @@ export async function sendFirstContact(input: {
   const known = new Set((env.FIRST_CONTACT_KNOWN_HMACS ?? '').split(',').map(x => x.trim()));
   const notable = new Set((env.FIRST_CONTACT_NOTABLE_HMACS ?? '').split(',').map(x => x.trim()));
   const domains = new Set((env.FIRST_CONTACT_NOTABLE_DOMAINS ?? '').toLowerCase().split(',').map(x => x.trim()));
-  if (!(await store.reserve(hmac, input.sourceId))) return 'already_logged';
+  if (!(await store.reserve(hmac, input.sourceId, input.sourceKind ?? 'newsletter'))) return 'already_logged';
   const suppressed = input.covered ? 'covered_by_transactional' :
     notable.has(hmac) || domains.has(normalizeEmail(input.email).split('@')[1]) ? 'draft_required' :
     input.known || known.has(hmac) ? 'skipped_known' : null;
@@ -42,13 +42,14 @@ export async function sendFirstContact(input: {
     return suppressed;
   }
   const url = `https://lims.bot/api/first-contact/unsubscribe?h=${hmac}&t=${unsubscribeToken(hmac, key)}`;
-  const text = `You're on the LIMS BOX newsletter list. We'll email you product updates when they're ready.\n\nExplore LIMS BOX: https://lims.bot\n\nUnsubscribe: ${url}\n${env.FIRST_CONTACT_POSTAL_ADDRESS!.trim()}`;
+  const intro = input.sourceKind === 'contact' ? "Thanks for contacting LIMS BOX. We've received your lab's request." : "You're on the LIMS BOX newsletter list.";
+  const text = `${intro}${input.sourceKind === 'contact' ? '' : " We'll email you product updates when they're ready."}\n\nExplore LIMS BOX: https://lims.bot\n\nUnsubscribe: ${url}\n${env.FIRST_CONTACT_POSTAL_ADDRESS!.trim()}`;
   let outcome = 'unresolved', code: string | null = 'UNRESOLVED_SEND', id: string | null = null;
   try {
     const response = await (input.fetcher ?? fetch)('https://api.resend.com/emails', {
       method: 'POST', signal: AbortSignal.timeout(10000),
       headers: { Authorization: `Bearer ${env.RESEND_API_KEY}`, 'Content-Type': 'application/json', 'Idempotency-Key': `first-contact/lims/${hmac}` },
-      body: JSON.stringify({ from: 'LIMS BOX <info@lims.bot>', to: [normalizeEmail(input.email)], subject: "You're on the LIMS BOX list", text,
+      body: JSON.stringify({ from: 'LIMS BOX <info@lims.bot>', to: [normalizeEmail(input.email)], subject: input.sourceKind === 'contact' ? 'We received your LIMS BOX request' : "You're on the LIMS BOX list", text,
         headers: { 'List-Unsubscribe': `<${url}>`, 'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click' } }),
     });
     const body = await response.json().catch(() => null);

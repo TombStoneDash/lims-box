@@ -1,18 +1,18 @@
 import { prisma } from './prisma';
 import type { ContactStore } from './first-contact-send';
 export function makeFirstContactStore(retry = false): ContactStore { return {
-  async reserve(hmac, sourceId) {
+  async reserve(hmac, sourceId, sourceKind = 'newsletter') {
     if (retry) {
       const rows = await prisma.$queryRaw<{ email_hmac: string }[]>`
         UPDATE first_contact_log SET outcome='pending',attempts=attempts+1,updated_at=now()
-        WHERE product='lims' AND email_hmac=${hmac} AND source_id=${sourceId ?? null}
+        WHERE product='lims' AND email_hmac=${hmac} AND source_id=${sourceId ?? null} AND source_kind=${sourceKind}
           AND outcome='failed' AND attempts < 3 AND unsubscribed_at IS NULL
           AND updated_at <= now() - interval '24 hours' RETURNING email_hmac`;
       return rows.length === 1;
     }
     const rows = await prisma.$queryRaw<{ email_hmac: string }[]>`
-      INSERT INTO first_contact_log (product,email_hmac,outcome,attempts,source_id)
-      VALUES ('lims',${hmac},'pending',1,${sourceId ?? null}) ON CONFLICT (product,email_hmac) DO NOTHING RETURNING email_hmac`;
+      INSERT INTO first_contact_log (product,email_hmac,outcome,attempts,source_id,source_kind)
+      VALUES ('lims',${hmac},'pending',1,${sourceId ?? null},${sourceKind}) ON CONFLICT (product,email_hmac) DO NOTHING RETURNING email_hmac`;
     return rows.length === 1;
   },
   async finish(hmac, outcome, code, messageId) {

@@ -1,21 +1,19 @@
 # LIMS newsletter first-contact sender (not activated)
 
-Only the newsletter has a new email sender. Early-access and waitlist retain
-existing applicant confirmations; successful provider-returned status `sent`
-records HMAC-only covered_by_transactional. A void return, fallback or rejected
-call never claims acceptance. They never invoke the new sender.
-
-Source inspection corrects the spec's contact endpoint assumption: `/api/contact`
-sends only Hudson's internal notice, no applicant confirmation. It remains a dry
-hook pending separate form-specific copy approval and a stable Supabase source
-record binding; its insert currently does not return a durable row ID. The demo
-endpoint and personnel-pack delivery are outside this newsletter/confirmation lane.
+Newsletter and contact have new, separately worded first-contact messages.
+Contact's actual route sends only Hudson's internal notice, so it is an uncovered
+inbound. When all sending gates pass, its existing Supabase insert returns the
+saved row ID; unknown history or missing saved ID suppresses the applicant email.
+No additional query is added to the contact insert while the sender is disabled.
+Early-access and waitlist retain existing applicant confirmations; only explicit
+provider status `sent` records HMAC-only covered_by_transactional. A void return,
+fallback or rejected call never claims acceptance. No extra confirmation is sent.
 
 Main's September 28 instruction chooses per-product suppression (cross-product
 is off). Unset scope follows that decision. Any explicitly different value is
 blocked. Every other activation flag is off by default. No source/test operation
-sends LIMS email. The approved-copy version here is the short plaintext welcome
-in `lib/first-contact-send.ts`, subject "You're on the LIMS BOX list"; Main must
+sends LIMS email. The proposed copy versions here are the short plaintext contact acknowledgement and welcome
+in `lib/first-contact-send.ts`, subjects "We received your LIMS BOX request" and "You're on the LIMS BOX list"; Main must
 approve this exact copy and postal footer before enabling it.
 
 ## Activation remains blocked
@@ -58,7 +56,7 @@ Preserve the ledger, HMAC secret and provider evidence to prevent duplicates.
 ## Offline maintenance (Main only; not executed by the implementation worker)
 
 `node --import tsx scripts/first-contact-maintenance.ts` reports eligible counts
-without writes. `--export-drafts` resolves the stored Resend Contacts ID privately,
+without writes. `--export-drafts` resolves the stored Resend Contacts ID or saved Supabase contact ID privately,
 checks its normalized email HMAC binding, writes exclusively in the private Hermes
 outbox with mode 0600, and only then marks drafted_for_hudson. Existing draft files
 are preserved; failed writes never claim success. Missing/private source access

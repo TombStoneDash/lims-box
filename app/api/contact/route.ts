@@ -3,6 +3,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { sendSubmissionNotice } from '@/lib/notify';
 import { getSupabase } from '@/lib/supabase';
 import { normalizeEmail } from '@/lib/emailValidation';
+import { sendBlockers, sendFirstContact } from '@/lib/first-contact-send';
+import { firstContactStore } from '@/lib/first-contact-store';
+import { limsPriorContact } from '@/lib/first-contact-lims';
 import { limsFirstContactDryRun } from '@/lib/first-contact-lims';
 import { limsHistorySources } from '@/lib/first-contact-lims-sources';
 
@@ -42,6 +45,14 @@ export async function POST(request: NextRequest) {
     // Runs BEFORE email so the lead is saved even if Resend fails.
     // Wrapped in try/catch so a DB failure never blocks email send.
     let dbSaved = false;
+    let sourceId: string | null = null;
+    let priorContact: boolean | null = null;
+    if (sendBlockers(process.env).length === 0) {
+      try {
+        const sources = limsHistorySources();
+        if (sources.countEarlyAccessBefore) priorContact = await limsPriorContact(sources, record.email, requestStartedAt);
+      } catch { /* Unknown history suppresses first contact. */ }
+    }
     try {
       const supabase = getSupabase();
       if (supabase) {
@@ -49,7 +60,7 @@ export async function POST(request: NextRequest) {
         // Column mapping: currentSystem → current_lims, message → pain_point.
         // PR #37 initially targeted 'contact_leads' which does not exist — every
         // signup would have silently failed the DB save. Corrected W212-followup.
-        const { error: dbError } = await supabase.from('limsbox_early_access').insert({
+        const insertion = supabase.from('limsbox_early_access').insert({
           name: record.name,
           lab_name: record.labName,
           email: record.email,
@@ -60,6 +71,8 @@ export async function POST(request: NextRequest) {
           instruments: record.instruments ?? null,
           source: 'contact_form',
         });
+        const { error: dbError, data } = priorContact === null ? await insertion : await insertion.select('id').single();
+        if (data && typeof data === 'object' && 'id' in data) sourceId = String(data.id);
         if (dbError) {
           console.error('[contact] DB save failed (non-fatal):', safeErrorMeta(dbError));
         } else {
@@ -114,6 +127,10 @@ export async function POST(request: NextRequest) {
       coveredByTransactional: false,
     });
 
+    if (dbSaved && sourceId && priorContact !== null) {
+      try { await sendFirstContact({ email: record.email, sourceId, sourceKind: 'contact', known: priorContact, env: process.env, store: firstContactStore }); }
+      catch { console.warn('[first-contact] contact_receipt_unavailable'); }
+    }
     return NextResponse.json({ success: true });
   } catch (err) {
     console.error('[contact] handler threw', safeErrorMeta(err));

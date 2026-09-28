@@ -2,6 +2,7 @@
 import { mkdir, writeFile } from 'node:fs/promises';
 import { limsPriorContact } from '../lib/first-contact-lims';
 import { limsHistorySources } from '../lib/first-contact-lims-sources';
+import { getSupabase } from '../lib/supabase';
 import { prisma } from '../lib/prisma';
 import { maintainFirstContacts, type MaintenanceRow } from '../lib/first-contact-maintenance';
 import { makeFirstContactStore } from '../lib/first-contact-store';
@@ -18,20 +19,33 @@ export async function runMaintenance(options:string[]) {
     await prisma.$executeRaw`UPDATE first_contact_log SET outcome='draft_required',updated_at=now()
       WHERE product='lims' AND outcome='failed' AND attempts >= 3`;
   }
-  const rows=await prisma.$queryRaw<MaintenanceRow[]>`SELECT email_hmac,source_id,outcome FROM first_contact_log
+  const rows=await prisma.$queryRaw<MaintenanceRow[]>`SELECT email_hmac,source_id,source_kind,outcome FROM first_contact_log
     WHERE product='lims' AND outcome IN ('failed','draft_required') AND source_id IS NOT NULL AND unsubscribed_at IS NULL ORDER BY updated_at LIMIT 100`;
   if(drafts || retry) await maintainFirstContacts(rows,{drafts,retry},{key,
-    async resolveEmail(id) {
+    async resolveEmail(id,row) {
+      if(row.source_kind==='contact') {
+        const client=getSupabase(); if(!client) throw Error('Private source unavailable');
+        const {data,error}=await client.from('limsbox_early_access').select('email').eq('id',id).single();
+        if(error || typeof data?.email!=='string') throw Error('Private source unavailable');
+        return data.email;
+      }
       const r=await fetch(`https://api.resend.com/contacts/${encodeURIComponent(id)}`,{headers:{Authorization:`Bearer ${apiKey}`},signal:AbortSignal.timeout(5000)});
       if(!r.ok) throw Error('Private source unavailable');
       const body=await r.json();
       if(typeof body.email!=='string' || body.unsubscribed===true) throw Error('Source unavailable or unsubscribed');
       return body.email;
     },
-    async writeDraft(hmac,email) {
+    async writeDraft(hmac,email,row) {
+      let details='';
+      if(row.source_kind==='contact') {
+        const client=getSupabase(); if(!client) throw Error('Private source unavailable');
+        const {data,error}=await client.from('limsbox_early_access').select('name,pain_point').eq('id',row.source_id).single();
+        if(error || !data) throw Error('Private source unavailable');
+        details=`\nName: ${String(data.name ?? '')}\nMessage: ${String(data.pain_point ?? '')}\n`;
+      }
       const dir='/Users/ops/Hermes/outbox/drafts/first-contact';
       await mkdir(dir,{recursive:true,mode:0o700});
-      try { await writeFile(`${dir}/lims-${hmac}.md`,`---\nproduct: lims\nemail_hmac: ${hmac}\nhandled: false\n---\n\nRecipient: ${email.replace(/[\r\n]/g,'')}\nSource: newsletter\n\nSuggested reply: You're on the LIMS BOX newsletter list. Explore LIMS BOX: https://lims.bot\n`,{flag:'wx',mode:0o600}); return true; }
+      try { await writeFile(`${dir}/lims-${hmac}.md`,`---\nproduct: lims\nemail_hmac: ${hmac}\nhandled: false\n---\n\n${details}Recipient: ${email.replace(/[\r\n]/g,'')}\nSource: ${row.source_kind ?? 'newsletter'}\n\nSuggested reply: ${row.source_kind==='contact'?"Thanks for contacting LIMS BOX. We've received your lab's request.":"You're on the LIMS BOX newsletter list."} Explore LIMS BOX: https://lims.bot\n`,{flag:'wx',mode:0o600}); return true; }
       catch(e) {if((e as NodeJS.ErrnoException).code==='EEXIST') return false; throw e;}
     },
     async markDrafted(hmac) {await prisma.$executeRaw`UPDATE first_contact_log SET outcome='drafted_for_hudson',updated_at=now() WHERE product='lims' AND email_hmac=${hmac} AND outcome='draft_required'`;},
@@ -40,8 +54,15 @@ export async function runMaintenance(options:string[]) {
       // correspondence/notable lists in the sender and Resend unsubscribe above.
       const sources=limsHistorySources();
       if(!sources.countEarlyAccessBefore) throw Error('History unavailable');
-      const known=await limsPriorContact(sources,email,new Date());
-      await sendFirstContact({email,sourceId:row.source_id,known,env:process.env,store:makeFirstContactStore(true)});
+      let before=new Date();
+      if(row.source_kind==='contact') {
+        const client=getSupabase(); if(!client) throw Error('Private source unavailable');
+        const {data,error}=await client.from('limsbox_early_access').select('created_at').eq('id',row.source_id).single();
+        if(error || !data?.created_at || !Number.isFinite(Date.parse(data.created_at))) throw Error('Source timestamp unavailable');
+        before=new Date(data.created_at);
+      }
+      const known=await limsPriorContact(sources,email,before);
+      await sendFirstContact({email,sourceId:row.source_id,sourceKind:row.source_kind,known,env:process.env,store:makeFirstContactStore(true)});
     },
   });
   console.log(JSON.stringify({event:'first_contact_maintenance',eligible:rows.length,write:drafts||retry}));

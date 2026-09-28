@@ -61,3 +61,11 @@ test('permanent recipient rejection requires a draft, definite quota rejection r
     assert.equal(await sendFirstContact({email:'person@example.test',known:false,env,...f,fetcher}),expected);
   }
 });
+test('contact acknowledgement uses contact copy and source binding, not newsletter copy',async()=>{
+  const f=fixture();let kind:string|undefined;
+  const original=f.store.reserve;
+  f.store.reserve=async(h,id,k)=>{kind=k;return original(h,id,k);};
+  assert.equal(await sendFirstContact({email:'person@example.test',sourceKind:'contact',sourceId:'contact-row-id',known:false,env,...f}),'sent');
+  assert.equal(kind,'contact');assert.equal(f.bodies[0].subject,'We received your LIMS BOX request');
+  assert.match(f.bodies[0].text,/received your lab's request/);assert.doesNotMatch(f.bodies[0].text,/newsletter|product updates/);
+});
