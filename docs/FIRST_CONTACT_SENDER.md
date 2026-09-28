@@ -28,7 +28,7 @@ Main must review and separately authorize:
   RESEND_API_KEY; FIRST_CONTACT_POSTAL_ADDRESS (approved real mailing address).
 - FIRST_CONTACT_KNOWN_HMACS, FIRST_CONTACT_NOTABLE_HMACS (comma-separated), and
   FIRST_CONTACT_NOTABLE_DOMAINS. No correspondent export exists by assumption;
-  until provided, own-product Prospect, Supabase and Resend Contacts are checked.
+  each list must be valid or explicitly reviewed-empty as `[]`; missing/malformed lists block sending. Own-product Prospect, Supabase and Resend Contacts are also checked.
 - Main's independently authorized own-address send and signed unsubscribe test.
   This worker must not perform that send. HTTP /mcp is unrelated and unchanged.
 - Main schedules private draft export and retention after reviewing the source below. A draft_required row never claims a written artifact.
@@ -47,7 +47,7 @@ private-draft requirements on the next run. No schedule is installed.
 
 Receipts live in the durable first_contact_log row, including provider message
 ID, bounded error code and timestamps. The HMAC unsubscribe link exposes no email;
-it suppresses this first-contact channel. It does not claim to unsubscribe
+GET shows confirmation only (safe for mail scanners); POST suppresses this first-contact channel. It does not claim to unsubscribe
 unrelated newsletter campaigns. Missing persistence returns 503, never success.
 
 Rollback: keep/return FIRST_CONTACT_EMAIL_ENABLED off, then revert the code.

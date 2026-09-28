@@ -12,12 +12,20 @@ export function validUnsubscribe(hmac: string, token: string, key: string) {
   return /^[a-f0-9]{64}$/.test(hmac) && /^[a-f0-9]{64}$/.test(token) &&
     timingSafeEqual(Buffer.from(token), Buffer.from(unsubscribeToken(hmac, key)));
 }
+export function contactList(value: string | undefined, domain = false): string[] | null {
+  if (value === '[]') return [];
+  if (!value?.trim()) return null;
+  const entries = value.split(',').map(x => x.trim().toLowerCase());
+  const pattern = domain ? /^(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z]{2,}$/ : /^[a-f0-9]{64}$/;
+  return entries.every(x => pattern.test(x)) ? entries : null;
+}
 export function sendBlockers(env: Record<string, string | undefined>): string[] {
   const required = ['FIRST_CONTACT_HMAC_KEY', 'FIRST_CONTACT_POSTAL_ADDRESS', 'RESEND_API_KEY'];
   return [
     ...(env.FIRST_CONTACT_EMAIL_ENABLED === 'true' ? [] : ['FLAG_OFF']),
     ...(!env.FIRST_CONTACT_SCOPE || env.FIRST_CONTACT_SCOPE === 'per-product' ? [] : ['CROSS_PRODUCT_UNSUPPORTED']),
     ...required.filter(k => !env[k]?.trim()),
+    ...['FIRST_CONTACT_KNOWN_HMACS','FIRST_CONTACT_NOTABLE_HMACS','FIRST_CONTACT_NOTABLE_DOMAINS'].filter(k => contactList(env[k], k.endsWith('DOMAINS')) === null),
     ...['FIRST_CONTACT_COPY_APPROVED', 'FIRST_CONTACT_DOMAIN_VERIFIED', 'FIRST_CONTACT_QUOTA_APPROVED', 'FIRST_CONTACT_SCHEMA_READY'].filter(k => env[k] !== 'true'),
   ];
 }
@@ -30,9 +38,9 @@ export async function sendFirstContact(input: {
   if (sendBlockers(env).length) return 'disabled';
   const key = env.FIRST_CONTACT_HMAC_KEY!;
   const hmac = emailHmac(input.email, key)!;
-  const known = new Set((env.FIRST_CONTACT_KNOWN_HMACS ?? '').split(',').map(x => x.trim()));
-  const notable = new Set((env.FIRST_CONTACT_NOTABLE_HMACS ?? '').split(',').map(x => x.trim()));
-  const domains = new Set((env.FIRST_CONTACT_NOTABLE_DOMAINS ?? '').toLowerCase().split(',').map(x => x.trim()));
+  const known = new Set(contactList(env.FIRST_CONTACT_KNOWN_HMACS)!);
+  const notable = new Set(contactList(env.FIRST_CONTACT_NOTABLE_HMACS)!);
+  const domains = new Set(contactList(env.FIRST_CONTACT_NOTABLE_DOMAINS, true)!);
   if (!(await store.reserve(hmac, input.sourceId, input.sourceKind ?? 'newsletter'))) return 'already_logged';
   const suppressed = input.covered ? 'covered_by_transactional' :
     notable.has(hmac) || domains.has(normalizeEmail(input.email).split('@')[1]) ? 'draft_required' :

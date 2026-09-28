@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { sendFirstContact, sendBlockers, validUnsubscribe, unsubscribeToken, type ContactStore } from '../lib/first-contact-send';
-const env = { FIRST_CONTACT_EMAIL_ENABLED:'true', FIRST_CONTACT_HMAC_KEY:'test-only-key', FIRST_CONTACT_POSTAL_ADDRESS:'Test address', RESEND_API_KEY:'test-only', FIRST_CONTACT_COPY_APPROVED:'true', FIRST_CONTACT_DOMAIN_VERIFIED:'true', FIRST_CONTACT_QUOTA_APPROVED:'true', FIRST_CONTACT_SCHEMA_READY:'true' };
+const env = { FIRST_CONTACT_KNOWN_HMACS:'[]', FIRST_CONTACT_NOTABLE_HMACS:'[]', FIRST_CONTACT_NOTABLE_DOMAINS:'[]', FIRST_CONTACT_EMAIL_ENABLED:'true', FIRST_CONTACT_HMAC_KEY:'test-only-key', FIRST_CONTACT_POSTAL_ADDRESS:'Test address', RESEND_API_KEY:'test-only', FIRST_CONTACT_COPY_APPROVED:'true', FIRST_CONTACT_DOMAIN_VERIFIED:'true', FIRST_CONTACT_QUOTA_APPROVED:'true', FIRST_CONTACT_SCHEMA_READY:'true' };
 function fixture() {
   const rows = new Map<string, {outcome:string;code:string|null;id:string|null}>();
   const store: ContactStore = {
@@ -68,4 +68,10 @@ test('contact acknowledgement uses contact copy and source binding, not newslett
   assert.equal(await sendFirstContact({email:'person@example.test',sourceKind:'contact',sourceId:'contact-row-id',known:false,env,...f}),'sent');
   assert.equal(kind,'contact');assert.equal(f.bodies[0].subject,'We received your LIMS BOX request');
   assert.match(f.bodies[0].text,/received your lab's request/);assert.doesNotMatch(f.bodies[0].text,/newsletter|product updates/);
+});
+test('missing and malformed contact lists fail closed; explicit reviewed empty arrays accepted',()=>{
+  for(const name of ['FIRST_CONTACT_KNOWN_HMACS','FIRST_CONTACT_NOTABLE_HMACS','FIRST_CONTACT_NOTABLE_DOMAINS']) {
+    for(const value of [undefined,'','not an address','a'.repeat(64)+',']) assert.ok(sendBlockers({...env,[name]:value}).includes(name));
+  }
+  assert.equal(sendBlockers(env).length,0);
 });
