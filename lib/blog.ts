@@ -217,8 +217,8 @@ function parseMarkdownToHtml(markdown: string): string {
 
   // Match whole runs by list type; blank lines and other blocks end each run.
   html = html.replace(/^(\d+)\.[ \t]+[^\n]*(?:\n\d+\.[ \t]+[^\n]*)*/gm, (list, ordinal: string) => {
-    const start = Number(ordinal);
-    const startAttribute = start === 1 ? '' : ` start="${start}"`;
+    const start = ordinal.replace(/^0+(?=\d)/, '');
+    const startAttribute = start === '1' ? '' : ` start="${start}"`;
     const items = list.split('\n').map(line => `<li>${line.replace(/^\d+\.[ \t]+/, '')}</li>`).join('\n');
     return `\n\n<ol${startAttribute} class="list-decimal pl-6 space-y-2 my-4">${items}</ol>\n\n`;
   });
