@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Check, Link as LinkIcon } from 'lucide-react';
 
 interface ShareButtonsProps {
@@ -24,32 +24,66 @@ export async function copyShareLink(url: string): Promise<boolean> {
     await navigator.clipboard.writeText(url);
     return true;
   } catch {
+    const previouslyFocused = document.activeElement;
     const textarea = document.createElement('textarea');
     try {
       textarea.value = url;
+      textarea.style.cssText = 'position: fixed; top: 0; left: 0; opacity: 0; pointer-events: none;';
       document.body.appendChild(textarea);
       textarea.select();
       return document.execCommand('copy') === true;
     } catch {
       return false;
     } finally {
-      textarea.remove();
+      try {
+        textarea.remove();
+      } catch {
+        // Cleanup must not override the copy result.
+      }
+      try {
+        if (
+          previouslyFocused?.isConnected &&
+          'focus' in previouslyFocused &&
+          typeof previouslyFocused.focus === 'function'
+        ) {
+          previouslyFocused.focus({ preventScroll: true });
+        }
+      } catch {
+        // Focus restoration is best effort and must preserve the copy result.
+      }
     }
   }
 }
 
 export function ShareButtons({ title, url }: ShareButtonsProps) {
   const [copyStatus, setCopyStatus] = useState<'idle' | 'copied' | 'failed'>('idle');
+  const copyFeedback = useRef<{ timer: ReturnType<typeof setTimeout> | null; attempt: number }>({
+    timer: null,
+    attempt: 0,
+  });
+  useEffect(() => () => {
+    copyFeedback.current.attempt += 1;
+    if (copyFeedback.current.timer !== null) clearTimeout(copyFeedback.current.timer);
+  }, []);
   const copied = copyStatus === 'copied';
   const failureMessage = "Couldn't copy link. Try again.";
   const { twitterUrl, linkedinUrl } = buildShareLinks(title, url);
 
   const handleCopyLink = async () => {
+    const attempt = ++copyFeedback.current.attempt;
+    if (copyFeedback.current.timer !== null) {
+      clearTimeout(copyFeedback.current.timer);
+      copyFeedback.current.timer = null;
+    }
     setCopyStatus('idle');
     const success = await copyShareLink(url);
+    if (attempt !== copyFeedback.current.attempt) return;
     setCopyStatus(success ? 'copied' : 'failed');
     if (success) {
-      setTimeout(() => setCopyStatus(status => status === 'copied' ? 'idle' : status), 2000);
+      copyFeedback.current.timer = setTimeout(() => {
+        copyFeedback.current.timer = null;
+        setCopyStatus(status => status === 'copied' ? 'idle' : status);
+      }, 2000);
     }
   };
 

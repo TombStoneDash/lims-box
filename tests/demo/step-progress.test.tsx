@@ -78,7 +78,7 @@ function harness(t: TestContext) {
 }
 
 const tabs = ['Step 1 of 3: Sample Entry', 'Step 2 of 3: Chain of Custody', 'Step 3 of 3: Demo Report'];
-const actions = ['Log Sample', 'Click to Sign', 'Generate Report'];
+const actions = ['Log Sample', 'Click to Sign: Received at Lab custody step for synthetic sample WS-2026-0384', 'Generate Report'];
 const completed = [/Sample Logged/, /COC complete\./, /Synthetic Analytical Report/];
 
 for (const navigation of ['tabs', 'Previous/Next']) {

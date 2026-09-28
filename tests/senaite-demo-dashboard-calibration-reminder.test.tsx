@@ -27,7 +27,7 @@ function renderReminder(instruments?: InstrumentCalibrationInput[]) {
     delete require.cache[pagePath];
     const Dashboard = require(pagePath).default;
     const markup = renderToStaticMarkup(<Dashboard />);
-    assert.match(markup, /Real-time overview — April 13, 2026/);
+    assert.match(markup, /Synthetic laboratory snapshot: fixed demo date April 13, 2026/);
     assert.doesNotMatch(markup, /All 5 instruments|Instrument calibration due April 28|15 days remaining/);
     const actionItems = markup.slice(markup.indexOf('Action Items'));
     const reminder = actionItems.match(/<div class="flex items-center gap-3 p-3 bg-blue-50[\s\S]*?<\/a><\/div>/)?.[0];
