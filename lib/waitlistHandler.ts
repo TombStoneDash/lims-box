@@ -26,6 +26,8 @@ export interface WaitlistDependencies {
   createProspect: (record: WaitlistRecord) => Promise<unknown>;
   sendSubmissionNotice: (notice: SubmissionNotice) => Promise<void | DeliveryResult>;
   sendApplicantConfirmation: (email: string, name: string) => Promise<void | DeliveryResult>;
+  /** First-contact dry run (read-only, logs a hashed decision); optional. */
+  firstContactDryRun?: (input: { email: string; requestStartedAt: Date; coveredByTransactional: boolean }) => Promise<void>;
   now?: () => string;
 }
 
@@ -58,6 +60,8 @@ async function confirmNewSignup(
 
 export function createWaitlistPostHandler(dependencies: WaitlistDependencies) {
   return async function handleWaitlistPost(request: NextRequest) {
+    // Taken before this request writes anything (first-contact dry run).
+    const requestStartedAt = new Date();
     try {
       const body = await request.json();
       const { email, labName, name, organization, source } = body ?? {};
@@ -120,6 +124,17 @@ export function createWaitlistPostHandler(dependencies: WaitlistDependencies) {
         // Both durable sinks failed: retain the full lead here as the last recovery copy.
         console.error('[waitlist] LEAD-RECOVERY (both sinks failed):', record);
         return NextResponse.json({ error: 'Failed to process signup' }, { status: 500 });
+      }
+
+      // confirmNewSignup attempts the applicant confirmation only for a new, saved signup.
+      try {
+        await dependencies.firstContactDryRun?.({
+          email: record.email,
+          requestStartedAt,
+          coveredByTransactional: isNewSignup === true && dbSaved,
+        });
+      } catch {
+        // The dry run must never affect the signup.
       }
 
       return NextResponse.json({ success: true, saved: dbSaved });

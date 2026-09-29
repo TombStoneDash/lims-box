@@ -37,7 +37,9 @@ test('analytical results table headers stay Sample ID, Analyte, Result, MCL, Met
 });
 
 test('the sign button names the custody step it signs while keeping its visible label', () => {
-  const button = source.match(/<button\s+onClick=\{\(\) => setSigned\(true\)\}[\s\S]*?<\/button>/)?.[0];
+  const button = [...source.matchAll(/<button\b[\s\S]*?<\/button>/g)]
+    .map(([markup]) => markup)
+    .find(markup => /aria-label="Click to Sign[^"]*"/.test(markup));
   assert.ok(button, 'sign button exists');
   assert.match(button, /aria-label="[^"]*Received at Lab[^"]*"/);
   // Label in Name (WCAG 2.5.3): the accessible name starts with the visible text.

@@ -17,9 +17,7 @@ const steps: { id: Step; label: string; icon: React.ElementType }[] = [
   { id: 'report', label: 'Demo Report', icon: FileText },
 ];
 
-function SampleEntryStep() {
-  const [submitted, setSubmitted] = useState(false);
-
+function SampleEntryStep({ submitted, onSubmit }: { submitted: boolean; onSubmit: () => void }) {
   if (submitted) {
     return (
       <div className="text-center py-8">
@@ -88,7 +86,7 @@ function SampleEntryStep() {
       </div>
 
       <button
-        onClick={() => setSubmitted(true)}
+        onClick={onSubmit}
         className="w-full md:w-auto px-6 py-3 bg-lab-teal hover:bg-lab-teal/90 text-white font-semibold rounded-lg transition-colors flex items-center justify-center gap-2"
       >
         Log Sample <ArrowRight className="w-4 h-4" />
@@ -97,9 +95,7 @@ function SampleEntryStep() {
   );
 }
 
-function COCStep() {
-  const [signed, setSigned] = useState(false);
-
+function COCStep({ signed, onSign }: { signed: boolean; onSign: () => void }) {
   return (
     <div className="space-y-6">
       <div className="bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-lg overflow-hidden">
@@ -139,7 +135,7 @@ function COCStep() {
                     <span className="text-xs px-2 py-0.5 bg-green-100 text-green-700 rounded-full">Signed</span>
                   ) : (
                     <button
-                      onClick={() => setSigned(true)}
+                      onClick={onSign}
                       aria-label="Click to Sign: Received at Lab custody step for synthetic sample WS-2026-0384"
                       className="text-xs px-2 py-0.5 bg-lab-teal text-white rounded-full hover:bg-lab-teal/90 transition-colors"
                     >
@@ -181,9 +177,7 @@ function COCStep() {
   );
 }
 
-function ReportStep() {
-  const [generated, setGenerated] = useState(false);
-
+function ReportStep({ generated, onGenerate }: { generated: boolean; onGenerate: () => void }) {
   return (
     <div className="space-y-6">
       {!generated ? (
@@ -194,7 +188,7 @@ function ReportStep() {
             Generate a synthetic report preview using example sample data, QC results, and threshold references from this walkthrough.
           </p>
           <button
-            onClick={() => setGenerated(true)}
+            onClick={onGenerate}
             className="px-6 py-3 bg-lab-teal hover:bg-lab-teal/90 text-white font-semibold rounded-lg transition-colors inline-flex items-center gap-2"
           >
             <FileText className="w-4 h-4" /> Generate Report
@@ -331,6 +325,9 @@ function CalendlyEmbed() {
 
 export default function DemoPage() {
   const [currentStep, setCurrentStep] = useState<Step>('entry');
+  const [submitted, setSubmitted] = useState(false);
+  const [signed, setSigned] = useState(false);
+  const [generated, setGenerated] = useState(false);
   const stepIndex = steps.findIndex(s => s.id === currentStep);
 
   return (
@@ -431,9 +428,9 @@ export default function DemoPage() {
             </h2>
           </div>
 
-          {currentStep === 'entry' && <SampleEntryStep />}
-          {currentStep === 'coc' && <COCStep />}
-          {currentStep === 'report' && <ReportStep />}
+          {currentStep === 'entry' && <SampleEntryStep submitted={submitted} onSubmit={() => setSubmitted(true)} />}
+          {currentStep === 'coc' && <COCStep signed={signed} onSign={() => setSigned(true)} />}
+          {currentStep === 'report' && <ReportStep generated={generated} onGenerate={() => setGenerated(true)} />}
 
           {/* Navigation */}
           <div className="flex items-center justify-between mt-8 pt-6 border-t border-slate-100 dark:border-white/10">
@@ -593,6 +590,27 @@ export default function DemoPage() {
               </p>
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* Clinical and diagnostics demo data */}
+      <section className="py-12 px-4" aria-labelledby="multi-lab-demo-heading">
+        <div className="max-w-3xl mx-auto text-center">
+          <h2 id="multi-lab-demo-heading" className="text-2xl font-bold text-slate-900 dark:text-white mb-3">
+            Clinical and diagnostics labs too
+          </h2>
+          <p className="text-sm text-slate-600 dark:text-slate-300 mb-4">
+            Planned, not live yet: synthetic seed data for two made-up labs, ABC Clinical (chemistry and hematology) and
+            ABC Diagnostics (PCR and urine culture), with no patient data. It is not shown on this page, and it does not
+            yet include results or QC runs. Today, clinical and diagnostics labs can review the Personnel Pack.
+          </p>
+          <p className="text-sm">
+            <Link href="/for/clinical-labs" className="text-lab-teal hover:underline">Personnel records for clinical labs</Link>
+            <span className="text-slate-300 mx-2">|</span>
+            <Link href="/for/diagnostics-labs" className="text-lab-teal hover:underline">Personnel records for diagnostics labs</Link>
+            <span className="text-slate-300 mx-2">|</span>
+            <a href="#schedule" className="text-lab-teal hover:underline">Book a guided demo</a>
+          </p>
         </div>
       </section>
 

@@ -47,7 +47,7 @@ const tiers = [
       'Everything in Starter, plus:',
       'All modules unlocked',
       'Automated EPA & state reporting',
-      'Instrument integration',
+      'Instrument integration (planned, not built yet)',
       'Custom report templates',
       'Dedicated onboarding call',
       'Priority email & chat support',
@@ -100,7 +100,7 @@ const faqs = [
   },
   {
     q: 'What modules are included in Starter?',
-    a: 'Starter includes the 4 core modules: Sample Tracking, Chain of Custody, QA/QC Management, and Basic Reporting. Growth unlocks all modules including instrument integration, automated regulatory reporting, and advanced analytics.',
+    a: 'Starter includes the 4 core modules: Sample Tracking, Chain of Custody, QA/QC Management, and Basic Reporting. Growth unlocks all modules, including automated regulatory reporting and advanced analytics. Instrument integration is planned and not built yet.',
   },
   {
     q: 'Can I upgrade or downgrade anytime?',

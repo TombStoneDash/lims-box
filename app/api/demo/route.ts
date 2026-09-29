@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { resolveDemoLimit } from '@/lib/demo-route-limit';
 
 /**
  * GET /api/demo — Returns sample LIMS data for integration demos.
@@ -57,12 +58,6 @@ const DEMO_METHODS = [
   { id: 'EPA-8260D', name: 'EPA 8260D', title: 'VOCs by GC-MS', analytes: ['TCE', 'PCE', 'Benzene', 'Vinyl Chloride', 'MTBE', '1,4-Dioxane'], matrix: ['Groundwater', 'Soil', 'Wastewater'], holding_time_days: 14, preservation: 'HCl to pH < 2, cool to 4°C', qc_requirements: 'MB, LCS, LCSD, MS, MSD per 20 samples' },
   { id: 'SM-9223B', name: 'SM 9223B', title: 'Total Coliforms / E. coli by Colilert', analytes: ['Total Coliform', 'E. coli'], matrix: ['Drinking Water'], holding_time_days: 1, preservation: 'Na2S2O3, cool to 4°C', qc_requirements: 'Sterility blank, positive/negative control per batch' },
 ];
-
-export function resolveDemoLimit(rawLimit: string | null): number {
-  const parsed = parseInt(rawLimit ?? '10', 10);
-  const bounded = Number.isFinite(parsed) ? parsed : 10;
-  return Math.min(Math.max(bounded, 1), 50);
-}
 
 export async function GET(request: Request) {
   const url = new URL(request.url);

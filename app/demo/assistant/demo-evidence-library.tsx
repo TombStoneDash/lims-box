@@ -30,6 +30,7 @@ interface EvidenceTest {
   discipline: string;
   valid_matrices: string[];
   turnaround_hours: number;
+  containers_per_test: { matrix: string; quantity: number; type: string }[];
 }
 
 const evidenceSamples = samplesJson as EvidenceSample[];
@@ -99,6 +100,14 @@ export function DemoEvidenceLibrary() {
             <p className="mt-1 text-slate-600 dark:text-slate-300">
               {test.name} · {test.discipline} · matrices {test.valid_matrices.join(', ')} · turnaround {test.turnaround_hours} hours
             </p>
+            <h4 className="mt-3 font-medium text-slate-900 dark:text-white">Container requirements</h4>
+            <ul className="mt-1 space-y-1 text-slate-600 dark:text-slate-300">
+              {test.containers_per_test.map((container, index) => (
+                <li key={index}>
+                  {container.matrix}: {container.quantity} × {container.type}
+                </li>
+              ))}
+            </ul>
           </article>
         ))}
       </div>

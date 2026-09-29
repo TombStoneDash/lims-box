@@ -60,3 +60,9 @@ test('keeps ordinary one-start list markup unchanged', (t) => {
   ]);
   assert.equal(html, '\n<ol class="list-decimal pl-6 space-y-2 my-4"><li>First step</li>\n<li>Second step</li></ol>\n');
 });
+
+for (const [ordinal, expected] of [['0004', '4'], ['0001', undefined], ['9007199254740993', '9007199254740993'], ['1000000000000000000000000000000', '1000000000000000000000000000000']]) {
+  test(`preserves normalized digit string ${ordinal}`, (t) => {
+    assert.equal(orderedLists(render(t, `${ordinal}. Step`))[0].start, expected);
+  });
+}
