@@ -68,6 +68,12 @@ test('array entries are capped at 320 characters', () => {
   assert.equal(safeParam(['a'.repeat(321)], ''), 'a'.repeat(320));
 });
 
+test('long array values that differ only after 320 characters still conflict', () => {
+  const shared = 'a'.repeat(320);
+  assert.equal(safeParam([`${shared}b`, `${shared}c`], ''), '');
+  assert.equal(safeParam([`${shared}c`, `${shared}b`], 'newsletter'), 'newsletter');
+});
+
 test('repeated identical params render the page without throwing and skip the email box', async () => {
   const markup = renderToStaticMarkup(
     await UnsubscribePage({
