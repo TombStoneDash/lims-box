@@ -96,28 +96,33 @@ test("survey export gives every active person a distinct personnel file, even wh
   assert.equal(personnelNames.length, 5);
   assert.ok(!("personnel/.pdf" in entries));
 
-  assert.ok(entries["personnel/maria-garcia.pdf"]);
-  assert.ok(entries["personnel/maria-garcia-2.pdf"]);
+  // Colliding names get an id-derived tag; the unique (non-ASCII) name keeps its plain file name.
+  assert.ok(!("personnel/maria-garcia.pdf" in entries));
+  assert.ok(entries["personnel/person.pdf"], "the one name with no ASCII letters keeps personnel/person.pdf");
+  const mariaFiles = personnelNames.filter((name) => /^personnel\/maria-garcia-[0-9a-f]{8}\.pdf$/.test(name));
+  const anneFiles = personnelNames.filter((name) => /^personnel\/anne-marie-o-neil-[0-9a-f]{8}\.pdf$/.test(name));
+  assert.equal(mariaFiles.length, 2);
+  assert.equal(anneFiles.length, 2);
 
-  const firstMariaText = extractPdfText(entries["personnel/maria-garcia.pdf"]);
-  const secondMariaText = extractPdfText(entries["personnel/maria-garcia-2.pdf"]);
-  const firstHasSupervisor = firstMariaText.some((line) =>
-    line.includes("COURSE-SUPERVISOR"),
-  );
-  const secondHasSupervisor = secondMariaText.some((line) =>
-    line.includes("COURSE-SUPERVISOR"),
-  );
-  const firstHasTechnologist = firstMariaText.some((line) =>
-    line.includes("COURSE-TECHNOLOGIST"),
-  );
-  const secondHasTechnologist = secondMariaText.some((line) =>
-    line.includes("COURSE-TECHNOLOGIST"),
-  );
-  assert.ok(
-    (firstHasSupervisor && secondHasTechnologist) ||
-      (secondHasSupervisor && firstHasTechnologist),
-    "the two Maria Garcia files must contain the two distinct training courses",
-  );
+  // Map each Maria file to the course inside it: the two files hold the two different people.
+  const courseOf = (files: Record<string, Uint8Array>, name: string) => {
+    const text = extractPdfText(files[name]);
+    if (text.some((line) => line.includes("COURSE-SUPERVISOR"))) return "SUPERVISOR";
+    if (text.some((line) => line.includes("COURSE-TECHNOLOGIST"))) return "TECHNOLOGIST";
+    return "NONE";
+  };
+  const mariaByFile = Object.fromEntries(mariaFiles.map((name) => [name, courseOf(entries, name)]));
+  assert.deepEqual(Object.values(mariaByFile).sort(), ["SUPERVISOR", "TECHNOLOGIST"]);
+
+  // Stable per person: the same people returned in reverse order keep exactly the same file names.
+  delegate.findMany = async () => [...people].reverse();
+  const reversedEntries = unzipSync(new Uint8Array(await (await GET()).arrayBuffer()));
+  const reversedPersonnel = Object.keys(reversedEntries).filter((name) => name.startsWith("personnel/")).sort();
+  assert.deepEqual(reversedPersonnel, [...personnelNames].sort());
+  for (const name of mariaFiles) {
+    assert.equal(courseOf(reversedEntries, name), mariaByFile[name], `${name} must hold the same person in both orders`);
+  }
+  delegate.findMany = async () => people;
 
   const manifest = strFromU8(entries["MANIFEST.txt"]);
   const manifestPersonnelPaths = Array.from(

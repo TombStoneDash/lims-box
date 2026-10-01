@@ -3,7 +3,7 @@
  *
  * Returns a ZIP bundle suitable for CLIA on-site survey review containing:
  *  - index.pdf              — summary of all active personnel + status matrix
- *  - personnel/<slug>.pdf   — one detailed PDF per active person
+ *  - personnel/<slug>.pdf   — one detailed PDF per active person (<slug>-<id tag>.pdf when names collide)
  *
  * Dependencies: pdfkit (already in deps), fflate (pure-JS zip)
  */
@@ -11,6 +11,7 @@
 import { prisma } from "@/lib/prisma";
 import PDFDocument from "pdfkit";
 import { zipSync, strToU8 } from "fflate";
+import { createHash } from "node:crypto";
 
 export const dynamic = "force-dynamic";
 
@@ -32,24 +33,30 @@ function slug(name: string): string {
     .replace(/^-|-$/g, "");
 }
 
+// Short, opaque tag from a person's record id (no personal data), so a file name
+// is tied to the person, not to the order the database returns records in.
+function idTag(id: string, length = 8): string {
+  return createHash("sha256").update(id).digest("hex").slice(0, length);
+}
+
 // Two people can slug to the same (or empty) base — e.g. duplicate names, or a
-// name with no ASCII letters. Give each person a unique personnel/ file name,
-// in fetch order, so later people never silently overwrite an earlier PDF.
+// name with no ASCII letters. A unique name keeps personnel/<slug>.pdf. Everyone
+// whose base collides gets personnel/<slug>-<id tag>.pdf, so no PDF overwrites
+// another and each person keeps the same file name whatever the fetch order.
 function buildPersonnelFileNames(people: PersonWithRelations[]): string[] {
+  const bases = people.map((p) => slug(p.name) || "person");
+  const counts = new Map<string, number>();
+  for (const base of bases) counts.set(base, (counts.get(base) ?? 0) + 1);
   const used = new Set<string>();
-  const fileNames: string[] = [];
-  for (const p of people) {
-    const base = slug(p.name) || "person";
-    let candidate = `personnel/${base}.pdf`;
-    let n = 2;
-    while (used.has(candidate)) {
-      candidate = `personnel/${base}-${n}.pdf`;
-      n++;
+  return people.map((p, i) => {
+    const base = bases[i];
+    let candidate = counts.get(base) === 1 ? `personnel/${base}.pdf` : `personnel/${base}-${idTag(p.id)}.pdf`;
+    for (let length = 12; used.has(candidate); length += 4) {
+      candidate = `personnel/${base}-${idTag(p.id, length)}.pdf`;
     }
     used.add(candidate);
-    fileNames.push(candidate);
-  }
-  return fileNames;
+    return candidate;
+  });
 }
 
 async function buildPdf(fn: (doc: InstanceType<typeof PDFDocument>) => void): Promise<Uint8Array> {
