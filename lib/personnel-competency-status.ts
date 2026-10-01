@@ -32,3 +32,26 @@ export function worstCompetencyStatus(comps: CompetencyRecord[], now: Date): str
   if (current.length === 0) return "no records";
   return "completed";
 }
+
+export function countOverdueCurrentCompetencies<T extends CompetencyRecord & { personId: string }>(
+  rows: T[],
+  now: Date,
+): number {
+  const byPerson = new Map<string, T[]>();
+  for (const row of rows) {
+    const existing = byPerson.get(row.personId);
+    if (existing) {
+      existing.push(row);
+    } else {
+      byPerson.set(row.personId, [row]);
+    }
+  }
+
+  let count = 0;
+  for (const personRows of byPerson.values()) {
+    for (const c of currentCompetencies(personRows)) {
+      if (isCompetencyOverdue(c, now)) count++;
+    }
+  }
+  return count;
+}

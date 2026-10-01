@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+import { countOverdueCurrentCompetencies } from "@/lib/personnel-competency-status";
 
 export const dynamic = "force-dynamic";
 
@@ -8,11 +9,11 @@ export default async function AdminDashboard() {
   const in30 = new Date(now);
   in30.setDate(in30.getDate() + 30);
 
-  const [peopleCount, overdueCount, dueIn30, upcomingSignOffs, reviewsDue, activeAuthCount, docCount] =
+  const [peopleCount, overdueRows, dueIn30, upcomingSignOffs, reviewsDue, activeAuthCount, docCount] =
     await Promise.all([
       prisma.person.count({ where: { active: true } }),
-      prisma.competency.count({
-        where: { OR: [{ status: "overdue" }, { expiresAt: { lt: now }, status: { not: "completed" } }] },
+      prisma.competency.findMany({
+        select: { personId: true, type: true, status: true, expiresAt: true, createdAt: true },
       }),
       prisma.competency.count({
         where: { expiresAt: { gte: now, lte: in30 }, status: { in: ["due", "overdue"] } },
@@ -32,6 +33,8 @@ export default async function AdminDashboard() {
       // Controlled documents (ISO 15189 §4.3)
       prisma.document.count({ where: { archivedAt: null } }),
     ]);
+
+  const overdueCount = countOverdueCurrentCompetencies(overdueRows, now);
 
   return (
     <div className="space-y-8">
