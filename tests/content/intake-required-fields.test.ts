@@ -111,3 +111,45 @@ test('the intake form blocks submission until email and lab size are both valid'
   assert.equal(fetchMock.mock.callCount(), 1);
   assert.equal(fetchMock.mock.calls[0].arguments[0], '/api/prospects');
 });
+
+test('the intake form blocks an incomplete email like jane@localhost and names the email field', async t => {
+  const fetchMock = t.mock.method(globalThis, 'fetch', async () => ({
+    ok: true,
+    json: async () => ({ ok: true }),
+  }));
+
+  const player = mount(t);
+  let tree = player.render();
+
+  function field(label: string) {
+    const match = elements(tree).find(el => el.props && el.props.label === label);
+    assert.ok(match, `expected a field labeled ${label}`);
+    return match!;
+  }
+
+  field('Your name').props.onChange('Jane Doe');
+  tree = player.render();
+  field('Email').props.onChange('jane@localhost');
+  tree = player.render();
+  field('Lab name').props.onChange('Example Lab');
+  tree = player.render();
+  const labSizeButton = elements(tree).find(el => el.type === 'button' && el.props.children === '1–10');
+  assert.ok(labSizeButton, 'expected a 1–10 lab size button');
+  labSizeButton!.props.onClick();
+  tree = player.render();
+
+  await elements(tree).find(el => el.type === 'form')!.props.onSubmit({ preventDefault() {} });
+  tree = player.render();
+
+  assert.equal(fetchMock.mock.callCount(), 0, 'nothing is sent with an incomplete email');
+  const alert = elements(tree).find(el => el.props && el.props.role === 'alert');
+  assert.ok(alert, 'expected a role="alert" element');
+  assert.equal(alert!.props.children, 'Enter a full email address, for example name@yourlab.org.');
+
+  field('Email').props.onChange('jane@example.org');
+  tree = player.render();
+  await elements(tree).find(el => el.type === 'form')!.props.onSubmit({ preventDefault() {} });
+
+  assert.equal(fetchMock.mock.callCount(), 1);
+  assert.equal(fetchMock.mock.calls[0].arguments[0], '/api/prospects');
+});
