@@ -53,13 +53,17 @@ const LIMS_BOT_OVERVIEW_PATTERN =
 const SAMPLE_TRACKING_PATTERN =
   /\b(?:can|does)\s+(?:lims\s*box|it|this)\s+(?:track|manage)\s+samples?\b|\bsample\s+(?:tracking|traceability)\b/i;
 
-function tokenize(input: string): string[] {
+export function tokenize(input: string): string[] {
   return input
     .toLowerCase()
+    // Contractions lose only their apostrophe ending ("don't" -> "don", "let's" -> "let"), so no
+    // one-letter fragment like "t" or "s" is left to match unrelated corpus entries. Other one-character
+    // terms (a lone digit such as the 7 in "pH 7") are kept.
+    .replace(/['\u2019](?:t|s|m|d|re|ve|ll)\b/g, '')
     .replace(/[^a-z0-9$./\s-]/g, ' ')
     .split(/\s+/)
     .map((t) => t.replace(/^[./-]+/, '').replace(/[./-]+$/, ''))
-    .filter((t) => t.length > 1 && !STOPWORDS.has(t));
+    .filter((t) => t.length > 0 && !STOPWORDS.has(t));
 }
 
 function scoreEntry(entry: CorpusEntry, tokens: string[]): number {
