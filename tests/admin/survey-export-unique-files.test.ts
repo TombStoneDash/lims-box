@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import test from "node:test";
 import { strFromU8, unzipSync } from "fflate";
 import { GET } from "../../app/api/admin/personnel-pack/survey-export/route";
@@ -104,23 +105,26 @@ test("survey export gives every active person a distinct personnel file, even wh
   assert.equal(mariaFiles.length, 2);
   assert.equal(anneFiles.length, 2);
 
-  // Map each Maria file to the course inside it: the two files hold the two different people.
-  const courseOf = (files: Record<string, Uint8Array>, name: string) => {
-    const text = extractPdfText(files[name]);
-    if (text.some((line) => line.includes("COURSE-SUPERVISOR"))) return "SUPERVISOR";
-    if (text.some((line) => line.includes("COURSE-TECHNOLOGIST"))) return "TECHNOLOGIST";
-    return "NONE";
+  // Each synthetic person has a unique training course, so the course inside a PDF identifies whose file it is.
+  const courses = ["COURSE-SUPERVISOR", "COURSE-TECHNOLOGIST", "COURSE-ANNE-MARIE-HYPHEN", "COURSE-ANNE-MARIE-SPACE", "COURSE-NO-ASCII"];
+  const personIn = (files: Record<string, Uint8Array>, name: string) => {
+    const text = extractPdfText(files[name]).join("");
+    const found = courses.filter((course) => text.includes(course));
+    assert.equal(found.length, 1, `${name} must hold exactly one person`);
+    return found[0];
   };
-  const mariaByFile = Object.fromEntries(mariaFiles.map((name) => [name, courseOf(entries, name)]));
-  assert.deepEqual(Object.values(mariaByFile).sort(), ["SUPERVISOR", "TECHNOLOGIST"]);
+  const personByFile = Object.fromEntries(personnelNames.map((name) => [name, personIn(entries, name)]));
+  assert.deepEqual(Object.values(personByFile).sort(), [...courses].sort(), "every person has exactly one file");
 
-  // Stable per person: the same people returned in reverse order keep exactly the same file names.
-  delegate.findMany = async () => [...people].reverse();
-  const reversedEntries = unzipSync(new Uint8Array(await (await GET()).arrayBuffer()));
-  const reversedPersonnel = Object.keys(reversedEntries).filter((name) => name.startsWith("personnel/")).sort();
-  assert.deepEqual(reversedPersonnel, [...personnelNames].sort());
-  for (const name of mariaFiles) {
-    assert.equal(courseOf(reversedEntries, name), mariaByFile[name], `${name} must hold the same person in both orders`);
+  // Stable per person: the same people in reverse order (and shuffled) keep exactly the same file for every person.
+  for (const order of [[...people].reverse(), [people[2], people[0], people[4], people[1], people[3]]]) {
+    delegate.findMany = async () => order;
+    const again = unzipSync(new Uint8Array(await (await GET()).arrayBuffer()));
+    const againPersonnel = Object.keys(again).filter((name) => name.startsWith("personnel/")).sort();
+    assert.deepEqual(againPersonnel, [...personnelNames].sort());
+    for (const name of personnelNames) {
+      assert.equal(personIn(again, name), personByFile[name], `${name} must hold the same person in every order`);
+    }
   }
   delegate.findMany = async () => people;
 
@@ -152,4 +156,40 @@ test("survey export gives every active person a distinct personnel file, even wh
       `index.pdf should list the file name "${name}"`,
     );
   }
+});
+
+test("a name that equals another person's tagged file name resolves the same way in every order", async (t) => {
+  const delegate = prisma.person as unknown as {
+    findMany: (...args: unknown[]) => Promise<unknown[]>;
+  };
+  const originalFindMany = delegate.findMany;
+  t.after(async () => {
+    delegate.findMany = originalFindMany;
+    await prisma.$disconnect();
+  });
+
+  // "Maria Garcia <tag of demo-person-001>" slugs to exactly the tagged file name of the first Maria Garcia.
+  const tag = createHash("sha256").update("demo-person-001").digest("hex").slice(0, 8);
+  const clash = makePerson({ id: "demo-person-006", name: `Maria Garcia ${tag}`, role: "Clerk", trainingCourse: "COURSE-CLASH" });
+  const all = [...people, clash];
+  const courses = ["COURSE-SUPERVISOR", "COURSE-TECHNOLOGIST", "COURSE-ANNE-MARIE-HYPHEN", "COURSE-ANNE-MARIE-SPACE", "COURSE-NO-ASCII", "COURSE-CLASH"];
+
+  const exportMap = async (order: unknown[]) => {
+    delegate.findMany = async () => order;
+    const files = unzipSync(new Uint8Array(await (await GET()).arrayBuffer()));
+    const map: Record<string, string> = {};
+    for (const name of Object.keys(files).filter((n) => n.startsWith("personnel/"))) {
+      const text = extractPdfText(files[name]).join("");
+      const found = courses.filter((course) => text.includes(course));
+      assert.equal(found.length, 1, `${name} must hold exactly one person`);
+      map[name] = found[0];
+    }
+    return map;
+  };
+
+  const first = await exportMap(all);
+  assert.equal(Object.keys(first).length, 6, "six people, six files");
+  assert.deepEqual(Object.values(first).sort(), [...courses].sort());
+  assert.deepEqual(await exportMap([...all].reverse()), first);
+  assert.deepEqual(await exportMap([all[5], all[3], all[0], all[4], all[1], all[2]]), first);
 });

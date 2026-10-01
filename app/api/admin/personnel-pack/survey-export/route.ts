@@ -42,21 +42,25 @@ function idTag(id: string, length = 8): string {
 // Two people can slug to the same (or empty) base — e.g. duplicate names, or a
 // name with no ASCII letters. A unique name keeps personnel/<slug>.pdf. Everyone
 // whose base collides gets personnel/<slug>-<id tag>.pdf, so no PDF overwrites
-// another and each person keeps the same file name whatever the fetch order.
+// another. Names are assigned in record-id order, never fetch order, so even the
+// rare leftover clash (a name that equals another person's tagged name, or two ids
+// sharing a tag) resolves the same way in every export.
 function buildPersonnelFileNames(people: PersonWithRelations[]): string[] {
-  const bases = people.map((p) => slug(p.name) || "person");
+  const baseOf = (p: PersonWithRelations) => slug(p.name) || "person";
   const counts = new Map<string, number>();
-  for (const base of bases) counts.set(base, (counts.get(base) ?? 0) + 1);
+  for (const p of people) counts.set(baseOf(p), (counts.get(baseOf(p)) ?? 0) + 1);
   const used = new Set<string>();
-  return people.map((p, i) => {
-    const base = bases[i];
+  const byId = new Map<string, string>();
+  for (const p of [...people].sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0))) {
+    const base = baseOf(p);
     let candidate = counts.get(base) === 1 ? `personnel/${base}.pdf` : `personnel/${base}-${idTag(p.id)}.pdf`;
     for (let length = 12; used.has(candidate); length += 4) {
       candidate = `personnel/${base}-${idTag(p.id, length)}.pdf`;
     }
     used.add(candidate);
-    return candidate;
-  });
+    byId.set(p.id, candidate);
+  }
+  return people.map((p) => byId.get(p.id) as string);
 }
 
 async function buildPdf(fn: (doc: InstanceType<typeof PDFDocument>) => void): Promise<Uint8Array> {
