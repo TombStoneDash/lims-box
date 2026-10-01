@@ -1,16 +1,7 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { StatusBadge, formatDate } from "../_components/StatusBadge";
-
-function worstStatus(comps: { status: string; expiresAt: Date | null }[]): string {
-  const now = new Date();
-  if (comps.some((c) => c.status === "overdue" || (c.expiresAt && c.expiresAt < now && c.status !== "completed"))) {
-    return "overdue";
-  }
-  if (comps.some((c) => c.status === "due")) return "due";
-  if (comps.length === 0) return "no records";
-  return "completed";
-}
+import { worstCompetencyStatus } from "@/lib/personnel-competency-status";
 
 export default async function PeopleListPage() {
   const people = await prisma.person.findMany({
@@ -56,7 +47,7 @@ export default async function PeopleListPage() {
                 <td className="px-4 py-2 text-slate-700">{p.role}</td>
                 <td className="px-4 py-2 text-slate-600 font-mono text-xs">{p.cliaCertNumber || "—"}</td>
                 <td className="px-4 py-2">
-                  <StatusBadge status={worstStatus(p.competencies)} />
+                  <StatusBadge status={worstCompetencyStatus(p.competencies, new Date())} />
                 </td>
                 <td className="px-4 py-2 text-slate-600">
                   {p.trainings[0] ? `${p.trainings[0].course} · ${formatDate(p.trainings[0].completedAt)}` : "—"}
