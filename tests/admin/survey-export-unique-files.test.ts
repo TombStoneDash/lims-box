@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import test from "node:test";
 import { strFromU8, unzipSync } from "fflate";
-import { GET } from "../../app/api/admin/personnel-pack/survey-export/route";
+import { buildPersonnelFileNames, GET } from "../../app/api/admin/personnel-pack/survey-export/route";
 import { prisma } from "../../lib/prisma";
 import { extractPdfText } from "../helpers/pdf";
 
@@ -192,4 +192,20 @@ test("a name that equals another person's tagged file name resolves the same way
   assert.deepEqual(Object.values(first).sort(), [...courses].sort());
   assert.deepEqual(await exportMap([...all].reverse()), first);
   assert.deepEqual(await exportMap([all[5], all[3], all[0], all[4], all[1], all[2]]), first);
+});
+
+test("file naming always terminates, even when crafted names take every tag length", () => {
+  // Two real collisions on "x" plus names occupying the tagged candidate at every tag length (8, 12, ... 64)
+  // for the id that sorts last, so its whole tag ladder is taken and only the counter fallback is left.
+  const full = createHash("sha256").update("id-b").digest("hex");
+  const squatters = [];
+  for (let length = 8; length <= 64; length += 4) {
+    squatters.push({ id: `id-a-${String(length).padStart(2, "0")}`, name: `x ${full.slice(0, length)}` });
+  }
+  const people = [{ id: "id-b", name: "x" }, { id: "id-a", name: "x" }, ...squatters];
+  const names = buildPersonnelFileNames(people);
+  assert.equal(names.length, people.length);
+  assert.equal(new Set(names).size, people.length, "every person gets a distinct file name");
+  assert.equal(names[0], `personnel/x-${full}-2.pdf`, "the last id falls back to the counter");
+  assert.deepEqual(buildPersonnelFileNames([...people].reverse()), [...names].reverse(), "same names in any order");
 });

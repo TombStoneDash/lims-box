@@ -45,8 +45,8 @@ function idTag(id: string, length = 8): string {
 // another. Names are assigned in record-id order, never fetch order, so even the
 // rare leftover clash (a name that equals another person's tagged name, or two ids
 // sharing a tag) resolves the same way in every export.
-function buildPersonnelFileNames(people: PersonWithRelations[]): string[] {
-  const baseOf = (p: PersonWithRelations) => slug(p.name) || "person";
+export function buildPersonnelFileNames(people: Array<Pick<PersonWithRelations, "id" | "name">>): string[] {
+  const baseOf = (p: Pick<PersonWithRelations, "id" | "name">) => slug(p.name) || "person";
   const counts = new Map<string, number>();
   for (const p of people) counts.set(baseOf(p), (counts.get(baseOf(p)) ?? 0) + 1);
   const used = new Set<string>();
@@ -54,8 +54,12 @@ function buildPersonnelFileNames(people: PersonWithRelations[]): string[] {
   for (const p of [...people].sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0))) {
     const base = baseOf(p);
     let candidate = counts.get(base) === 1 ? `personnel/${base}.pdf` : `personnel/${base}-${idTag(p.id)}.pdf`;
-    for (let length = 12; used.has(candidate); length += 4) {
+    for (let length = 12; used.has(candidate) && length <= 64; length += 4) {
       candidate = `personnel/${base}-${idTag(p.id, length)}.pdf`;
+    }
+    // sha256 has only 64 hex characters; past that, a counter always finds a free name.
+    for (let n = 2; used.has(candidate); n++) {
+      candidate = `personnel/${base}-${idTag(p.id, 64)}-${n}.pdf`;
     }
     used.add(candidate);
     byId.set(p.id, candidate);
