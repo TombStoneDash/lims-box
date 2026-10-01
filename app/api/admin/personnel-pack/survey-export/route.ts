@@ -32,6 +32,26 @@ function slug(name: string): string {
     .replace(/^-|-$/g, "");
 }
 
+// Two people can slug to the same (or empty) base — e.g. duplicate names, or a
+// name with no ASCII letters. Give each person a unique personnel/ file name,
+// in fetch order, so later people never silently overwrite an earlier PDF.
+function buildPersonnelFileNames(people: PersonWithRelations[]): string[] {
+  const used = new Set<string>();
+  const fileNames: string[] = [];
+  for (const p of people) {
+    const base = slug(p.name) || "person";
+    let candidate = `personnel/${base}.pdf`;
+    let n = 2;
+    while (used.has(candidate)) {
+      candidate = `personnel/${base}-${n}.pdf`;
+      n++;
+    }
+    used.add(candidate);
+    fileNames.push(candidate);
+  }
+  return fileNames;
+}
+
 async function buildPdf(fn: (doc: InstanceType<typeof PDFDocument>) => void): Promise<Uint8Array> {
   const doc = new PDFDocument({ size: "LETTER", margin: 54 });
   const chunks: Buffer[] = [];
@@ -64,7 +84,11 @@ async function fetchPeople() {
   });
 }
 
-function buildIndexPdf(people: PersonWithRelations[], generatedAt: string): Promise<Uint8Array> {
+function buildIndexPdf(
+  people: PersonWithRelations[],
+  fileNames: string[],
+  generatedAt: string,
+): Promise<Uint8Array> {
   return buildPdf((doc) => {
     // Title block
     doc
@@ -138,8 +162,8 @@ function buildIndexPdf(people: PersonWithRelations[], generatedAt: string): Prom
       .text("Included files in this bundle:");
     doc.font("Helvetica").fontSize(9);
     doc.text("  index.pdf  — this document");
-    for (const p of people) {
-      doc.text(`  personnel/${slug(p.name)}.pdf  — ${p.name} (${p.role})`);
+    for (let i = 0; i < people.length; i++) {
+      doc.text(`  ${fileNames[i]}  — ${people[i].name} (${people[i].role})`);
     }
   });
 }
@@ -266,10 +290,11 @@ export async function GET() {
   const dateSlug = new Date().toISOString().slice(0, 10);
 
   const people = await fetchPeople();
+  const fileNames = buildPersonnelFileNames(people);
 
   // Build all PDFs in parallel
   const [indexPdf, ...personPdfs] = await Promise.all([
-    buildIndexPdf(people, generatedAt),
+    buildIndexPdf(people, fileNames, generatedAt),
     ...people.map((p) => buildPersonPdf(p, generatedAt)),
   ]);
 
@@ -278,7 +303,7 @@ export async function GET() {
     "index.pdf": indexPdf,
   };
   for (let i = 0; i < people.length; i++) {
-    zipEntries[`personnel/${slug(people[i].name)}.pdf`] = personPdfs[i];
+    zipEntries[fileNames[i]] = personPdfs[i];
   }
 
   // Add a plain-text manifest
@@ -289,7 +314,7 @@ export async function GET() {
     ``,
     `Files:`,
     `  index.pdf`,
-    ...people.map((p) => `  personnel/${slug(p.name)}.pdf  (${p.name} — ${p.role})`),
+    ...people.map((p, i) => `  ${fileNames[i]}  (${p.name} — ${p.role})`),
     ``,
     `Workflow documentation support. Human-reviewed drafting.`,
     `Confirm completeness before any CMS or accreditation submission.`,
