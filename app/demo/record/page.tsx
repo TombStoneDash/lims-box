@@ -215,6 +215,7 @@ export default function RecordPage() {
           <p className="text-slate-500 mb-8">Recording mode — click anywhere to start, or press Enter</p>
           <button
             type="button"
+            autoFocus
             onClick={event => {
               event.stopPropagation();
               setStarted(true);
@@ -255,13 +256,13 @@ export default function RecordPage() {
       {/* Progress bar — full width, very thin */}
       <div className="absolute top-0 left-0 right-0 h-0.5 bg-white/5 z-20">
         <div
-          className="h-full bg-[#2E8B57] transition-all duration-1000 ease-linear"
+          className="h-full bg-[#2E8B57] transition-all duration-1000 ease-linear motion-reduce:transition-none"
           style={{ width: `${(totalElapsed / totalTime) * 100}%` }}
         />
       </div>
 
       {/* Main content area — centered, no chrome */}
-      <div className={`flex-1 flex items-center justify-center px-8 transition-opacity duration-500 ${transitioning ? 'opacity-0' : 'opacity-100'}`}>
+      <div className={`flex-1 flex items-center justify-center px-8 transition-opacity duration-500 ${transitioning ? 'opacity-0' : 'opacity-100'} motion-reduce:transition-none`}>
         <div className="w-full max-w-2xl">
           {/* Overlay text */}
           <h2 className="text-3xl md:text-4xl font-bold text-white mb-8 tracking-tight text-center">
