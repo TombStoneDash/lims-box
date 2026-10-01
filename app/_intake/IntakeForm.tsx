@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useId, useState } from "react";
-import { intakeErrorMessage } from "@/lib/intake-form-status";
+import { intakeErrorMessage, intakeValidationMessage } from "@/lib/intake-form-status";
 
 const LAB_SIZES = ["1–10", "11–50", "51–200", "200+"];
 
@@ -79,6 +79,12 @@ export default function IntakeForm({
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
+    const validationMessage = intakeValidationMessage({ email: state.email, labSize: state.labSize });
+    if (validationMessage) {
+      setStatus("error");
+      setErrorMsg(validationMessage);
+      return;
+    }
     setStatus("submitting");
     setErrorMsg("");
     try {
