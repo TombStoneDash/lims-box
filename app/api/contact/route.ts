@@ -2,7 +2,7 @@ import { leadLogMeta, safeErrorMeta } from '@/lib/safeLog';
 import { NextRequest, NextResponse } from 'next/server';
 import { sendSubmissionNotice } from '@/lib/notify';
 import { getSupabase } from '@/lib/supabase';
-import { normalizeEmail } from '@/lib/emailValidation';
+import { normalizeContactSubmission } from '@/lib/contact-submission';
 import { limsFirstContactDryRun } from '@/lib/first-contact-lims';
 import { limsHistorySources } from '@/lib/first-contact-lims-sources';
 
@@ -13,25 +13,17 @@ export async function POST(request: NextRequest) {
   const requestStartedAt = new Date();
   try {
     const body = await request.json();
-    const { name, labName, email, labSize, currentSystem, message, phone, instruments } = body ?? {};
 
-    const normalizedEmail = normalizeEmail(email);
-    if (!name || !labName || !normalizedEmail) {
+    const normalized = normalizeContactSubmission(body);
+    if (normalized.ok === false) {
       return NextResponse.json(
-        { error: 'Name, valid email, and lab name are required' },
+        { error: normalized.error },
         { status: 400 },
       );
     }
 
     const record = {
-      name: String(name).trim(),
-      labName: String(labName).trim(),
-      email: normalizedEmail,
-      labSize: labSize ? String(labSize).trim() : null,
-      currentSystem: currentSystem ? String(currentSystem).trim() : null,
-      message: message ? String(message).trim() : null,
-      phone: phone ? String(phone).trim() : null,
-      instruments: instruments ? String(instruments).trim() : null,
+      ...normalized.record,
       timestamp: new Date().toISOString(),
     };
 
