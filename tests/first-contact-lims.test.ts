@@ -134,8 +134,9 @@ const post = (url: string, body: unknown) => new NextRequest(url, {
 test('early-access handler: hook runs after the save and confirmation, and a failing hook changes nothing', async () => {
   const order: string[] = [];
   let hookInput: { email: string; requestStartedAt: Date; coveredByTransactional: boolean } | undefined;
+  let saveStartedAt = 0;
   const handler = createEarlyAccessPostHandler({
-    createProspect: async () => { order.push('save'); },
+    createProspect: async () => { saveStartedAt = Date.now(); order.push('save'); },
     sendSubmissionNotice: async () => { order.push('notice'); },
     sendApplicantConfirmation: async () => { order.push('confirmation'); },
     firstContactDryRun: async (input) => { order.push('dry-run'); hookInput = input; throw new Error('boom'); },
@@ -147,7 +148,9 @@ test('early-access handler: hook runs after the save and confirmation, and a fai
   assert.deepEqual(order, ['save', 'notice', 'confirmation', 'dry-run']);
   assert.equal(hookInput?.email, 'new@example.test');
   assert.equal(hookInput?.coveredByTransactional, true);
-  assert.ok((hookInput?.requestStartedAt.getTime() ?? 0) <= before + 5);
+  assert.ok(hookInput?.requestStartedAt instanceof Date);
+  assert.ok((hookInput?.requestStartedAt.getTime() ?? 0) >= before, 'captured no earlier than the request start');
+  assert.ok((hookInput?.requestStartedAt.getTime() ?? 0) <= saveStartedAt, 'captured no later than the save');
 });
 
 test('early-access handler without the hook behaves as before', async () => {
