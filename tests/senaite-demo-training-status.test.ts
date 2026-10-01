@@ -5,6 +5,8 @@ import {
   evaluateCompetency,
   evaluateStaffTraining,
   evaluateTrainingRegistry,
+  registryBadge,
+  registrySummaryText,
   TRAINING_AS_OF_DATE,
 } from '../lib/senaite-demo-training-status';
 import { staff } from '../lib/demo-data';
@@ -91,4 +93,22 @@ test('training page derives status from dates instead of hardcoding green', () =
   const thTagsWithScope = source.match(/<th\b[^>]*scope="col"/g) ?? [];
   assert.equal(thTags.length, thTagsWithScope.length);
   assert.ok(thTags.length >= 5);
+});
+
+test('registry summary and badge count unreadable dates and are green only when all current', () => {
+  const ok = { name: 'A', competencies: [{ name: 'X', certifiedDate: '2025-01-01', expirationDate: '2027-01-01', status: 'Current', assessedBy: 'Q' }] };
+  const bad = { name: 'B', competencies: [{ name: 'Y', certifiedDate: '2025-01-01', expirationDate: 'not-a-date', status: 'Current', assessedBy: 'Q' }] };
+
+  const mixed = evaluateTrainingRegistry([ok, bad]);
+  assert.equal(mixed.status, 'invalid');
+  assert.equal(registrySummaryText(mixed), '2 staff — 0 expired, 0 expiring within 60 days, 1 unreadable date (as of April 13, 2026, synthetic)');
+  assert.deepEqual(registryBadge(mixed), { label: '1 unreadable date', tone: 'slate' });
+
+  const current = evaluateTrainingRegistry([ok]);
+  assert.equal(registrySummaryText(current), '1 staff — all competencies current as of April 13, 2026 (synthetic)');
+  assert.deepEqual(registryBadge(current), { label: 'All competencies current', tone: 'green' });
+
+  const demo = evaluateTrainingRegistry(staff);
+  assert.deepEqual(registryBadge(demo), { label: '1 expiring soon', tone: 'amber' });
+  assert.equal(registrySummaryText(evaluateTrainingRegistry([])), 'No staff training records (as of April 13, 2026, synthetic)');
 });

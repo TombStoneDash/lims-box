@@ -1,6 +1,6 @@
 import React from 'react';
 import { staff, trainingSummary, TRAINING_SUMMARY_AS_OF_DATE } from '@/lib/demo-data';
-import { evaluateCompetency, evaluateStaffTraining, evaluateTrainingRegistry } from '@/lib/senaite-demo-training-status';
+import { evaluateCompetency, evaluateStaffTraining, evaluateTrainingRegistry, registryBadge, registrySummaryText } from '@/lib/senaite-demo-training-status';
 import { CheckCircle2, GraduationCap, User, Shield, Pen } from 'lucide-react';
 
 const COMPETENCY_STATUS_LABEL: Record<string, string> = {
@@ -30,15 +30,16 @@ function staffStatusLabel(evaluation: ReturnType<typeof evaluateStaffTraining>):
   return `${evaluation.expiringSoonCount} expiring soon`;
 }
 
-function registrySummaryText(registry: ReturnType<typeof evaluateTrainingRegistry>): string {
-  if (registry.status === 'current') {
-    return `${registry.totalStaff} staff — all competencies current as of April 13, 2026 (synthetic)`;
-  }
-  return `${registry.totalStaff} staff — ${registry.expiredCount} expired, ${registry.expiringSoonCount} expiring within 60 days (as of April 13, 2026, synthetic)`;
-}
+const REGISTRY_BADGE_STYLE: Record<string, string> = {
+  green: 'bg-green-50 border-green-200 text-green-700',
+  amber: 'bg-amber-50 border-amber-200 text-amber-800',
+  red: 'bg-red-50 border-red-200 text-red-700',
+  slate: 'bg-slate-100 border-slate-300 text-slate-800',
+};
 
 export default function TrainingPage() {
   const registry = evaluateTrainingRegistry(staff);
+  const badge = registryBadge(registry);
 
   return (
     <div className="space-y-6">
@@ -52,9 +53,9 @@ export default function TrainingPage() {
             <Pen className="w-4 h-4 text-purple-600" />
             <span className="text-xs font-medium text-purple-700">Electronic Signatures Enabled</span>
           </div>
-          <div className="flex items-center gap-2 bg-green-50 border border-green-200 rounded-lg px-3 py-2">
-            <CheckCircle2 className="w-4 h-4 text-green-600" />
-            <span className="text-xs font-medium text-green-700">{registrySummaryText(registry)}</span>
+          <div className={`flex items-center gap-2 border rounded-lg px-3 py-2 ${REGISTRY_BADGE_STYLE[badge.tone]}`}>
+            {badge.tone === 'green' && <CheckCircle2 className="w-4 h-4 text-green-600" />}
+            <span className="text-xs font-medium">{badge.label}</span>
           </div>
         </div>
       </div>

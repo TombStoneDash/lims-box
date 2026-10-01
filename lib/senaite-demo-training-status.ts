@@ -144,3 +144,38 @@ export function evaluateTrainingRegistry(
     invalidCount: evaluations.reduce((sum, e) => sum + e.invalidCount, 0),
   };
 }
+
+export const TRAINING_AS_OF_LABEL = 'April 13, 2026';
+
+function unreadableDates(count: number): string {
+  return `${count} unreadable ${count === 1 ? 'date' : 'dates'}`;
+}
+
+/** Header summary. Says "all current" only when every competency is current, and always counts unreadable dates. */
+export function registrySummaryText(registry: TrainingRegistryEvaluation): string {
+  const asOf = `as of ${TRAINING_AS_OF_LABEL}, synthetic`;
+  if (registry.totalStaff === 0) return `No staff training records (${asOf})`;
+  if (registry.status === 'current') {
+    return `${registry.totalStaff} staff — all competencies current as of ${TRAINING_AS_OF_LABEL} (synthetic)`;
+  }
+  const parts = [`${registry.expiredCount} expired`, `${registry.expiringSoonCount} expiring within ${EXPIRING_SOON_DAYS} days`];
+  if (registry.invalidCount > 0) parts.push(unreadableDates(registry.invalidCount));
+  else if (registry.status === 'invalid') parts.push('some training records incomplete');
+  return `${registry.totalStaff} staff — ${parts.join(', ')} (${asOf})`;
+}
+
+export type RegistryBadge = { label: string; tone: 'green' | 'amber' | 'red' | 'slate' };
+
+/** Badge beside the header: its label and color follow the rolled-up status, so it is green only when all current. */
+export function registryBadge(registry: TrainingRegistryEvaluation): RegistryBadge {
+  switch (registry.status) {
+    case 'current':
+      return { label: 'All competencies current', tone: 'green' };
+    case 'expiring-soon':
+      return { label: `${registry.expiringSoonCount} expiring soon`, tone: 'amber' };
+    case 'expired':
+      return { label: `${registry.expiredCount} expired`, tone: 'red' };
+    default:
+      return { label: registry.invalidCount > 0 ? unreadableDates(registry.invalidCount) : 'Training records incomplete', tone: 'slate' };
+  }
+}
