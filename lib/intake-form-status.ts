@@ -1,3 +1,18 @@
+import { normalizeEmail } from "./emailValidation";
+
+export function intakeValidationMessage(input: {
+  email: string;
+  labSize: string;
+}): string | null {
+  if (normalizeEmail(input.email) === null) {
+    return "Enter a full email address, for example name@yourlab.org.";
+  }
+  if (input.labSize.trim().length === 0) {
+    return "Choose your lab size.";
+  }
+  return null;
+}
+
 export function intakeErrorMessage(input: {
   status?: number;
   serverError?: unknown;
