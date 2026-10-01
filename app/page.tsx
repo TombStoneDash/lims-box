@@ -57,7 +57,7 @@ export default function HomePage() {
             href="/clia"
             className="inline-flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 hover:text-lab-teal dark:hover:text-lab-teal mb-6 px-3 py-1 rounded-full border border-slate-200 dark:border-white/10 transition-colors"
           >
-            New: CLIA Tracker &middot; coming with the June launch &rarr;
+            New: CLIA Tracker &middot; available now &rarr;
           </Link>
           <h1 className="text-4xl md:text-6xl font-bold text-slate-900 dark:text-white mb-6 tracking-tight">
             The LIMS that doesn&apos;t need an IT department.
