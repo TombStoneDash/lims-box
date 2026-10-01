@@ -1,5 +1,30 @@
 export type WebinarRegistrationOutcome = 'registered' | 'invalid' | 'failed';
 
+export interface WebinarRegistrationInput {
+  name: string;
+  email: string;
+  labName: string;
+  sessionId: string;
+}
+
+export interface WebinarRegistrationPayload {
+  name: string;
+  email: string;
+  labName: string;
+  source: string;
+}
+
+export function webinarRegistrationPayload(
+  input: WebinarRegistrationInput
+): WebinarRegistrationPayload {
+  return {
+    name: input.name.trim(),
+    email: input.email.trim(),
+    labName: input.labName.trim(),
+    source: `webinar:${input.sessionId}`,
+  };
+}
+
 export function registrationOutcome(
   result: { ok: boolean; status: number } | 'network-error'
 ): WebinarRegistrationOutcome {
