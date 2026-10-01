@@ -58,7 +58,8 @@ function tokenize(input: string): string[] {
     .toLowerCase()
     .replace(/[^a-z0-9$./\s-]/g, ' ')
     .split(/\s+/)
-    .filter((t) => t.length > 0 && !STOPWORDS.has(t));
+    .map((t) => t.replace(/^[./-]+/, '').replace(/[./-]+$/, ''))
+    .filter((t) => t.length > 1 && !STOPWORDS.has(t));
 }
 
 function scoreEntry(entry: CorpusEntry, tokens: string[]): number {
