@@ -8,7 +8,7 @@ export const metadata: Metadata = {
 };
 
 interface Props {
-  searchParams: Promise<{ email?: string; list?: string }>;
+  searchParams: Promise<{ email?: string | string[]; list?: string | string[] }>;
 }
 
 export default async function UnsubscribePage({ searchParams }: Props) {
