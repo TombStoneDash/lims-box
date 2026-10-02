@@ -55,3 +55,34 @@ export function countOverdueCurrentCompetencies<T extends CompetencyRecord & { p
   }
   return count;
 }
+
+export function countDueSoonCurrentCompetencies<T extends CompetencyRecord & { personId: string }>(
+  rows: T[],
+  now: Date,
+  until: Date,
+): number {
+  const byPerson = new Map<string, T[]>();
+  for (const row of rows) {
+    const existing = byPerson.get(row.personId);
+    if (existing) {
+      existing.push(row);
+    } else {
+      byPerson.set(row.personId, [row]);
+    }
+  }
+
+  let count = 0;
+  for (const personRows of byPerson.values()) {
+    for (const c of currentCompetencies(personRows)) {
+      if (
+        c.expiresAt !== null &&
+        c.expiresAt >= now &&
+        c.expiresAt <= until &&
+        (c.status === "due" || c.status === "overdue")
+      ) {
+        count++;
+      }
+    }
+  }
+  return count;
+}
