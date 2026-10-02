@@ -93,11 +93,17 @@ export function createWaitlistPostHandler(dependencies: WaitlistDependencies) {
       }
 
       let dbSaved = false;
-      try {
-        await dependencies.createProspect(record);
+      if (isNewSignup === false) {
+        // Already recorded for this email: skip createProspect so a repeat
+        // submission doesn't inflate the conversion report with another row.
         dbSaved = true;
-      } catch (dbErr) {
-        console.error('[waitlist] DB save failed (non-fatal):', safeErrorMeta(dbErr));
+      } else {
+        try {
+          await dependencies.createProspect(record);
+          dbSaved = true;
+        } catch (dbErr) {
+          console.error('[waitlist] DB save failed (non-fatal):', safeErrorMeta(dbErr));
+        }
       }
 
       const confirmation = await confirmNewSignup(dependencies, record, isNewSignup, dbSaved);
