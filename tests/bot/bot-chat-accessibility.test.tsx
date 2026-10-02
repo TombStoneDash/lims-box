@@ -66,11 +66,11 @@ test('dynamic accessibility semantics preserve the single bot request', () => {
   assert.ok(source.includes('.focus()'));
   assert.ok(source.includes('aria-busy={busy}'));
   assert.ok(source.includes('<nav aria-label="Sources for this answer"'));
-  for (const question of ['s', 'suggestion']) {
+  for (const question of ['s', 'suggestion', 'card.question']) {
     assert.ok(source.includes(`ask(${question});\n`));
     assert.match(source, new RegExp(`ask\\(${question}\\);\\s*inputRef\\.current\\?\\.focus\\(\\);`));
   }
-  assert.equal(source.split('disabled={busy}').length - 1, 2);
+  assert.equal(source.split('disabled={busy}').length - 1, 3);
   assert.equal(source.split("fetch('/api/bot'").length - 1, 1);
   assert.equal(source.split('fetch(').length - 1, 1);
 });

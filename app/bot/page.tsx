@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { BotChat } from './bot-chat';
+import { CAPABILITY_CARDS } from '../../lib/bot/front-door';
 
 export const metadata: Metadata = {
   title: 'LIMS BOT (Prototype) — LIMS BOX',
@@ -15,12 +16,15 @@ export default function BotPage() {
         <h1 className="text-3xl font-bold text-slate-900 dark:text-white mb-2">
           LIMS BOT <span className="text-sm font-medium text-slate-500 align-middle">prototype</span>
         </h1>
+        <p className="text-lg text-slate-800 dark:text-slate-100 mb-3">
+          Ask me how to get your analyzer&apos;s data into a system that will survive a survey.
+        </p>
         <p className="text-slate-600 dark:text-slate-300 mb-8 text-sm">
           Answers come only from published LIMS BOX documentation and always cite
           their source. If the documentation doesn&apos;t cover it, LIMS BOT says so
           instead of guessing.
         </p>
-        <BotChat />
+        <BotChat cards={CAPABILITY_CARDS} />
       </div>
     </main>
   );
