@@ -2,6 +2,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { StatusBadge, formatDate } from "../_components/StatusBadge";
 import { worstCompetencyStatus } from "@/lib/personnel-competency-status";
+import { adminMutationsEnabled } from "@/lib/admin-capabilities";
 
 export default async function PeopleListPage() {
   const people = await prisma.person.findMany({
@@ -12,6 +13,7 @@ export default async function PeopleListPage() {
     },
     orderBy: { name: "asc" },
   });
+  const mutationsEnabled = adminMutationsEnabled();
 
   return (
     <div className="space-y-6">
@@ -20,12 +22,19 @@ export default async function PeopleListPage() {
           <h1 className="text-2xl font-semibold">People</h1>
           <p className="text-sm text-slate-600 mt-1">{people.length} active</p>
         </div>
-        <Link
-          href="/admin/people/new"
-          className="inline-flex items-center rounded-md bg-slate-900 text-white px-4 py-2 text-sm font-medium hover:bg-slate-800"
-        >
-          Add person
-        </Link>
+        {!mutationsEnabled ? (
+          <div className="text-right max-w-xs space-y-1">
+            <p className="text-xs text-slate-500">
+              Adding people is disabled on this read-only view.
+            </p>
+            <Link
+              href="/demo/operator"
+              className="inline-flex items-center rounded-md bg-slate-900 text-white px-4 py-2 text-sm font-medium hover:bg-slate-800"
+            >
+              Open operator sandbox
+            </Link>
+          </div>
+        ) : null}
       </div>
 
       <div className="overflow-x-auto rounded-md border border-slate-200">
