@@ -88,8 +88,8 @@ export async function POST(request: NextRequest) {
 
     // ── 3. Respond — 200 if EITHER path succeeded; 500 only if both failed ───
     if (!dbSaved && !emailSent) {
-      // Both durable sinks failed: retain the full lead here as the last recovery copy.
-      console.error('[contact] LEAD-RECOVERY (both sinks failed):', record);
+      // Both durable sinks failed: retain only redacted metadata here, never the raw lead.
+      console.error('[contact] LEAD-RECOVERY (both sinks failed):', leadLogMeta(record));
       console.error('[contact] both DB save and email send failed — returning 500');
       return NextResponse.json(
         { error: 'Failed to process submission' },

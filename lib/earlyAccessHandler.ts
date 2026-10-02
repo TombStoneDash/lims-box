@@ -1,4 +1,4 @@
-import { safeErrorMeta } from '@/lib/safeLog';
+import { leadLogMeta, safeErrorMeta } from '@/lib/safeLog';
 import type { DeliveryResult } from './notify';
 import { NextRequest, NextResponse } from 'next/server';
 import {
@@ -68,8 +68,8 @@ export function createEarlyAccessPostHandler(dependencies: EarlyAccessDependenci
       }
 
       if (!dbSaved && !noticeSent) {
-        // Both durable sinks failed: retain the full lead here as the last recovery copy.
-        console.error('[early-access] LEAD-RECOVERY (both sinks failed):', record);
+        // Both durable sinks failed: retain only redacted metadata here, never the raw lead.
+        console.error('[early-access] LEAD-RECOVERY (both sinks failed):', leadLogMeta(record as unknown as Record<string, unknown>));
         return NextResponse.json(
           { error: 'Failed to process application' },
           { status: 500 },
