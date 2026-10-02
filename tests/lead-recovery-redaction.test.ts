@@ -65,18 +65,26 @@ function assertRecoveryIsClean(calls: unknown[][]) {
   );
   assert.equal(recoveryCalls.length, 1, 'expected exactly one LEAD-RECOVERY recovery log');
 
-  const [, record] = recoveryCalls[0] as [string, Record<string, unknown>];
-  assert.equal(record.email, EMAIL, 'recovery record must keep the raw submitted email');
-
-  for (const [key, value] of Object.entries(record)) {
-    if (key === 'email') continue;
-    assert.ok(!serialize(value).includes(EMAIL), `recovery record field "${key}" must not also carry the raw email`);
-  }
-
   for (const args of calls) {
-    if (args === recoveryCalls[0]) continue;
-    for (const arg of args) {
-      assert.ok(!serialize(arg).includes(EMAIL), 'the raw email leaked outside the recovery record');
+    const isRecovery = typeof args[0] === 'string' && args[0].includes('LEAD-RECOVERY');
+    if (isRecovery) {
+      const [label, record] = args as [string, Record<string, unknown>];
+      assert.ok(!label.includes(EMAIL), 'the raw email leaked into the LEAD-RECOVERY label');
+      assert.equal(record.email, EMAIL, 'recovery record must keep the raw submitted email');
+
+      for (const [key, value] of Object.entries(record)) {
+        if (key === 'email') continue;
+        assert.ok(!serialize(value).includes(EMAIL), `recovery record field "${key}" must not also carry the raw email`);
+      }
+
+      for (const [index, arg] of args.entries()) {
+        if (index === 1) continue;
+        assert.ok(!serialize(arg).includes(EMAIL), 'the raw email leaked outside the recovery record');
+      }
+    } else {
+      for (const arg of args) {
+        assert.ok(!serialize(arg).includes(EMAIL), 'the raw email leaked outside the recovery record');
+      }
     }
   }
 }
