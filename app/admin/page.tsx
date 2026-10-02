@@ -4,6 +4,7 @@ import {
   countDueSoonCurrentCompetencies,
   countOverdueCurrentCompetencies,
 } from "@/lib/personnel-competency-status";
+import { formatCalendarDate } from "@/lib/admin-calendar-date";
 
 export const dynamic = "force-dynamic";
 
@@ -109,11 +110,7 @@ export default async function AdminDashboard() {
                     <td className="px-4 py-2 font-medium">{ev.competency.person.name}</td>
                     <td className="px-4 py-2 text-slate-600">{ev.competency.type}</td>
                     <td className="px-4 py-2 text-amber-700 font-medium">
-                      {ev.nextReviewDue?.toLocaleDateString("en-US", {
-                        year: "numeric",
-                        month: "short",
-                        day: "numeric",
-                      }) ?? "—"}
+                      {formatCalendarDate(ev.nextReviewDue)}
                     </td>
                     <td className="px-4 py-2">
                       <Link

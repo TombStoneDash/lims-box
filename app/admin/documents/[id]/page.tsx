@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { formatDate } from "../../_components/StatusBadge";
+import { formatDate, formatTimestampDate } from "../../_components/StatusBadge";
 import { createDocumentVersion } from "../../pp-actions";
 
 export const dynamic = "force-dynamic";
@@ -29,7 +29,7 @@ export default async function DocumentDetailPage({ params }: { params: Promise<{
             <span className="inline-flex items-center rounded-md border border-slate-200 bg-slate-50 px-2 py-0.5 text-xs mr-2">
               {doc.docType}
             </span>
-            Created {formatDate(doc.createdAt)}
+            Created {formatTimestampDate(doc.createdAt)}
           </p>
         </div>
         <Link href="/admin/documents" className="rounded-md px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-50">
@@ -175,7 +175,7 @@ export default async function DocumentDetailPage({ params }: { params: Promise<{
                       )}
                     </td>
                     <td className="px-4 py-2 text-slate-600">{formatDate(v.effectiveDate)}</td>
-                    <td className="px-4 py-2 text-slate-600">{formatDate(v.supersededDate)}</td>
+                    <td className="px-4 py-2 text-slate-600">{formatTimestampDate(v.supersededDate)}</td>
                     <td className="px-4 py-2 text-slate-600">{v.approvedBy}</td>
                     <td className="px-4 py-2 text-slate-600 max-w-xs truncate">{v.revisionSummary}</td>
                   </tr>
