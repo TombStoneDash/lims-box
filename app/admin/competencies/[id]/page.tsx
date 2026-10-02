@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { StatusBadge, formatDate } from "../../_components/StatusBadge";
+import { StatusBadge, formatDate, formatTimestampDate } from "../../_components/StatusBadge";
 import { createReviewEvent } from "../../pp-actions";
 import { REVIEW_TYPES, REVIEW_OUTCOMES, REVIEW_TYPE_LABELS, REVIEW_OUTCOME_LABELS } from "@/lib/personnel-pack-utils";
 
@@ -62,7 +62,7 @@ export default async function CompetencyDetailPage({ params }: { params: Promise
         <div className="rounded-md border border-slate-200 bg-slate-50 p-4 text-sm flex items-start justify-between">
           <div>
             <span className="font-medium">Last review:</span>{" "}
-            {formatDate(latestReview.reviewedAt)} by {latestReview.reviewerName}
+            {formatTimestampDate(latestReview.reviewedAt)} by {latestReview.reviewerName}
             {" · "}
             {outcomeBadge(latestReview.reviewOutcome)}
           </div>
@@ -201,7 +201,7 @@ export default async function CompetencyDetailPage({ params }: { params: Promise
               <tbody className="divide-y divide-slate-100">
                 {competency.reviewEvents.map((ev) => (
                   <tr key={ev.id}>
-                    <td className="px-4 py-2 text-slate-600">{formatDate(ev.reviewedAt)}</td>
+                    <td className="px-4 py-2 text-slate-600">{formatTimestampDate(ev.reviewedAt)}</td>
                     <td className="px-4 py-2 text-slate-600">
                       {REVIEW_TYPE_LABELS[ev.reviewType as keyof typeof REVIEW_TYPE_LABELS] ?? ev.reviewType}
                     </td>

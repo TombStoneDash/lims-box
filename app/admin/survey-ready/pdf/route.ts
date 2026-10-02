@@ -1,11 +1,11 @@
 import { prisma } from "@/lib/prisma";
+import { formatCalendarDate } from "@/lib/admin-calendar-date";
 import PDFDocument from "pdfkit";
 
 export const dynamic = "force-dynamic";
 
 function fmt(d: Date | null | undefined): string {
-  if (!d) return "—";
-  return new Date(d).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
+  return formatCalendarDate(d);
 }
 
 export async function GET() {

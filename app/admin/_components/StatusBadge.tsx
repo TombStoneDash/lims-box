@@ -1,4 +1,7 @@
-import { formatCalendarDate } from "@/lib/admin-calendar-date";
+import {
+  formatCalendarDate,
+  formatTimestampDate as formatLocalTimestampDate,
+} from "@/lib/admin-calendar-date";
 
 export function StatusBadge({ status }: { status: string }) {
   const s = status.toLowerCase();
@@ -19,4 +22,8 @@ export function StatusBadge({ status }: { status: string }) {
 
 export function formatDate(d: Date | string | null | undefined): string {
   return formatCalendarDate(d);
+}
+
+export function formatTimestampDate(d: Date | string | null | undefined): string {
+  return formatLocalTimestampDate(d);
 }
