@@ -175,7 +175,7 @@ export default async function DocumentDetailPage({ params }: { params: Promise<{
                       )}
                     </td>
                     <td className="px-4 py-2 text-slate-600">{formatDate(v.effectiveDate)}</td>
-                    <td className="px-4 py-2 text-slate-600">{formatDate(v.supersededDate)}</td>
+                    <td className="px-4 py-2 text-slate-600">{formatTimestampDate(v.supersededDate)}</td>
                     <td className="px-4 py-2 text-slate-600">{v.approvedBy}</td>
                     <td className="px-4 py-2 text-slate-600 max-w-xs truncate">{v.revisionSummary}</td>
                   </tr>

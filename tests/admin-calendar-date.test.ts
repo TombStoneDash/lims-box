@@ -29,6 +29,23 @@ function hasCall(source: ts.SourceFile, callee: string): boolean {
   return found;
 }
 
+function hasCallWithPropertyArgument(source: ts.SourceFile, callee: string, property: string): boolean {
+  let found = false;
+  function visit(node: ts.Node) {
+    if (
+      ts.isCallExpression(node) &&
+      ts.isIdentifier(node.expression) &&
+      node.expression.text === callee &&
+      node.arguments.some((argument) => ts.isPropertyAccessExpression(argument) && argument.name.text === property)
+    ) {
+      found = true;
+    }
+    ts.forEachChild(node, visit);
+  }
+  visit(source);
+  return found;
+}
+
 test("formatCalendarDate renders UTC-midnight date-only values without a day shift west of UTC", () => {
   const output = execFileSync(
     process.execPath,
@@ -121,5 +138,20 @@ test("wall-clock timestamp displays use the local timestamp formatter", () => {
   for (const relativePath of paths) {
     const source = parsedSource(relativePath, ts.ScriptKind.TSX);
     assert.ok(hasCall(source, "formatTimestampDate"), `${relativePath} must call formatTimestampDate()`);
+  }
+});
+
+test("audit-trail timestamps use the local timestamp formatter", () => {
+  const paths = [
+    ["app/admin/documents/[id]/page.tsx", "supersededDate"],
+    ["app/admin/people/[id]/page.tsx", "revokedAt"],
+    ["app/admin/procedures/[id]/page.tsx", "revokedAt"],
+  ] as const;
+  for (const [relativePath, property] of paths) {
+    const source = parsedSource(relativePath, ts.ScriptKind.TSX);
+    assert.ok(
+      hasCallWithPropertyArgument(source, "formatTimestampDate", property),
+      `${relativePath} must pass ${property} to formatTimestampDate()`,
+    );
   }
 });
