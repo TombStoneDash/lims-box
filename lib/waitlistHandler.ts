@@ -1,4 +1,4 @@
-import { safeErrorMeta } from '@/lib/safeLog';
+import { leadLogMeta, safeErrorMeta } from '@/lib/safeLog';
 import { NotificationDeliveryError, type DeliveryResult } from './notify';
 import { NextRequest, NextResponse } from 'next/server';
 import { normalizeEmail } from '@/lib/emailValidation';
@@ -29,6 +29,18 @@ export interface WaitlistDependencies {
   /** First-contact dry run (read-only, logs a hashed decision); optional. */
   firstContactDryRun?: (input: { email: string; requestStartedAt: Date; coveredByTransactional: boolean }) => Promise<void>;
   now?: () => string;
+}
+
+// Unlike early-access's resolveEarlyAdopterSource, this `source` is raw,
+// attacker-controlled free text (see WaitlistRecord.source below), so the
+// last-resort recovery log below must never carry it verbatim.
+const WAITLIST_RECOVERY_SOURCE_PLACEHOLDER = 'redacted';
+
+// Takes the sanitized recovery record as a plain parameter (never `record`,
+// the full-PII submission in scope above the caller) so this is the file's
+// only console call that can ever log a lead's email.
+function logWaitlistRecovery(record: Record<string, unknown>): void {
+  console.error('[waitlist] LEAD-RECOVERY (both sinks failed):', record);
 }
 
 // Hudson's approval (2026-09-24, 17A) covers new signups only. The applicant
@@ -128,7 +140,10 @@ export function createWaitlistPostHandler(dependencies: WaitlistDependencies) {
 
       if (!dbSaved && !noticeSent) {
         // Both durable sinks failed: retain the full lead here as the last recovery copy.
-        console.error('[waitlist] LEAD-RECOVERY (both sinks failed):', record);
+        logWaitlistRecovery({
+          ...leadLogMeta({ ...record, source: WAITLIST_RECOVERY_SOURCE_PLACEHOLDER }),
+          email: record.email,
+        });
         return NextResponse.json({ error: 'Failed to process signup' }, { status: 500 });
       }
 
