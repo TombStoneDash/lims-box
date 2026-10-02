@@ -60,7 +60,42 @@ export const CLIENTS = Object.freeze([
 export const FLAGS = Object.freeze({
   HOLDING_TIME_BREACH: 'HOLDING_TIME_BREACH',
   QC_FAILURE: 'QC_FAILURE',
+  DELTA_CHECK: 'DELTA_CHECK',
+  CALIBRATION_OVERDUE: 'CALIBRATION_OVERDUE',
 });
+
+// Synthetic instruments. Each analysis runs on exactly one instrument of its
+// lab. Calibration intervals are EXAMPLES (basis 'example', UNVERIFIED).
+export const INSTRUMENTS = Object.freeze([
+  { id: 'SYN-INST-CHEM-01', lab: 'ABC-CLN', name: `Chemistry analyzer ${SYNTHETIC_MARKER}`, keywords: ['GLU', 'K', 'CREA', 'UPRO'],
+    lastCalibrated: '2026-09-01', intervalDays: 30, basis: 'example' },
+  // The one overdue calibration: due 2026-09-14, and every result on it came later.
+  { id: 'SYN-INST-HEME-01', lab: 'ABC-CLN', name: `Hematology analyzer ${SYNTHETIC_MARKER}`, keywords: ['A1C', 'WBC'],
+    lastCalibrated: '2026-08-15', intervalDays: 30, basis: 'example' },
+  { id: 'SYN-INST-PCR-01', lab: 'ABC-DX', name: `Real-time PCR system ${SYNTHETIC_MARKER}`, keywords: ['SARS2', 'GAS'],
+    lastCalibrated: '2026-09-05', intervalDays: 90, basis: 'example' },
+  { id: 'SYN-INST-MICRO-01', lab: 'ABC-DX', name: `Culture incubator ${SYNTHETIC_MARKER}`, keywords: ['UCULT'],
+    lastCalibrated: '2026-09-10', intervalDays: 30, basis: 'example' },
+]);
+
+export const PLANNED_OVERDUE_INSTRUMENT = 'SYN-INST-HEME-01';
+
+// Delta check: flag a result that moved too far from the same subject's
+// previous result within a window. EXAMPLE limit, UNVERIFIED.
+export const DELTA_RULES = Object.freeze([
+  { keyword: 'CREA', maxAbsChange: 0.3, windowHours: 48, unit: 'mg/dL', basis: 'example', status: 'UNVERIFIED' },
+]);
+
+// Earlier synthetic results for the same synthetic subjects (no patient data).
+// Only the first one breaks the rule: +0.4 mg/dL within 24 h. The second moves
+// 0.1 (inside the limit); the third moves a lot but is 5 days older (outside the window).
+export const PRIOR_RESULTS = Object.freeze([
+  { subjectCode: 'SYN-SUBJ-CLN-005', keyword: 'CREA', value: 0.5, at: '2026-09-24T13:00:00Z' },
+  { subjectCode: 'SYN-SUBJ-CLN-002', keyword: 'CREA', value: 1.1, at: '2026-09-21T13:00:00Z' },
+  { subjectCode: 'SYN-SUBJ-CLN-003', keyword: 'CREA', value: 0.3, at: '2026-09-18T13:00:00Z' },
+]);
+
+export const PLANNED_DELTA = Object.freeze({ sampleId: 'SYN-CLN-SER-0005', keyword: 'CREA' });
 
 // ---------------------------------------------------------------------------
 // Samples. Deterministic: fixed base time, fixed lags, no RNG. UTC.
@@ -126,11 +161,17 @@ function buildSamples() {
       const analyses = PANELS[group.matrix].map((keyword) => {
         const breach = PLANNED_BREACHES.find((b) => b.sampleId === id && b.keyword === keyword);
         const lag = breach ? breach.lagHours : LAG_HOURS[keyword];
+        const onOverdueInstrument = INSTRUMENTS.find((x) => x.id === PLANNED_OVERDUE_INSTRUMENT).keywords.includes(keyword);
+        const delta = PLANNED_DELTA.sampleId === id && PLANNED_DELTA.keyword === keyword;
         return {
           keyword,
           testedAt: iso(collected + lag * HOUR),
           result: resultFor(byKeyword.get(keyword), i),
-          flags: breach ? [FLAGS.HOLDING_TIME_BREACH] : [],
+          flags: [
+            ...(breach ? [FLAGS.HOLDING_TIME_BREACH] : []),
+            ...(delta ? [FLAGS.DELTA_CHECK] : []),
+            ...(onOverdueInstrument ? [FLAGS.CALIBRATION_OVERDUE] : []),
+          ],
         };
       });
       samples.push({
@@ -191,4 +232,7 @@ export const SEED = Object.freeze({
   clients: CLIENTS,
   samples: SAMPLES,
   qcBatches: QC_BATCHES,
+  instruments: INSTRUMENTS,
+  deltaRules: DELTA_RULES,
+  priorResults: PRIOR_RESULTS,
 });

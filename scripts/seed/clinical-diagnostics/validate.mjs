@@ -30,6 +30,28 @@ export function evaluateControl(control) {
   return { pass: Math.abs(z) <= 3, detail: `${control.control}: ${control.measured} vs ${control.mean} +/- ${control.sd} (${z.toFixed(1)} SD)` };
 }
 
+const DAY = 24 * HOUR;
+
+/** Calibration due date (ISO date) from the last calibration and the interval. */
+export function calibrationDue(instrument) {
+  return new Date(Date.parse(`${instrument.lastCalibrated}T00:00:00Z`) + instrument.intervalDays * DAY).toISOString().slice(0, 10);
+}
+
+export function isCalibrationOverdue(instrument, testedAt) {
+  return Date.parse(testedAt) > Date.parse(`${calibrationDue(instrument)}T00:00:00Z`);
+}
+
+/** The latest earlier result for the subject inside the rule's window, or null. */
+export function priorWithinWindow(priors, subjectCode, rule, collectedAt) {
+  const inWindow = priors.filter((p) => p.subjectCode === subjectCode && p.keyword === rule.keyword)
+    .filter((p) => { const h = hoursBetween(p.at, collectedAt); return h > 0 && h <= rule.windowHours; });
+  return inWindow.sort((a, b) => Date.parse(b.at) - Date.parse(a.at))[0] ?? null;
+}
+
+export function isDeltaFailure(current, prior, rule) {
+  return Math.abs(Number(current) - prior.value) > rule.maxAbsChange + 1e-9;
+}
+
 export function validateSeed(seed = SEED) {
   const errors = [];
   const err = (m) => errors.push(m);
@@ -51,7 +73,26 @@ export function validateSeed(seed = SEED) {
     if (!(a.stability?.hours > 0)) err(`${a.keyword}: stability hours must be positive`);
   }
 
+  const instruments = seed.instruments ?? [];
+  const instrumentFor = new Map();
+  for (const x of instruments) {
+    if (!labs.has(x.lab)) err(`${x.id}: unknown lab ${x.lab}`);
+    if (x.basis !== 'example') err(`${x.id}: calibration interval must be labelled example`);
+    for (const k of x.keywords) {
+      if (instrumentFor.has(k)) err(`${k}: runs on more than one instrument`);
+      if (analyses.get(k)?.lab !== x.lab) err(`${x.id}: ${k} is not a ${x.lab} analysis`);
+      instrumentFor.set(k, x);
+    }
+  }
+  for (const a of seed.analyses) if (instruments.length && !instrumentFor.has(a.keyword)) err(`${a.keyword}: no instrument`);
+  const deltaRules = new Map((seed.deltaRules ?? []).map((r) => [r.keyword, r]));
+  for (const r of deltaRules.values()) if (r.basis !== 'example') err(`delta rule ${r.keyword}: must be labelled example`);
+  const priors = seed.priorResults ?? [];
+  for (const p of priors) if (!/^SYN-SUBJ-/.test(p.subjectCode)) err(`prior result: subject must be synthetic`);
+
   const breaches = [];
+  const deltaFailures = [];
+  const overdueResults = [];
   const ids = new Set();
   for (const s of seed.samples) {
     if (ids.has(s.id)) err(`duplicate sample id ${s.id}`);
@@ -71,6 +112,17 @@ export function validateSeed(seed = SEED) {
       const flagged = a.flags.includes(FLAGS.HOLDING_TIME_BREACH);
       if (breach !== flagged) err(`${s.id}/${a.keyword}: holding-time flag ${flagged} but computed breach ${breach}`);
       if (breach) breaches.push({ lab: s.lab, sampleId: s.id, keyword: a.keyword, hours: hoursBetween(s.collectedAt, a.testedAt), limitHours: def.stability.hours });
+
+      const rule = deltaRules.get(a.keyword);
+      const prior = rule ? priorWithinWindow(priors, s.subjectCode, rule, s.collectedAt) : null;
+      const deltaFails = Boolean(prior && isDeltaFailure(a.result, prior, rule));
+      if (deltaFails !== a.flags.includes(FLAGS.DELTA_CHECK)) err(`${s.id}/${a.keyword}: delta flag ${a.flags.includes(FLAGS.DELTA_CHECK)} but computed ${deltaFails}`);
+      if (deltaFails) deltaFailures.push({ lab: s.lab, sampleId: s.id, keyword: a.keyword, current: Number(a.result), prior: prior.value, priorAt: prior.at, maxAbsChange: rule.maxAbsChange, windowHours: rule.windowHours });
+
+      const instrument = instrumentFor.get(a.keyword);
+      const overdue = Boolean(instrument && isCalibrationOverdue(instrument, a.testedAt));
+      if (overdue !== a.flags.includes(FLAGS.CALIBRATION_OVERDUE)) err(`${s.id}/${a.keyword}: calibration flag ${a.flags.includes(FLAGS.CALIBRATION_OVERDUE)} but computed ${overdue}`);
+      if (overdue) overdueResults.push({ lab: s.lab, sampleId: s.id, keyword: a.keyword, instrument: instrument.id, due: calibrationDue(instrument) });
     }
   }
 
@@ -94,7 +146,13 @@ export function validateSeed(seed = SEED) {
     if (nQc !== 1) err(`${lab}: expected exactly one QC failure, found ${nQc}`);
   }
 
-  return { ok: errors.length === 0, errors, summary: { samples: seed.samples.length, breaches, qcFailures } };
+  if (instruments.length || deltaRules.size) {
+    if (deltaFailures.length !== 1) err(`expected exactly one delta check failure, found ${deltaFailures.length}`);
+    const overdueInstruments = [...new Set(overdueResults.map((r) => r.instrument))];
+    if (overdueInstruments.length !== 1) err(`expected exactly one overdue instrument, found ${overdueInstruments.length}`);
+  }
+
+  return { ok: errors.length === 0, errors, summary: { samples: seed.samples.length, breaches, qcFailures, deltaFailures, overdueResults } };
 }
 
 if (import.meta.url === pathToFileURL(process.argv[1] ?? '').href) {
