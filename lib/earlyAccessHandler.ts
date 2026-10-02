@@ -1,4 +1,4 @@
-import { safeErrorMeta } from '@/lib/safeLog';
+import { leadLogMeta, safeErrorMeta } from '@/lib/safeLog';
 import type { DeliveryResult } from './notify';
 import { NextRequest, NextResponse } from 'next/server';
 import {
@@ -37,10 +37,10 @@ export function createEarlyAccessPostHandler(dependencies: EarlyAccessDependenci
         return NextResponse.json({ error: validation.error }, { status: 400 });
       }
 
-      const { record, labType } = validation;
+      const { record: submission, labType } = validation;
       let dbSaved = false;
       try {
-        await dependencies.createProspect(record);
+        await dependencies.createProspect(submission);
         dbSaved = true;
       } catch (dbErr) {
         console.error('[early-access] DB save failed (non-fatal):', safeErrorMeta(dbErr));
@@ -49,16 +49,16 @@ export function createEarlyAccessPostHandler(dependencies: EarlyAccessDependenci
       let noticeSent = false;
       try {
         await dependencies.sendSubmissionNotice({
-          subject: `New early-adopter application — ${record.labName}`,
+          subject: `New early-adopter application — ${submission.labName}`,
           lines: [
-            ['Lab name', record.labName],
+            ['Lab name', submission.labName],
             ['Lab type', labType],
-            ['Track', record.track],
-            ['Contact name', record.name],
-            ['Email', record.email],
-            ['Monthly volume', record.labSize],
-            ['Pain point', record.painPoint],
-            ['Source', record.source],
+            ['Track', submission.track],
+            ['Contact name', submission.name],
+            ['Email', submission.email],
+            ['Monthly volume', submission.labSize],
+            ['Pain point', submission.painPoint],
+            ['Source', submission.source],
             ['Received', (dependencies.now ?? (() => new Date().toISOString()))()],
           ],
         });
@@ -69,6 +69,7 @@ export function createEarlyAccessPostHandler(dependencies: EarlyAccessDependenci
 
       if (!dbSaved && !noticeSent) {
         // Both durable sinks failed: retain the full lead here as the last recovery copy.
+        const record = { ...leadLogMeta({ ...submission }), email: submission.email };
         console.error('[early-access] LEAD-RECOVERY (both sinks failed):', record);
         return NextResponse.json(
           { error: 'Failed to process application' },
@@ -77,14 +78,14 @@ export function createEarlyAccessPostHandler(dependencies: EarlyAccessDependenci
       }
 
       try {
-        await dependencies.sendApplicantConfirmation(record.email, record.name);
+        await dependencies.sendApplicantConfirmation(submission.email, submission.name);
       } catch (err) {
         console.error('[early-access] Applicant confirmation failed (non-fatal)', safeErrorMeta(err));
       }
 
       // The applicant confirmation above is this inbound's first contact (spec 1.5).
       try {
-        await dependencies.firstContactDryRun?.({ email: record.email, requestStartedAt, coveredByTransactional: true });
+        await dependencies.firstContactDryRun?.({ email: submission.email, requestStartedAt, coveredByTransactional: true });
       } catch {
         // The dry run must never affect the signup.
       }
