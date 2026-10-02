@@ -23,6 +23,23 @@ export function pagedResponse<T extends { id: string }>(
   return Response.json({ data, pagination: { next_cursor: nextCursor, has_more: hasMore } });
 }
 
+/**
+ * Cursor-paginated response envelope driven by a lookahead query.
+ * Callers must fetch up to `limit + 1` rows; the presence of that extra
+ * row (not a row-count-equals-limit heuristic) determines `has_more`, so a
+ * result set that ends exactly on a page boundary does not falsely
+ * advertise a next page.
+ */
+export function pagedResponseLookahead<T extends { id: string }>(
+  rows: T[],
+  limit: number
+): Response {
+  const hasMore = rows.length > limit;
+  const data = hasMore ? rows.slice(0, limit) : rows;
+  const nextCursor = hasMore ? data[data.length - 1].id : null;
+  return Response.json({ data, pagination: { next_cursor: nextCursor, has_more: hasMore } });
+}
+
 /** Parse `?limit` and `?cursor` from a URL. */
 export function parsePagination(url: URL): { limit: number; cursor: string | null } {
   const parsed = parseInt(url.searchParams.get("limit") ?? "20", 10);
