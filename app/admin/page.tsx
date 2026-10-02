@@ -5,6 +5,7 @@ import {
   countOverdueCurrentCompetencies,
 } from "@/lib/personnel-competency-status";
 import { formatCalendarDate } from "@/lib/admin-calendar-date";
+import { CURRENT_AUTHORIZATION_WHERE } from "@/lib/current-authorization";
 
 export const dynamic = "force-dynamic";
 
@@ -30,7 +31,7 @@ export default async function AdminDashboard() {
         take: 10,
       }),
       // Active procedure authorizations (ISO 15189 §6.2.4)
-      prisma.authorization.count({ where: { isActive: true } }),
+      prisma.authorization.count({ where: CURRENT_AUTHORIZATION_WHERE }),
       // Controlled documents (ISO 15189 §4.3)
       prisma.document.count({ where: { archivedAt: null } }),
     ]);

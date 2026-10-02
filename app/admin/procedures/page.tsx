@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { formatTimestampDate } from "../_components/StatusBadge";
+import { CURRENT_AUTHORIZATION_WHERE } from "@/lib/current-authorization";
 
 export const dynamic = "force-dynamic";
 
@@ -9,7 +10,7 @@ export default async function ProceduresPage() {
     where: { active: true },
     orderBy: { name: "asc" },
     include: {
-      _count: { select: { authorizations: { where: { isActive: true } } } },
+      _count: { select: { authorizations: { where: CURRENT_AUTHORIZATION_WHERE } } },
     },
   });
 
