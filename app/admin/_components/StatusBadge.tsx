@@ -1,3 +1,5 @@
+import { formatCalendarDate } from "@/lib/admin-calendar-date";
+
 export function StatusBadge({ status }: { status: string }) {
   const s = status.toLowerCase();
   const cls =
@@ -16,8 +18,5 @@ export function StatusBadge({ status }: { status: string }) {
 }
 
 export function formatDate(d: Date | string | null | undefined): string {
-  if (!d) return "—";
-  const date = typeof d === "string" ? new Date(d) : d;
-  if (isNaN(date.getTime())) return "—";
-  return date.toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
+  return formatCalendarDate(d);
 }
