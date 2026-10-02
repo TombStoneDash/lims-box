@@ -10,8 +10,8 @@ test("formatCalendarDate renders UTC-midnight date-only values without a day shi
   const output = execFileSync(
     process.execPath,
     ["--import", "tsx", "--eval", `
-      import { formatCalendarDate } from "${path.join(__dirname, "../lib/admin-calendar-date")}";
-      process.stdout.write(formatCalendarDate(new Date("2026-10-02")));
+      import calendarDate from "${path.join(__dirname, "../lib/admin-calendar-date.ts")}";
+      process.stdout.write(calendarDate.formatCalendarDate(new Date("2026-10-02")));
     `],
     { env: { ...process.env, TZ: "America/Los_Angeles" }, encoding: "utf8" },
   );
