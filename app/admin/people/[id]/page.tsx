@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { competencyDisplayStatus } from "@/lib/competency-display-status";
 import { StatusBadge, formatDate } from "../../_components/StatusBadge";
 import { grantAuthorization, revokeAuthorization } from "../../pp-actions";
 
@@ -19,6 +20,8 @@ export default async function PersonDetailPage({ params }: { params: Promise<{ i
     },
   });
   if (!person) return notFound();
+
+  const now = new Date();
 
   // Procedures available for new authorization (exclude already-active ones)
   const activeProcedureIds = person.authorizations
@@ -87,7 +90,9 @@ export default async function PersonDetailPage({ params }: { params: Promise<{ i
                 person.competencies.map((c) => (
                   <tr key={c.id}>
                     <td className="px-4 py-2">{c.type}</td>
-                    <td className="px-4 py-2"><StatusBadge status={c.status} /></td>
+                    <td className="px-4 py-2">
+                      <StatusBadge status={competencyDisplayStatus(c, person.competencies, now)} />
+                    </td>
                     <td className="px-4 py-2 text-slate-600">{formatDate(c.completedAt)}</td>
                     <td className="px-4 py-2 text-slate-600">{formatDate(c.expiresAt)}</td>
                     <td className="px-4 py-2 text-slate-600">{c.notes || "—"}</td>
