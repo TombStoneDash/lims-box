@@ -6,6 +6,7 @@ import {
 } from "@/lib/personnel-competency-status";
 import { formatCalendarDate } from "@/lib/admin-calendar-date";
 import { CURRENT_AUTHORIZATION_WHERE } from "@/lib/current-authorization";
+import { recentSignOffWindow } from "@/lib/admin-signoff-stats";
 
 export const dynamic = "force-dynamic";
 
@@ -14,13 +15,13 @@ export default async function AdminDashboard() {
   const in30 = new Date(now);
   in30.setDate(in30.getDate() + 30);
 
-  const [peopleCount, overdueRows, upcomingSignOffs, reviewsDue, activeAuthCount, docCount] =
+  const [peopleCount, overdueRows, recentSignOffs, reviewsDue, activeAuthCount, docCount] =
     await Promise.all([
       prisma.person.count({ where: { active: true } }),
       prisma.competency.findMany({
         select: { personId: true, type: true, status: true, expiresAt: true, createdAt: true },
       }),
-      prisma.signOff.count({ where: { signedAt: { gte: now, lte: in30 } } }),
+      prisma.signOff.count({ where: { signedAt: recentSignOffWindow(now) } }),
       // Reviews due in next 30 days (ISO 15189 §6.2.2)
       prisma.reviewEvent.findMany({
         where: { nextReviewDue: { gte: now, lte: in30 } },
@@ -56,8 +57,8 @@ export default async function AdminDashboard() {
       </div>
 
       <div className="text-sm text-slate-500">
-        Upcoming director sign-offs in next 30 days:{" "}
-        <strong className="text-slate-900">{upcomingSignOffs}</strong>
+        Director sign-offs in the previous 30 days:{" "}
+        <strong className="text-slate-900">{recentSignOffs}</strong>
       </div>
 
       {/* ISO 15189 stats */}
