@@ -2,7 +2,8 @@ import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import test from "node:test";
 import { strFromU8, unzipSync } from "fflate";
-import { buildPersonnelFileNames, GET } from "../../app/api/admin/personnel-pack/survey-export/route";
+import { GET } from "../../app/api/admin/personnel-pack/survey-export/route";
+import { buildPersonnelFileNames } from "../../lib/personnel-survey-file-names";
 import { prisma } from "../../lib/prisma";
 import { extractPdfText } from "../helpers/pdf";
 
