@@ -1,11 +1,16 @@
-import { safeErrorMeta } from '@/lib/safeLog';
+import { leadLogMeta, safeErrorMeta } from '@/lib/safeLog';
 import type { DeliveryResult } from './notify';
 import { NextRequest, NextResponse } from 'next/server';
 import {
   validateEarlyAccessApplication,
   type EarlyAccessRecord,
 } from '@/lib/earlyAccessApplication';
-import { resolveEarlyAdopterSource } from '@/lib/leadAttribution';
+import { DEFAULT_EARLY_ADOPTER_SOURCE, resolveEarlyAdopterSource } from '@/lib/leadAttribution';
+
+// Only the unattributed default is logged on recovery; any UTM-attributed
+// value is still free-ish text from a referer/query param and must not reach
+// the recovery log raw (R1 lesson: never log a submitted/derived `source`).
+const KNOWN_RECOVERY_SOURCES = new Set([DEFAULT_EARLY_ADOPTER_SOURCE]);
 
 interface SubmissionNotice {
   subject: string;
@@ -68,8 +73,11 @@ export function createEarlyAccessPostHandler(dependencies: EarlyAccessDependenci
       }
 
       if (!dbSaved && !noticeSent) {
-        // Both durable sinks failed: retain the full lead here as the last recovery copy.
-        console.error('[early-access] LEAD-RECOVERY (both sinks failed):', record);
+        // Both durable sinks failed: retain only redacted, non-PII metadata as the recovery copy.
+        console.error('[early-access] LEAD-RECOVERY (both sinks failed):', {
+          ...leadLogMeta({ ...record }),
+          source: KNOWN_RECOVERY_SOURCES.has(record.source) ? record.source : null,
+        });
         return NextResponse.json(
           { error: 'Failed to process application' },
           { status: 500 },

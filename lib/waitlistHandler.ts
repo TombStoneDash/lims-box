@@ -1,7 +1,13 @@
-import { safeErrorMeta } from '@/lib/safeLog';
+import { leadLogMeta, safeErrorMeta } from '@/lib/safeLog';
 import { NotificationDeliveryError, type DeliveryResult } from './notify';
 import { NextRequest, NextResponse } from 'next/server';
 import { normalizeEmail } from '@/lib/emailValidation';
+
+// `source` is free text supplied by the caller (body.source, or the fixed
+// default below) — never log it raw, since free text such as a name or
+// phone number can land there (R1 lesson). Only this literal default token
+// is ever written to the recovery log; anything else becomes null.
+const KNOWN_RECOVERY_SOURCES = new Set(['lims.bot']);
 
 interface SubmissionNotice {
   subject: string;
@@ -127,8 +133,11 @@ export function createWaitlistPostHandler(dependencies: WaitlistDependencies) {
       }
 
       if (!dbSaved && !noticeSent) {
-        // Both durable sinks failed: retain the full lead here as the last recovery copy.
-        console.error('[waitlist] LEAD-RECOVERY (both sinks failed):', record);
+        // Both durable sinks failed: retain only redacted, non-PII metadata as the recovery copy.
+        console.error('[waitlist] LEAD-RECOVERY (both sinks failed):', {
+          ...leadLogMeta({ ...record }),
+          source: KNOWN_RECOVERY_SOURCES.has(record.source) ? record.source : null,
+        });
         return NextResponse.json({ error: 'Failed to process signup' }, { status: 500 });
       }
 
