@@ -36,22 +36,25 @@ function callExpressionsFor(source: ts.SourceFile, calleeChain: string): ts.Call
   return matches;
 }
 
-function containsWhereIdentifier(node: ts.Node, identifierName: string): boolean {
-  let found = false;
-  function visit(n: ts.Node) {
-    if (
-      ts.isPropertyAssignment(n) &&
-      ts.isIdentifier(n.name) &&
-      n.name.text === "where" &&
-      ts.isIdentifier(n.initializer) &&
-      n.initializer.text === identifierName
-    ) {
-      found = true;
-    }
-    ts.forEachChild(n, visit);
+function hasIdentifierAtObjectPath(
+  call: ts.CallExpression,
+  propertyPath: string[],
+  identifierName: string,
+): boolean {
+  let current: ts.Expression | undefined = call.arguments[0];
+
+  for (const propertyName of propertyPath) {
+    if (!current || !ts.isObjectLiteralExpression(current)) return false;
+    const property = current.properties.find(
+      (candidate): candidate is ts.PropertyAssignment =>
+        ts.isPropertyAssignment(candidate) &&
+        ts.isIdentifier(candidate.name) &&
+        candidate.name.text === propertyName,
+    );
+    current = property?.initializer;
   }
-  visit(node);
-  return found;
+
+  return !!current && ts.isIdentifier(current) && current.text === identifierName;
 }
 
 test("active authorization for an inactive person is excluded; active authorization for an active person counts", () => {
@@ -112,7 +115,9 @@ test("app/admin/page.tsx counts authorizations using the centralized current-aut
   const calls = callExpressionsFor(source, "prisma.authorization.count");
   assert.ok(calls.length > 0, "expected a prisma.authorization.count( call expression");
   assert.ok(
-    calls.some((call) => containsWhereIdentifier(call, "CURRENT_AUTHORIZATION_WHERE")),
+    calls.some((call) =>
+      hasIdentifierAtObjectPath(call, ["where"], "CURRENT_AUTHORIZATION_WHERE"),
+    ),
     "prisma.authorization.count must be called with where: CURRENT_AUTHORIZATION_WHERE",
   );
 });
@@ -122,7 +127,13 @@ test("app/admin/procedures/page.tsx counts per-procedure authorizations using th
   const calls = callExpressionsFor(source, "prisma.procedure.findMany");
   assert.ok(calls.length > 0, "expected a prisma.procedure.findMany( call expression");
   assert.ok(
-    calls.some((call) => containsWhereIdentifier(call, "CURRENT_AUTHORIZATION_WHERE")),
+    calls.some((call) =>
+      hasIdentifierAtObjectPath(
+        call,
+        ["include", "_count", "select", "authorizations", "where"],
+        "CURRENT_AUTHORIZATION_WHERE",
+      ),
+    ),
     "the authorizations _count must be scoped with where: CURRENT_AUTHORIZATION_WHERE",
   );
 });
