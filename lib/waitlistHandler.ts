@@ -1,4 +1,4 @@
-import { safeErrorMeta } from '@/lib/safeLog';
+import { leadLogMeta, safeErrorMeta } from '@/lib/safeLog';
 import { NotificationDeliveryError, type DeliveryResult } from './notify';
 import { NextRequest, NextResponse } from 'next/server';
 import { normalizeEmail } from '@/lib/emailValidation';
@@ -127,8 +127,14 @@ export function createWaitlistPostHandler(dependencies: WaitlistDependencies) {
       }
 
       if (!dbSaved && !noticeSent) {
-        // Both durable sinks failed: retain the full lead here as the last recovery copy.
-        console.error('[waitlist] LEAD-RECOVERY (both sinks failed):', record);
+        // Both durable sinks failed: retain only redacted lead metadata as the last recovery copy.
+        // `source` is user-controlled free text, so it is never echoed verbatim — only a
+        // fixed placeholder is logged, never the submitted value.
+        const recoveryMeta = { ...leadLogMeta(record as unknown as Record<string, unknown>), source: 'waitlist' };
+        {
+          const record = recoveryMeta;
+          console.error('[waitlist] LEAD-RECOVERY (both sinks failed):', record);
+        }
         return NextResponse.json({ error: 'Failed to process signup' }, { status: 500 });
       }
 

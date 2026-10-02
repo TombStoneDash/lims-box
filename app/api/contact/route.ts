@@ -22,13 +22,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const record = {
+    const submission = {
       ...normalized.record,
       timestamp: new Date().toISOString(),
     };
 
     // Audit log (kept for Vercel runtime trace)
-    console.log('[contact] submission received:', leadLogMeta(record));
+    console.log('[contact] submission received:', leadLogMeta(submission));
 
     // ── 1. DB persistence — durability backstop (W165) ───────────────────────
     // Runs BEFORE email so the lead is saved even if Resend fails.
@@ -42,14 +42,14 @@ export async function POST(request: NextRequest) {
         // PR #37 initially targeted 'contact_leads' which does not exist — every
         // signup would have silently failed the DB save. Corrected W212-followup.
         const { error: dbError } = await supabase.from('limsbox_early_access').insert({
-          name: record.name,
-          lab_name: record.labName,
-          email: record.email,
-          lab_size: record.labSize ?? null,
-          current_lims: record.currentSystem ?? null,
-          pain_point: record.message ?? null,
-          phone: record.phone ?? null,
-          instruments: record.instruments ?? null,
+          name: submission.name,
+          lab_name: submission.labName,
+          email: submission.email,
+          lab_size: submission.labSize ?? null,
+          current_lims: submission.currentSystem ?? null,
+          pain_point: submission.message ?? null,
+          phone: submission.phone ?? null,
+          instruments: submission.instruments ?? null,
           source: 'contact_form',
         });
         if (dbError) {
@@ -69,15 +69,15 @@ export async function POST(request: NextRequest) {
     let emailSent = false;
     try {
       await sendSubmissionNotice({
-        subject: `New contact form submission — ${record.labName}`,
+        subject: `New contact form submission — ${submission.labName}`,
         lines: [
-          ['Name', record.name],
-          ['Lab name', record.labName],
-          ['Email', record.email],
-          ['Lab size', record.labSize],
-          ['Current system', record.currentSystem],
-          ['Message', record.message],
-          ['Received', record.timestamp],
+          ['Name', submission.name],
+          ['Lab name', submission.labName],
+          ['Email', submission.email],
+          ['Lab size', submission.labSize],
+          ['Current system', submission.currentSystem],
+          ['Message', submission.message],
+          ['Received', submission.timestamp],
         ],
       });
       emailSent = true;
@@ -88,7 +88,8 @@ export async function POST(request: NextRequest) {
 
     // ── 3. Respond — 200 if EITHER path succeeded; 500 only if both failed ───
     if (!dbSaved && !emailSent) {
-      // Both durable sinks failed: retain the full lead here as the last recovery copy.
+      // Both durable sinks failed: retain only redacted lead metadata as the last recovery copy.
+      const record = leadLogMeta(submission);
       console.error('[contact] LEAD-RECOVERY (both sinks failed):', record);
       console.error('[contact] both DB save and email send failed — returning 500');
       return NextResponse.json(
@@ -100,7 +101,7 @@ export async function POST(request: NextRequest) {
     // The contact form sends no email to the person today, only Hudson's notice.
     await limsFirstContactDryRun({
       endpoint: 'contact',
-      email: record.email,
+      email: submission.email,
       sources: limsHistorySources,
       requestStartedAt,
       coveredByTransactional: false,
