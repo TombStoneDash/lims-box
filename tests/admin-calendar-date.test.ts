@@ -29,21 +29,21 @@ function hasCall(source: ts.SourceFile, callee: string): boolean {
   return found;
 }
 
-function hasCallWithPropertyArgument(source: ts.SourceFile, callee: string, property: string): boolean {
-  let found = false;
+function countCallsWithArgumentText(source: ts.SourceFile, callee: string, argumentText: string): number {
+  let count = 0;
   function visit(node: ts.Node) {
     if (
       ts.isCallExpression(node) &&
       ts.isIdentifier(node.expression) &&
       node.expression.text === callee &&
-      node.arguments.some((argument) => ts.isPropertyAccessExpression(argument) && argument.name.text === property)
+      node.arguments.some((argument) => argument.getText(source) === argumentText)
     ) {
-      found = true;
+      count += 1;
     }
     ts.forEachChild(node, visit);
   }
   visit(source);
-  return found;
+  return count;
 }
 
 test("formatCalendarDate renders UTC-midnight date-only values without a day shift west of UTC", () => {
@@ -128,30 +128,36 @@ test("remaining date-only paths use the calendar formatter", () => {
   }
 });
 
-test("wall-clock timestamp displays use the local timestamp formatter", () => {
-  const paths = [
-    "app/admin/procedures/page.tsx",
-    "app/admin/documents/page.tsx",
-    "app/admin/documents/[id]/page.tsx",
-    "app/admin/competencies/[id]/page.tsx",
-  ];
-  for (const relativePath of paths) {
+test("every wall-clock timestamp display uses the local timestamp formatter", () => {
+  const callSites = [
+    ["app/admin/procedures/page.tsx", "p.createdAt"],
+    ["app/admin/documents/page.tsx", "doc.createdAt"],
+    ["app/admin/documents/[id]/page.tsx", "doc.createdAt"],
+    ["app/admin/competencies/[id]/page.tsx", "latestReview.reviewedAt"],
+    ["app/admin/competencies/[id]/page.tsx", "ev.reviewedAt"],
+  ] as const;
+  for (const [relativePath, argumentText] of callSites) {
     const source = parsedSource(relativePath, ts.ScriptKind.TSX);
-    assert.ok(hasCall(source, "formatTimestampDate"), `${relativePath} must call formatTimestampDate()`);
+    assert.equal(
+      countCallsWithArgumentText(source, "formatTimestampDate", argumentText),
+      1,
+      `${relativePath} must pass ${argumentText} to formatTimestampDate() exactly once`,
+    );
   }
 });
 
 test("audit-trail timestamps use the local timestamp formatter", () => {
-  const paths = [
-    ["app/admin/documents/[id]/page.tsx", "supersededDate"],
-    ["app/admin/people/[id]/page.tsx", "revokedAt"],
-    ["app/admin/procedures/[id]/page.tsx", "revokedAt"],
+  const callSites = [
+    ["app/admin/documents/[id]/page.tsx", "v.supersededDate"],
+    ["app/admin/people/[id]/page.tsx", "auth.revokedAt"],
+    ["app/admin/procedures/[id]/page.tsx", "auth.revokedAt"],
   ] as const;
-  for (const [relativePath, property] of paths) {
+  for (const [relativePath, argumentText] of callSites) {
     const source = parsedSource(relativePath, ts.ScriptKind.TSX);
-    assert.ok(
-      hasCallWithPropertyArgument(source, "formatTimestampDate", property),
-      `${relativePath} must pass ${property} to formatTimestampDate()`,
+    assert.equal(
+      countCallsWithArgumentText(source, "formatTimestampDate", argumentText),
+      1,
+      `${relativePath} must pass ${argumentText} to formatTimestampDate() exactly once`,
     );
   }
 });
