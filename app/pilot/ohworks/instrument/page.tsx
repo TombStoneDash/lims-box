@@ -1,3 +1,4 @@
+import { buildPilotAnalyticalRunView } from '@/lib/ohworks-demo-analytical-run-view';
 import { buildPilotInstrumentReadinessView } from '@/lib/ohworks-demo-instrument-readiness-view';
 import { AlertOctagon, Cable, CheckCircle2, GitBranch, ShieldAlert } from 'lucide-react';
 import {
@@ -17,6 +18,7 @@ export default async function OHWorksInstrumentWorkbench({ searchParams }: PageP
   const params = searchParams ? await searchParams : undefined;
   const role = resolveRoleView(params?.role);
   const readiness = buildPilotInstrumentReadinessView();
+  const analyticalRun = buildPilotAnalyticalRunView();
 
   return (
     <div className="space-y-7">
@@ -176,6 +178,72 @@ export default async function OHWorksInstrumentWorkbench({ searchParams }: PageP
             </table>
           </div>
         ))}
+      </section>
+
+      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <h2 className="text-lg font-semibold text-teal-700">Analytical run checks — carryover and dilution (fabricated run)</h2>
+        <p className="mt-2 text-sm leading-6 text-slate-600">
+          A fabricated analyser run evaluated by the real rule modules. Thresholds, factors and ranges are
+          fabricated examples, not LIAISON XL specifications, and no instrument is connected.
+          Every value and outcome below is synthetic; no real SENAITE server or customer data is used.
+        </p>
+        <div className="mt-4 flex flex-wrap gap-3 text-sm font-semibold text-teal-800">
+          <p className="rounded-xl bg-teal-50 p-3">Synthetic results that must repeat: {analyticalRun.counts.mustRepeat}</p>
+          <p className="rounded-xl bg-teal-50 p-3">Synthetic reruns required: {analyticalRun.counts.rerunsRequired}</p>
+          <p className="rounded-xl bg-teal-50 p-3">Synthetic blocked readings: {analyticalRun.counts.blocked}</p>
+        </div>
+        <div className="mt-5 overflow-x-auto">
+          <table className="w-full min-w-[900px] text-left text-xs">
+            <caption className="pb-2 text-left text-sm font-semibold text-teal-700">Carryover — fabricated values and synthetic outcomes</caption>
+            <thead className="bg-slate-50 text-slate-600">
+              <tr>
+                {['Synthetic position / result', 'Fabricated value', 'Synthetic status', 'Synthetic contribution', 'Synthetic source position', 'Reason / explanation'].map((title) => (
+                  <th key={title} scope="col" className="px-3 py-2">{title}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {analyticalRun.carryoverRows.map((row) => (
+                <tr key={row.resultId}>
+                  <th scope="row" className="px-3 py-3 font-mono font-normal">{row.positionId}<p>{row.resultId}</p></th>
+                  <td className="px-3 py-3">{row.value}<p className="mt-1 text-slate-600">Fabricated wash before: {row.washBefore ? 'yes' : 'no'}</p></td>
+                  <td className="px-3 py-3">
+                    <span className={`whitespace-nowrap rounded-full px-2.5 py-1 font-semibold ${row.status === 'clear' ? 'bg-teal-50 text-teal-800' : row.status === 'must_repeat' ? 'bg-rose-50 text-rose-800' : 'bg-amber-50 text-amber-800'}`}>{row.status}</span>
+                  </td>
+                  <td className="px-3 py-3">{row.contributionText}</td>
+                  <td className="px-3 py-3 font-mono">{row.sourcePositionText}</td>
+                  <td className="px-3 py-3 text-slate-600"><span className="font-mono">{row.reasonCode}</span><p className="mt-1">{row.explanation}</p></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <div className="mt-5 overflow-x-auto">
+          <table className="w-full min-w-[900px] text-left text-xs">
+            <caption className="pb-2 text-left text-sm font-semibold text-teal-700">Dilution / rerun — fabricated readings, factors and synthetic outcomes</caption>
+            <thead className="bg-slate-50 text-slate-600">
+              <tr>
+                {['Fabricated reading', 'Fabricated raw reading (synthetic-units)', 'Fabricated applied factor', 'Synthetic decision', 'Synthetic next factor / limit / corrected result', 'Reason / explanation'].map((title) => (
+                  <th key={title} scope="col" className="px-3 py-2">{title}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {analyticalRun.dilutionRows.map((row) => (
+                <tr key={row.id}>
+                  <th scope="row" className="px-3 py-3 font-normal"><span className="font-mono">{row.id}</span><p className="mt-1">{row.label}</p></th>
+                  <td className="px-3 py-3">{row.rawReading}</td>
+                  <td className="px-3 py-3">{row.appliedDilutionFactor}</td>
+                  <td className="px-3 py-3">
+                    <span className={`whitespace-nowrap rounded-full px-2.5 py-1 font-semibold ${row.decision === 'block' ? 'bg-rose-50 text-rose-800' : row.decision === 'report_as_is' ? 'bg-teal-50 text-teal-800' : 'bg-amber-50 text-amber-800'}`}>{row.decision}</span>
+                  </td>
+                  <td className="px-3 py-3">{row.outcomeText}</td>
+                  <td className="px-3 py-3 text-slate-600"><span className="font-mono">{row.reasonCode}</span><p className="mt-1">{row.reason}</p></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </section>
 
       <section className="rounded-2xl border border-emerald-200 bg-emerald-50 p-6">
