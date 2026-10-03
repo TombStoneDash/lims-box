@@ -82,6 +82,20 @@ test('script and long input cannot be interpolated into suggestions', () => {
   }
 });
 
+test('an incidental substring cannot promote a suggestion while an exact word still routes', () => {
+  // "script" is a substring of "subscription" (implementation-fee's text), but it is
+  // not a real word in that text, so it must not promote the entry into a suggestion.
+  const hostile = askBot('<script>zzqxvbl</script>');
+  assert.equal(hostile.grounded, false);
+  assert.deepEqual(hostile.suggestions, defaults);
+  assert.ok(!hostile.suggestions?.includes(title('implementation-fee')));
+
+  // The real, exact word that legitimately appears in that same entry still routes.
+  const exact = askBot('subscription');
+  assert.equal(exact.grounded, true);
+  assert.equal(exact.sources[0]?.title, title('implementation-fee'));
+});
+
 test('default padding does not repeat a partial match', () => {
   const response = askBot('anytime');
   assert.equal(response.grounded, false);

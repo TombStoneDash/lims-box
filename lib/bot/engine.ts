@@ -68,13 +68,16 @@ export function tokenize(input: string): string[] {
 
 function scoreEntry(entry: CorpusEntry, tokens: string[]): number {
   const kw = new Set(entry.keywords);
-  const title = entry.title.toLowerCase();
-  const text = entry.text.toLowerCase();
+  // Match title/text as whole normalized tokens (via the same tokenizer used on the
+  // query), not raw substrings -> a token like "script" must not match inside an
+  // unrelated word like "subscription".
+  const titleTokens = new Set(tokenize(entry.title));
+  const textTokens = new Set(tokenize(entry.text));
   let score = 0;
   for (const t of tokens) {
     if (kw.has(t)) score += 3;
-    else if (title.includes(t)) score += 2;
-    else if (text.includes(t)) score += 1;
+    else if (titleTokens.has(t)) score += 2;
+    else if (textTokens.has(t)) score += 1;
   }
   return score;
 }
