@@ -6,6 +6,7 @@ import {
   resolveRoleView,
 } from '@/lib/ohworks-pilot';
 
+import { buildPilotAuditIntegrityView } from '@/lib/ohworks-demo-audit-integrity-view';
 import { buildPilotQualityEventsView } from '@/lib/ohworks-demo-quality-events-view';
 
 interface PageProps {
@@ -18,6 +19,7 @@ export default async function OHWorksAuditReadiness({ searchParams }: PageProps)
   const visibleAudit = getVisibleAudit(role.id);
   const visibleDiscovery = getVisibleDiscoveryRecords(role.id);
   const qualityEvents = buildPilotQualityEventsView();
+  const auditIntegrity = buildPilotAuditIntegrityView();
 
   return (
     <div className="space-y-7">
@@ -194,6 +196,131 @@ export default async function OHWorksAuditReadiness({ searchParams }: PageProps)
                           {entry.significanceLabel}
                         </span>
                         <p className="mt-2 leading-5 text-slate-600">{entry.explanation}</p>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <h2 className="text-lg font-semibold">Audit-chain integrity and record retention (fabricated)</h2>
+        <p className="mt-3 text-sm leading-6 text-slate-600">
+          All chains, records, and values below are fabricated. Retention periods are fabricated examples,
+          not regulatory guidance. NOTHING is purged or deleted — the manifest is a preview only.
+          No SENAITE server is connected to this panel.
+        </p>
+        <p className="mt-3 text-sm font-semibold text-teal-800">
+          Synthetic totals: {auditIntegrity.counts.brokenChains} broken chains ·{' '}
+          {auditIntegrity.counts.recordsEligible} records eligible · {auditIntegrity.counts.recordsHeld} records held
+        </p>
+        <p className="mt-2 break-all text-xs text-slate-500">Fabricated evaluation time: {auditIntegrity.currentAt}</p>
+        <div className="mt-6 space-y-6">
+          <div>
+            <h3 className="font-semibold text-teal-800">Fabricated audit chains</h3>
+            <div className="mt-3 overflow-x-auto">
+              <table className="w-full min-w-[700px] text-left text-xs">
+                <caption className="mb-3 text-left text-slate-500">
+                  Fabricated chains only; the synthetic hash is not cryptographic proof. Failure indices start at zero.
+                </caption>
+                <thead className="bg-slate-50 text-slate-500">
+                  <tr>
+                    <th scope="col" className="p-3">Synthetic scenario</th>
+                    <th scope="col" className="p-3">Status</th>
+                    <th scope="col" className="p-3">Entries</th>
+                    <th scope="col" className="p-3">Final hash / first failure</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {auditIntegrity.chains.map((chain) => (
+                    <tr key={chain.label}>
+                      <th scope="row" className="p-3 font-medium">{chain.label}</th>
+                      <td className="p-3">
+                        <span className={chain.status === 'VERIFIED'
+                          ? 'inline-block rounded-full bg-teal-100 px-2 py-1 font-semibold text-teal-900'
+                          : 'inline-block rounded-full bg-amber-100 px-2 py-1 font-semibold text-amber-900'}>
+                          {chain.status}
+                        </span>
+                      </td>
+                      <td className="p-3">{chain.entryCount}</td>
+                      <td className="p-3">
+                        {chain.finalHashPreview && <span className="font-mono">{chain.finalHashPreview}</span>}
+                        {chain.failure && <>
+                          <p className="font-semibold">Index {chain.failure.entryIndex} · {chain.failure.code}</p>
+                          <p className="mt-2 text-slate-600">{chain.reason}</p>
+                          <p className="mt-2 text-slate-600">{chain.nextAction}</p>
+                        </>}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div>
+            <h3 className="font-semibold text-teal-800">Fabricated record retention and manifest preview</h3>
+            <div className="mt-3 overflow-x-auto">
+              <table className="w-full min-w-[700px] text-left text-xs">
+                <caption className="mb-3 text-left text-slate-500">
+                  The chain and records are fabricated; retention periods are fabricated examples, not regulatory guidance.
+                  NOTHING is purged or deleted — the manifest is a preview only. Whole days are rounded down;
+                  past-end days do not override a hold.
+                </caption>
+                <thead className="bg-slate-50 text-slate-500">
+                  <tr>
+                    <th scope="col" className="p-3">Synthetic record</th>
+                    <th scope="col" className="p-3">Class</th>
+                    <th scope="col" className="p-3">Status</th>
+                    <th scope="col" className="p-3">Retention end (synthetic)</th>
+                    <th scope="col" className="p-3">Whole days remaining / overdue</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {auditIntegrity.records.map((record) => (
+                    <tr key={record.recordId}>
+                      <th scope="row" className="p-3 font-medium">{record.recordId}</th>
+                      <td className="p-3">{record.recordClass}</td>
+                      <td className="p-3">
+                        <span className={record.evaluation.status === 'held'
+                          ? 'inline-block rounded-full bg-amber-100 px-2 py-1 font-semibold text-amber-900'
+                          : 'inline-block rounded-full bg-teal-100 px-2 py-1 font-semibold text-teal-900'}>
+                          {record.evaluation.status}
+                        </span>
+                      </td>
+                      <td className="p-3 font-mono">{record.evaluation.retentionEndDate}</td>
+                      <td className="p-3">{record.wholeDays} {record.dayDirection}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <div className="mt-4 overflow-x-auto">
+              <table className="w-full min-w-[600px] text-left text-xs">
+                <caption className="mb-3 text-left text-slate-500">Fabricated purge-manifest attempts — preview only, no deletion.</caption>
+                <thead className="bg-slate-50 text-slate-500">
+                  <tr>
+                    <th scope="col" className="p-3">Synthetic records requested</th>
+                    <th scope="col" className="p-3">Outcome</th>
+                    <th scope="col" className="p-3">Explanation</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {auditIntegrity.purgeAttempts.map((attempt) => (
+                    <tr key={attempt.status}>
+                      <th scope="row" className="p-3 font-medium">{attempt.recordIds.join(', ')}</th>
+                      <td className="p-3">
+                        <span className={attempt.status === 'refused'
+                          ? 'inline-block rounded-full bg-amber-100 px-2 py-1 font-semibold text-amber-900'
+                          : 'inline-block rounded-full bg-teal-100 px-2 py-1 font-semibold text-teal-900'}>
+                          {attempt.status}
+                        </span>
+                      </td>
+                      <td className="p-3">
+                        {attempt.code && <p className="font-semibold">{attempt.code}</p>}
+                        <p className="mt-1 text-slate-600">{attempt.explanation}</p>
                       </td>
                     </tr>
                   ))}

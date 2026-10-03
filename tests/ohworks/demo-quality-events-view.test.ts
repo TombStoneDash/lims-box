@@ -88,11 +88,14 @@ test('builder is deterministic and contains no environment, clock, or network re
   assert.doesNotMatch(source, /Date\.now\s*\(|new Date\s*\(\s*\)|process\.env|fetch\s*\(/);
 });
 
-test('audit panel stays server-rendered and immediately precedes the real-data stop', () => {
+test('quality-events panel stays server-rendered and immediately precedes the audit-integrity panel', () => {
   const source = readFileSync(new URL('../../app/pilot/ohworks/audit/page.tsx', import.meta.url), 'utf8');
   assert.doesNotMatch(source, /use client|<form\b|fetch\s*\(/);
   assert.match(source, /const qualityEvents = buildPilotQualityEventsView\(\)/);
-  const panel = source.slice(source.indexOf('Quality events (fabricated)'), source.indexOf('Real-data stop'));
+  const panel = source.slice(
+    source.indexOf('Quality events (fabricated)'),
+    source.indexOf('Audit-chain integrity and record retention (fabricated)'),
+  );
   assert.equal((panel.match(/<section\b/g) ?? []).length, 1);
   assert.match(panel, /border-amber-200 bg-amber-50/);
   assert.match(panel, /entry\.explanation/);
