@@ -53,23 +53,31 @@ const LIMS_BOT_OVERVIEW_PATTERN =
 const SAMPLE_TRACKING_PATTERN =
   /\b(?:can|does)\s+(?:lims\s*box|it|this)\s+(?:track|manage)\s+samples?\b|\bsample\s+(?:tracking|traceability)\b/i;
 
-function tokenize(input: string): string[] {
+export function tokenize(input: string): string[] {
   return input
     .toLowerCase()
+    // Contractions lose only their apostrophe ending ("don't" -> "don", "let's" -> "let"), so no
+    // one-letter fragment like "t" or "s" is left to match unrelated corpus entries. Other one-character
+    // terms (a lone digit such as the 7 in "pH 7") are kept.
+    .replace(/['\u2019](?:t|s|m|d|re|ve|ll)\b/g, '')
     .replace(/[^a-z0-9$./\s-]/g, ' ')
     .split(/\s+/)
+    .map((t) => t.replace(/^[./-]+/, '').replace(/[./-]+$/, ''))
     .filter((t) => t.length > 0 && !STOPWORDS.has(t));
 }
 
 function scoreEntry(entry: CorpusEntry, tokens: string[]): number {
   const kw = new Set(entry.keywords);
-  const title = entry.title.toLowerCase();
-  const text = entry.text.toLowerCase();
+  // Match title/text as whole normalized tokens (via the same tokenizer used on the
+  // query), not raw substrings -> a token like "script" must not match inside an
+  // unrelated word like "subscription".
+  const titleTokens = new Set(tokenize(entry.title));
+  const textTokens = new Set(tokenize(entry.text));
   let score = 0;
   for (const t of tokens) {
     if (kw.has(t)) score += 3;
-    else if (title.includes(t)) score += 2;
-    else if (text.includes(t)) score += 1;
+    else if (titleTokens.has(t)) score += 2;
+    else if (textTokens.has(t)) score += 1;
   }
   return score;
 }

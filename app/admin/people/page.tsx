@@ -1,16 +1,8 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { StatusBadge, formatDate } from "../_components/StatusBadge";
-
-function worstStatus(comps: { status: string; expiresAt: Date | null }[]): string {
-  const now = new Date();
-  if (comps.some((c) => c.status === "overdue" || (c.expiresAt && c.expiresAt < now && c.status !== "completed"))) {
-    return "overdue";
-  }
-  if (comps.some((c) => c.status === "due")) return "due";
-  if (comps.length === 0) return "no records";
-  return "completed";
-}
+import { worstCompetencyStatus } from "@/lib/personnel-competency-status";
+import { adminMutationsEnabled } from "@/lib/admin-capabilities";
 
 export default async function PeopleListPage() {
   const people = await prisma.person.findMany({
@@ -21,6 +13,7 @@ export default async function PeopleListPage() {
     },
     orderBy: { name: "asc" },
   });
+  const mutationsEnabled = adminMutationsEnabled();
 
   return (
     <div className="space-y-6">
@@ -29,12 +22,19 @@ export default async function PeopleListPage() {
           <h1 className="text-2xl font-semibold">People</h1>
           <p className="text-sm text-slate-600 mt-1">{people.length} active</p>
         </div>
-        <Link
-          href="/admin/people/new"
-          className="inline-flex items-center rounded-md bg-slate-900 text-white px-4 py-2 text-sm font-medium hover:bg-slate-800"
-        >
-          Add person
-        </Link>
+        {!mutationsEnabled ? (
+          <div className="text-right max-w-xs space-y-1">
+            <p className="text-xs text-slate-500">
+              Adding people is disabled on this read-only view.
+            </p>
+            <Link
+              href="/demo/operator"
+              className="inline-flex items-center rounded-md bg-slate-900 text-white px-4 py-2 text-sm font-medium hover:bg-slate-800"
+            >
+              Open operator sandbox
+            </Link>
+          </div>
+        ) : null}
       </div>
 
       <div className="overflow-x-auto rounded-md border border-slate-200">
@@ -56,7 +56,7 @@ export default async function PeopleListPage() {
                 <td className="px-4 py-2 text-slate-700">{p.role}</td>
                 <td className="px-4 py-2 text-slate-600 font-mono text-xs">{p.cliaCertNumber || "—"}</td>
                 <td className="px-4 py-2">
-                  <StatusBadge status={worstStatus(p.competencies)} />
+                  <StatusBadge status={worstCompetencyStatus(p.competencies, new Date())} />
                 </td>
                 <td className="px-4 py-2 text-slate-600">
                   {p.trainings[0] ? `${p.trainings[0].course} · ${formatDate(p.trainings[0].completedAt)}` : "—"}

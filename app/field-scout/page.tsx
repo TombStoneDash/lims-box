@@ -6,6 +6,7 @@ import {
 } from '@/lib/fieldScout';
 
 export const metadata: Metadata = {
+  alternates: { canonical: '/field-scout' },
   title: 'Field Scout for water labs — LIMS BOX',
   description:
     'A mock, human-reviewed field-to-bench workflow for authorized water and environmental laboratory asset capture.',

@@ -1,5 +1,12 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+import {
+  countDueSoonCurrentCompetencies,
+  countOverdueCurrentCompetencies,
+} from "@/lib/personnel-competency-status";
+import { formatCalendarDate } from "@/lib/admin-calendar-date";
+import { CURRENT_AUTHORIZATION_WHERE } from "@/lib/current-authorization";
+import { recentSignOffWindow } from "@/lib/admin-signoff-stats";
 
 export const dynamic = "force-dynamic";
 
@@ -8,16 +15,13 @@ export default async function AdminDashboard() {
   const in30 = new Date(now);
   in30.setDate(in30.getDate() + 30);
 
-  const [peopleCount, overdueCount, dueIn30, upcomingSignOffs, reviewsDue, activeAuthCount, docCount] =
+  const [peopleCount, overdueRows, recentSignOffs, reviewsDue, activeAuthCount, docCount] =
     await Promise.all([
       prisma.person.count({ where: { active: true } }),
-      prisma.competency.count({
-        where: { OR: [{ status: "overdue" }, { expiresAt: { lt: now }, status: { not: "completed" } }] },
+      prisma.competency.findMany({
+        select: { personId: true, type: true, status: true, expiresAt: true, createdAt: true },
       }),
-      prisma.competency.count({
-        where: { expiresAt: { gte: now, lte: in30 }, status: { in: ["due", "overdue"] } },
-      }),
-      prisma.signOff.count({ where: { signedAt: { gte: now, lte: in30 } } }),
+      prisma.signOff.count({ where: { signedAt: recentSignOffWindow(now) } }),
       // Reviews due in next 30 days (ISO 15189 §6.2.2)
       prisma.reviewEvent.findMany({
         where: { nextReviewDue: { gte: now, lte: in30 } },
@@ -28,10 +32,13 @@ export default async function AdminDashboard() {
         take: 10,
       }),
       // Active procedure authorizations (ISO 15189 §6.2.4)
-      prisma.authorization.count({ where: { isActive: true } }),
+      prisma.authorization.count({ where: CURRENT_AUTHORIZATION_WHERE }),
       // Controlled documents (ISO 15189 §4.3)
       prisma.document.count({ where: { archivedAt: null } }),
     ]);
+
+  const overdueCount = countOverdueCurrentCompetencies(overdueRows, now);
+  const dueIn30 = countDueSoonCurrentCompetencies(overdueRows, now, in30);
 
   return (
     <div className="space-y-8">
@@ -50,8 +57,8 @@ export default async function AdminDashboard() {
       </div>
 
       <div className="text-sm text-slate-500">
-        Upcoming director sign-offs in next 30 days:{" "}
-        <strong className="text-slate-900">{upcomingSignOffs}</strong>
+        Director sign-offs in the previous 30 days:{" "}
+        <strong className="text-slate-900">{recentSignOffs}</strong>
       </div>
 
       {/* ISO 15189 stats */}
@@ -105,11 +112,7 @@ export default async function AdminDashboard() {
                     <td className="px-4 py-2 font-medium">{ev.competency.person.name}</td>
                     <td className="px-4 py-2 text-slate-600">{ev.competency.type}</td>
                     <td className="px-4 py-2 text-amber-700 font-medium">
-                      {ev.nextReviewDue?.toLocaleDateString("en-US", {
-                        year: "numeric",
-                        month: "short",
-                        day: "numeric",
-                      }) ?? "—"}
+                      {formatCalendarDate(ev.nextReviewDue)}
                     </td>
                     <td className="px-4 py-2">
                       <Link

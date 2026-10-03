@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
+  alternates: { canonical: "/clinical" },
   title: "LIMS BOX for clinical labs — local-first documentation continuity",
   description:
     "Local-first documentation layer for CLIA-certified clinical labs. Survey-readiness organization. Human-reviewed drafting. Not a LIMS replacement. See a synthetic demo — no customer data, no live LIS integration.",
@@ -15,7 +16,7 @@ const DEMONSTRATED_TODAY = [
 
 const COMING_SOON = [
   "Direct LIS or EHR integration — not built, and the demo below is not connected to any lab's live system.",
-  "Native instrument integrations beyond CSV/XML file import.",
+  "Instrument result import. Today there is only a CSV reader for one analyzer, used in testing.",
   "Automated compliance submission — drafts are always human-reviewed before approval, not auto-filed.",
 ] as const;
 

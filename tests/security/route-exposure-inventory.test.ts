@@ -12,9 +12,12 @@ export const KNOWN_UNPROTECTED_PENDING_OWNER_DECISION: readonly string[] = [
   "/pilot/ohworks/audit/export",
   "/pilot/ohworks/bot",
   "/pilot/ohworks/bot/api",
+  "/pilot/ohworks/critical-results",
   "/pilot/ohworks/instrument",
   "/pilot/ohworks/personnel",
   "/pilot/ohworks/qc",
+  "/pilot/ohworks/reports",
+  "/pilot/ohworks/result-review",
   "/pilot/ohworks/samples",
 ];
 
@@ -58,6 +61,8 @@ const PUBLIC_BY_DESIGN: readonly { path: string; reason: string }[] = [
   { path: "/faq", reason: "Public product questions and answers." },
   { path: "/field-scout", reason: "Public field-workflow examples and interest form." },
   { path: "/for/cannabis-labs", reason: "Public cannabis-lab product information." },
+  { path: "/for/clinical-labs", reason: "Public clinical-lab product information." },
+  { path: "/for/diagnostics-labs", reason: "Public diagnostics-lab product information." },
   { path: "/for/environmental-labs", reason: "Public environmental-lab product information." },
   { path: "/partners", reason: "Public partnership information." },
   { path: "/personnel-pack", reason: "Public documentation-pack request form." },

@@ -1,15 +1,10 @@
 'use client';
 
-import { useState } from 'react';
 import Link from 'next/link';
-import { FlaskConical, ChevronDown } from 'lucide-react';
+import { FlaskConical } from 'lucide-react';
 import { WaitlistFooter } from '@/components/WaitlistFooter';
 
-interface FAQ {
-  question: string;
-  answer: string;
-  category: string;
-}
+import { FAQItem, type FAQ } from './faq-item';
 
 const faqs: FAQ[] = [
   {
@@ -30,7 +25,7 @@ const faqs: FAQ[] = [
   {
     category: 'Pricing & Contracts',
     question: 'What does LIMS BOX cost?',
-    answer: 'Plans start at $500/month for up to 3 users. The Growth plan at $1,200/month supports up to 10 users with instrument integration and advanced reporting. No implementation fee, no long-term contract, cancel anytime. See our pricing page for full details.',
+    answer: 'Plans start at $500/month for up to 3 users. The Growth plan at $1,200/month supports up to 10 users with advanced reporting. Instrument integration is planned and not built yet. No implementation fee, no long-term contract, cancel anytime. See our pricing page for full details.',
   },
   {
     category: 'Pricing & Contracts',
@@ -65,7 +60,7 @@ const faqs: FAQ[] = [
   {
     category: 'Technical',
     question: 'Can LIMS BOX integrate with our instruments?',
-    answer: 'Yes. LIMS BOX supports direct instrument integration via CSV, XML, and common data formats. ICP-MS, GC-MS, IC, UV-Vis, and other instruments that export data files can be connected. The Growth and Enterprise plans include instrument integration setup.',
+    answer: 'Not yet as a general feature. Today there is a CSV reader for one analyzer, used in testing only. Importing results from other instruments and file formats is planned. Tell us which instruments you run and we will say what that would take.',
   },
   {
     category: 'Technical',
@@ -103,29 +98,6 @@ const faqJsonLd = {
     },
   })),
 };
-
-function FAQItem({ faq }: { faq: FAQ }) {
-  const [open, setOpen] = useState(false);
-
-  return (
-    <div className="border-b border-black/5 dark:border-white/5">
-      <button
-        onClick={() => setOpen(!open)}
-        className="w-full flex items-start justify-between py-5 text-left"
-      >
-        <span className="font-medium text-slate-900 dark:text-white pr-4 text-sm">{faq.question}</span>
-        <ChevronDown
-          className={`w-5 h-5 text-slate-400 shrink-0 transition-transform ${open ? 'rotate-180' : ''}`}
-        />
-      </button>
-      {open && (
-        <div className="pb-5 text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
-          {faq.answer}
-        </div>
-      )}
-    </div>
-  );
-}
 
 export default function FAQPage() {
   return (

@@ -1,3 +1,5 @@
+import { buildPilotQualityIndicatorsView } from '@/lib/ohworks-demo-quality-indicators-view';
+import { FacilityReadinessPanel } from '@/app/pilot/ohworks/_components/facility-readiness-panel';
 import Link from 'next/link';
 import { ArrowRight, Bot, Filter, ShieldAlert, Waypoints } from 'lucide-react';
 import {
@@ -22,6 +24,8 @@ export default async function OHWorksPilotOverview({ searchParams }: PageProps) 
   const visiblePersonnel = getVisiblePersonnel(role.id);
   const visibleAudit = getVisibleAudit(role.id);
   const visibleDiscovery = getVisibleDiscoveryRecords(role.id);
+
+  const quality = buildPilotQualityIndicatorsView();
 
   const cards = [
     {
@@ -154,6 +158,62 @@ export default async function OHWorksPilotOverview({ searchParams }: PageProps) 
           </div>
         </div>
       </section>
+
+      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-teal-700">Synthetic demonstration data only</p>
+        <h2 className="mt-2 text-lg font-semibold">Monthly quality indicators and proficiency testing (fabricated month)</h2>
+        <p className="mt-3 text-sm leading-6 text-slate-600">
+          {quality.period}: a fabricated month evaluated by the real rule modules. All values, targets, windows and
+          event limits shown are fabricated examples, not benchmarks or regulatory limits. No real SENAITE server
+          or customer data is behind this panel. The same synthetic content is shown for every role.
+        </p>
+        <div className="mt-5 grid gap-4 md:grid-cols-2">
+          {quality.indicators.map((row) => (
+            <div key={row.label} className="rounded-xl border border-slate-200 p-4">
+              <h3 className="text-sm font-semibold">{row.label}</h3>
+              <span className={`mt-2 inline-block rounded-full px-2 py-1 text-xs font-semibold ${row.meetsTarget === null ? 'bg-slate-100 text-slate-700' : row.meetsTarget ? 'bg-teal-50 text-teal-800' : 'bg-amber-50 text-amber-800'}`}>{row.status}</span>
+              <p className="mt-2 text-sm">Synthetic rate: {row.rate} ({row.numerator}/{row.denominator})</p>
+              <p className="mt-1 text-xs text-slate-600">Fabricated target: {row.target} · {row.direction} is better</p>
+              {row.ratePercent !== null && (
+                <div aria-hidden="true" className="relative mt-3 h-2 rounded-full bg-slate-100">
+                  <div className="h-2 rounded-full bg-teal-500" style={{ width: `${row.ratePercent}%` }} />
+                  <span className="absolute -top-1 h-4 border-l-2 border-slate-700" style={{ left: `${row.targetPercent}%` }} />
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+        <p className="mt-3 text-xs text-slate-500">Synthetic bars show rate on a 0–100% scale; the dark marker shows the fabricated target. No bar is shown for an unmeasurable period.</p>
+        <div className="mt-6 overflow-x-auto">
+          <table className="w-full min-w-[760px] text-left text-sm">
+            <caption className="mb-3 text-left font-semibold">Fabricated proficiency-testing events — every value and outcome is synthetic</caption>
+            <thead className="border-b border-slate-200 text-xs uppercase text-slate-500">
+              <tr><th scope="col" className="p-2">Synthetic event / consensus</th><th scope="col" className="p-2">Assigned / SD</th><th scope="col" className="p-2">Satisfactory / questionable / unsatisfactory</th><th scope="col" className="p-2">Satisfactory rate</th><th scope="col" className="p-2">Outcome / reasons</th></tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {quality.ptEvents.map((event) => (
+                <tr key={event.label}>
+                  <td className="p-2">{event.label}<br />{event.consensusSource}</td>
+                  <td className="p-2">{event.assignedValue} / {event.standardDeviation}</td>
+                  <td className="p-2">{event.satisfactoryCount} / {event.questionableCount} / {event.unsatisfactoryCount}</td>
+                  <td className="p-2">{event.satisfactoryRate}</td>
+                  <td className="p-2"><span className="font-semibold">{event.outcome}</span>{event.failReasonExplanations.map((reason) => <p key={reason} className="mt-1 text-xs text-slate-600">{reason}</p>)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        {quality.ptEvents.map((event) => (
+          <details key={event.label} className="mt-4 rounded-xl border border-slate-200 p-4">
+            <summary className="cursor-pointer text-sm font-semibold text-teal-800">{event.label}: fabricated participant scores</summary>
+            <ul className="mt-3 space-y-2 text-xs text-slate-600">
+              {event.participantScores.map((score) => <li key={score.participantId}>{score.participantId}: synthetic z-score {score.zScore} · {score.classification}. {score.explanation}</li>)}
+            </ul>
+          </details>
+        ))}
+      </section>
+
+      <FacilityReadinessPanel />
 
       <section className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
         <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">

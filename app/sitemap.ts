@@ -14,6 +14,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: '/blog', priority: 0.8, changeFrequency: 'daily' as const },
     { url: '/for/environmental-labs', priority: 0.9, changeFrequency: 'weekly' as const },
     { url: '/for/cannabis-labs', priority: 0.9, changeFrequency: 'weekly' as const },
+    { url: '/for/clinical-labs', priority: 0.9, changeFrequency: 'weekly' as const },
+    { url: '/for/diagnostics-labs', priority: 0.9, changeFrequency: 'weekly' as const },
     { url: '/case-study', priority: 0.8, changeFrequency: 'monthly' as const },
     { url: '/roi-calculator', priority: 0.8, changeFrequency: 'monthly' as const },
     // Added 2026-06-02 — sitemap completeness audit (fix/sitemap-completeness-2026-06-02)
@@ -33,6 +35,10 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: '/start', priority: 0.6, changeFrequency: 'monthly' as const },
     // Added 2026-08-08 — water-lane funnel discoverability (issue #72 pass)
     { url: '/field-scout', priority: 0.8, changeFrequency: 'weekly' as const },
+    // Added 2026-09-20 — public CLIA product pages completeness audit
+    { url: '/clia', priority: 0.8, changeFrequency: 'monthly' as const },
+    { url: '/clia-tracker', priority: 0.8, changeFrequency: 'monthly' as const },
+    { url: '/survey-ready-export', priority: 0.8, changeFrequency: 'monthly' as const },
   ]
 
   const blogPosts = getAllPosts().map((post) => ({

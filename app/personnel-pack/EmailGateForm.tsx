@@ -112,14 +112,14 @@ export function createEmailGateController(fetchImpl: typeof fetch = fetch) {
 export function EmailGateFeedback({ state }: { state: EmailGateState }) {
   if (state.kind === 'pending') {
     return (
-      <p role="status" aria-live="polite" className="text-amber-300 text-xs">
+      <p role="status" aria-live="polite" className="text-amber-300 text-sm">
         {state.message}
       </p>
     );
   }
   if (state.kind === 'unavailable') {
     return (
-      <p role="alert" aria-live="assertive" className="text-red-400 text-xs">
+      <p role="alert" aria-live="assertive" className="text-red-300 text-sm">
         {state.message}
       </p>
     );
@@ -181,30 +181,56 @@ export function EmailGateForm() {
             </p>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="flex flex-col gap-3">
-            <input
-              type="email"
-              required
-              placeholder="your@lab.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              disabled={submitting}
-              className="bg-white/10 border border-white/20 rounded-lg px-4 py-2.5 text-sm
-                         text-white placeholder:text-slate-500 focus:outline-none
-                         focus:border-[#2E8B57]/60 w-full disabled:opacity-60"
-            />
-            <select
-              required
-              value={accredType}
-              onChange={(e) => setAccredType(e.target.value)}
-              disabled={submitting}
-              className="bg-white/10 border border-white/20 rounded-lg px-4 py-2.5 text-sm
-                         text-slate-300 focus:outline-none focus:border-[#2E8B57]/60 w-full
-                         appearance-none disabled:opacity-60"
-            >
-              <option value="">Select your pack</option>
-              <option value="iso15189">ISO 15189 pack (reviewed)</option>
-            </select>
+          <form
+            onSubmit={handleSubmit}
+            className="flex flex-col gap-3"
+            aria-describedby="personnel-pack-form-note"
+          >
+            <div>
+              <label
+                htmlFor="personnel-pack-email"
+                className="block text-sm font-medium text-slate-200 mb-1"
+              >
+                Work e-mail
+              </label>
+              <input
+                id="personnel-pack-email"
+                name="email"
+                type="email"
+                required
+                placeholder="your@lab.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                disabled={submitting}
+                autoComplete="email"
+                inputMode="email"
+                className="bg-white/10 border border-white/20 rounded-lg px-4 py-2.5 text-sm
+                           text-white placeholder:text-slate-500 focus:outline-none
+                           focus:border-[#2E8B57]/60 w-full disabled:opacity-60"
+              />
+            </div>
+            <div>
+              <label
+                htmlFor="personnel-pack-choice"
+                className="block text-sm font-medium text-slate-200 mb-1"
+              >
+                Which pack do you need?
+              </label>
+              <select
+                id="personnel-pack-choice"
+                name="accredType"
+                required
+                value={accredType}
+                onChange={(e) => setAccredType(e.target.value)}
+                disabled={submitting}
+                className="bg-white/10 border border-white/20 rounded-lg px-4 py-2.5 text-sm
+                           text-slate-300 focus:outline-none focus:border-[#2E8B57]/60 w-full
+                           appearance-none disabled:opacity-60"
+              >
+                <option value="">Select your pack</option>
+                <option value="iso15189">ISO 15189 pack (reviewed)</option>
+              </select>
+            </div>
             <button
               type="submit"
               disabled={submitting}
@@ -218,7 +244,7 @@ export function EmailGateForm() {
 
             <EmailGateFeedback state={state} />
 
-            <p className="text-xs text-slate-500">
+            <p id="personnel-pack-form-note" className="text-xs text-slate-500">
               No phone required. No spam. Unsubscribe anytime.
             </p>
             <p className="text-xs text-slate-500">

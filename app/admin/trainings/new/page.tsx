@@ -24,7 +24,7 @@ export default async function NewTrainingPage({
         <Field name="course" label="Course title" required />
         <Field name="provider" label="Provider (optional)" />
         <Field name="completedAt" label="Completed date" type="date" required />
-        <Field name="hours" label="Hours (optional)" type="number" step="0.5" />
+        <Field name="hours" label="Hours (optional)" type="number" step="0.5" min="0" />
         <Field
           name="certificate"
           label="Certificate filename (manual upload reference)"
@@ -57,6 +57,7 @@ function Field({
   label,
   type = "text",
   step,
+  min,
   placeholder,
   required = false,
 }: {
@@ -64,6 +65,7 @@ function Field({
   label: string;
   type?: string;
   step?: string;
+  min?: string;
   placeholder?: string;
   required?: boolean;
 }) {
@@ -74,6 +76,7 @@ function Field({
         name={name}
         type={type}
         step={step}
+        min={min}
         placeholder={placeholder}
         required={required}
         className="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"

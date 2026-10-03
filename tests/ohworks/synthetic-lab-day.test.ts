@@ -120,3 +120,162 @@ test('library is in-process and has no clock, environment, network or JSON impor
     assert.doesNotMatch(source, forbidden);
   }
 });
+
+function extendedFixture(): SyntheticLabDayInput {
+  const input = fixture();
+  input.extended = {
+    stability: { bySpecimenId: {
+      [input.results[0].specimenId]: {
+        collectedAt: '2026-09-19T09:00:00Z',
+        history: [{ condition: 'room-temp', at: '2026-09-19T09:00:00Z' }],
+        windows: [{ condition: 'room-temp', maxDurationMs: 30 * 60_000 }],
+      },
+    } },
+    criticalRepeat: {
+      policies: [{ analyteCode: 'GLUCOSE', unit: 'mmol/L', repeatRequired: true, tolerance: { absolute: 1, percent: null }, maxRepeats: 2 }],
+      repeatsByResultId: {},
+    },
+    reflex: {
+      knownAnalytes: ['GLUCOSE', 'SYNTHETIC-REFLEX'],
+      rules: [{ id: 'SYNTHETIC-REFLEX-RULE', triggerAnalyte: 'GLUCOSE', comparison: 'gte', threshold: 5, reflexAnalytes: ['SYNTHETIC-REFLEX'], maxReflexDepth: 1 }],
+    },
+    reportingFormats: [{ analyteCode: 'GLUCOSE', unit: 'mmol/L', decimalPlaces: 2, belowDetectionSymbol: '<', belowDetectionLimit: 0.1, aboveQuantitationSymbol: '>', aboveQuantitationLimit: 30, qualitativeThresholds: null }],
+  };
+  return input;
+}
+
+test('expired stability holds but all later extended stages still run in order', () => {
+  const report = runSyntheticLabDay(extendedFixture());
+  const result = report.results[0];
+  assert.equal(result.stability?.status, 'expired');
+  assert.equal(result.outcome, 'HOLD');
+  assert.ok(result.holdReasonCodes.includes('window-exceeded'));
+  assert.deepEqual(result.trace.map(t => t.step), ['effective-definition', 'specimen-stability', 'unit-conversion', 'reference-range', 'delta-check', 'qc-rules', 'volume-ledger', 'autoverification', 'reflex-plan', 'reporting-format', 'turnaround-time']);
+  assert.match(result.trace[1].explanation, /exceeded/);
+  assert.equal(result.reportString, '5.00 mmol/L');
+  assert.deepEqual(result.reflexAdditions, ['SYNTHETIC-REFLEX']);
+  const undeclared = report.results.find(r => r.resultId === 'SYNTHETIC-NEW')!;
+  assert.equal(undeclared.outcome, 'AUTO_RELEASE');
+  assert.equal(undeclared.trace[1].decision, 'not-declared');
+  assert.equal(Object.hasOwn(undeclared, 'stability'), false);
+});
+
+test('critical repeat uses converted units and retains the critical hold pending or confirmed', () => {
+  for (const confirmed of [false, true]) {
+    const input = extendedFixture();
+    input.results = [{ ...input.results[0], value: 468 }];
+    const result = input.results[0];
+    if (confirmed) input.extended!.criticalRepeat!.repeatsByResultId[result.resultId] = [{ subjectId: result.subjectId, analyteCode: result.analyteCode, value: 26.5, unit: 'mmol/L', capturedAt: '2026-09-19T10:05:00Z' }];
+    const report = runSyntheticLabDay(input);
+    const output = report.results[0];
+    assert.equal(output.converted?.value, 25.98);
+    assert.equal(output.criticalRepeat?.status, confirmed ? 'confirmed' : 'pending');
+    assert.equal(output.criticalRepeat?.notifyAllowed, confirmed);
+    assert.equal(output.outcome, 'HOLD'); // Stability hold must survive confirmation.
+    assert.ok(output.holdReasonCodes.includes('value-critical'));
+    const steps = output.trace.map(t => t.step);
+    assert.equal(steps[steps.indexOf('autoverification') + 1], 'critical-repeat');
+    assert.equal(steps[steps.indexOf('critical-repeat') + 1], 'reflex-plan');
+    assert.equal(report.extendedTotals?.criticalNotifyBlocked, confirmed ? 0 : 1);
+  }
+});
+
+test('critical repeat is skipped for noncritical values or missing analyte policies', () => {
+  for (const critical of [false, true]) {
+    const input = fixture();
+    input.results = [{ ...input.results[0], value: critical ? 468 : 90 }];
+    input.extended = { criticalRepeat: extendedFixture().extended!.criticalRepeat };
+    if (critical) input.extended.criticalRepeat!.policies = [];
+    const output = runSyntheticLabDay(input).results[0];
+    assert.equal(Object.hasOwn(output, 'criticalRepeat'), false);
+    assert.ok(output.trace.every(t => t.step !== 'critical-repeat'));
+  }
+});
+
+test('reflex cycles and excessive declared depth block and hold an otherwise clean result', () => {
+  for (const cycle of [true, false]) {
+    const input = fixture();
+    input.results = [input.results[0]];
+    const reflex = extendedFixture().extended!.reflex!;
+    reflex.knownAnalytes.push('SYNTHETIC-SECOND-REFLEX');
+    reflex.rules.push({ ...reflex.rules[0], id: 'SYNTHETIC-SECOND-RULE', triggerAnalyte: 'SYNTHETIC-REFLEX', reflexAnalytes: [cycle ? 'GLUCOSE' : 'SYNTHETIC-SECOND-REFLEX'] });
+    input.extended = { reflex };
+    const output = runSyntheticLabDay(input).results[0];
+    assert.equal(output.outcome, 'HOLD');
+    assert.ok(output.holdReasonCodes.includes(cycle ? 'rule-cycle-detected' : 'reflex-depth-exceeded'));
+    assert.equal(output.trace.find(t => t.step === 'reflex-plan')?.decision, 'blocked');
+    assert.equal(Object.hasOwn(output, 'reflexAdditions'), false);
+    assert.equal(output.trace.at(-1)?.step, 'turnaround-time');
+  }
+});
+
+test('reporting censors converted values and holds missing formats before turnaround', () => {
+  const input = fixture();
+  input.results = [{ ...input.results[0], value: 0.9 }];
+  input.extended = { reportingFormats: extendedFixture().extended!.reportingFormats };
+  const report = runSyntheticLabDay(input);
+  assert.equal(report.results[0].reportString, '<0.1 mmol/L');
+  assert.equal(report.extendedTotals?.censoredReports, 1);
+  assert.equal(report.results[0].trace.at(-2)?.decision, 'below-detection');
+  input.results[0].value = 90;
+  input.extended.reportingFormats = [];
+  const missing = runSyntheticLabDay(input).results[0];
+  assert.equal(missing.outcome, 'HOLD');
+  assert.ok(missing.holdReasonCodes.includes('unknown-analyte'));
+  assert.equal(missing.trace.at(-2)?.step, 'reporting-format');
+  assert.deepEqual(missing.trace.at(-2)?.reasonCodes, ['unknown-analyte']);
+  assert.ok(missing.trace.at(-2)!.explanation.length > 0);
+  assert.equal(missing.trace.at(-1)?.step, 'turnaround-time');
+  assert.equal(Object.hasOwn(missing, 'reportString'), false);
+});
+
+test('typed stability and repeat policy errors hold with trace explanations', () => {
+  const input = extendedFixture();
+  input.results = [{ ...input.results[0], value: 468 }];
+  input.extended!.stability!.bySpecimenId[input.results[0].specimenId].windows = [];
+  input.extended!.criticalRepeat!.policies[0].maxRepeats = 0;
+  const output = runSyntheticLabDay(input).results[0];
+  assert.equal(output.outcome, 'HOLD');
+  for (const code of ['windows-empty', 'policy-max-repeats-invalid']) {
+    assert.ok(output.holdReasonCodes.includes(code));
+    assert.ok(output.trace.find(t => t.reasonCodes.includes(code))!.explanation.length > 0);
+  }
+  assert.equal(output.trace.at(-1)?.step, 'turnaround-time');
+});
+
+test('extended totals reconcile and extended runs are deterministic without input mutation', () => {
+  const input = extendedFixture();
+  input.results[1].value = 468;
+  input.results[2].value = 0.9;
+  const before = structuredClone(input);
+  const report = runSyntheticLabDay(input);
+  assert.deepEqual(input, before);
+  assert.deepEqual(runSyntheticLabDay(input), report);
+  assert.deepEqual(report.extendedTotals, {
+    stabilityExpired: report.results.filter(r => r.stability?.status === 'expired').length,
+    criticalNotifyBlocked: report.results.filter(r => r.criticalRepeat?.notifyAllowed === false).length,
+    reflexAdditions: report.results.reduce((sum, r) => sum + (r.reflexAdditions?.length ?? 0), 0),
+    censoredReports: report.results.filter(r => r.trace.some(t => t.step === 'reporting-format' && ['below-detection', 'above-quantitation'].includes(t.decision))).length,
+  });
+  assert.equal(report.extendedTotals?.stabilityExpired, 1);
+  assert.equal(report.extendedTotals?.criticalNotifyBlocked, 2);
+  assert.equal(report.extendedTotals?.censoredReports, 1);
+  assert.ok(report.extendedTotals!.reflexAdditions > 0);
+  assert.equal(report.totals.released + report.totals.held, input.results.length);
+});
+
+test('original fixture has no extended keys and only the original eight step names', () => {
+  const input = fixture();
+  const report = runSyntheticLabDay(input);
+  assert.equal(Object.hasOwn(report, 'extendedTotals'), false);
+  const originalSteps = ['effective-definition', 'unit-conversion', 'reference-range', 'delta-check', 'qc-rules', 'volume-ledger', 'autoverification', 'turnaround-time'];
+  assert.deepEqual([...new Set(report.results.flatMap(r => r.trace.map(t => t.step)))], originalSteps);
+  for (const result of report.results) {
+    for (const key of ['stability', 'criticalRepeat', 'reflexAdditions', 'reportString']) assert.equal(Object.hasOwn(result, key), false);
+  }
+  input.extended = {};
+  const empty = runSyntheticLabDay(input);
+  assert.deepEqual(empty.results, report.results);
+  assert.deepEqual(empty.totals, report.totals);
+  assert.deepEqual(empty.extendedTotals, { stabilityExpired: 0, criticalNotifyBlocked: 0, reflexAdditions: 0, censoredReports: 0 });
+});

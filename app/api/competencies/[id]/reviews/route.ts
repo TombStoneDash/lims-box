@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import {
   apiError,
-  pagedResponse,
+  pagedResponseLookahead,
   parsePagination,
   REVIEW_TYPES,
   REVIEW_OUTCOMES,
@@ -25,11 +25,11 @@ export async function GET(req: NextRequest, { params }: Params) {
   const events = await prisma.reviewEvent.findMany({
     where: { competencyId: id },
     orderBy: { reviewedAt: "desc" },
-    take: limit,
+    take: limit + 1,
     ...(cursor ? { skip: 1, cursor: { id: cursor } } : {}),
   });
 
-  return pagedResponse(events, limit);
+  return pagedResponseLookahead(events, limit);
 }
 
 /** POST /api/competencies/:id/reviews — log a review event */

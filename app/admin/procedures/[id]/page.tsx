@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { formatDate } from "../../_components/StatusBadge";
+import { formatDate, formatTimestampDate } from "../../_components/StatusBadge";
 
 export const dynamic = "force-dynamic";
 
@@ -114,7 +114,7 @@ export default async function ProcedureDetailPage({ params }: { params: Promise<
                   <tr key={auth.id}>
                     <td className="px-4 py-2 text-slate-500">{auth.person.name}</td>
                     <td className="px-4 py-2 text-slate-500">{formatDate(auth.authorizedAt)}</td>
-                    <td className="px-4 py-2 text-slate-500">{formatDate(auth.revokedAt)}</td>
+                    <td className="px-4 py-2 text-slate-500">{formatTimestampDate(auth.revokedAt)}</td>
                     <td className="px-4 py-2 text-slate-500">{auth.revokedBy ?? "—"}</td>
                     <td className="px-4 py-2 text-slate-500">{auth.revocationReason ?? "—"}</td>
                   </tr>

@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
+  alternates: { canonical: "/start" },
   title: "LIMS BOX — Choose your lab type",
   description:
     "Workflow documentation support and offline continuity for labs that can't afford to stop.",

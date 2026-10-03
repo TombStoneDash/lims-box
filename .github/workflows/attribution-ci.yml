@@ -33,7 +33,7 @@ concurrency:
 
 jobs:
   verify:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, daisy]
     timeout-minutes: 15
     steps:
       - name: Check out repository

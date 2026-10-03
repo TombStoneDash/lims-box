@@ -6,19 +6,29 @@ import {
   ClipboardCheck, FileText, Microscope, BadgeCheck,
 } from 'lucide-react';
 import { withCampaignAttribution } from '@/lib/leadAttribution';
+import { COLA_EVENT, colaEventPhase } from '@/lib/cola-event';
 
-export const metadata: Metadata = {
-  title: 'Meet LIMS BOX at COLA Forum Nashville — May 6–8, 2026',
-  description:
-    'See a live SENAITE-powered LIMS demo and apply to the early-adopter pilot at COLA Forum Nashville, May 6–8, 2026. Book a 15-minute meeting with the founder.',
-  alternates: { canonical: '/cola' },
-  openGraph: {
-    title: 'Meet LIMS BOX at COLA Forum Nashville — May 6–8, 2026',
+// Evaluate the date for each request so the event cannot stay live in a static build.
+export const dynamic = 'force-dynamic';
+
+export function generateMetadata(): Metadata {
+  const title = colaEventPhase(new Date()) === 'past'
+    ? 'We met labs at COLA Forum Nashville, May 6–8, 2026'
+    : 'Meet LIMS BOX at COLA Forum Nashville — May 6–8, 2026';
+
+  return {
+    title,
     description:
-      'Live demo, early-adopter program, and 15-minute founder meetings at COLA Forum Nashville.',
-    url: 'https://lims.bot/cola',
-  },
-};
+      'See a live SENAITE-powered LIMS demo and apply to the early-adopter pilot at COLA Forum Nashville, May 6–8, 2026. Book a 15-minute meeting with the founder.',
+    alternates: { canonical: '/cola' },
+    openGraph: {
+      title,
+      description:
+        'Live demo, early-adopter program, and 15-minute founder meetings at COLA Forum Nashville.',
+      url: 'https://lims.bot/cola',
+    },
+  };
+}
 
 const CALENDLY_BASE =
   process.env.NEXT_PUBLIC_CALENDLY_URL || 'https://calendly.com/hudtaylor/cola-nashville';
@@ -50,35 +60,39 @@ const agenda = [
 ];
 
 export default function ColaPage() {
+  const phase = colaEventPhase(new Date());
+
   return (
     <div className="min-h-screen bg-[#0F172A] text-white">
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify({
-            '@context': 'https://schema.org',
-            '@type': 'Event',
-            name: 'LIMS BOX at COLA Forum 2026',
-            description:
-              'Meet the LIMS BOX team at COLA Forum Nashville — live SENAITE demo, early-adopter pilot applications, and 15-minute founder meetings.',
-            startDate: '2026-05-06',
-            endDate: '2026-05-08',
-            eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode',
-            eventStatus: 'https://schema.org/EventScheduled',
-            location: {
-              '@type': 'Place',
-              name: 'Gaylord Opryland Resort & Convention Center',
-              address: {
-                '@type': 'PostalAddress',
-                addressLocality: 'Nashville',
-                addressRegion: 'TN',
-                addressCountry: 'US',
+      {phase !== 'past' && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              '@context': 'https://schema.org',
+              '@type': 'Event',
+              name: 'LIMS BOX at COLA Forum 2026',
+              description:
+                'Meet the LIMS BOX team at COLA Forum Nashville — live SENAITE demo, early-adopter pilot applications, and 15-minute founder meetings.',
+              startDate: COLA_EVENT.start,
+              endDate: COLA_EVENT.end,
+              eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode',
+              eventStatus: 'https://schema.org/EventScheduled',
+              location: {
+                '@type': 'Place',
+                name: 'Gaylord Opryland Resort & Convention Center',
+                address: {
+                  '@type': 'PostalAddress',
+                  addressLocality: 'Nashville',
+                  addressRegion: 'TN',
+                  addressCountry: 'US',
+                },
               },
-            },
-            organizer: { '@type': 'Organization', name: 'LIMS BOX', url: 'https://lims.bot' },
-          }),
-        }}
-      />
+              organizer: { '@type': 'Organization', name: 'LIMS BOX', url: 'https://lims.bot' },
+            }),
+          }}
+        />
+      )}
 
       {/* Header */}
       <header className="bg-black/40 backdrop-blur-sm border-b border-white/5">
@@ -105,10 +119,14 @@ export default function ColaPage() {
             <Calendar className="w-4 h-4" /> COLA Forum 2026
           </div>
           <h1 className="text-3xl md:text-5xl lg:text-6xl font-bold tracking-tight mb-5">
-            Visit us at COLA Forum Nashville
+            {phase === 'past'
+              ? 'Missed us in Nashville? Book a remote demo'
+              : 'Visit us at COLA Forum Nashville'}
           </h1>
           <p className="text-lg md:text-xl text-slate-300 max-w-2xl mx-auto mb-8">
-            May 6–8, 2026 · Gaylord Opryland · Booth details on the COLA attendee app.
+            {phase !== 'past' && (
+              <>May 6–8, 2026 · Gaylord Opryland · Booth details on the COLA attendee app.{' '}</>
+            )}
             Live SENAITE demo, early-adopter applications, and 15-minute founder meetings.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
@@ -304,7 +322,8 @@ export default function ColaPage() {
           <div className="bg-white/5 border border-white/10 rounded-2xl p-6 md:p-8">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
               <h2 className="text-lg font-semibold flex items-center gap-2">
-                <Calendar className="w-5 h-5 text-[#2E8B57]" /> Book 15 minutes in Nashville
+                <Calendar className="w-5 h-5 text-[#2E8B57]" />
+                {phase === 'past' ? 'Book a 15-minute remote call' : 'Book 15 minutes in Nashville'}
               </h2>
               <a
                 href={CALENDLY_URL}
