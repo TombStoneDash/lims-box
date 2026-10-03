@@ -3,6 +3,7 @@ import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import test from "node:test";
+import { pathToFileURL } from "node:url";
 import ts from "typescript";
 import { formatCalendarDate, formatTimestampDate } from "../lib/admin-calendar-date";
 
@@ -50,7 +51,7 @@ test("formatCalendarDate renders UTC-midnight date-only values without a day shi
   const output = execFileSync(
     process.execPath,
     ["--import", "tsx", "--eval", `
-      import calendarDate from "${path.join(__dirname, "../lib/admin-calendar-date.ts")}";
+      import calendarDate from "${pathToFileURL(path.join(__dirname, "../lib/admin-calendar-date.ts")).href}";
       process.stdout.write(calendarDate.formatCalendarDate(new Date("2026-10-02")));
     `],
     { env: { ...process.env, TZ: "America/Los_Angeles" }, encoding: "utf8", timeout: 10_000 },
@@ -69,7 +70,7 @@ test("formatTimestampDate preserves local calendar semantics for real timestamps
   const output = execFileSync(
     process.execPath,
     ["--import", "tsx", "--eval", `
-      import calendarDate from "${path.join(__dirname, "../lib/admin-calendar-date.ts")}";
+      import calendarDate from "${pathToFileURL(path.join(__dirname, "../lib/admin-calendar-date.ts")).href}";
       process.stdout.write(calendarDate.formatTimestampDate(new Date("2026-10-02T01:00:00Z")));
     `],
     { env: { ...process.env, TZ: "America/Los_Angeles" }, encoding: "utf8", timeout: 10_000 },
