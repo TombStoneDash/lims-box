@@ -111,13 +111,19 @@ test('output is deterministic, does not mutate fixture, and has no clock, enviro
   assert.doesNotMatch(source, /Date\.now\s*\(|process\.env|fetch\s*\(|new Date\s*\(\s*\)/);
 });
 
-test('page renders one read-only readiness section immediately before supplier questions', () => {
+test('page renders readiness, analytical checks, then supplier questions in order', () => {
   const source = readFileSync('app/pilot/ohworks/instrument/page.tsx', 'utf8');
   assert.match(source, /const readiness = buildPilotInstrumentReadinessView\(\)/);
   assert.doesNotMatch(source, /['"]use client['"]|<form\b|fetch\s*\(|mapInstrumentFlags\(|evaluateCalibrationVerificationSchedule\(|evaluateCalibratorLotTraceability\(/);
-  const title = 'Run-readiness checks (fabricated instrument)';
-  assert.equal(source.split(title).length - 1, 1);
-  const sectionEnd = source.indexOf('</section>', source.indexOf(title));
-  const nextSectionEnd = source.indexOf('</section>', sectionEnd + 10);
-  assert.ok(source.slice(sectionEnd, nextSectionEnd).includes('Supplier questions still open'));
+  const readinessTitle = 'Run-readiness checks (fabricated instrument)';
+  const analyticalTitle = 'Analytical run checks — carryover and dilution (fabricated run)';
+  const supplierTitle = 'Supplier questions still open';
+  for (const title of [readinessTitle, analyticalTitle, supplierTitle]) {
+    assert.equal(source.split(title).length - 1, 1);
+  }
+  const readinessEnd = source.indexOf('</section>', source.indexOf(readinessTitle));
+  const analyticalEnd = source.indexOf('</section>', source.indexOf(analyticalTitle));
+  const supplierEnd = source.indexOf('</section>', source.indexOf(supplierTitle));
+  assert.ok(source.slice(readinessEnd, analyticalEnd).includes(analyticalTitle));
+  assert.ok(source.slice(analyticalEnd, supplierEnd).includes(supplierTitle));
 });
