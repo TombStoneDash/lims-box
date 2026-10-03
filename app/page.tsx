@@ -57,7 +57,7 @@ export default function HomePage() {
             href="/clia"
             className="inline-flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 hover:text-lab-teal dark:hover:text-lab-teal mb-6 px-3 py-1 rounded-full border border-slate-200 dark:border-white/10 transition-colors"
           >
-            New: CLIA Tracker &middot; coming with the June launch &rarr;
+            New: CLIA Tracker &middot; available now &rarr;
           </Link>
           <h1 className="text-4xl md:text-6xl font-bold text-slate-900 dark:text-white mb-6 tracking-tight">
             The LIMS that doesn&apos;t need an IT department.
@@ -91,7 +91,7 @@ export default function HomePage() {
       </section>
 
       {/* Commercial */}
-      <VideoSection videoId={COMMERCIAL_VIDEO_ID} />
+      <VideoSection videoId={COMMERCIAL_VIDEO_ID} title="The Ripple Effect: LIMS BOX commercial" />
 
       {/* SENAITE technology fact only — no partnership or endorsement claim */}
       <section className="py-16 px-4">
@@ -115,7 +115,7 @@ export default function HomePage() {
           <h2 className="text-2xl md:text-3xl font-bold tracking-tight text-slate-900 dark:text-white mb-8">
             See It In Action
           </h2>
-          <VideoSection videoId={DEMO_VIDEO_ID} />
+          <VideoSection videoId={DEMO_VIDEO_ID} title="LIMS BOX product demo (30-second cut)" />
         </div>
       </section>
 

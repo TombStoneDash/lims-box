@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
-import { formatDate } from "../_components/StatusBadge";
+import { formatTimestampDate } from "../_components/StatusBadge";
+import { CURRENT_AUTHORIZATION_WHERE } from "@/lib/current-authorization";
 
 export const dynamic = "force-dynamic";
 
@@ -9,7 +10,7 @@ export default async function ProceduresPage() {
     where: { active: true },
     orderBy: { name: "asc" },
     include: {
-      _count: { select: { authorizations: { where: { isActive: true } } } },
+      _count: { select: { authorizations: { where: CURRENT_AUTHORIZATION_WHERE } } },
     },
   });
 
@@ -52,7 +53,7 @@ export default async function ProceduresPage() {
                   <td className="px-4 py-2 text-slate-600 font-mono text-xs">{p.procedureCode ?? "—"}</td>
                   <td className="px-4 py-2 text-slate-600 max-w-xs truncate">{p.description ?? "—"}</td>
                   <td className="px-4 py-2 text-slate-600">{p._count.authorizations}</td>
-                  <td className="px-4 py-2 text-slate-600">{formatDate(p.createdAt)}</td>
+                  <td className="px-4 py-2 text-slate-600">{formatTimestampDate(p.createdAt)}</td>
                   <td className="px-4 py-2">
                     <Link
                       href={`/admin/procedures/${p.id}`}

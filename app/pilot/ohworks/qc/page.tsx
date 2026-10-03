@@ -2,6 +2,7 @@ import { buildPilotQcBracketLotView } from '@/lib/ohworks-demo-qc-bracket-lot-vi
 import { Activity } from 'lucide-react';
 import { buildPilotQcView } from '@/lib/ohworks-demo-qc-view';
 import { resolveRoleView } from '@/lib/ohworks-pilot';
+import { MethodPerformancePanel } from '@/app/pilot/ohworks/_components/method-performance-panel';
 
 interface PageProps {
   searchParams?: Promise<{ role?: string }>;
@@ -195,6 +196,8 @@ export default async function OHWorksQcReview({ searchParams }: PageProps) {
           </div>
         </div>
       </section>
+
+      <MethodPerformancePanel />
     </div>
   );
 }

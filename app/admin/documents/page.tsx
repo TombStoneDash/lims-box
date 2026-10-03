@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
-import { formatDate } from "../_components/StatusBadge";
+import { formatDate, formatTimestampDate } from "../_components/StatusBadge";
 
 export const dynamic = "force-dynamic";
 
@@ -68,7 +68,7 @@ export default async function DocumentsPage() {
                       )}
                     </td>
                     <td className="px-4 py-2 text-slate-600">{doc._count.versions}</td>
-                    <td className="px-4 py-2 text-slate-600">{formatDate(doc.createdAt)}</td>
+                    <td className="px-4 py-2 text-slate-600">{formatTimestampDate(doc.createdAt)}</td>
                     <td className="px-4 py-2">
                       <Link
                         href={`/admin/documents/${doc.id}`}

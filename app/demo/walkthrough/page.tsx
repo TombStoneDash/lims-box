@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import React, { useReducer, useEffect } from 'react';
+import { tick, goTo, togglePause, type WalkthroughPlayerState } from '@/lib/walkthrough-player';
 import Link from 'next/link';
 import {
   FlaskConical, ClipboardList, Shield, BarChart3, FileText,
@@ -15,7 +16,8 @@ interface WalkthroughStep {
   overlay: string;
   description: string;
   icon: React.ElementType;
-  color: string;
+  tileClass: string;
+  iconClass: string;
   content: React.ReactNode;
 }
 
@@ -104,7 +106,12 @@ function QCDashboardScreen() {
               <span className="text-xs font-semibold text-white">{a.name}</span>
               <span className="text-[10px] px-2 py-0.5 rounded-full bg-green-500/20 text-green-300">All in range</span>
             </div>
-            <svg viewBox={`0 0 ${w} ${h}`} className="w-full" style={{ maxHeight: 100 }}>
+            <svg viewBox={`0 0 ${w} ${h}`} className="w-full" style={{ maxHeight: 100 }}
+              role="img" aria-labelledby={`walkthrough-qc-${a.name}-title`} aria-describedby={`walkthrough-qc-${a.name}-desc`}>
+              <title id={`walkthrough-qc-${a.name}-title`}>{`${a.name} QC chart`}</title>
+              <desc id={`walkthrough-qc-${a.name}-desc`}>
+                {`${a.name} walkthrough QC series of ${a.points.length} measurements. Mean: ${a.mean}. Standard deviation: ${a.sd}. Measured values in plot order: ${a.points.join(', ')}.`}
+              </desc>
               <rect x={pad} y={toY(a.mean + 2 * a.sd)} width={pw} height={toY(a.mean - 2 * a.sd) - toY(a.mean + 2 * a.sd)} fill="rgba(46,139,87,0.1)" />
               <line x1={pad} y1={toY(a.mean)} x2={w - pad} y2={toY(a.mean)} stroke="#2E8B57" strokeWidth={1} strokeDasharray="4 4" />
               <path d={d} fill="none" stroke="#3B82F6" strokeWidth={2} />
@@ -199,7 +206,8 @@ const walkthroughSteps: WalkthroughStep[] = [
     overlay: 'Log a sample in seconds. Holding times start automatically.',
     description: 'Sample WS-2026-0421 is logged with auto-generated ID, EPA method lookup, and automatic holding time countdown. Zero manual calculation.',
     icon: ClipboardList,
-    color: 'bg-blue-500',
+    tileClass: 'bg-blue-500/20',
+    iconClass: 'text-blue-500',
     content: <SampleIntakeScreen />,
   },
   {
@@ -208,7 +216,8 @@ const walkthroughSteps: WalkthroughStep[] = [
     overlay: 'Every action. Logged. Timestamped. Tamper-evident.',
     description: 'Complete chain of custody with electronic signatures, IP logging, and immutable timestamps. Built for ISO 17025 and 21 CFR Part 11.',
     icon: Shield,
-    color: 'bg-purple-500',
+    tileClass: 'bg-purple-500/20',
+    iconClass: 'text-purple-500',
     content: <AuditTrailScreen />,
   },
   {
@@ -217,7 +226,8 @@ const walkthroughSteps: WalkthroughStep[] = [
     overlay: 'QC trending in real time. Failures flagged before results go out.',
     description: 'Levey-Jennings charts, Westgard rules, and batch QC — all automated. Method blanks, LCS, duplicates, and matrix spikes tracked per batch.',
     icon: BarChart3,
-    color: 'bg-green-500',
+    tileClass: 'bg-green-500/20',
+    iconClass: 'text-green-500',
     content: <QCDashboardScreen />,
   },
   {
@@ -226,7 +236,8 @@ const walkthroughSteps: WalkthroughStep[] = [
     overlay: 'One-click reports. EPA-formatted. 3 hours → 12 seconds.',
     description: 'Results, QC summary, and regulatory limits auto-populated into client-ready reports. No copy-paste. No manual formatting.',
     icon: FileText,
-    color: 'bg-amber-500',
+    tileClass: 'bg-amber-500/20',
+    iconClass: 'text-amber-500',
     content: <ReportingScreen />,
   },
   {
@@ -235,50 +246,49 @@ const walkthroughSteps: WalkthroughStep[] = [
     overlay: 'Ask your LIMS in plain English.',
     description: 'Natural language queries against your lab data. Pending samples, QC status, turnaround metrics — answers in seconds, not spreadsheet sessions.',
     icon: MessageSquare,
-    color: 'bg-teal-500',
+    tileClass: 'bg-teal-500/20',
+    iconClass: 'text-teal-500',
     content: <LimsBotScreen />,
   },
 ];
 
+type PlayerAction =
+  | { type: 'tick' }
+  | { type: 'goTo'; step: number }
+  | { type: 'togglePause' }
+  | { type: 'initialize'; paused: boolean };
+
+function playerReducer(state: WalkthroughPlayerState, action: PlayerAction): WalkthroughPlayerState {
+  switch (action.type) {
+    case 'tick': return tick(state, walkthroughSteps.length, STEP_DURATION);
+    case 'goTo': return goTo(state, action.step);
+    case 'togglePause': return togglePause(state);
+    case 'initialize': return { ...state, paused: action.paused };
+  }
+}
+
 export default function WalkthroughPage() {
-  const [currentStep, setCurrentStep] = useState(0);
-  const [elapsed, setElapsed] = useState(0);
-  const [paused, setPaused] = useState(false);
+  // Stay paused through hydration until the visitor's motion preference is known.
+  const [{ step: currentStep, elapsed, paused }, dispatch] = useReducer(playerReducer, {
+    step: 0, elapsed: 0, paused: true, finished: false,
+  });
 
   const totalTime = walkthroughSteps.length * STEP_DURATION;
   const globalElapsed = currentStep * STEP_DURATION + elapsed;
 
-  const advance = useCallback(() => {
-    if (currentStep < walkthroughSteps.length - 1) {
-      setCurrentStep(s => s + 1);
-      setElapsed(0);
-    } else {
-      setPaused(true); // pause at end
-    }
-  }, [currentStep]);
-
   useEffect(() => {
-    if (paused) return;
-    const timer = setInterval(() => {
-      setElapsed(prev => {
-        if (prev + 1 >= STEP_DURATION) {
-          advance();
-          return 0;
-        }
-        return prev + 1;
-      });
-    }, 1000);
+    dispatch({ type: 'initialize', paused: window.matchMedia('(prefers-reduced-motion: reduce)').matches });
+    const timer = setInterval(() => dispatch({ type: 'tick' }), 1000);
     return () => clearInterval(timer);
-  }, [paused, advance]);
+  }, []);
 
   const step = walkthroughSteps[currentStep];
   const StepIcon = step.icon;
-  const progressPct = ((elapsed + 1) / STEP_DURATION) * 100;
-
-  const goTo = (idx: number) => { setCurrentStep(idx); setElapsed(0); };
+  const progressPct = Math.min(100, ((elapsed + 1) / STEP_DURATION) * 100);
 
   return (
     <div className="min-h-screen bg-[#0F172A] flex flex-col">
+      <h1 className="sr-only">LIMS BOX guided walkthrough</h1>
       {/* Minimal header */}
       <header className="bg-black/40 border-b border-white/5 px-4 py-3">
         <div className="max-w-5xl mx-auto flex items-center justify-between">
@@ -292,7 +302,9 @@ export default function WalkthroughPage() {
               {Math.floor(globalElapsed / 60)}:{String(globalElapsed % 60).padStart(2, '0')} / {Math.floor(totalTime / 60)}:{String(totalTime % 60).padStart(2, '0')}
             </span>
             <button
-              onClick={() => setPaused(p => !p)}
+              onClick={() => dispatch({ type: 'togglePause' })}
+              aria-label={paused ? 'Play walkthrough' : 'Pause walkthrough'}
+              aria-pressed={paused}
               className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
             >
               {paused ? <Play className="w-3.5 h-3.5 ml-0.5" /> : <Pause className="w-3.5 h-3.5" />}
@@ -307,7 +319,9 @@ export default function WalkthroughPage() {
           {walkthroughSteps.map((s, i) => (
             <button
               key={s.id}
-              onClick={() => goTo(i)}
+              onClick={() => dispatch({ type: 'goTo', step: i })}
+              aria-current={i === currentStep ? 'step' : undefined}
+              aria-label={`Step ${i + 1}: ${s.title}`}
               className="flex-1 group"
             >
               <div className={`h-1 rounded-full overflow-hidden ${i < currentStep ? 'bg-[#2E8B57]' : i === currentStep ? 'bg-white/20' : 'bg-white/5'}`}>
@@ -328,8 +342,8 @@ export default function WalkthroughPage() {
         <div className="max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-5 gap-6 h-full">
           {/* Left: overlay + description */}
           <div className="lg:col-span-2 flex flex-col justify-center">
-            <div className={`w-10 h-10 rounded-xl ${step.color}/20 flex items-center justify-center mb-4`}>
-              <StepIcon className={`w-5 h-5 ${step.color.replace('bg-', 'text-')}`} />
+            <div className={`w-10 h-10 rounded-xl ${step.tileClass} flex items-center justify-center mb-4`}>
+              <StepIcon className={`w-5 h-5 ${step.iconClass}`} />
             </div>
             <p className="text-xs text-slate-500 uppercase tracking-wider mb-2">
               Step {currentStep + 1} of {walkthroughSteps.length}
@@ -342,7 +356,7 @@ export default function WalkthroughPage() {
             </p>
             {currentStep < walkthroughSteps.length - 1 ? (
               <button
-                onClick={() => { advance(); setElapsed(0); }}
+                onClick={() => dispatch({ type: 'goTo', step: currentStep + 1 })}
                 className="inline-flex items-center gap-2 text-sm text-[#2E8B57] hover:text-white transition-colors font-medium"
               >
                 Next: {walkthroughSteps[currentStep + 1].title} <ChevronRight className="w-4 h-4" />

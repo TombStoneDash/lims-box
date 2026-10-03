@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { resolveDemoLimit } from '@/lib/demo-route-limit';
 
 /**
  * GET /api/demo — Returns sample LIMS data for integration demos.
@@ -61,7 +62,14 @@ const DEMO_METHODS = [
 export async function GET(request: Request) {
   const url = new URL(request.url);
   const type = url.searchParams.get('type') || 'samples';
-  const limit = Math.min(parseInt(url.searchParams.get('limit') || '10'), 50);
+  const supportedTypes = ['samples', 'results', 'qc', 'coc', 'methods'];
+  if (!supportedTypes.includes(type)) {
+    return NextResponse.json(
+      { error: `Unsupported type. Use one of: ${supportedTypes.join(', ')}.` },
+      { status: 400 },
+    );
+  }
+  const limit = resolveDemoLimit(url.searchParams.get('limit'));
 
   let data: unknown[];
   let description: string;

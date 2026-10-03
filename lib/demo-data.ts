@@ -18,7 +18,7 @@ function generateRuns(mean: number, sd: number, days = 90, seed = 1): QCRun[] {
   };
   for (let i = 0; i < days; i++) {
     const d = new Date(start);
-    d.setDate(start.getDate() + i);
+    d.setUTCDate(start.getUTCDate() + i);
     const z = (rand() + rand() + rand() + rand() - 2) * 1.2;
     const result = Math.round((mean + z * sd) * 100) / 100;
     out.push({ date: d.toISOString().slice(0, 10), result });

@@ -38,6 +38,21 @@ test('a value exactly at the limit of detection is within_range, not below_detec
   const input = baselineInput();
   input.result = 1;
   const evaluation = evaluateReferenceRange(input);
+  assert.equal(evaluation.classification, 'below_range');
+});
+
+test('a value exactly at the limit of detection and exactly at the reference range lower bound is within_range', () => {
+  const input = baselineInput();
+  input.referenceRange.lowerBound = 1;
+  input.result = 1;
+  const evaluation = evaluateReferenceRange(input);
+  assert.equal(evaluation.classification, 'within_range');
+});
+
+test('a value exactly at the reference range lower bound is within_range', () => {
+  const input = baselineInput();
+  input.result = 5;
+  const evaluation = evaluateReferenceRange(input);
   assert.equal(evaluation.classification, 'within_range');
 });
 
@@ -57,6 +72,13 @@ test('a value below the limit of detection is below_detection', () => {
   assert.equal(evaluation.flag, 'BELOW DETECTION LIMIT');
 });
 
+test('a value below both the limit of detection and the reference range lower bound is below_detection, not below_range', () => {
+  const input = baselineInput();
+  input.result = 0.5;
+  const evaluation = evaluateReferenceRange(input);
+  assert.equal(evaluation.classification, 'below_detection');
+});
+
 test('a value above the reference range upper bound but within quantitation is above_range', () => {
   const input = baselineInput();
   input.result = 25;
@@ -73,11 +95,12 @@ test('a value above the upper limit of quantitation is above_quantitation, takin
   assert.equal(evaluation.flag, 'ABOVE QUANTITATION LIMIT');
 });
 
-test('a value below the declared reference range lower bound but above detection is within_range', () => {
+test('a value below the declared reference range lower bound but above detection is below_range', () => {
   const input = baselineInput();
   input.result = 2;
   const evaluation = evaluateReferenceRange(input);
-  assert.equal(evaluation.classification, 'within_range');
+  assert.equal(evaluation.classification, 'below_range');
+  assert.equal(evaluation.flag, 'BELOW REFERENCE RANGE');
 });
 
 test('a less-than censored value at the limit of detection is below_detection', () => {
@@ -324,11 +347,19 @@ test('evaluation is deterministic across repeated calls with the same input', ()
   assert.deepEqual(first, second);
 });
 
-test('every classification is one of the five defined outcomes', () => {
-  const allowed = ['below_detection', 'within_range', 'above_range', 'above_quantitation', 'invalid'];
+test('every classification is one of the six defined outcomes', () => {
+  const allowed = [
+    'below_detection',
+    'within_range',
+    'above_range',
+    'below_range',
+    'above_quantitation',
+    'invalid',
+  ];
   const scenarios: ReferenceRangeInput[] = [
     baselineInput(),
     { ...baselineInput(), result: 0.5 },
+    { ...baselineInput(), result: 2 },
     { ...baselineInput(), result: 25 },
     { ...baselineInput(), result: 150 },
     { ...baselineInput(), result: NaN },

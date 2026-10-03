@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { safeParam } from '../../lib/unsubscribe-params';
 import UnsubscribeClient from './UnsubscribeClient';
 
 export const metadata: Metadata = {
@@ -7,13 +8,13 @@ export const metadata: Metadata = {
 };
 
 interface Props {
-  searchParams: Promise<{ email?: string; list?: string }>;
+  searchParams: Promise<{ email?: string | string[]; list?: string | string[] }>;
 }
 
 export default async function UnsubscribePage({ searchParams }: Props) {
   const resolvedSearchParams = await searchParams;
-  const email = resolvedSearchParams.email ? decodeURIComponent(resolvedSearchParams.email) : '';
-  const list = resolvedSearchParams.list ? decodeURIComponent(resolvedSearchParams.list) : 'newsletter';
+  const email = safeParam(resolvedSearchParams.email, '');
+  const list = safeParam(resolvedSearchParams.list, 'newsletter');
 
   return (
     <main className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4">
@@ -27,9 +28,9 @@ export default async function UnsubscribePage({ searchParams }: Props) {
         <UnsubscribeClient email={email} list={list} />
 
         {/* CAN-SPAM physical address */}
-        <div className="mt-8 pt-6 border-t border-gray-100 text-center text-xs text-gray-400 space-y-1">
+        <div className="mt-8 pt-6 border-t border-gray-100 text-center text-xs text-gray-500 space-y-1">
           <p>TombStone Dash LLC</p>
-          <p>6821 Ridge Manor Ave. · San Diego, CA 92120</p>
+          <p>P.O. Box 60 · La Mesa, CA 91942</p>
           <p className="mt-2">
             <a href="https://lims.bot" className="underline hover:text-gray-600">
               lims.bot

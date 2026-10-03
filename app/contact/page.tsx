@@ -1,11 +1,13 @@
 'use client';
 
 import Link from 'next/link';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { FlaskConical, Send, CheckCircle2, Mail, Building2, Users, Phone, Calendar } from 'lucide-react';
+import { contactOutcome, contactMessage, type ContactOutcome } from '@/lib/contact-form-status';
 
 export default function ContactPage() {
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+  const [outcome, setOutcome] = useState<ContactOutcome | null>(null);
   const [form, setForm] = useState({
     name: '',
     labName: '',
@@ -14,6 +16,13 @@ export default function ContactPage() {
     currentSystem: '',
     message: '',
   });
+  const errorRef = useRef<HTMLParagraphElement>(null);
+
+  useEffect(() => {
+    if (status === 'error' && errorRef.current) {
+      errorRef.current.focus();
+    }
+  }, [status, outcome]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -25,12 +34,15 @@ export default function ContactPage() {
         body: JSON.stringify(form),
       });
       if (res.ok) {
+        setOutcome(contactOutcome({ ok: true, status: res.status }));
         setStatus('success');
         setForm({ name: '', labName: '', email: '', labSize: '', currentSystem: '', message: '' });
       } else {
+        setOutcome(contactOutcome({ ok: false, status: res.status }));
         setStatus('error');
       }
     } catch {
+      setOutcome(contactOutcome('network-error'));
       setStatus('error');
     }
   };
@@ -131,7 +143,7 @@ export default function ContactPage() {
           {/* Right — form */}
           <div className="lg:col-span-3">
             {status === 'success' ? (
-              <div className="bg-white dark:bg-white/5 rounded-2xl border border-black/5 dark:border-white/10 p-8 text-center">
+              <div role="status" className="bg-white dark:bg-white/5 rounded-2xl border border-black/5 dark:border-white/10 p-8 text-center">
                 <CheckCircle2 className="w-12 h-12 text-green-500 mx-auto mb-4" />
                 <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Message sent</h2>
                 <p className="text-slate-600 dark:text-slate-300">We&apos;ll get back to you within one business day.</p>
@@ -236,14 +248,22 @@ export default function ContactPage() {
                 <button
                   type="submit"
                   disabled={status === 'loading'}
+                  aria-busy={status === 'loading'}
                   className="w-full flex items-center justify-center gap-2 py-3 bg-lab-teal hover:bg-lab-teal/90 text-white font-semibold rounded-lg transition-colors disabled:opacity-50"
                 >
                   <Send className="w-4 h-4" />
                   {status === 'loading' ? 'Sending...' : 'Send Message'}
                 </button>
 
-                {status === 'error' && (
-                  <p className="text-sm text-red-500 text-center">Something went wrong. Please try again or email info@lims.bot directly.</p>
+                {status === 'error' && outcome && (
+                  <p
+                    ref={errorRef}
+                    role="alert"
+                    tabIndex={-1}
+                    className="text-sm text-red-700 dark:text-red-300 text-center focus:outline-none"
+                  >
+                    {contactMessage(outcome)}
+                  </p>
                 )}
               </form>
             )}

@@ -66,7 +66,7 @@ export const corpus: CorpusEntry[] = [
     title: 'What does LIMS BOX cost?',
     source: '/faq',
     keywords: ['cost', 'price', 'pricing', 'month', 'monthly', 'plan', 'plans', 'fee', 'contract', 'pay', 'expensive', 'cheap', 'budget'],
-    text: 'Plans start at $500/month for up to 3 users. The Growth plan at $1,200/month supports up to 10 users with instrument integration and advanced reporting. No implementation fee, no long-term contract, cancel anytime. See our pricing page for full details.',
+    text: 'Plans start at $500/month for up to 3 users. The Growth plan at $1,200/month supports up to 10 users with advanced reporting. Instrument integration is planned and not built yet. No implementation fee, no long-term contract, cancel anytime. See our pricing page for full details.',
   },
   {
     id: 'pilot-program',
@@ -115,7 +115,7 @@ export const corpus: CorpusEntry[] = [
     title: 'Can LIMS BOX integrate with our instruments?',
     source: '/faq',
     keywords: ['instrument', 'instruments', 'integration', 'integrate', 'connect', 'uv-vis', 'ic', 'analyzer', 'interface'],
-    text: 'Yes. LIMS BOX supports direct instrument integration via CSV, XML, and common data formats. ICP-MS, GC-MS, IC, UV-Vis, and other instruments that export data files can be connected. The Growth and Enterprise plans include instrument integration setup.',
+    text: 'Not yet as a general feature. Today there is a CSV reader for one analyzer, used in testing only. Importing results from other instruments and file formats is planned. Tell us which instruments you run and we will say what that would take.',
   },
   {
     id: 'offline',

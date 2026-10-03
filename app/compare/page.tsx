@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
+import { toneLabel } from '@/lib/compare-tone';
 import {
   FlaskConical, CheckCircle2, XCircle, Minus,
   Zap, DollarSign, WifiOff, Package, Sparkles, ArrowRight,
@@ -99,9 +100,9 @@ function toneClasses(tone: 'yes' | 'no' | 'partial') {
 }
 
 function ToneIcon({ tone }: { tone: 'yes' | 'no' | 'partial' }) {
-  if (tone === 'yes') return <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-shrink-0" />;
-  if (tone === 'no') return <XCircle className="w-4 h-4 text-slate-500 flex-shrink-0" />;
-  return <Minus className="w-4 h-4 text-amber-400 flex-shrink-0" />;
+  if (tone === 'yes') return <CheckCircle2 aria-hidden="true" className="w-4 h-4 text-emerald-400 flex-shrink-0" />;
+  if (tone === 'no') return <XCircle aria-hidden="true" className="w-4 h-4 text-slate-500 flex-shrink-0" />;
+  return <Minus aria-hidden="true" className="w-4 h-4 text-amber-400 flex-shrink-0" />;
 }
 
 export default function ComparePage() {
@@ -156,14 +157,16 @@ export default function ComparePage() {
       <section className="px-4 pb-10 hidden md:block">
         <div className="max-w-6xl mx-auto overflow-x-auto">
           <table className="w-full border-separate border-spacing-0 text-sm">
+            <caption className="sr-only">LIMS BOX compared with other LIMS options, by capability</caption>
             <thead>
               <tr>
-                <th className="sticky left-0 z-10 bg-[#0F172A] text-left py-4 pr-4 font-semibold text-slate-400 text-xs uppercase tracking-wider">
+                <th scope="col" className="sticky left-0 z-10 bg-[#0F172A] text-left py-4 pr-4 font-semibold text-slate-400 text-xs uppercase tracking-wider">
                   Capability
                 </th>
                 {columns.map(col => (
                   <th
                     key={col.name}
+                    scope="col"
                     className={`py-4 px-4 text-left align-bottom ${
                       col.highlight
                         ? 'bg-[#2E8B57]/15 border-x border-t border-[#2E8B57]/40 rounded-t-xl'
@@ -209,6 +212,7 @@ export default function ComparePage() {
                       <td key={cIdx} className={classes}>
                         <div className="flex items-start gap-2">
                           <ToneIcon tone={cell.tone} />
+                          <span className="sr-only">{toneLabel(cell.tone)}: </span>
                           <span className={`font-medium ${toneClasses(cell.tone)}`}>{cell.value}</span>
                         </div>
                       </td>
@@ -259,6 +263,7 @@ export default function ComparePage() {
                         ) : (
                           <span className={`inline-flex items-center gap-1 font-medium ${toneClasses(cell.tone)}`}>
                             <ToneIcon tone={cell.tone} />
+                            <span className="sr-only">{toneLabel(cell.tone)}: </span>
                             {cell.value}
                           </span>
                         )}

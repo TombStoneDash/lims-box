@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import type { Viewport } from 'next'
+import { SKIP_LINK_LABEL, SKIP_LINK_TARGET_ID } from '@/lib/skip-link'
 import './globals.css'
 
 export const metadata: Metadata = {
@@ -97,7 +98,6 @@ export default function RootLayout({
                   "Sample tracking and chain of custody",
                   "Environmental and water testing workflows",
                   "Automated reporting and compliance",
-                  "Instrument integration",
                   "Quality assurance and quality control",
                   "Client portal and result delivery",
                   "Built for labs under 50 people"
@@ -108,7 +108,13 @@ export default function RootLayout({
         />
       </head>
       <body className="theme-background overflow-x-hidden">
-        <main id="main-content">
+        <a
+          href={`#${SKIP_LINK_TARGET_ID}`}
+          className="sr-only focus:not-sr-only focus:fixed top-4 left-4 z-[9999] rounded bg-white px-4 py-3 text-black focus:ring-2 focus:ring-blue-700 focus:ring-offset-2"
+        >
+          {SKIP_LINK_LABEL}
+        </a>
+        <main id={SKIP_LINK_TARGET_ID} tabIndex={-1} className="outline-none">
           {children}
         </main>
       </body>

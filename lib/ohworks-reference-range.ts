@@ -15,6 +15,7 @@ export type ReferenceRangeClassification =
   | 'below_detection'
   | 'within_range'
   | 'above_range'
+  | 'below_range'
   | 'above_quantitation'
   | 'invalid';
 
@@ -61,6 +62,7 @@ const REPORT_FLAGS: Record<ReferenceRangeClassification, string> = {
   below_detection: 'BELOW DETECTION LIMIT',
   within_range: 'WITHIN REFERENCE RANGE',
   above_range: 'ABOVE REFERENCE RANGE',
+  below_range: 'BELOW REFERENCE RANGE',
   above_quantitation: 'ABOVE QUANTITATION LIMIT',
   invalid: 'INVALID RESULT — REVIEW REQUIRED',
 };
@@ -199,6 +201,7 @@ export function evaluateReferenceRange(input: ReferenceRangeInput): ReferenceRan
   const safeLod = limitOfDetection as number;
   const safeUloq = upperLimitOfQuantitation as number;
   const safeUpperBound = upperBound as number;
+  const safeLowerBound = lowerBound as number;
 
   let classification: ReferenceRangeClassification;
   if (qualifier === 'less-than') {
@@ -211,6 +214,8 @@ export function evaluateReferenceRange(input: ReferenceRangeInput): ReferenceRan
     classification = 'above_quantitation';
   } else if (safeValue > safeUpperBound) {
     classification = 'above_range';
+  } else if (safeValue < safeLowerBound) {
+    classification = 'below_range';
   } else {
     classification = 'within_range';
   }
