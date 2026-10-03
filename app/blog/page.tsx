@@ -41,6 +41,7 @@ const blogBreadcrumbJsonLd = {
 };
 
 function formatDate(dateString: string): string {
+  // Date-only metadata is parsed at UTC midnight; keep its authored calendar day.
   return new Date(dateString).toLocaleDateString('en-US', {
     year: 'numeric',
     month: 'long',

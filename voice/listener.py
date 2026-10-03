@@ -11,6 +11,7 @@ Usage:
 import sys
 import time
 import logging
+import unicodedata
 import re
 import numpy as np
 
@@ -95,6 +96,7 @@ def record_until_silence(
         else:
             speech_detected = True
             silent_frames = 0
+            speech_detected = True
         chunks.append(indata.copy())
 
     try:
@@ -125,8 +127,12 @@ def transcribe(model: WhisperModel, audio: np.ndarray) -> str:
     """Run faster-whisper on an audio array, return transcribed text."""
     if len(audio) == 0 or not np.any(audio):
         return ""
-    segments, _info = model.transcribe(audio, language="en", beam_size=3)
-    return " ".join(seg.text for seg in segments).strip()
+    try:
+        segments, _info = model.transcribe(audio, language="en", beam_size=3)
+        return " ".join(seg.text for seg in segments).strip()
+    except Exception:
+        logger.exception("Transcription failed; discarding transcript. Try again.")
+        return ""
 
 
 # ── Wake word detection ─────────────────────────────────────────────────────
@@ -156,8 +162,15 @@ def extract_inline_command(text: str, wake_word: str) -> str | None:
     match = _match_wake_phrase(text, wake_word)
     if match is None:
         return None
-    # Strip only the separator after the wake phrase, preserving argument punctuation.
-    remainder = re.sub(r"^[\s,.:–—-]+", "", text[match.end():]).strip()
+    remainder = text[match.end():]
+    # Remove only the wake/command separator; preserve punctuation in arguments.
+    start = 0
+    while start < len(remainder) and (
+        remainder[start].isspace()
+        or unicodedata.category(remainder[start]).startswith("P")
+    ):
+        start += 1
+    remainder = remainder[start:].strip()
     # Only return if there's substantial text after the wake word
     if len(remainder) > 3:
         return remainder

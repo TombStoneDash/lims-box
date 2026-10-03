@@ -54,7 +54,7 @@ export default function UnsubscribeClient({ email, list }: Props) {
             <>You have been removed from {displayList}.</>
           )}
         </p>
-        <p className="text-gray-400 text-xs mt-4">
+        <p className="text-gray-500 text-xs mt-4">
           You won&apos;t receive further emails from this list. Changes may take up to 24 hours.
         </p>
       </div>
@@ -67,46 +67,53 @@ export default function UnsubscribeClient({ email, list }: Props) {
         Unsubscribe from {displayList}
       </h2>
 
-      {email ? (
-        <p className="text-gray-600 text-sm mb-6">
-          Click below to unsubscribe <strong>{email}</strong> from {displayList}.
-        </p>
-      ) : (
-        <div className="mb-6">
-          <p className="text-gray-600 text-sm mb-4">
-            Enter your email address to unsubscribe from {displayList}.
-          </p>
-          <label htmlFor="unsubscribe-email" className="block text-sm font-medium text-gray-900 mb-2">
-            Email address
-          </label>
-          <input
-            id="unsubscribe-email"
-            type="email"
-            autoComplete="email"
-            maxLength={320}
-            value={enteredEmail}
-            onChange={(event) => setEnteredEmail(event.target.value)}
-            disabled={state === 'loading'}
-            className="w-full rounded-md border border-gray-300 px-3 py-2"
-          />
-        </div>
-      )}
-
-      {state === 'error' && (
-        <div role="alert" className="bg-red-50 border border-red-200 rounded p-3 mb-4 text-sm text-red-700">
-          {errorMsg}
-        </div>
-      )}
-
-      <button
-        onClick={handleUnsubscribe}
-        disabled={state === 'loading' || !canUnsubscribe}
-        className="w-full bg-gray-900 text-white py-3 px-4 rounded-md font-medium hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+      <form
+        onSubmit={(event) => {
+          event.preventDefault();
+          handleUnsubscribe();
+        }}
       >
-        {state === 'loading' ? 'Processing…' : 'Confirm Unsubscribe'}
-      </button>
+        {email ? (
+          <p className="text-gray-600 text-sm mb-6">
+            Click below to unsubscribe <strong>{email}</strong> from {displayList}.
+          </p>
+        ) : (
+          <div className="mb-6">
+            <p className="text-gray-600 text-sm mb-4">
+              Enter your email address to unsubscribe from {displayList}.
+            </p>
+            <label htmlFor="unsubscribe-email" className="block text-sm font-medium text-gray-900 mb-2">
+              Email address
+            </label>
+            <input
+              id="unsubscribe-email"
+              type="email"
+              autoComplete="email"
+              maxLength={320}
+              value={enteredEmail}
+              onChange={(event) => setEnteredEmail(event.target.value)}
+              disabled={state === 'loading'}
+              className="w-full rounded-md border border-gray-300 px-3 py-2"
+            />
+          </div>
+        )}
 
-      <p className="text-xs text-gray-400 mt-4 text-center">
+        {state === 'error' && (
+          <div role="alert" className="bg-red-50 border border-red-200 rounded p-3 mb-4 text-sm text-red-700">
+            {errorMsg}
+          </div>
+        )}
+
+        <button
+          type="submit"
+          disabled={state === 'loading' || !canUnsubscribe}
+          className="w-full bg-gray-900 text-white py-3 px-4 rounded-md font-medium hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+        >
+          {state === 'loading' ? 'Processing…' : 'Confirm Unsubscribe'}
+        </button>
+      </form>
+
+      <p className="text-xs text-gray-500 mt-4 text-center">
         Changed your mind?{' '}
         <a href="https://lims.bot" className="underline hover:text-gray-600">
           Visit LIMS BOX

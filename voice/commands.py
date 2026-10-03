@@ -125,7 +125,6 @@ def _handle_log_sample(args: tuple, client: SenaiteClient) -> str:
     uid = result.get("uid") if isinstance(result, dict) else None
     if not isinstance(uid, str) or not uid.strip():
         return unconfirmed
-
     session.set_sample(sample_id, uid)
     return f"Sample {sample_id} has been logged."
 
@@ -147,6 +146,11 @@ def _handle_start_test(args: tuple, client: SenaiteClient) -> str:
         items = analyses.get("items", [])
         if not items:
             return f"Test '{test_name}' is not configured on sample {session.current_sample_id}."
+        if len(items) != 1:
+            return (
+                f"Test '{test_name}' is ambiguous on sample {session.current_sample_id}: "
+                "multiple matching analyses were found. No workflow change was made."
+            )
 
         analysis = items[0]
         current_state = analysis.get("review_state") or "unknown"

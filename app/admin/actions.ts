@@ -1,6 +1,7 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
+import { parseTrainingHours } from "@/lib/training-hours";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
@@ -24,13 +25,6 @@ function optDate(v: FormDataEntryValue | null): Date | null {
   const d = new Date(s);
   return isNaN(d.getTime()) ? null : d;
 }
-function optFloat(v: FormDataEntryValue | null): number | null {
-  const s = str(v);
-  if (!s) return null;
-  const n = Number(s);
-  return isNaN(n) ? null : n;
-}
-
 export async function createPerson(formData: FormData) {
   const person = await prisma.person.create({
     data: {
@@ -89,7 +83,7 @@ export async function createTraining(formData: FormData) {
       course: str(formData.get("course")),
       provider: optStr(formData.get("provider")),
       completedAt: reqDate(formData.get("completedAt"), "completedAt"),
-      hours: optFloat(formData.get("hours")),
+      hours: parseTrainingHours(str(formData.get("hours"))),
       certificate: optStr(formData.get("certificate")),
     },
   });

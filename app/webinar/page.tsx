@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { FlaskConical, Calendar, Clock, Users, Video, CheckCircle2, ArrowRight } from 'lucide-react';
 import { WaitlistFooter } from '@/components/WaitlistFooter';
-import { registrationMessage, registrationOutcome } from '@/lib/webinar-registration';
+import { registrationMessage, registrationOutcome, webinarRegistrationPayload } from '@/lib/webinar-registration';
 import { formatSessionDate, upcomingOnly } from '@/lib/webinar-sessions';
 import type { Metadata } from 'next';
 
@@ -73,11 +73,14 @@ export default function WebinarPage() {
       const response = await fetch('/api/waitlist', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: formData.email,
-          labName: formData.labName,
-          source: `webinar:${sessionId}`,
-        }),
+        body: JSON.stringify(
+          webinarRegistrationPayload({
+            name: formData.name,
+            email: formData.email,
+            labName: formData.labName,
+            sessionId,
+          })
+        ),
       });
       const outcome = registrationOutcome({ ok: response.ok, status: response.status });
       if (outcome === 'registered') {

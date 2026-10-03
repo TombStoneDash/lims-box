@@ -96,17 +96,59 @@ function parseMarkdownToHtml(markdown: string): string {
   let imageToken = 'BLOG_IMAGE';
   while (markdown.includes(imageToken)) imageToken += '_';
   const escapeAttribute = (value: string) => value.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-  html = html.replace(/`[^`]+`|!\[([^\]]*)\]\(([^)]+)\)/g, (match, alt: string | undefined, src: string) => {
-    if (alt === undefined) return match;
-    const index = images.push(`<img src="${escapeAttribute(src)}" alt="${escapeAttribute(alt)}" class="max-w-full h-auto" />`) - 1;
-    return `${imageToken}${index}END`;
-  });
+  // Only allow relative paths and http(s) URLs as image destinations; strip whitespace/control
+  // characters first so an embedded tab or NUL cannot hide a disallowed scheme like "javascript:".
+  const isSafeImageDestination = (value: string): boolean => {
+    const stripped = value.trim().replace(/[\s\u0000-\u001f\u007f]/g, '');
+    if (!stripped) return false;
+    if (stripped.startsWith('//')) return false;
+    if (stripped.startsWith('/') || stripped.startsWith('./') || stripped.startsWith('../')) return true;
+    const schemeMatch = stripped.match(/^([a-zA-Z][a-zA-Z0-9+.-]*):/);
+    if (!schemeMatch) return true;
+    const scheme = schemeMatch[1].toLowerCase();
+    return scheme === 'http' || scheme === 'https';
+  };
+  const imageStart = /`[^`]+`|!\[([^\]\r\n]*)\]\(/g;
+  const imageParts: string[] = [];
+  let imageCopiedThrough = 0;
+  let imageMatch: RegExpExecArray | null;
+  while ((imageMatch = imageStart.exec(html)) !== null) {
+    if (imageMatch[1] === undefined) continue;
+    let depth = 1;
+    let end = imageStart.lastIndex;
+    let src = '';
+    for (; end < html.length; end++) {
+      const char = html[end];
+      const next = html[end + 1];
+      if (char === '\\' && (next === '(' || next === ')' || next === '\\')) {
+        src += next;
+        end++;
+        continue;
+      }
+      // Do not borrow a closing delimiter from later prose, markup, or code.
+      if (/\s/.test(char) || char === '[' || char === '`') break;
+      if (char === '(') depth++;
+      if (char === ')' && --depth === 0) break;
+      src += char;
+    }
+    const valid = depth === 0 && src !== '' && isSafeImageDestination(src);
+    // Protect invalid openers too, so the link pass cannot turn them into anchors.
+    const index = images.push(valid
+      ? `<img src="${escapeAttribute(src)}" alt="${escapeAttribute(imageMatch[1])}" class="max-w-full h-auto" />`
+      : imageMatch[0]) - 1;
+    imageParts.push(html.slice(imageCopiedThrough, imageMatch.index), `${imageToken}${index}END`);
+    imageCopiedThrough = valid ? end + 1 : imageStart.lastIndex;
+    imageStart.lastIndex = imageCopiedThrough;
+  }
+  html = imageParts.join('') + html.slice(imageCopiedThrough);
 
   // Use text placeholders so inline code remains part of its paragraph.
   const inlineCode: string[] = [];
+  const inlineRaw: string[] = [];
   let inlineToken = 'BLOG_INLINE_CODE';
   while (markdown.includes(inlineToken)) inlineToken += '_';
-  html = html.replace(/`([^`]+)`/g, (_, code: string) => {
+  html = html.replace(/`([^`]+)`/g, (raw: string, code: string) => {
+    inlineRaw.push(raw);
     const escaped = code.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     const index = inlineCode.push(`<code class="bg-black/5 dark:bg-white/5 px-1.5 py-0.5 rounded text-sm">${escaped}</code>`) - 1;
     return `${inlineToken}${index}END`;
@@ -114,6 +156,12 @@ function parseMarkdownToHtml(markdown: string): string {
 
   // Keep link destinations out of prose transforms while labels remain formattable.
   const linkDestinations: string[] = [];
+  const linkTitles: Array<string | undefined> = [];
+  // Link attributes are literal: put inline code back as its source text and drop quote escapes.
+  const restoreInlineRaw = (value: string) =>
+    value.replace(new RegExp(`${inlineToken}(\\d+)END`, 'g'), (_, index) => inlineRaw[Number(index)]);
+  const unescapeQuotes = (value: string) => value.replace(/\\(["'])/g, '$1');
+  const linkTitle = /^([\s\S]*?)[ \t]+(?:"((?:\\.|[^"\\])*)"|'((?:\\.|[^'\\])*)')[ \t]*$/;
   let linkToken = 'BLOG_LINK_DESTINATION';
   while (markdown.includes(linkToken)) linkToken += '_';
   const linkStart = /\[([^\]]+)\]\(/g;
@@ -139,7 +187,12 @@ function parseMarkdownToHtml(markdown: string): string {
       destination += char;
     }
     if (depth !== 0 || !destination) continue;
-    const index = linkDestinations.push(destination) - 1;
+    // An optional "title" or 'title' follows the URL inside the parentheses.
+    const titled = destination.match(linkTitle);
+    const url = titled ? titled[1] : destination;
+    const title = titled ? (titled[2] ?? titled[3]) : undefined;
+    const index = linkDestinations.push(unescapeQuotes(restoreInlineRaw(url))) - 1;
+    linkTitles.push(title === undefined ? undefined : unescapeQuotes(restoreInlineRaw(title)));
     linkParts.push(html.slice(copiedThrough, linkMatch.index), `[${linkMatch[1]}](${linkToken}${index}END)`);
     copiedThrough = end + 1;
     linkStart.lastIndex = copiedThrough;
@@ -154,14 +207,20 @@ function parseMarkdownToHtml(markdown: string): string {
   html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
   html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
 
-  html = html.replace(new RegExp(`\\[([^\\]]+)\\]\\((${linkToken}\\d+END)\\)`, 'g'), '<a href="$2" class="text-lab-teal hover:text-lab-blue underline transition-colors">$1</a>');
+  html = html.replace(new RegExp(`\\[([^\\]]+)\\]\\((${linkToken}(\\d+)END)\\)`, 'g'), (_, label: string, token: string, index: string) => {
+    const title = linkTitles[Number(index)];
+    const titleAttribute = title === undefined ? '' : ` title="${escapeAttribute(title)}"`;
+    return `<a href="${token}"${titleAttribute} class="text-lab-teal hover:text-lab-blue underline transition-colors">${label}</a>`;
+  });
 
   html = html.replace(/^---$/gm, '<hr class="my-8 border-t border-black/10 dark:border-white/10" />');
 
   // Match whole runs by list type; blank lines and other blocks end each run.
-  html = html.replace(/^\d+\.[ \t]+[^\n]*(?:\n\d+\.[ \t]+[^\n]*)*/gm, (list) => {
+  html = html.replace(/^(\d+)\.[ \t]+[^\n]*(?:\n\d+\.[ \t]+[^\n]*)*/gm, (list, ordinal: string) => {
+    const start = ordinal.replace(/^0+(?=\d)/, '');
+    const startAttribute = start === '1' ? '' : ` start="${start}"`;
     const items = list.split('\n').map(line => `<li>${line.replace(/^\d+\.[ \t]+/, '')}</li>`).join('\n');
-    return `\n\n<ol class="list-decimal pl-6 space-y-2 my-4">${items}</ol>\n\n`;
+    return `\n\n<ol${startAttribute} class="list-decimal pl-6 space-y-2 my-4">${items}</ol>\n\n`;
   });
   html = html.replace(/^- [^\n]*(?:\n- [^\n]*)*/gm, (list) => {
     const items = list.split('\n').map(line => `<li>${line.slice(2)}</li>`).join('\n');

@@ -8,7 +8,7 @@ export const metadata: Metadata = {
 };
 
 interface Props {
-  searchParams: Promise<{ email?: string; list?: string }>;
+  searchParams: Promise<{ email?: string | string[]; list?: string | string[] }>;
 }
 
 export default async function UnsubscribePage({ searchParams }: Props) {
@@ -28,9 +28,9 @@ export default async function UnsubscribePage({ searchParams }: Props) {
         <UnsubscribeClient email={email} list={list} />
 
         {/* CAN-SPAM physical address */}
-        <div className="mt-8 pt-6 border-t border-gray-100 text-center text-xs text-gray-400 space-y-1">
+        <div className="mt-8 pt-6 border-t border-gray-100 text-center text-xs text-gray-500 space-y-1">
           <p>TombStone Dash LLC</p>
-          <p>6821 Ridge Manor Ave. · San Diego, CA 92120</p>
+          <p>P.O. Box 60 · La Mesa, CA 91942</p>
           <p className="mt-2">
             <a href="https://lims.bot" className="underline hover:text-gray-600">
               lims.bot
