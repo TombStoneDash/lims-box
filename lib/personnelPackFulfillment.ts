@@ -174,7 +174,7 @@ export function createPersonnelPackPostHandler(dependencies: PersonnelPackDepend
         });
         return failure(
           503,
-          'Automatic fulfillment is temporarily unavailable. Email info@lims.bot directly.',
+          'Automatic fulfillment is temporarily unavailable. Please retry your request.',
           'asset_unavailable',
         );
       }
@@ -206,7 +206,7 @@ export function createPersonnelPackPostHandler(dependencies: PersonnelPackDepend
         });
         return failure(
           503,
-          'Automatic fulfillment is temporarily unavailable. Email info@lims.bot directly.',
+          'Automatic fulfillment is temporarily unavailable. Please retry your request.',
           'lead_store_failed',
         );
       }

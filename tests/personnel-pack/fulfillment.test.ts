@@ -178,7 +178,7 @@ test('asset-resolution failures fail closed before persistence or delivery', asy
 
   assert.equal(response.status, 503);
   assert.deepEqual(await response.json(), {
-    error: 'Automatic fulfillment is temporarily unavailable. Email info@lims.bot directly.',
+    error: 'Automatic fulfillment is temporarily unavailable. Please retry your request.',
     code: 'asset_unavailable',
   });
   assert.equal(leads.length, 0);
@@ -199,7 +199,7 @@ test('lead-store failures fail closed and do not promise delivery', async () => 
 
   assert.equal(response.status, 503);
   assert.deepEqual(await response.json(), {
-    error: 'Automatic fulfillment is temporarily unavailable. Email info@lims.bot directly.',
+    error: 'Automatic fulfillment is temporarily unavailable. Please retry your request.',
     code: 'lead_store_failed',
   });
   assert.equal(notices.length, 0);
@@ -294,8 +294,8 @@ test('invalid email is rejected before any side effects', async () => {
 test('browser copy offers direct download and removes the inbox-only promise', async () => {
   const source = await readFile('app/personnel-pack/EmailGateForm.tsx', 'utf8');
 
-  assert.match(source, /Your reviewed pack is ready now\./);
-  assert.match(source, /this page is your fulfillment path/i);
+  assert.match(source, /Your pack is ready now\./);
+  assert.match(source, /Use the download link above to get your PDF/i);
   assert.match(source, /Automatic fulfillment is currently available only for the reviewed ISO 15189 pack\./);
   assert.doesNotMatch(source, /Check your inbox/i);
   assert.doesNotMatch(source, /within 2(?:\u00a0| )minutes/i);

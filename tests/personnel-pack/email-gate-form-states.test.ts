@@ -104,7 +104,7 @@ test('pending-fulfillment state is reached for the known 409 unsupported-selecti
 test('unavailable/misconfigured state is reached for a 503 asset/lead/notice failure', async () => {
   for (const code of ['asset_unavailable', 'lead_store_failed', 'operator_notice_failed']) {
     const { impl } = fakeFetch(503, {
-      error: 'Automatic fulfillment is temporarily unavailable. Email info@lims.bot directly.',
+      error: 'Automatic fulfillment is temporarily unavailable. Please retry your request.',
       code,
     });
     const controller = createEmailGateController(impl as unknown as typeof fetch);
@@ -114,7 +114,7 @@ test('unavailable/misconfigured state is reached for a 503 asset/lead/notice fai
     assert.equal(final.kind, 'unavailable', code);
     assert.equal(
       (final as { message: string }).message,
-      'Automatic fulfillment is temporarily unavailable. Email info@lims.bot directly.',
+      'Automatic fulfillment is temporarily unavailable. Please retry your request.',
       code,
     );
   }
@@ -185,7 +185,7 @@ test('retrying the very same controller instance after failure clears the prior 
         ok: false,
         status: 503,
         json: async () => ({
-          error: 'Automatic fulfillment is temporarily unavailable. Email info@lims.bot directly.',
+          error: 'Automatic fulfillment is temporarily unavailable. Please retry your request.',
           code: 'asset_unavailable',
         }),
       } as unknown as Response;
@@ -221,7 +221,7 @@ test('pending and unavailable state messages never contain the submitted email, 
   const pending = await pendingController.submit({ email: CANARY_EMAIL, accredType: 'clia' });
 
   const unavailableFetch = fakeFetch(503, {
-    error: 'Automatic fulfillment is temporarily unavailable. Email info@lims.bot directly.',
+    error: 'Automatic fulfillment is temporarily unavailable. Please retry your request.',
     code: 'asset_unavailable',
   });
   const unavailableController = createEmailGateController(unavailableFetch.impl as unknown as typeof fetch);

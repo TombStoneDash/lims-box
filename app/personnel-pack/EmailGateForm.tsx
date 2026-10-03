@@ -28,7 +28,7 @@ const NETWORK_UNAVAILABLE_MESSAGE = 'Network error. Email info@lims.bot directly
 const UNSUPPORTED_PACK_MESSAGE =
   'Automatic fulfillment is currently available only for the reviewed ISO 15189 pack.';
 const FULFILLMENT_UNAVAILABLE_MESSAGE =
-  'Automatic fulfillment is temporarily unavailable. Email info@lims.bot directly.';
+  'Automatic fulfillment is temporarily unavailable. Please retry your request.';
 
 /** Only the one known "accepted but not fulfillable" code counts as pending; everything else fails closed to unavailable. */
 export function classifyFailureKind(status: number, code: unknown): 'pending' | 'unavailable' {
@@ -164,7 +164,7 @@ export function EmailGateForm() {
             className="bg-[#2E8B57]/10 border border-[#2E8B57]/30 rounded-lg px-4 py-3"
           >
             <p className="text-[#2E8B57] font-medium text-sm">
-              ✓ Your reviewed pack is ready now.
+              ✓ Your pack is ready now.
             </p>
             <a
               href={state.delivery.assetUrl}
@@ -177,7 +177,7 @@ export function EmailGateForm() {
             <p className="mt-3 text-xs text-slate-400">
               {state.delivery.emailed
                 ? 'A copy was also emailed to you.'
-                : 'Email delivery is unavailable right now, so this page is your fulfillment path.'}
+                : 'Use the download link above to get your PDF.'}
             </p>
           </div>
         ) : (
@@ -228,7 +228,7 @@ export function EmailGateForm() {
                            appearance-none disabled:opacity-60"
               >
                 <option value="">Select your pack</option>
-                <option value="iso15189">ISO 15189 pack (reviewed)</option>
+                <option value="iso15189">ISO 15189 pack</option>
               </select>
             </div>
             <button
@@ -239,7 +239,7 @@ export function EmailGateForm() {
                          text-white font-semibold px-6 py-2.5 rounded-lg text-sm
                          transition-colors flex items-center justify-center gap-2"
             >
-              {submitting ? 'Sending…' : 'Send me the PDF →'}
+              {submitting ? 'Preparing…' : 'Get the PDF →'}
             </button>
 
             <EmailGateFeedback state={state} />

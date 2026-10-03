@@ -1,49 +1,17 @@
-import { NextRequest, NextResponse } from 'next/server';
 import {
   createPersonnelPackPostHandler,
-  loadDownloadableAsset,
+  resolveBundledAsset,
   type PersonnelPackDelivery,
 } from '@/lib/personnelPackFulfillment';
 import { sendSubmissionNotice } from '@/lib/notify';
 import { getSupabase } from '@/lib/supabase';
+import { autoPdfEnabled, createAutomaticPersonnelPackFulfillment } from '@/lib/personnel-pack/fulfillment';
+import { createPersonnelPackStorage } from '@/lib/personnel-pack/storage';
+import { configuredDownloadClaimService, createPersonnelPackGetHandler } from '@/lib/personnelPackDownloadClaims';
 
 export const runtime = 'nodejs';
 
-export async function GET(request: NextRequest) {
-  const key = request.nextUrl.searchParams.get('asset') ?? 'iso15189';
-
-  let result;
-  try {
-    result = await loadDownloadableAsset(key);
-  } catch (error) {
-    console.error('[personnel-pack-download]', 'asset_unavailable', JSON.stringify({
-      asset: key,
-      stage: 'download',
-      error: error instanceof Error ? error.message : String(error),
-    }));
-    return NextResponse.json(
-      { error: 'Automatic fulfillment is temporarily unavailable. Email info@lims.bot directly.', code: 'asset_unavailable' },
-      { status: 503 },
-    );
-  }
-
-  if (!result) {
-    return NextResponse.json(
-      { error: 'Automatic fulfillment is currently available only for the reviewed ISO 15189 pack.', code: 'unsupported_pack_selection' },
-      { status: 404 },
-    );
-  }
-
-  return new NextResponse(result.bytes, {
-    status: 200,
-    headers: {
-      'Content-Type': 'application/pdf',
-      'Content-Disposition': `attachment; filename="${result.asset.downloadFilename}"`,
-      'Cache-Control': 'private, no-store',
-      'X-Content-Type-Options': 'nosniff',
-    },
-  });
-}
+export const GET = createPersonnelPackGetHandler();
 
 async function createLead(record: { email: string; accred_type: string | null; source: 'personnel-pack-download' }) {
   const supabase = getSupabase();
@@ -70,7 +38,7 @@ async function sendPersonnelPackDelivery(
 <div style="font-family:system-ui,sans-serif;max-width:520px;margin:0 auto;color:#0f172a;">
   <p style="font-size:15px;">Thanks for requesting the LIMS BOX Personnel Pack.</p>
   <p style="font-size:14px;color:#334155;line-height:1.6;">
-    Your reviewed download is ready now:
+    Your download is ready now:
   </p>
   <p style="margin:20px 0;">
     <a href="${delivery.assetUrl}"
@@ -115,6 +83,13 @@ async function sendPersonnelPackDelivery(
 
 export const POST = createPersonnelPackPostHandler({
   createLead,
+  resolveAsset: (selection, origin) => {
+    if (!autoPdfEnabled()) return resolveBundledAsset(selection, origin);
+    if (selection !== 'iso15189') return Promise.resolve(null);
+    const claims = configuredDownloadClaimService();
+    if (!claims) throw new Error('download_claim_unavailable');
+    return createAutomaticPersonnelPackFulfillment(createPersonnelPackStorage(), claims)(selection, origin);
+  },
   sendSubmissionNotice,
   sendApplicantDelivery: sendPersonnelPackDelivery,
 });
