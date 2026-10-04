@@ -112,6 +112,12 @@ function answerQuestion(rawQuestion: unknown): BotResponse {
 
   const isComplianceQuestion = COMPLIANCE_PATTERN.test(question);
   if (!isComplianceQuestion) {
+    // Instrument imports are not spreadsheet migration, even when the query
+    // also mentions data, CSV, or Excel. The current limitation is authoritative.
+    if (/\binstruments?\b/i.test(question)
+      && /\b(?:import\w*|integrat\w*|connect\w*|support\w*)\b/i.test(question)) {
+      return responseForEntry('instruments');
+    }
     if (LIMS_BOT_OVERVIEW_PATTERN.test(question)) {
       return responseForEntry('what-is-lims-bot');
     }
@@ -177,15 +183,24 @@ const ROUND_TRIPPABLE_TITLES = new Set(
   corpus.filter((entry) => answerQuestion(entry.title).grounded).map((entry) => entry.title),
 );
 const DEFAULT_SUGGESTION_IDS = ['what-is-lims-box', 'pricing', 'pilot-program'];
-const PRODUCT_CAPABILITY_PATTERN = /\b(?:can|could|does|will|is|has)\s+(?:the\s+)?lims\s*box\b(?!\s+founder|['’]s\s+founder)|\blims\s*box\s+(?:can|could|does|will|is|has|supports?|integrates?|imports?)\b/i;
+function isProductQuestion(question: string): boolean {
+  // Product mentions are independent of voice/word order. A founder's title
+  // ("the LIMS BOX founder") is not itself a reference to product capability.
+  const withoutFounderTitle = question.replace(/\blims\s*box(?:['’]s)?\s+founder\b/gi, 'founder');
+  if (/\blims\s*box\b/i.test(withoutFounderTitle)) return true;
+
+  // Preserve personal-history questions such as "What experience does Hudson
+  // have?". Any remaining present/modal clause is conservatively product intent,
+  // including passive questions that omit the product name entirely.
+  const withoutPersonalHistory = withoutFounderTitle
+    .replace(/\b(?:does\s+(?:the\s+)?(?:founder|hudson)\s+have|has\s+(?:the\s+)?(?:founder|hudson)\s+had)\b/gi, '')
+    .replace(/\bis\s+(?:the\s+)?(?:founder|hudson)['’]s\s+(?:experience|background|career|history)\b/gi, '');
+  return /\b(?:am|is|are|do|does|has|have|can|could|will|would|should|must|today|currently|available|supported)\b/i.test(withoutPersonalHistory);
+}
 
 function isFounderQuestion(question: unknown): question is string {
   if (typeof question !== 'string') return false;
   const bounded = question.trim().slice(0, MAX_QUESTION_LENGTH);
-  // A founder mention cannot turn a question about today's product into a
-  // claim based on their past employment ("Can the founder confirm LIMS BOX
-  // can integrate instruments?"). Route explicit product capabilities first.
-  if (PRODUCT_CAPABILITY_PATTERN.test(bounded)) return false;
   return /\b(?:founder|hudson)\b/i.test(bounded)
     && !/\b(?:talk|contact|call|email|speak|consultation)\b/i.test(bounded);
 }
@@ -217,11 +232,12 @@ export function askBot(rawQuestion: unknown): BotResponse {
   // product-capability question (e.g. whether LIMS BOX imports instruments).
   // For explicit product questions, founder context must not boost the
   // contact FAQ over the actual capability FAQ during keyword ranking.
-  const productQuestion = typeof rawQuestion === 'string'
-    && PRODUCT_CAPABILITY_PATTERN.test(rawQuestion.trim().slice(0, MAX_QUESTION_LENGTH))
+  const isProduct = typeof rawQuestion === 'string'
+    && isProductQuestion(rawQuestion.trim().slice(0, MAX_QUESTION_LENGTH));
+  const productQuestion = isProduct && typeof rawQuestion === 'string'
     ? rawQuestion.trim().slice(0, MAX_QUESTION_LENGTH).replace(/\b(?:founder|hudson|experience|background|career)\b/gi, '')
     : rawQuestion;
-  const response = isFounderQuestion(rawQuestion)
+  const response = !isProduct && isFounderQuestion(rawQuestion)
     ? answerFounderQuestion(rawQuestion)
     : answerQuestion(productQuestion);
   if (response.grounded) return response;

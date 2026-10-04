@@ -9,6 +9,7 @@ import FounderSourcePage from '../app/bot/sources/[...path]/page';
 import { POST } from '../app/api/bot/route';
 import { NextRequest } from 'next/server';
 import { askBot, EVIDENCE_MISSING_ANSWER } from '../lib/bot/engine';
+import { corpus } from '../lib/bot/corpus';
 import { FOUNDER_CITATION_PREFIX, loadFounderCorpus } from '../lib/bot/founder-corpus';
 import { filterCommercialClaims } from '../lib/bot/output-claims-filter';
 import { COMMERCIAL_CLAIM_RULES } from '../lib/bot/commercial-claims';
@@ -124,14 +125,23 @@ test('a founder mention or mixed career intent cannot override current product c
     'Can the founder confirm whether LIMS BOX can integrate with our instruments?',
     'Does LIMS BOX support instrument imports given the founder experience?',
     'Given Hudson background, can LIMS BOX integrate with our instruments today?',
+    "Are instrument imports supported by LIMS BOX given Hudson's experience?",
+    "Is instrument import supported by LIMS Box given Hudson's experience?",
+    "Can instrument data be imported given Hudson's experience?",
+    "Given Hudson's experience, instrument import availability in LIMS BOX?",
   ]) {
     const result = askBot(question);
     assert.match(result.answer, /Not yet/);
     assert.ok(result.sources.every((source) => !source.path.startsWith(FOUNDER_CITATION_PREFIX)));
   }
-  assert.equal(askBot('Can the founder confirm instrument imports are available?').grounded, false);
+  assert.match(askBot('Can the founder confirm instrument imports are available?').answer, /Not yet/);
   for (const question of [
     'What instrument import experience does the founder have?',
+    'What instrument import experience has Hudson had?',
+    "What is Hudson's background in instrument imports?",
+    'What did Hudson implement for instrument imports?',
+    'What training experience does Hudson have?',
+    'What data recovery experience does Hudson have?',
     'What LIMS configuration experience does the LIMS BOX founder have?',
     'What instrument import experience does the LIMS BOX founder have?',
     'What configuration experience does the LIMS BOX\'s founder have?',
@@ -141,6 +151,41 @@ test('a founder mention or mixed career intent cannot override current product c
     assert.ok(result.sources.some((source) => source.path.startsWith(FOUNDER_CITATION_PREFIX)));
   }
 });
+
+// Each topic exercises both voices, explicit/implicit product references, and
+// founder context in either position with an admitted historical corpus.
+const productTopics = [
+  { id: 'instruments', active: 'Can LIMS BOX import instrument data', passive: 'Can instrument data be imported', availability: 'Is instrument import supported' },
+  { id: 'data-migration', active: 'Can LIMS BOX migrate spreadsheets', passive: 'Can spreadsheets be migrated', availability: 'Is spreadsheet migration available' },
+  { id: 'methods', active: 'Does LIMS BOX provide EPA methods', passive: 'Are EPA methods provided', availability: 'Are EPA methods available' },
+  { id: 'implementation-fee', active: 'Does LIMS BOX include configuration', passive: 'Is configuration included', availability: 'Is configuration available' },
+  { id: 'support', active: 'Does LIMS BOX provide phone support', passive: 'Is phone support provided', availability: 'Is phone support available' },
+  { id: 'chain-of-custody', active: 'Does LIMS BOX record custody transfers', passive: 'Are custody transfers recorded', availability: 'Is chain of custody available' },
+  { id: 'offline', active: 'Can LIMS BOX work offline', passive: 'Can it be used offline', availability: 'Is offline operation available' },
+  { id: 'cancel-data', active: 'Can LIMS BOX export on cancellation', passive: 'Can records be exported on cancellation', availability: 'Is export on cancellation available' },
+];
+
+for (const topic of productTopics) {
+  test(`current ${topic.id} answers take priority over founder history in either voice`, (t) => {
+    const bundle = fixture(t, FOUNDER_EXCERPTS.map((excerpt) => excerpt.text));
+    useBundle(t, bundle.root);
+    const expected = corpus.find((entry) => entry.id === topic.id)!;
+    for (const phrasing of [topic.active, topic.passive, `${topic.passive} by LIMS BOX`,
+      topic.availability, `${topic.availability} in LIMS BOX`]) {
+      for (const question of [
+        `${phrasing}?`,
+        `${phrasing} given Hudson's experience?`,
+        `Given the founder background, ${phrasing}?`,
+      ]) {
+        const result = askBot(question);
+        assert.equal(result.grounded, true, question);
+        assert.equal(result.answer, expected.text, question);
+        assert.ok(result.sources.some((source) => source.path === expected.source), question);
+        assert.ok(result.sources.every((source) => !source.path.startsWith(FOUNDER_CITATION_PREFIX)), question);
+      }
+    }
+  });
+}
 
 for (const change of [
   { status: 'EXCLUDED_HOLD_FOR_HUDSON' }, { status: 'DUPLICATE' }, { status: 'UNKNOWN' },
