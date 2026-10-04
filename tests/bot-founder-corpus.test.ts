@@ -623,6 +623,10 @@ test('the founder bio never answers a product question (it reads as a customer c
     'Has LIMS BOX been validated at a public health lab?',
     'Can LIMS BOX handle 5M test results a year?',
     'Does LIMS BOX work for water labs?',
+    // Full-name possessives are the product side too (Pro review at 589c51de).
+    "Has Hudson Taylor's company worked with public health labs?",
+    "Has Hud Taylor's team worked with hospitals?",
+    "Has John Hudson Taylor's company served ten labs?",
   ]) {
     const result = askBot(question);
     assert.ok(!result.answer.includes(bio.text), question);

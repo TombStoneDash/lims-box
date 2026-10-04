@@ -187,7 +187,7 @@ const ROUND_TRIPPABLE_TITLES = new Set(
 const DEFAULT_SUGGESTION_IDS = ['what-is-lims-box', 'pricing', 'pilot-program'];
 const FOUNDER_IDENTITY_PATTERN = /\b(?:founded|built|created|started|made|developed|designed|launched|wrote|coded|programmed|invented|conceived|came\s+up\s+with|thought\s+of|dreamed\s+up)\s+lims\s*(?:box|bot)\b|\bwhose\s+(?:idea|brainchild|creation|company|product)(?:\s+(?:was|is)\s+(?:lims\s*(?:box|bot)|it|this))?\b|\bwho\s+(?:(?:originally\s+)?(?:built|founded|created|started|made|developed|designed|runs|owns|leads|operates)\s+(?:lims\s*(?:box|bot)|it|this)|(?:was|is)\s+(?:lims\s*(?:box|bot)|it|this)\s+(?:built|founded|created|started|made|developed|designed)\s+by)\b|\bby\s+whom\s+was\s+(?:lims\s*(?:box|bot)|it|this)\s+(?:built|founded|created|started|made|developed|designed)\b|\bwho(?:['’]s|\s+is|\s+was|\s+are)?\s+(?:the\s+)?(?:(?:person|people|team)\s+)?behind\s+(?:lims\s*(?:box|bot)|it|this)\b/i;
 // "Hudson's company" or "his team" is the product side, not the founder.
-const NOT_PRODUCT_SIDE = String.raw`(?!(?:['’]s)?\s+(?:company|team|product|software|platform|app|business|firm|startup|tool|system|staff|lims)\b)`;
+const NOT_PRODUCT_SIDE = String.raw`(?!(?:\s+(?:hudson|taylor))*(?:['’]s)?\s+(?:company|team|product|software|platform|app|business|firm|startup|tool|system|staff|lims)\b)`;
 // The founder by role or by any published form of the name (John Hudson Taylor, Hud Taylor).
 const FOUNDER_REFERENCE_PATTERN = new RegExp(String.raw`\b(?:(?:co-?)?founder|hudson|hud|taylor)\b${NOT_PRODUCT_SIDE}`, 'i');
 // The founder as the grammatical subject: "Does the founder have", "Is Hudson".
