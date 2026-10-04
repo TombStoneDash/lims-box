@@ -125,7 +125,7 @@ function ReportScreen() {
         </div>
       </div>
       <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3 text-xs text-blue-300">
-        EPA-compliant report generated in <strong>12 seconds</strong>. All QC data auto-included.
+        Synthetic report preview with example results. This recording shows a static example, not a generated or compliance-validated report.
       </div>
     </div>
   );
@@ -157,7 +157,7 @@ const steps: RecordStep[] = [
   { id: 'intake', title: 'Sample Intake', overlay: 'Every sample. Tracked.', icon: ClipboardList, content: <IntakeScreen /> },
   { id: 'audit', title: 'Audit Trail', overlay: 'Every action. Logged.', icon: Shield, content: <AuditScreen /> },
   { id: 'qc', title: 'QC Dashboard', overlay: 'Enterprise-grade traceability.', icon: BarChart3, content: <QCScreen /> },
-  { id: 'report', title: 'Reporting', overlay: 'Ready in minutes.', icon: FileText, content: <ReportScreen /> },
+  { id: 'report', title: 'Reporting', overlay: 'Synthetic report preview.', icon: FileText, content: <ReportScreen /> },
   { id: 'bot', title: 'LIMS BOT', overlay: 'Ask in plain English.', icon: MessageSquare, content: <BotScreen /> },
 ];
 

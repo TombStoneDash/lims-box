@@ -159,7 +159,7 @@ function COCStep({ signed, onSign }: { signed: boolean; onSign: () => void }) {
         <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-3">
           <div className="flex items-center gap-2 text-sm text-green-800 dark:text-green-200">
             <Check className="w-4 h-4" />
-            <span><strong>COC complete.</strong> Demo signature captured with timestamp and IP. A synthetic audit trail entry was recorded.</span>
+            <span><strong>Demo signature shown.</strong> This synthetic custody example updates only this page. No signature or audit record is saved.</span>
           </div>
         </div>
       )}
@@ -664,8 +664,8 @@ export default function DemoPage() {
               <p className="text-xs text-slate-500">Validation support</p>
             </div>
             <div>
-              <p className="font-bold text-slate-900 dark:text-white">Offline-Capable</p>
-              <p className="text-xs text-slate-500">No internet needed</p>
+              <p className="font-bold text-slate-900 dark:text-white">Web Demo</p>
+              <p className="text-xs text-slate-500">Internet connection required</p>
             </div>
             <div>
               <p className="font-bold text-slate-900 dark:text-white">30-Day Pilot</p>
