@@ -221,13 +221,12 @@ export function classifyQuestionIntent(rawQuestion: unknown): QuestionIntent {
 function answerFounderQuestion(question: string): BotResponse {
   const bounded = question.trim().slice(0, MAX_QUESTION_LENGTH);
   const overview = FOUNDER_OVERVIEW_PATTERN.test(bounded) || FOUNDER_IDENTITY_PATTERN.test(bounded);
-  if (!overview && !/\b(?:experience|background|career|history|historical|previously|past|resume|worked|implemented|configured|trained)\b|\bwhat\s+did\b/i.test(bounded)) {
+  // Identity needs the published bio, not a keyword match on career history.
+  if (overview) return responseForEntry('founder-bio');
+  if (!/\b(?:experience|background|career|history|historical|previously|past|resume|worked|implemented|configured|trained)\b|\bwhat\s+did\b/i.test(bounded)) {
     return evidenceMissing();
   }
   const tokens = tokenize(bounded);
-  // Identity/history requests without a literal 'founder' still search only
-  // admitted founder evidence, never the product FAQ.
-  if (overview) tokens.push('founder', 'experience');
   const top = loadFounderCorpus()
     .map((entry) => ({ entry, score: scoreEntry(entry, tokens) }))
     .sort((a, b) => b.score - a.score)[0];

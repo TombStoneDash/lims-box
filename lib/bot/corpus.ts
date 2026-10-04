@@ -20,6 +20,13 @@ export const COMPLIANCE_POSITIONING =
 
 export const corpus: CorpusEntry[] = [
   {
+    id: 'founder-bio',
+    title: 'Who is the founder?',
+    source: '/about',
+    keywords: ['founder', 'hudson', 'hud', 'taylor', 'bio'],
+    text: "LIMS BOX is built by Hud Taylor. MS Biochem (UCSD / Salk). Certified Water Specialist (California). 15+ years of lab software, including senior LIMS development at the State of Alaska Department of Health's public health lab — five hospitals, ten labs, 5M+ test results a year.",
+  },
+  {
     id: 'what-is-lims-box',
     title: 'What is LIMS BOX?',
     source: '/',

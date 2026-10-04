@@ -66,7 +66,7 @@ function useBundle(t: TestContext, root: string | undefined) {
   });
 }
 
-test('manifest-backed redacted candidates produce only reviewed passages and founder-file citations', (t) => {
+test('manifest-backed redacted candidates produce only reviewed passages and public excerpt citations', (t) => {
   const privateSurroundings = 'Name: Synthetic Private Person\nAn unrelated private career story.';
   const bundle = fixture(t, FOUNDER_EXCERPTS.map((excerpt) =>
     `${privateSurroundings}\n${excerpt.text.replace(/ /g, '\n')}\nPrivate closing note.`));
@@ -74,8 +74,9 @@ test('manifest-backed redacted candidates produce only reviewed passages and fou
   assert.equal(entries.length, FOUNDER_EXCERPTS.length);
   for (const [index, entry] of entries.entries()) {
     assert.equal(entry.text, `Founder archive (historical experience): ${FOUNDER_EXCERPTS[index].text}`);
-    assert.equal(entry.source, `${FOUNDER_CITATION_PREFIX}${bundle.manifest[index].path}#${FOUNDER_EXCERPTS[index].id}`);
+    assert.equal(entry.source, `${FOUNDER_CITATION_PREFIX}founder-${FOUNDER_EXCERPTS[index].id}#${FOUNDER_EXCERPTS[index].id}`);
     assert.doesNotMatch(JSON.stringify(entry), /Synthetic Private Person|private career|Private closing|source_relpaths/);
+    assert.doesNotMatch(JSON.stringify(entry), /[a-f0-9]{64}|15_HT_FOUNDER_INTAKE|sha256|FLI-\d{3}/);
     assert.equal(filterCommercialClaims(entry.text).blocked, false);
     assert.equal(admitFounderSource(bundle.manifest[index], bundle.sources[index])?.rightsClass, 'ORIGINAL_INTERNAL');
   }
@@ -92,13 +93,13 @@ test('founder questions use the real bot API path and cite a working excerpt pag
   const result = await response.json();
   assert.equal(result.grounded, true);
   assert.match(result.answer, /Configured and integrated the software/);
-  assert.equal(result.sources[0].path, `${FOUNDER_CITATION_PREFIX}${bundle.manifest[0].path}#configuration`);
+  assert.equal(result.sources[0].path, `${FOUNDER_CITATION_PREFIX}founder-configuration#configuration`);
   assert.equal(filterCommercialClaims(result.answer).blocked, false);
-  const page = await FounderSourcePage({ params: Promise.resolve({ path: bundle.manifest[0].path.split('/') }) });
+  const page = await FounderSourcePage({ params: Promise.resolve({ path: ['founder-configuration'] }) });
   const html = renderToStaticMarkup(page);
   assert.ok(html.includes(result.answer));
   assert.match(html, /id="configuration"/);
-  assert.ok(html.includes(`lims-knowledge/${bundle.manifest[0].path}`));
+  assert.doesNotMatch(html + JSON.stringify(result), /[a-f0-9]{64}|15_HT_FOUNDER_INTAKE|sha256|lims-knowledge/);
   // The local citation also survives the existing chat history policy.
   const history = parseHistory(serializeHistory([{ role: 'bot', text: result.answer, sources: result.sources }]));
   assert.deepEqual(history[0].sources, result.sources);
@@ -157,16 +158,18 @@ test('a founder mention or mixed career intent cannot override current product c
 // Intent and observable answers are both asserted: a correct label alone must
 // not conceal a fallback to pricing or a historical answer to a capability ask.
 const intentCases: { question: string; intent: QuestionIntent; entry?: string; excerpt?: string }[] = [
-  { question: 'Tell me about the founder of LIMS BOX', intent: 'founder' },
-  { question: 'Who founded LIMS Box?', intent: 'founder' },
-  { question: 'Who built LIMS BOT?', intent: 'founder' },
-  { question: 'Who built it?', intent: 'founder' },
-  { question: 'Who was it founded by?', intent: 'founder' },
-  { question: 'Who created LIMS BOX?', intent: 'founder' },
-  { question: 'Who was LIMS Box founded by?', intent: 'founder' },
-  { question: 'By whom was LIMS BOT built?', intent: 'founder' },
-  { question: 'Who is the founder of LIMS Box?', intent: 'founder' },
-  { question: 'Tell me about the LIMS BOT founder', intent: 'founder' },
+  { question: 'Tell me about the founder of LIMS BOX', intent: 'founder', entry: 'founder-bio' },
+  { question: 'Who is the founder?', intent: 'founder', entry: 'founder-bio' },
+  { question: 'Who is Hudson?', intent: 'founder', entry: 'founder-bio' },
+  { question: 'Who founded LIMS Box?', intent: 'founder', entry: 'founder-bio' },
+  { question: 'Who built LIMS BOT?', intent: 'founder', entry: 'founder-bio' },
+  { question: 'Who built it?', intent: 'founder', entry: 'founder-bio' },
+  { question: 'Who was it founded by?', intent: 'founder', entry: 'founder-bio' },
+  { question: 'Who created LIMS BOX?', intent: 'founder', entry: 'founder-bio' },
+  { question: 'Who was LIMS Box founded by?', intent: 'founder', entry: 'founder-bio' },
+  { question: 'By whom was LIMS BOT built?', intent: 'founder', entry: 'founder-bio' },
+  { question: 'Who is the founder of LIMS Box?', intent: 'founder', entry: 'founder-bio' },
+  { question: 'Tell me about the LIMS BOT founder', intent: 'founder', entry: 'founder-bio' },
   { question: 'What experience does the founder of LIMS BOX have with configuration?', intent: 'founder', excerpt: 'configuration' },
   { question: 'What is the configuration background of the LIMS BOX founder?', intent: 'founder', excerpt: 'configuration' },
   { question: 'What is the background of the founder of LIMS Box?', intent: 'founder' },
@@ -211,7 +214,14 @@ for (const { question, intent, entry, excerpt } of intentCases) {
     assert.equal(classifyQuestionIntent(question), intent);
     const result = askBot(question);
     assert.equal(result.grounded, true);
-    if (intent === 'founder') {
+    if (entry === 'founder-bio') {
+      const bio = corpus.find((item) => item.id === entry)!;
+      assert.equal(result.answer, bio.text);
+      assert.deepEqual(result.sources, [{ title: bio.title, path: '/about' }]);
+      assert.match(result.answer, /Hud Taylor/);
+      delete process.env.LIMS_FOUNDER_KNOWLEDGE_DIR;
+      assert.deepEqual(askBot(question), result);
+    } else if (intent === 'founder') {
       assert.match(result.answer, /^Founder archive \(historical experience\):/);
       assert.ok(result.sources.every((source) => source.path.startsWith(FOUNDER_CITATION_PREFIX)));
       if (excerpt) assert.ok(result.sources.some((source) => source.path.endsWith(`#${excerpt}`)));
@@ -379,7 +389,7 @@ test('arbitrary founder text and every forbidden commercial claim stay outside a
   assert.equal(result.grounded, true);
   assert.equal(filterCommercialClaims(result.answer).blocked, false);
   assert.doesNotMatch(result.answer, /Unknown personal name|FDA cleared/i);
-  const page = await FounderSourcePage({ params: Promise.resolve({ path: bundle.sources[0].redacted.split('/') }) });
+  const page = await FounderSourcePage({ params: Promise.resolve({ path: ['founder-configuration'] }) });
   assert.doesNotMatch(renderToStaticMarkup(page), /Unknown personal name|FDA cleared/i);
   const unreviewed = fixture(t, ['New founder claim which has not been reviewed.']);
   assert.deepEqual(loadFounderCorpus(unreviewed.root), []);
@@ -392,7 +402,7 @@ test('duplicates collapse; holds and bundle removal revoke answers and citation 
   for (const source of bundle.sources) source.bot_status = 'REDACTED_NEEDS_HUMAN_REVIEW';
   bundle.save();
   assert.equal(askBot('What experience does the founder have?').grounded, false);
-  await assert.rejects(FounderSourcePage({ params: Promise.resolve({ path: bundle.sources[0].redacted.split('/') }) }), /NEXT_HTTP_ERROR_FALLBACK;404/);
+  await assert.rejects(FounderSourcePage({ params: Promise.resolve({ path: ['founder-configuration'] }) }), /NEXT_HTTP_ERROR_FALLBACK;404/);
   for (const route of ['15_HT_FOUNDER_INTAKE/originals/private.doc', '../MANIFEST.tsv', '15_HT_FOUNDER_INTAKE/SOURCES.tsv']) {
     await assert.rejects(FounderSourcePage({ params: Promise.resolve({ path: route.split('/') }) }), /NEXT_HTTP_ERROR_FALLBACK;404/);
   }
@@ -403,18 +413,19 @@ test('public citation pages expose only reviewed excerpts, excluding private/cus
   const bundle = fixture(t, FOUNDER_EXCERPTS.map((excerpt) => `${privateText}\n${excerpt.text}`));
   useBundle(t, bundle.root);
   for (const [index, record] of bundle.manifest.entries()) {
-    const page = await FounderSourcePage({ params: Promise.resolve({ path: record.path.split('/') }) });
+    const page = await FounderSourcePage({ params: Promise.resolve({ path: [`founder-${FOUNDER_EXCERPTS[index].id}`] }) });
     const html = renderToStaticMarkup(page);
     assert.ok(html.includes(`Founder archive (historical experience): ${FOUNDER_EXCERPTS[index].text}`));
     for (const hidden of [privateText, 'Synthetic Private Person', 'Customer Secret Laboratory',
       'confidential sample result', bundle.root, bundle.sources[index].alias, record.source_location,
-      'source_relpaths', 'catalog_hash_prefix']) {
+      'source_relpaths', 'catalog_hash_prefix', record.path, record.sha256, bundle.sources[index].sha256]) {
       assert.ok(!html.includes(hidden), `Citation page leaked ${hidden}`);
     }
   }
   // Probe private paths while the bundle has admitted public excerpts.
   const hash = bundle.sources[0].sha256;
   for (const route of [
+    bundle.sources[0].redacted,
     `15_HT_FOUNDER_INTAKE/originals/${hash}.txt`,
     `15_HT_FOUNDER_INTAKE/text/${hash}.txt`,
     '15_HT_FOUNDER_INTAKE/SOURCES.tsv', 'MANIFEST.tsv', '../MANIFEST.tsv',

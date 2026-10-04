@@ -108,7 +108,8 @@ export function loadFounderCorpus(root = process.env.LIMS_FOUNDER_KNOWLEDGE_DIR)
         entries.push({
           id: `founder-${excerpt.id}`,
           title: excerpt.title,
-          source: `${FOUNDER_CITATION_PREFIX}${record.path}#${excerpt.id}`,
+          // Public IDs identify reviewed passages, never private documents.
+          source: `${FOUNDER_CITATION_PREFIX}founder-${excerpt.id}#${excerpt.id}`,
           keywords: [...excerpt.keywords],
           text: answer,
         });
