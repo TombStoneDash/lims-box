@@ -183,8 +183,26 @@ const ROUND_TRIPPABLE_TITLES = new Set(
   corpus.filter((entry) => answerQuestion(entry.title).grounded).map((entry) => entry.title),
 );
 const DEFAULT_SUGGESTION_IDS = ['what-is-lims-box', 'pricing', 'pilot-program'];
-const FOUNDER_IDENTITY_PATTERN = /\bwho\s+(?:(?:originally\s+)?(?:built|founded|created|started)\s+(?:lims\s*(?:box|bot)|it|this)|(?:was|is)\s+(?:lims\s*(?:box|bot)|it|this)\s+(?:built|founded|created|started)\s+by)\b|\bby\s+whom\s+was\s+(?:lims\s*(?:box|bot)|it|this)\s+(?:built|founded|created|started)\b/i;
-const FOUNDER_OVERVIEW_PATTERN = /^(?:tell\s+me\s+about|who\s+is)\s+(?:the\s+)?(?:founder(?:\s+of\s+(?:the\s+)?lims\s*(?:box|bot))?|lims\s*(?:box|bot)(?:['’]s)?\s+founder|hudson)[?.!]*$/i;
+const FOUNDER_IDENTITY_PATTERN = /\bwho\s+(?:(?:originally\s+)?(?:built|founded|created|started|made|developed|designed)\s+(?:lims\s*(?:box|bot)|it|this)|(?:was|is)\s+(?:lims\s*(?:box|bot)|it|this)\s+(?:built|founded|created|started|made|developed|designed)\s+by)\b|\bby\s+whom\s+was\s+(?:lims\s*(?:box|bot)|it|this)\s+(?:built|founded|created|started|made|developed|designed)\b|\bwho(?:['’]s|\s+is|\s+was|\s+are)?\s+(?:the\s+)?(?:(?:person|people|team)\s+)?behind\s+(?:lims\s*(?:box|bot)|it|this)\b/i;
+// The founder by role or by any published form of the name (John Hudson Taylor, Hud Taylor).
+const FOUNDER_REFERENCE_PATTERN = /\b(?:co-?)?founder\b|\b(?:hudson|hud|taylor)\b/i;
+// Founder routing contract: docs/bot/founder-question-routing.md.
+// Words that only say who a founder question is about, or that it asks for
+// identity or general background. The words left over are its topic.
+const FOUNDER_FRAME_WORDS = new Set([
+  'founder', 'founders', 'co-founder', 'cofounder', 'hudson', 'hud', 'taylor', 'john', 'bot', 'limsbot',
+  'he', 'him', 'his', 'mr', 'mister', 'this', 'company', 'by', 'whom', 'behind', 'name', 'bio', 'biography', 'profile',
+  'person', 'people', 'team',
+  'built', 'founded', 'created', 'started', 'made', 'developed', 'designed',
+  'experience', 'experienced', 'background', 'career', 'history', 'historical', 'previous',
+  'previously', 'past', 'resume', 'worked', 'work', 'done', 'has', 'had', 'have', 'was', 'were',
+  'any', 'kind', 'give', 'share', 'describe', 'some', 'more', 'please', 'before', 'ago', 'ever',
+]);
+// A topic is answered only when the question asks about the founder's past.
+const FOUNDER_HISTORY_PATTERN = /\b(?:experienced?|background|career|history|historical|previous(?:ly)?|past|resume|worked|implemented|configured|trained|qualifications?|qualified|education|credentials?|degrees?|studied|before|ever|did|has|had|was|were)\b/i;
+// Topics the published bio states without using these exact words (degree, school).
+const BIO_TOPIC_WORDS = ['education', 'degree', 'school', 'university', 'study', 'studied', 'qualification', 'qualified', 'credential', 'certification'];
+const singular = (token: string) => (token.length > 3 ? token.replace(/s$/, '') : token);
 
 export type QuestionIntent = 'founder' | 'product' | 'mixed' | 'contact';
 
@@ -199,7 +217,7 @@ export function classifyQuestionIntent(rawQuestion: unknown): QuestionIntent {
   const subject = question
     .replace(/\bfounder\s+of\s+(?:the\s+)?lims\s*(?:box|bot)\b/gi, 'founder')
     .replace(/\blims\s*(?:box|bot)(?:['’]s)?\s+founder\b/gi, 'founder');
-  const founder = /\b(?:founder|hudson)\b/i.test(subject)
+  const founder = FOUNDER_REFERENCE_PATTERN.test(subject)
     || FOUNDER_IDENTITY_PATTERN.test(subject);
 
   // Active product questions and statements, passive capability questions,
@@ -213,34 +231,38 @@ export function classifyQuestionIntent(rawQuestion: unknown): QuestionIntent {
     || /\b(?:imports?|migration|methods|configuration|support|custody|operation|exports?)\s+availability\b/i.test(subject)
     || /\blims\s*(?:box|bot)(?:['’]s)?\s+(?:pricing|prices?|costs?|subscription)\b|\b(?:pricing|prices?|costs?|subscription)\s+(?:of|for)\s+lims\s*(?:box|bot)\b/i.test(subject)
     || /\b(?:how\s+much|what\s+(?:is|are)\s+(?:the\s+)?(?:price|pricing|cost|subscription)|pricing\s+(?:today|for))\b/i.test(subject);
-  if (currentProduct) return founder ? 'mixed' : 'product';
-  if (/\b(?:talk|contact|call|email|speak|consultation)\b/i.test(subject)) return 'contact';
+  // Compliance answers always lead with the locked positioning, which only the
+  // product path gives, so a founder mention never takes a compliance question.
+  if (currentProduct || (founder && COMPLIANCE_PATTERN.test(subject))) return founder ? 'mixed' : 'product';
+  // "Has the founder worked with call centers?" is history, not a contact request.
+  if (/\b(?:talk|contact|call|email|speak|consultation|reach|meet)\b/i.test(subject)
+    && !(founder && FOUNDER_HISTORY_PATTERN.test(subject))) return 'contact';
   return founder ? 'founder' : 'product';
 }
 
 function answerFounderQuestion(question: string): BotResponse {
   const bounded = question.trim().slice(0, MAX_QUESTION_LENGTH);
-  const overview = FOUNDER_OVERVIEW_PATTERN.test(bounded) || FOUNDER_IDENTITY_PATTERN.test(bounded);
-  // Identity needs the published bio, not a keyword match on career history.
-  if (overview) return responseForEntry('founder-bio');
-  if (!/\b(?:experience|background|career|history|historical|previously|past|resume|worked|implemented|configured|trained)\b|\bwhat\s+did\b/i.test(bounded)) {
-    return evidenceMissing();
-  }
-  const tokens = tokenize(bounded);
+  const topic = tokenize(bounded).filter((token) => !FOUNDER_FRAME_WORDS.has(token));
+  // Identity ("Who is Hudson Taylor?", "founder bio") and general background
+  // ("What is the founder's background?") are answered by the published bio.
+  if (topic.length === 0) return responseForEntry('founder-bio');
+  if (!FOUNDER_HISTORY_PATTERN.test(bounded)) return evidenceMissing();
+  // Archive excerpts are scored on the topic alone, so founder or history
+  // wording can never make an unrelated excerpt qualify.
   const top = loadFounderCorpus()
-    .map((entry) => ({ entry, score: scoreEntry(entry, tokens) }))
+    .map((entry) => ({ entry, score: scoreEntry(entry, topic) }))
     .sort((a, b) => b.score - a.score)[0];
-  if (!top || top.score < MIN_SCORE) return evidenceMissing();
-
-  const sources = [{ title: top.entry.title, path: top.entry.source }];
-  let answer = top.entry.text;
-  if (COMPLIANCE_PATTERN.test(bounded)) {
-    answer = `${COMPLIANCE_POSITIONING} ${answer}`;
-    sources.unshift({ title: 'LIMS BOX compliance positioning', path: '/compliance' });
+  if (!top || top.score < MIN_SCORE) {
+    // The bio still answers a topic it states (water, public health, a degree).
+    const bio = corpus.find((entry) => entry.id === 'founder-bio');
+    const bioWords = new Set([...tokenize(bio?.text ?? ''), ...BIO_TOPIC_WORDS].map(singular));
+    return topic.some((token) => bioWords.has(singular(token))) ? responseForEntry('founder-bio') : evidenceMissing();
   }
-  const filtered = filterCommercialClaims(answer);
+
+  // Compliance questions never reach this path (classifyQuestionIntent).
+  const filtered = filterCommercialClaims(top.entry.text);
   if (filtered.blocked) return { answer: filtered.answer, grounded: false, sources: [] };
-  return { answer: filtered.answer, grounded: true, sources };
+  return { answer: filtered.answer, grounded: true, sources: [{ title: top.entry.title, path: top.entry.source }] };
 }
 
 export function askBot(rawQuestion: unknown): BotResponse {
@@ -249,9 +271,13 @@ export function askBot(rawQuestion: unknown): BotResponse {
   // For explicit product questions, founder context must not boost the
   // contact FAQ over the actual capability FAQ during keyword ranking.
   const intent = classifyQuestionIntent(rawQuestion);
+  // Asking to reach the founder is a contact request, never a bio lookup.
+  if (intent === 'contact' && typeof rawQuestion === 'string' && FOUNDER_REFERENCE_PATTERN.test(rawQuestion)) {
+    return responseForEntry('talk-to-person');
+  }
   const isProduct = intent === 'product' || intent === 'mixed';
   const productQuestion = isProduct && typeof rawQuestion === 'string'
-    ? rawQuestion.trim().slice(0, MAX_QUESTION_LENGTH).replace(/\b(?:founder|hudson|experience|background|career)\b/gi, '')
+    ? rawQuestion.trim().slice(0, MAX_QUESTION_LENGTH).replace(/\b(?:(?:co-?)?founder|hudson|hud|taylor|john|experience|background|career)\b/gi, '')
     : rawQuestion;
   const response = intent === 'founder' && typeof rawQuestion === 'string'
     ? answerFounderQuestion(rawQuestion)

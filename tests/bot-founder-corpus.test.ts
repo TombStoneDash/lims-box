@@ -9,7 +9,7 @@ import FounderSourcePage from '../app/bot/sources/[...path]/page';
 import { POST } from '../app/api/bot/route';
 import { NextRequest } from 'next/server';
 import { askBot, classifyQuestionIntent, type QuestionIntent, EVIDENCE_MISSING_ANSWER } from '../lib/bot/engine';
-import { corpus } from '../lib/bot/corpus';
+import { corpus, COMPLIANCE_POSITIONING } from '../lib/bot/corpus';
 import { FOUNDER_CITATION_PREFIX, loadFounderCorpus } from '../lib/bot/founder-corpus';
 import { filterCommercialClaims } from '../lib/bot/output-claims-filter';
 import { COMMERCIAL_CLAIM_RULES } from '../lib/bot/commercial-claims';
@@ -109,7 +109,9 @@ test('missing bundle and off-topic founder questions fail closed; product and co
   useBundle(t, undefined);
   assert.deepEqual(loadFounderCorpus(), []);
   assert.deepEqual(loadFounderCorpus('/not/a/knowledge/bundle'), []);
-  assert.equal(askBot('What experience does the founder have?').answer, EVIDENCE_MISSING_ANSWER);
+  // General background is the published /about bio; archive topics fail closed.
+  assert.equal(askBot('What experience does the founder have?').answer, corpus.find((item) => item.id === 'founder-bio')!.text);
+  assert.equal(askBot('What configuration experience does the founder have?').answer, EVIDENCE_MISSING_ANSWER);
   const bundle = fixture(t);
   process.env.LIMS_FOUNDER_KNOWLEDGE_DIR = bundle.root;
   assert.equal(askBot('What is the founder SSN?').grounded, false);
@@ -170,9 +172,30 @@ const intentCases: { question: string; intent: QuestionIntent; entry?: string; e
   { question: 'By whom was LIMS BOT built?', intent: 'founder', entry: 'founder-bio' },
   { question: 'Who is the founder of LIMS Box?', intent: 'founder', entry: 'founder-bio' },
   { question: 'Tell me about the LIMS BOT founder', intent: 'founder', entry: 'founder-bio' },
+  // Every published form of the founder's name, and bio wording (HUD review at 24d29712).
+  { question: 'Who is Hudson Taylor?', intent: 'founder', entry: 'founder-bio' },
+  { question: 'Who is John Hudson Taylor?', intent: 'founder', entry: 'founder-bio' },
+  { question: 'Who is Hud Taylor?', intent: 'founder', entry: 'founder-bio' },
+  { question: 'Tell me about Hudson Taylor', intent: 'founder', entry: 'founder-bio' },
+  { question: 'founder bio', intent: 'founder', entry: 'founder-bio' },
+  { question: 'Hudson Taylor bio', intent: 'founder', entry: 'founder-bio' },
+  { question: "What is the founder's name?", intent: 'founder', entry: 'founder-bio' },
+  { question: "Who's behind LIMS BOX?", intent: 'founder', entry: 'founder-bio' },
+  { question: 'Who made LIMS BOX?', intent: 'founder', entry: 'founder-bio' },
+  { question: 'Who is Hudson Taylor and what is his background?', intent: 'founder', entry: 'founder-bio' },
+  { question: 'Who is Mr. Taylor?', intent: 'founder', entry: 'founder-bio' },
+  { question: 'Who started this company?', intent: 'founder', entry: 'founder-bio' },
+  { question: 'What company did the founder work for?', intent: 'founder', entry: 'founder-bio' },
+  // General background, and history topics the bio states.
+  { question: 'What is the background of the founder of LIMS Box?', intent: 'founder', entry: 'founder-bio' },
+  { question: "What is the founder's background?", intent: 'founder', entry: 'founder-bio' },
+  { question: 'What experience does the founder have?', intent: 'founder', entry: 'founder-bio' },
+  { question: "Tell me about Hudson's experience", intent: 'founder', entry: 'founder-bio' },
+  { question: 'What experience does Hudson have with water testing?', intent: 'founder', entry: 'founder-bio' },
+  { question: 'Has Hudson worked in public health?', intent: 'founder', entry: 'founder-bio' },
+  { question: 'Does the founder have a degree?', intent: 'founder', entry: 'founder-bio' },
   { question: 'What experience does the founder of LIMS BOX have with configuration?', intent: 'founder', excerpt: 'configuration' },
   { question: 'What is the configuration background of the LIMS BOX founder?', intent: 'founder', excerpt: 'configuration' },
-  { question: 'What is the background of the founder of LIMS Box?', intent: 'founder' },
   { question: 'What training experience does the founder of LIMS BOT have?', intent: 'founder', excerpt: 'training' },
   { question: "What is Hudson's background in instrument imports?", intent: 'founder', excerpt: 'instrument-imports' },
   { question: 'What did Hudson implement for instrument imports?', intent: 'founder', excerpt: 'instrument-imports' },
@@ -205,7 +228,28 @@ const intentCases: { question: string; intent: QuestionIntent; entry?: string; e
   { question: 'Tell me about LIMS BOX given the founder background', intent: 'mixed', entry: 'what-is-lims-box' },
   { question: 'What is LIMS BOT given the founder background?', intent: 'mixed', entry: 'what-is-lims-bot' },
   { question: 'Can I talk to the founder?', intent: 'contact', entry: 'talk-to-person' },
+  // Reaching the founder is a contact request, never a bio lookup.
+  { question: 'Can I meet Hudson?', intent: 'contact', entry: 'talk-to-person' },
+  { question: 'How can I reach the founder?', intent: 'contact', entry: 'talk-to-person' },
+  { question: 'Can I speak with Hud Taylor?', intent: 'contact', entry: 'talk-to-person' },
 ];
+
+test('founder questions about topics nothing published covers fail closed, even with the archive loaded', (t) => {
+  const bundle = fixture(t, FOUNDER_EXCERPTS.map((item) => item.text));
+  useBundle(t, bundle.root);
+  for (const question of [
+    "What is the founder's favorite color?",
+    'What did Hudson implement?',
+    'Can Hudson help my lab migrate?',
+    'What does Hudson think about competitors?',
+    'Has the founder worked with call centers?',
+  ]) {
+    const result = askBot(question);
+    assert.equal(result.grounded, false, question);
+    assert.equal(result.answer, EVIDENCE_MISSING_ANSWER, question);
+    assert.deepEqual(result.sources, [], question);
+  }
+});
 
 for (const { question, intent, entry, excerpt } of intentCases) {
   test(`intent ${intent}: ${question}`, (t) => {
@@ -399,9 +443,11 @@ test('duplicates collapse; holds and bundle removal revoke answers and citation 
   const bundle = fixture(t, [FOUNDER_EXCERPTS[0].text, FOUNDER_EXCERPTS[0].text]);
   useBundle(t, bundle.root);
   assert.equal(loadFounderCorpus().length, 1);
+  // A topic question depends on the archive (general background is the public bio).
+  assert.equal(askBot('What configuration experience does the founder have?').grounded, true);
   for (const source of bundle.sources) source.bot_status = 'REDACTED_NEEDS_HUMAN_REVIEW';
   bundle.save();
-  assert.equal(askBot('What experience does the founder have?').grounded, false);
+  assert.equal(askBot('What configuration experience does the founder have?').grounded, false);
   await assert.rejects(FounderSourcePage({ params: Promise.resolve({ path: ['founder-configuration'] }) }), /NEXT_HTTP_ERROR_FALLBACK;404/);
   for (const route of ['15_HT_FOUNDER_INTAKE/originals/private.doc', '../MANIFEST.tsv', '15_HT_FOUNDER_INTAKE/SOURCES.tsv']) {
     await assert.rejects(FounderSourcePage({ params: Promise.resolve({ path: route.split('/') }) }), /NEXT_HTTP_ERROR_FALLBACK;404/);
@@ -433,5 +479,23 @@ test('public citation pages expose only reviewed excerpts, excluding private/cus
   ]) {
     await assert.rejects(FounderSourcePage({ params: Promise.resolve({ path: route.split('/') }) }),
       /NEXT_HTTP_ERROR_FALLBACK;404/);
+  }
+});
+
+test('compliance questions that mention the founder keep the locked positioning and never cite the archive', (t) => {
+  const bundle = fixture(t, FOUNDER_EXCERPTS.map((item) => item.text));
+  useBundle(t, bundle.root);
+  for (const question of [
+    "What is the founder's experience with CLIA?",
+    'Is the founder HIPAA certified?',
+    'Has Hudson done validation for CLIA labs?',
+    'Who is the founder and is LIMS BOX HIPAA compliant?',
+  ]) {
+    assert.equal(classifyQuestionIntent(question), 'mixed', question);
+    const result = askBot(question);
+    assert.equal(result.grounded, true, question);
+    assert.ok(result.answer.startsWith(COMPLIANCE_POSITIONING), question);
+    assert.equal(result.sources[0].path, '/compliance', question);
+    assert.ok(result.sources.every((source) => !source.path.startsWith(FOUNDER_CITATION_PREFIX)), question);
   }
 });
