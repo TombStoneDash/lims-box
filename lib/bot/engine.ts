@@ -185,9 +185,12 @@ const ROUND_TRIPPABLE_TITLES = new Set(
   corpus.filter((entry) => answerQuestion(entry.title).grounded).map((entry) => entry.title),
 );
 const DEFAULT_SUGGESTION_IDS = ['what-is-lims-box', 'pricing', 'pilot-program'];
-const FOUNDER_IDENTITY_PATTERN = /\b(?:founded|built|created|started|made|developed|designed|launched|wrote|coded|programmed|invented|conceived|came\s+up\s+with|thought\s+of|dreamed\s+up)\s+lims\s*(?:box|bot)\b|\bwhose\s+(?:idea|brainchild|creation|company|product)(?:\s+(?:was|is)\s+(?:lims\s*(?:box|bot)|it|this))?\b|\bwho\s+(?:(?:originally\s+)?(?:built|founded|created|started|made|developed|designed|runs|owns|leads|operates)\s+(?:lims\s*(?:box|bot)|it|this)|(?:was|is)\s+(?:lims\s*(?:box|bot)|it|this)\s+(?:built|founded|created|started|made|developed|designed)\s+by)\b|\bby\s+whom\s+was\s+(?:lims\s*(?:box|bot)|it|this)\s+(?:built|founded|created|started|made|developed|designed)\b|\bwho(?:['’]s|\s+is|\s+was|\s+are)?\s+(?:the\s+)?(?:(?:person|people|team)\s+)?behind\s+(?:lims\s*(?:box|bot)|it|this)\b/i;
+const FOUNDER_IDENTITY_PATTERN = /\b(?:founded|built|created|started|made|developed|designed|launched|wrote|coded|programmed|invented|conceived|came\s+up\s+with|thought\s+of|dreamed\s+up)\s+lims\s*(?:box|bot)\b|\bwhose\s+(?:idea|brainchild|creation|company|product)(?:\s+(?:was|is)\s+(?:lims\s*(?:box|bot)|it|this))?\b|\bwho\s+(?:(?:originally\s+)?(?:built|founded|created|started|made|developed|designed|runs|owns|leads|operates)\s+(?:lims\s*(?:box|bot)|it|(?:this|the)\s+(?:company|startup|business|product|app|bot|software)|this)|(?:was|is)\s+(?:lims\s*(?:box|bot)|it|this)\s+(?:built|founded|created|started|made|developed|designed)\s+by)\b|\bby\s+whom\s+was\s+(?:lims\s*(?:box|bot)|it|this)\s+(?:built|founded|created|started|made|developed|designed)\b|\bwho(?:['’]s|\s+is|\s+was|\s+are)?\s+(?:the\s+)?(?:(?:person|people|team)\s+)?behind\s+(?:lims\s*(?:box|bot)|it|this)\b/i;
 // "Hudson's company" or "his team" is the product side, not the founder.
 const NOT_PRODUCT_SIDE = String.raw`(?!(?:\s+(?:hudson|taylor))*(?:['’]s)?\s+(?:company|team|product|software|platform|app|business|firm|startup|tool|system|staff|lims)\b)`;
+// Something the founder owns or runs ("Hudson Taylor's own company", "his small team",
+// "the founder's new startup") is the product side; the whole phrase becomes "the company".
+const FOUNDER_ORGANIZATION_PATTERN = /(?:\b(?:(?:co-?)?founder|john|hudson|hud|taylor)(?:\s+(?:hudson|taylor))*['’]s|\bhis)\s+(?:[a-z-]+\s+){0,2}?(?:company|team|teams|product|products|software|platform|app|business|firm|startup|tool|tools|system|systems|staff|lims|customers?|clients?)\b/gi;
 // The founder by role or by any published form of the name (John Hudson Taylor, Hud Taylor).
 const FOUNDER_REFERENCE_PATTERN = new RegExp(String.raw`\b(?:(?:co-?)?founder|hudson|hud|taylor)\b${NOT_PRODUCT_SIDE}`, 'i');
 // The founder as the grammatical subject: "Does the founder have", "Is Hudson".
@@ -215,6 +218,9 @@ const REQUEST_WRAPPER_PATTERN = /^(?:please\s+)?(?:(?:can|could|would|will)\s+yo
 const FILLER_PATTERN = /,?\s*\b(?:exactly|really|actually|just|specifically|originally)\b\s*,?/gi;
 // The product as the thing the founder built is attribution, not a product question.
 const BUILT_PRODUCT_PATTERN = /\b(built|founded|created|started|made|developed|designed)\s+(?:lims\s*(?:box|bot)|it|this)\b|\b(?:lims\s*(?:box|bot)|it|this)\s+(?:was|is)\s+(?=(?:built|founded|created|started|made|developed|designed)\b)/gi;
+// A company, team or customer question is about the organization, not the person,
+// so the personal bio never answers it (identity phrasing is normalized away first).
+const ORGANIZATION_PATTERN = /\b(?:company|companies|team|teams|staff|startup|startups|business|businesses|firm|product|products|software|platform|customers?|clients?|organi[sz]ation)\b/i;
 const CONTACT_PATTERN = /\b(?:talk|contact|call|email|speak|consultation|reach|meet|meeting|touch|book|schedule)\b/i;
 // Founder routing contract: docs/bot/founder-question-routing.md.
 // Words that only say who a founder question is about, or that it asks for
@@ -264,6 +270,7 @@ export function classifyQuestionIntent(rawQuestion: unknown): QuestionIntent {
   const question = rawQuestion.trim().slice(0, MAX_QUESTION_LENGTH).replace(REQUEST_WRAPPER_PATTERN, '');
   // Normalize filler and attribution noun phrases, not every mention of the product.
   const subject = question
+    .replace(FOUNDER_ORGANIZATION_PATTERN, 'the company')
     .replace(FILLER_PATTERN, ' ')
     .replace(/\bfounder\s+of\s+(?:the\s+)?lims\s*(?:box|bot)\b/gi, 'founder')
     .replace(/\b(?:lims\s*(?:box|bot)(?:['’]s)?|your)\s+founder\b/gi, 'founder')
@@ -288,7 +295,7 @@ export function classifyQuestionIntent(rawQuestion: unknown): QuestionIntent {
   if (CONTACT_PATTERN.test(subject) && !FOUNDER_PAST_PATTERN.test(subject)) return 'contact';
   // Identity phrases name the product only as what was founded.
   const rest = subject.replace(FOUNDER_IDENTITY_PATTERN, 'who founded').replace(BUILT_PRODUCT_PATTERN, '$1');
-  if (CURRENT_QUESTION_PATTERN.test(rest) || (founder && PRODUCT_REFERENCE_PATTERN.test(rest))) {
+  if (CURRENT_QUESTION_PATTERN.test(rest) || (founder && (PRODUCT_REFERENCE_PATTERN.test(rest) || ORGANIZATION_PATTERN.test(rest)))) {
     return founder ? 'mixed' : 'product';
   }
   return founder ? 'founder' : 'product';

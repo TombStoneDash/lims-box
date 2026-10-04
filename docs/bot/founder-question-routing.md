@@ -16,8 +16,11 @@ Change this document and those tests together.
   finding wordings where an excerpt answers a question it does not support. Archive answers need
   their own reviewed design and deployment wiring (`LIMS_FOUNDER_KNOWLEDGE_DIR` has none today), in
   a separate change.
-- **The bio never answers a product question.** It is excluded from product FAQ ranking, where its
-  "five hospitals, ten labs" line would read as a customer claim.
+- **The bio never answers a product or organization question.** It is excluded from product FAQ
+  ranking, where its "five hospitals, ten labs" line would read as a customer claim, and a founder
+  question that mentions a company, team, staff, startup, business, product, customers or clients
+  ("Has Hudson Taylor's own company worked with public health labs?") takes the product path.
+  Identity phrasing ("Who started this company?", "Whose company is LIMS BOX?") still gets the bio.
 
 ## Routing rules, in order
 

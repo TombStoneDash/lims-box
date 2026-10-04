@@ -181,7 +181,10 @@ const intentCases: { question: string; intent: QuestionIntent; entry?: string }[
   { question: 'Who is Hudson Taylor and what is his background?', intent: 'founder', entry: 'founder-bio' },
   { question: 'Who is Mr. Taylor?', intent: 'founder', entry: 'founder-bio' },
   { question: 'Who started this company?', intent: 'founder', entry: 'founder-bio' },
-  { question: 'What company did the founder work for?', intent: 'founder', entry: 'founder-bio' },
+  // A company question is about the organization, never answered by the personal bio.
+  { question: 'What company did the founder work for?', intent: 'mixed' },
+  { question: 'Have Hudson and his team worked with hospitals?', intent: 'mixed' },
+  { question: 'Whose company is LIMS BOX?', intent: 'founder', entry: 'founder-bio' },
   // Requests to the bot wrap the real question (HUD review at 07bbab81).
   { question: 'Could you tell me who John Hudson Taylor is?', intent: 'founder', entry: 'founder-bio' },
   { question: 'Do you know who built LIMS BOX?', intent: 'founder', entry: 'founder-bio' },
@@ -627,6 +630,7 @@ test('the founder bio never answers a product question (it reads as a customer c
     "Has Hudson Taylor's company worked with public health labs?",
     "Has Hud Taylor's team worked with hospitals?",
     "Has John Hudson Taylor's company served ten labs?",
+    "Has Hudson Taylor's own company worked with public health labs?",
   ]) {
     const result = askBot(question);
     assert.ok(!result.answer.includes(bio.text), question);
@@ -650,4 +654,28 @@ test('founder context without a comma or in an earlier sentence still leaves pro
   assert.notEqual(classifyQuestionIntent("I made it to the demo, what's next?"), 'founder');
   const train = askBot("With Hudson's training background do you train our technicians?");
   assert.ok(train.sources.every((source) => source.path !== '/about' && !source.path.startsWith(FOUNDER_CITATION_PREFIX)));
+});
+
+// Property check for the "founder's organization" class (Pro reviews at 589c51de and
+// 91662b66): every name form, possessive, modifier and organization noun stays on the
+// product side, so the personal bio never answers for the company.
+test('questions about anything the founder owns or runs never get the personal bio', (t) => {
+  const bundle = fixture(t, FOUNDER_EXCERPTS.map((item) => item.text));
+  useBundle(t, bundle.root);
+  const owners = ["Hudson's", 'Hudson’s', "Hud's", "Hudson Taylor's", "Hud Taylor's", "John Hudson Taylor's", "the founder's", "the LIMS BOX founder's", 'his'];
+  const modifiers = ['', 'own ', 'new ', 'small ', 'very own '];
+  const organizations = ['company', 'team', 'staff', 'startup', 'business', 'software', 'product'];
+  const templates = [
+    (x: string) => `Has ${x} worked with public health labs?`,
+    (x: string) => `Does ${x} serve hospitals?`,
+    (x: string) => `Is ${x} certified for water testing in California?`,
+  ];
+  let checked = 0;
+  for (const owner of owners) for (const modifier of modifiers) for (const organization of organizations) for (const template of templates) {
+    const question = template(`${owner} ${modifier}${organization}`);
+    const result = askBot(question);
+    assert.ok(result.sources.every((source) => source.path !== '/about' && !source.path.startsWith(FOUNDER_CITATION_PREFIX)), question);
+    checked += 1;
+  }
+  assert.equal(checked, owners.length * modifiers.length * organizations.length * templates.length);
 });
