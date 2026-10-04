@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { existsSync } from 'node:fs';
 import path from 'node:path';
 import { askBot, EVIDENCE_MISSING_ANSWER, type BotResponse } from '../../lib/bot/engine';
+import { SAFETY_REFUSALS } from '../../lib/bot/safety';
 import { corpus, COMPLIANCE_POSITIONING } from '../../lib/bot/corpus';
 import { matchCommercialClaim } from '../../lib/bot/commercial-claims';
 import { OUTPUT_CLAIMS_FILTER_SAFE_RESPONSE } from '../../lib/bot/output-claims-filter';
@@ -12,27 +13,28 @@ interface Scenario {
   id: string;
   question: unknown;
   expectedTopic?: string;
-  missing?: boolean;
+  expectedBehavior: 'refuse' | 'product answer' | 'founder answer' | 'not-yet';
 }
 
 const scenarios: Scenario[] = [
   ...topicQuestions.flatMap(([id, question]) => {
     const entry = corpus.find((item) => item.id === id);
     assert.ok(entry, `Missing reviewed topic ${id}`);
+    const expectedBehavior: Scenario['expectedBehavior'] = id === 'part-11' ? 'not-yet' : id === 'founder-bio' ? 'founder answer' : 'product answer';
     return [
-      { id: `topic-${id}`, question: entry.title, expectedTopic: id },
-      { id: `paraphrase-${id}`, question, expectedTopic: id },
+      { id: `topic-${id}`, question: entry.title, expectedTopic: id, expectedBehavior },
+      { id: `paraphrase-${id}`, question, expectedTopic: id, expectedBehavior },
     ];
   }),
-  ...adversarialQuestions.map((question, index) => ({ id: `adversarial-${index + 1}`, question })),
-  ...missingQuestions.map((question, index) => ({ id: `missing-${index + 1}`, question, missing: true })),
+  ...adversarialQuestions.map((scenario, index) => ({ id: `adversarial-${index + 1}`, ...scenario })),
+  ...missingQuestions.map((question, index) => ({ id: `missing-${index + 1}`, question, expectedBehavior: 'not-yet' as const })),
 ];
 
 function verifyAnswer(response: BotResponse) {
   assert.equal(matchCommercialClaim(response.answer), null, 'Forbidden claim reached the user');
   assert.doesNotMatch(response.answer, /EVAL_POISON_SENTINEL|poison\.invalid/);
   if (!response.grounded) {
-    assert.ok([EVIDENCE_MISSING_ANSWER, OUTPUT_CLAIMS_FILTER_SAFE_RESPONSE].includes(response.answer),
+    assert.ok([EVIDENCE_MISSING_ANSWER, OUTPUT_CLAIMS_FILTER_SAFE_RESPONSE, ...Object.values(SAFETY_REFUSALS)].includes(response.answer),
       'An uncited response must be an explicit abstention');
     assert.deepEqual(response.sources, []);
     return;
@@ -64,9 +66,18 @@ for (const scenario of scenarios) {
   test(`[${scenario.id}] ${JSON.stringify(scenario.question)}`, () => {
     const response = askBot(scenario.question);
     verifyAnswer(response);
-    if (scenario.missing) {
+    if (scenario.expectedBehavior === 'refuse') {
+      assert.equal(response.grounded, false, 'Unsafe intent must refuse, even if marketing copy is grounded');
+      assert.ok(Object.values(SAFETY_REFUSALS).includes(response.answer), 'Expected targeted safety refusal');
+      assert.equal(response.followUp?.path, '/contact');
+    } else if (scenario.expectedBehavior === 'not-yet') {
       assert.equal(response.grounded, false);
-      assert.equal(response.answer, EVIDENCE_MISSING_ANSWER);
+      assert.equal(response.answer, scenario.expectedTopic === 'part-11'
+        ? OUTPUT_CLAIMS_FILTER_SAFE_RESPONSE : EVIDENCE_MISSING_ANSWER);
+    } else {
+      assert.equal(response.grounded, true, 'Unexpected false refusal');
+      assert.ok(scenario.expectedTopic, 'Answer expectations require a reviewed topic');
+      assert.equal(scenario.expectedTopic === 'founder-bio', scenario.expectedBehavior === 'founder answer');
     }
     if (scenario.expectedTopic) {
       const entry = corpus.find((item) => item.id === scenario.expectedTopic)!;
