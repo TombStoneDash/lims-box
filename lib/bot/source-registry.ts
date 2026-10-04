@@ -1,5 +1,5 @@
 // LIMS BOT source registry: admission and evidence-resolution policy.
-// Schema/policy only. No live retrieval, no auth wiring, no ingestion.
+// Admission policy only. File reads live in founder-corpus.ts.
 // Spec: LIMS_BOT_EXPERT_V2_SPEC_20260902.md section 7.3, Slice S1 deliverable 1.
 
 export type RightsClass =
@@ -162,3 +162,99 @@ export function admitSource(
 
   return { ok: true, record };
 }
+
+export const FOUNDER_REDACTED_PATH = /^15_HT_FOUNDER_INTAKE\/redacted\/([a-f0-9]{64})\.txt$/;
+export const FOUNDER_SOURCES_PATH = '15_HT_FOUNDER_INTAKE/SOURCES.tsv';
+
+export interface FounderManifestRow {
+  path: string;
+  sha256: string;
+  size: string;
+  origin: string;
+  source_location: string;
+  added: string;
+}
+
+export interface FounderSourceRow {
+  alias: string;
+  status: string;
+  sha256: string;
+  redacted: string;
+  bot_status: string;
+}
+
+// Ownership attestation: lims-knowledge#1 records Hudson's Sep 24 decision.
+// Bot use of eligible redacted candidates is authorized by
+// LIMS-FOUNDER-KNOWLEDGE-INTO-BOT-CORPUS-BUILDOUT-20261003-R1.
+// A merge alone never admits held or human-review-pending documents.
+const FOUNDER_RIGHTS_EVIDENCE: RightsEvidence = {
+  reference: 'https://github.com/TombStoneDash/lims-knowledge/pull/1',
+  reviewer: 'TombStoneDash',
+  reviewedAt: '2026-09-25T17:24:12Z',
+};
+const HELD_FOUNDER_ALIASES = new Set(['FLI-001', 'FLI-089', 'FLI-114']);
+
+export function admitFounderSource(
+  manifest: FounderManifestRow,
+  source: FounderSourceRow,
+): SourceRecord | null {
+  const pathMatch = FOUNDER_REDACTED_PATH.exec(manifest.path);
+  if (!pathMatch || source.redacted !== manifest.path
+    || source.sha256 !== pathMatch[1]
+    || !/^FLI-\d{3}$/.test(source.alias) || HELD_FOUNDER_ALIASES.has(source.alias)
+    || source.status !== 'INTEGRATED' || source.bot_status !== 'REDACTED_CANDIDATE'
+    || manifest.origin !== 'HT_ORIGINAL'
+    || manifest.source_location !== `derived:contact-redaction of sha256:${source.sha256}`
+    || !SHA256_HEX_PATTERN.test(manifest.sha256)
+    || !/^[1-9]\d*$/.test(manifest.size) || !isIsoTimestamp(manifest.added)) return null;
+
+  const evidenceId = `founder-evidence-${source.alias.toLowerCase()}`;
+  const result = admitSource({
+    id: `founder-source-${source.alias.toLowerCase()}`,
+    rightsClass: 'ORIGINAL_INTERNAL',
+    status: 'approved',
+    rightsEvidence: FOUNDER_RIGHTS_EVIDENCE,
+    employerIpAttestation: true,
+    evidenceRef: evidenceId,
+  }, [{
+    id: evidenceId,
+    status: 'approved',
+    contentHash: manifest.sha256,
+    reviewer: FOUNDER_RIGHTS_EVIDENCE.reviewer,
+    reviewedAt: FOUNDER_RIGHTS_EVIDENCE.reviewedAt,
+  }]);
+  return result.ok && result.record.status === 'approved' ? result.record : null;
+}
+
+// Public excerpts, reviewed against the merged redacted founder files at
+// e2eeb98c8c0bb2f1fd374e543184662760c00f99. Never publish an entire resume:
+// upstream contact redaction deliberately leaves personal names in place.
+// Exact passage matching (whitespace only) excludes all surrounding personal
+// material, even if a future candidate contains identifiers our detector misses.
+// Adding a topic requires reviewing another identifier-free verbatim passage.
+export const FOUNDER_EXCERPTS = [
+  {
+    id: 'configuration',
+    title: 'Founder experience: LIMS configuration',
+    keywords: ['experience', 'background', 'career', 'configuration', 'configured', 'administrator'],
+    text: 'LIMS (Laboratory Information Management System) Administrator - Configured and integrated the software to support the evolving business needs of the company pertaining to laboratory data.',
+  },
+  {
+    id: 'training',
+    title: 'Founder experience: Omega 11 training',
+    keywords: ['omega', 'training', 'trained', 'technicians', 'chemists'],
+    text: 'I finalized the Omega 11 LIMS configuration and trained all the technicians and chemists to use the software for their daily tasks, as well as providing advanced training to the LIMS Administrator back up.',
+  },
+  {
+    id: 'instrument-imports',
+    title: 'Founder experience: instrument data imports',
+    keywords: ['instrument', 'instruments', 'imports', 'import', 'excel', 'csv', 'txt'],
+    text: 'Including the configuration of the instruments to import raw data and the creation of user defined import specifications for multiple file types such as Excel, CSV, TXT.',
+  },
+  {
+    id: 'data-recovery',
+    title: 'Founder experience: laboratory data entry and recovery',
+    keywords: ['entry', 'recovery', 'recover'],
+    text: 'Perform data entry and recovery using the Laboratory Information Management System (LIMS).',
+  },
+] as const;
