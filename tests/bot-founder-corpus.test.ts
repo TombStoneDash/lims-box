@@ -278,3 +278,30 @@ test('duplicates collapse; holds and bundle removal revoke answers and citation 
     await assert.rejects(FounderSourcePage({ params: Promise.resolve({ path: route.split('/') }) }), /NEXT_HTTP_ERROR_FALLBACK;404/);
   }
 });
+
+test('public citation pages expose only reviewed excerpts, excluding private/customer content and metadata', async (t) => {
+  const privateText = 'Synthetic Private Person; Customer Secret Laboratory; confidential sample result: positive.';
+  const bundle = fixture(t, FOUNDER_EXCERPTS.map((excerpt) => `${privateText}\n${excerpt.text}`));
+  useBundle(t, bundle.root);
+  for (const [index, record] of bundle.manifest.entries()) {
+    const page = await FounderSourcePage({ params: Promise.resolve({ path: record.path.split('/') }) });
+    const html = renderToStaticMarkup(page);
+    assert.ok(html.includes(`Founder archive (historical experience): ${FOUNDER_EXCERPTS[index].text}`));
+    for (const hidden of [privateText, 'Synthetic Private Person', 'Customer Secret Laboratory',
+      'confidential sample result', bundle.root, bundle.sources[index].alias, record.source_location,
+      'source_relpaths', 'catalog_hash_prefix']) {
+      assert.ok(!html.includes(hidden), `Citation page leaked ${hidden}`);
+    }
+  }
+  // Probe private paths while the bundle has admitted public excerpts.
+  const hash = bundle.sources[0].sha256;
+  for (const route of [
+    `15_HT_FOUNDER_INTAKE/originals/${hash}.txt`,
+    `15_HT_FOUNDER_INTAKE/text/${hash}.txt`,
+    '15_HT_FOUNDER_INTAKE/SOURCES.tsv', 'MANIFEST.tsv', '../MANIFEST.tsv',
+    `15_HT_FOUNDER_INTAKE/redacted/${'a'.repeat(64)}.txt`,
+  ]) {
+    await assert.rejects(FounderSourcePage({ params: Promise.resolve({ path: route.split('/') }) }),
+      /NEXT_HTTP_ERROR_FALLBACK;404/);
+  }
+});

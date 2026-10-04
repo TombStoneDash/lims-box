@@ -40,6 +40,7 @@ const PUBLIC_BY_DESIGN: readonly { path: string; reason: string }[] = [
   { path: "/blog", reason: "Public article index." },
   { path: "/blog/x", reason: "Public published article." },
   { path: "/bot", reason: "Public prototype assistant interface." },
+  { path: "/bot/sources/x", reason: "Public reviewed founder excerpts only; private source documents, customer material and metadata are excluded." },
   { path: "/case-study", reason: "Public product case study." },
   { path: "/clia", reason: "Public CLIA product information." },
   { path: "/clia-tracker", reason: "Public personnel-tracker product information." },
