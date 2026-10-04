@@ -199,6 +199,11 @@ const intentCases: { question: string; intent: QuestionIntent; entry?: string; e
   { question: "Give me an overview of Hud Taylor's career.", intent: 'founder', entry: 'founder-bio' },
   { question: 'What can you tell me about John Hudson Taylor?', intent: 'founder', entry: 'founder-bio' },
   { question: 'Would you please introduce me to the founder of LIMS BOX?', intent: 'founder', entry: 'founder-bio' },
+  // HUD review at 68b2b47a.
+  { question: 'Which person founded LIMS BOX?', intent: 'founder', entry: 'founder-bio' },
+  { question: 'Name the person who built LIMS BOX.', intent: 'founder', entry: 'founder-bio' },
+  { question: 'Who came up with LIMS BOX?', intent: 'founder', entry: 'founder-bio' },
+  { question: 'Whose idea was LIMS BOX?', intent: 'founder', entry: 'founder-bio' },
   // A person's certifications and lab history are background, not product compliance.
   { question: 'What prior laboratory experience has Hud Taylor had?', intent: 'founder', entry: 'founder-bio' },
   { question: 'Was Hudson certified as a water specialist?', intent: 'founder', entry: 'founder-bio' },
@@ -280,6 +285,11 @@ test('founder questions about topics nothing published covers fail closed, even 
     "What is the founder's favorite color?",
     'Did Hudson train for a marathon?',
     'What music did Hudson listen to while configuring LIMS?',
+    // Quantifiers and negation change the claim; no excerpt covers them (HUD review at 68b2b47a).
+    'Did Hudson configure every LIMS system?',
+    'Did Hudson only configure instruments?',
+    'Did Hudson never train chemists?',
+    "Didn't the founder configure the instruments?",
     'Can Hudson help my lab migrate?',
     'What does Hudson think about competitors?',
     'Has the founder worked with call centers?',
@@ -582,10 +592,26 @@ test('no product FAQ question cites the founder archive, whatever founder contex
       `${base} given the founder's configuration experience?`,
       `With Hud Taylor's instrument import history in mind, ${base.charAt(0).toLowerCase()}${base.slice(1)}?`,
       `${base}? The founder trained technicians before.`,
+      `${base.charAt(0).toLowerCase()}${base.slice(1)}, given Hudson's background?`,
     ]) {
       const result = askBot(question);
       assert.ok(result.sources.every((source) => !source.path.startsWith(FOUNDER_CITATION_PREFIX)), question);
       assert.doesNotMatch(result.answer, /historical experience/, question);
     }
+  }
+});
+
+test('past-tense questions whose subject is not the founder never cite the archive', (t) => {
+  const bundle = fixture(t, FOUNDER_EXCERPTS.map((item) => item.text));
+  useBundle(t, bundle.root);
+  for (const question of [
+    "Were instrument files imported with Hudson's background?",
+    "Was configuration included, given the founder's experience?",
+    'Were technicians trained when Hudson was there?',
+    "Did the data recovery work, given Hud Taylor's resume?",
+  ]) {
+    assert.notEqual(classifyQuestionIntent(question), 'founder', question);
+    const result = askBot(question);
+    assert.ok(result.sources.every((source) => !source.path.startsWith(FOUNDER_CITATION_PREFIX)), question);
   }
 });

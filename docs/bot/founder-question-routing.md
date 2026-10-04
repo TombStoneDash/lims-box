@@ -17,14 +17,17 @@ phrasing lists: whatever wording a question uses, they decide what it can never 
 - **S1. A question that is about the product never gets a historical archive excerpt.** It is
   about the product when it asks what LIMS BOX does, includes, supports, costs or makes available;
   when it is a yes/no question (or a "how ...", "if/whether ..." clause) whose subject is not the
-  founder, in any tense ("Is phone support offered?", "Has LIMS BOX offered phone support?"); or
+  founder, in any tense ("Is phone support offered?", "Has LIMS BOX offered phone support?", "Were
+  instrument files imported ...?"); or
   when, after founder attribution ("the founder of LIMS BOX", "who built it") is set aside, it still
   names the product or the present (LIMS BOX, it, this, plans, pricing, features, current, today,
   now, yet). Such a question with a founder mention is `mixed` and is answered from the product FAQ
   with the founder words removed.
 - **S2. An archive excerpt answers only when it covers every topic word of the question.** One
-  shared word is not enough ("Did Hudson train for a marathon?" gets no training excerpt). The same
-  holds for the published bio on topic questions.
+  shared word is not enough ("Did Hudson train for a marathon?" gets no training excerpt). Words that
+  change what is claimed, quantifiers (every, all, only, each, always, never) and negation (not, no,
+  "didn't"), always stay in the topic, and no excerpt covers them, so such questions get no excerpt.
+  The same holds for the published bio on topic questions.
 
 ## Routing rules, in order
 
@@ -55,6 +58,15 @@ phrasing lists: whatever wording a question uses, they decide what it can never 
    "configuration" match), and must cover the whole topic (rule S2).
 8. **The bio answers a topic only when it states all of it** (water testing, public health, labs,
    education, a degree, certifications). Otherwise the bot says it has no approved material.
+
+## Known limits (safe by design)
+
+- A historical question whose subject is not the founder ("Were technicians trained when Hudson was
+  there?") is treated as a product question (S1). It gets the product FAQ or the no-approved-material
+  answer, never an archive excerpt.
+- Identity covers the founder's names and roles and the creation verbs (built, founded, created,
+  started, made, designed, launched, invented, came up with, whose idea ...). Other wordings fall to
+  the product FAQ ranking that every LIMS BOT question already uses.
 
 ## What this does not change
 

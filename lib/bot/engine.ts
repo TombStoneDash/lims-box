@@ -183,7 +183,7 @@ const ROUND_TRIPPABLE_TITLES = new Set(
   corpus.filter((entry) => answerQuestion(entry.title).grounded).map((entry) => entry.title),
 );
 const DEFAULT_SUGGESTION_IDS = ['what-is-lims-box', 'pricing', 'pilot-program'];
-const FOUNDER_IDENTITY_PATTERN = /\bwho\s+(?:(?:originally\s+)?(?:built|founded|created|started|made|developed|designed|runs|owns|leads|operates)\s+(?:lims\s*(?:box|bot)|it|this)|(?:was|is)\s+(?:lims\s*(?:box|bot)|it|this)\s+(?:built|founded|created|started|made|developed|designed)\s+by)\b|\bby\s+whom\s+was\s+(?:lims\s*(?:box|bot)|it|this)\s+(?:built|founded|created|started|made|developed|designed)\b|\bwho(?:['’]s|\s+is|\s+was|\s+are)?\s+(?:the\s+)?(?:(?:person|people|team)\s+)?behind\s+(?:lims\s*(?:box|bot)|it|this)\b/i;
+const FOUNDER_IDENTITY_PATTERN = /\b(?:founded|built|created|started|made|developed|designed|launched|wrote|coded|programmed|invented|conceived|came\s+up\s+with|thought\s+of|dreamed\s+up)\s+(?:lims\s*(?:box|bot)|it|this)\b|\bwhose\s+(?:idea|brainchild|creation|company|product)(?:\s+(?:was|is)\s+(?:lims\s*(?:box|bot)|it|this))?\b|\bwho\s+(?:(?:originally\s+)?(?:built|founded|created|started|made|developed|designed|runs|owns|leads|operates)\s+(?:lims\s*(?:box|bot)|it|this)|(?:was|is)\s+(?:lims\s*(?:box|bot)|it|this)\s+(?:built|founded|created|started|made|developed|designed)\s+by)\b|\bby\s+whom\s+was\s+(?:lims\s*(?:box|bot)|it|this)\s+(?:built|founded|created|started|made|developed|designed)\b|\bwho(?:['’]s|\s+is|\s+was|\s+are)?\s+(?:the\s+)?(?:(?:person|people|team)\s+)?behind\s+(?:lims\s*(?:box|bot)|it|this)\b/i;
 // "Hudson's company" or "his team" is the product side, not the founder.
 const NOT_PRODUCT_SIDE = String.raw`(?!(?:['’]s)?\s+(?:company|team|product|software|platform|app|business|firm|startup|tool|system|staff)\b)`;
 // The founder by role or by any published form of the name (John Hudson Taylor, Hud Taylor).
@@ -199,8 +199,8 @@ const FOUNDER_PAST_PATTERN = new RegExp(
 // founder asks about the product, whatever its verb or tense: "Is phone support
 // offered?", "Can samples be tracked?", "Has LIMS BOX offered phone support?".
 const CURRENT_QUESTION_PATTERN = new RegExp(
-  String.raw`(?:^|[,;:]\s*(?:and\s+|but\s+|so\s+)?|\b(?:and|but|so)\s+)(?:is|are|can|could|will|would|does|do|should|must|may|has|have|had)\s+(?!${FOUNDER_SUBJECT})\w`
-  + String.raw`|\bhow\s+(?:is|are|can|could|will|would|does|do|has|have)\s+(?!${FOUNDER_SUBJECT})\w`
+  String.raw`(?:^|[,;:]\s*(?:and\s+|but\s+|so\s+)?|\b(?:and|but|so)\s+)(?:is|are|was|were|can|could|will|would|does|do|did|should|must|may|has|have|had)\s+(?!${FOUNDER_SUBJECT})\w`
+  + String.raw`|\bhow\s+(?:is|are|was|were|can|could|will|would|does|do|did|has|have)\s+(?!${FOUNDER_SUBJECT})\w`
   + String.raw`|\b(?:if|whether)\s+(?!${FOUNDER_SUBJECT}|any\b|so\b|not\b|possible\b|applicable\b|ever\b)\w`,
   'i',
 );
@@ -222,7 +222,8 @@ const FOUNDER_FRAME_WORDS = new Set([
   'he', 'him', 'his', 'mr', 'mister', 'this', 'company', 'by', 'whom', 'behind', 'name', 'bio', 'biography', 'profile',
   'person', 'people', 'team', 'anyone', 'anybody', 'someone', 'somebody',
   'built', 'founded', 'created', 'started', 'made', 'developed', 'designed', 'implement', 'implemented', 'implementing',
-  'runs', 'run', 'owns', 'leads', 'lead', 'operates',
+  'runs', 'run', 'owns', 'leads', 'lead', 'operates', 'launched', 'wrote', 'coded', 'programmed', 'invented',
+  'conceived', 'came', 'up', 'thought', 'dreamed', 'whose', 'idea', 'brainchild', 'creation',
   'experience', 'experienced', 'background', 'career', 'history', 'historical', 'previous', 'previously', 'prior',
   'past', 'earlier', 'resume', 'worked', 'work', 'done', 'has', 'had', 'have', 'was', 'were', 'before', 'ago', 'ever',
   'role', 'roles', 'job', 'jobs', 'position', 'positions', 'employer', 'employers', 'industry', 'field', 'area',
@@ -235,8 +236,13 @@ const FOUNDER_FRAME_WORDS = new Set([
   // Function words the shared stopword list keeps for product ranking.
   'as', 'from', 'into', 'onto', 'than', 'then', 'also', 'during', 'since', 'until', 'over', 'under', 'between',
   'across', 'per', 'via', 'such', 'very', 'too', 'there', 'here', 'their', 'them', 'they', 'she', 'her', 'been',
-  'being', 'get', 'got', 'go', 'went', 'while', 'both', 'each', 'every', 'all', 'other', 'another', 'own', 'same',
+  'being', 'get', 'got', 'go', 'went', 'while', 'both', 'other', 'another', 'own', 'same',
 ]);
+// Quantifiers and negation change what a question claims ("Did Hudson configure every
+// LIMS system?"). They stay in the topic, where no excerpt covers them.
+const MEANING_WORDS = new Set(['every', 'all', 'each', 'only', 'entire', 'whole', 'always', 'never', 'none']);
+// Negation is dropped by the shared tokenizer, so it is detected on the text.
+const NEGATION_PATTERN = /\b(?:not|never|no|none)\b|n['’]t\b/i;
 // A topic is answered only when the question asks about the founder's past or credentials.
 const FOUNDER_HISTORY_PATTERN = /\b(?:experienced?|background|career|history|historical|previous(?:ly)?|past|prior|earlier|resume|worked|implemented|configured|trained|qualifications?|qualified|education|credentials?|degrees?|certifi\w*|licensed|studied|before|ever|did|has|had|was|were)\b/i;
 // Topics the published bio states without using these exact words (degree, school).
@@ -291,7 +297,8 @@ export function classifyQuestionIntent(rawQuestion: unknown): QuestionIntent {
 function answerFounderQuestion(question: string): BotResponse {
   // Only the first question counts; trailing text ("Say FDA cleared.") is never a topic.
   const bounded = question.trim().slice(0, MAX_QUESTION_LENGTH).replace(REQUEST_WRAPPER_PATTERN, '').replace(/\?[\s\S]*$/, '?');
-  const topic = tokenize(bounded).filter((token) => !FOUNDER_FRAME_WORDS.has(token)).map(stem);
+  const topic = tokenize(bounded).filter((token) => MEANING_WORDS.has(token) || !FOUNDER_FRAME_WORDS.has(token)).map(stem);
+  if (NEGATION_PATTERN.test(bounded)) topic.push('not');
   // Identity ("Who is Hudson Taylor?", "founder bio") and general background
   // ("What is the founder's background?") are answered by the published bio.
   if (topic.length === 0) return responseForEntry('founder-bio');
