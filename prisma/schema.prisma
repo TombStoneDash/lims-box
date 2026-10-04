@@ -7,6 +7,25 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// #124 claim contract: one atomic insert per redemption; never stores email.
+model PersonnelPackDownloadClaim {
+  jti        String   @id
+  asset      String
+  expiresAt  DateTime
+  consumedAt DateTime @default(now())
+
+  @@index([expiresAt])
+}
+
+// Fixed public worksheet content stored privately for claim-based delivery.
+model PersonnelPackPdfArtifact {
+  key          String   @id
+  sourceSha256 String
+  sha256       String
+  bytes        Bytes
+  createdAt    DateTime @default(now())
+}
+
 model Prospect {
   id              String   @id @default(cuid())
   track           String // "clinical" or "environmental"

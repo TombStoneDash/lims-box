@@ -3,7 +3,11 @@ name: Personnel Pack Fulfillment CI
 on:
   pull_request:
     paths:
-      - "app/api/personnel-pack-download/route.ts"
+      - "app/api/personnel-pack-download/**"
+      - "lib/personnel-pack/**"
+      - "lib/personnelPackDownloadClaims.ts"
+      - "tests/personnel-pack-fulfillment*.test.ts"
+      - "prisma/**"
       - "app/personnel-pack/EmailGateForm.tsx"
       - "lib/emailValidation.ts"
       - "lib/notify.ts"
@@ -20,7 +24,11 @@ on:
     branches:
       - main
     paths:
-      - "app/api/personnel-pack-download/route.ts"
+      - "app/api/personnel-pack-download/**"
+      - "lib/personnel-pack/**"
+      - "lib/personnelPackDownloadClaims.ts"
+      - "tests/personnel-pack-fulfillment*.test.ts"
+      - "prisma/**"
       - "app/personnel-pack/EmailGateForm.tsx"
       - "lib/emailValidation.ts"
       - "lib/notify.ts"

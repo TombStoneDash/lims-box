@@ -177,7 +177,7 @@ export function EmailGateForm() {
             <p className="mt-3 text-xs text-slate-400">
               {state.delivery.emailed
                 ? 'A copy was also emailed to you.'
-                : 'Email delivery is unavailable right now, so this page is your fulfillment path.'}
+                : 'Your download is available here; this page is your fulfillment path.'}
             </p>
           </div>
         ) : (
@@ -239,7 +239,7 @@ export function EmailGateForm() {
                          text-white font-semibold px-6 py-2.5 rounded-lg text-sm
                          transition-colors flex items-center justify-center gap-2"
             >
-              {submitting ? 'Sending…' : 'Send me the PDF →'}
+              {submitting ? 'Preparing…' : 'Get the PDF →'}
             </button>
 
             <EmailGateFeedback state={state} />

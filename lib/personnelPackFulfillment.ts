@@ -49,8 +49,8 @@ export interface PersonnelPackDelivery {
 
 export interface PersonnelPackDependencies {
   createLead: (record: PersonnelPackRecord) => Promise<void>;
-  sendSubmissionNotice: (notice: SubmissionNotice) => Promise<void | DeliveryResult>;
-  sendApplicantDelivery: (email: string, delivery: PersonnelPackDelivery) => Promise<void>;
+  sendSubmissionNotice?: (notice: SubmissionNotice) => Promise<void | DeliveryResult>;
+  sendApplicantDelivery?: (email: string, delivery: PersonnelPackDelivery) => Promise<void>;
   resolveAsset?: (accredType: string | null, origin: string) => Promise<PersonnelPackDelivery | null>;
   logDiagnostic?: (code: string, meta: Record<string, unknown>) => void;
   now?: () => string;
@@ -214,7 +214,7 @@ export function createPersonnelPackPostHandler(dependencies: PersonnelPackDepend
       // Internal alert delivery must not gate applicant fulfillment: the lead is
       // already persisted and the PDF has passed integrity verification.
       try {
-        await dependencies.sendSubmissionNotice({
+        await dependencies.sendSubmissionNotice?.({
           subject: `New Personnel Pack lead — ${delivery.label}`,
           lines: [
             ['Email', normalizedEmail],
@@ -234,8 +234,10 @@ export function createPersonnelPackPostHandler(dependencies: PersonnelPackDepend
       }
 
       try {
-        await dependencies.sendApplicantDelivery(normalizedEmail, delivery);
-        delivery = { ...delivery, emailed: true };
+        if (dependencies.sendApplicantDelivery) {
+          await dependencies.sendApplicantDelivery(normalizedEmail, delivery);
+          delivery = { ...delivery, emailed: true };
+        }
       } catch {
         logDiagnostic('applicant_delivery_failed', {
           requestId,
@@ -248,7 +250,7 @@ export function createPersonnelPackPostHandler(dependencies: PersonnelPackDepend
         success: true,
         saved: true,
         delivery,
-      });
+      }, { headers: { 'Cache-Control': 'private, no-store', 'Referrer-Policy': 'no-referrer' } });
     } catch {
       logDiagnostic('invalid_request', {
         requestId,
