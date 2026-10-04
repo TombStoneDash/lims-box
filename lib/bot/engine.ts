@@ -186,6 +186,22 @@ const DEFAULT_SUGGESTION_IDS = ['what-is-lims-box', 'pricing', 'pilot-program'];
 const FOUNDER_IDENTITY_PATTERN = /\bwho\s+(?:(?:originally\s+)?(?:built|founded|created|started|made|developed|designed)\s+(?:lims\s*(?:box|bot)|it|this)|(?:was|is)\s+(?:lims\s*(?:box|bot)|it|this)\s+(?:built|founded|created|started|made|developed|designed)\s+by)\b|\bby\s+whom\s+was\s+(?:lims\s*(?:box|bot)|it|this)\s+(?:built|founded|created|started|made|developed|designed)\b|\bwho(?:['’]s|\s+is|\s+was|\s+are)?\s+(?:the\s+)?(?:(?:person|people|team)\s+)?behind\s+(?:lims\s*(?:box|bot)|it|this)\b/i;
 // The founder by role or by any published form of the name (John Hudson Taylor, Hud Taylor).
 const FOUNDER_REFERENCE_PATTERN = /\b(?:co-?)?founder\b|\b(?:hudson|hud|taylor)\b/i;
+// The founder as the grammatical subject: "Does the founder have", "Is Hudson".
+const FOUNDER_SUBJECT = String.raw`(?:the\s+)?(?:(?:co-?)?founder|hudson|hud|taylor|john|mr\.?|he|his)\b`;
+// A present-tense yes/no question (or "how ...", "if/whether ...") whose subject
+// is not the founder asks about the product today, whatever its verb:
+// "Is phone support offered?", "Can samples be tracked?", "how are results reported".
+const CURRENT_QUESTION_PATTERN = new RegExp(
+  String.raw`(?:^|[,;:]\s*(?:and\s+|but\s+|so\s+)?|\b(?:and|but|so)\s+)(?:is|are|can|could|will|would|does|do|should|must|may)\s+(?!${FOUNDER_SUBJECT})\w`
+  + String.raw`|\bhow\s+(?:is|are|can|could|will|would|does|do)\s+(?!${FOUNDER_SUBJECT})\w`
+  + String.raw`|\b(?:if|whether)\s+(?!${FOUNDER_SUBJECT}|any\b|so\b|not\b|possible\b|applicable\b|ever\b)\w`,
+  'i',
+);
+// A request to the bot ("Could you tell me who ...?") wraps the real question.
+const REQUEST_WRAPPER_PATTERN = /^(?:please\s+)?(?:(?:can|could|would|will)\s+you\s+(?:please\s+)?(?:tell\s+me|tell|explain|describe|share|say|give\s+me|introduce)|do\s+you\s+know|do\s+you\s+have\s+(?:any\s+)?(?:info(?:rmation)?|details?)\s+(?:on|about)|i(?:['’]d|\s+would)?\s+(?:like|want)\s+to\s+know)\b\s*/i;
+// Regulatory compliance of the product. A person's certifications are background.
+const PRODUCT_COMPLIANCE_PATTERN = /clia|hipaa|complian|fda|15189|part\s*11|regulat/i;
+const CONTACT_PATTERN = /\b(?:talk|contact|call|email|speak|consultation|reach|meet|meeting|touch|book|schedule)\b/i;
 // Founder routing contract: docs/bot/founder-question-routing.md.
 // Words that only say who a founder question is about, or that it asks for
 // identity or general background. The words left over are its topic.
@@ -197,12 +213,16 @@ const FOUNDER_FRAME_WORDS = new Set([
   'experience', 'experienced', 'background', 'career', 'history', 'historical', 'previous',
   'previously', 'past', 'resume', 'worked', 'work', 'done', 'has', 'had', 'have', 'was', 'were',
   'any', 'kind', 'give', 'share', 'describe', 'some', 'more', 'please', 'before', 'ago', 'ever',
+  'prior', 'introduce', 'introduction', 'explain', 'say', 'info', 'information', 'detail', 'details',
+  'include', 'includes', 'including', 'want', 'like',
 ]);
 // A topic is answered only when the question asks about the founder's past.
-const FOUNDER_HISTORY_PATTERN = /\b(?:experienced?|background|career|history|historical|previous(?:ly)?|past|resume|worked|implemented|configured|trained|qualifications?|qualified|education|credentials?|degrees?|studied|before|ever|did|has|had|was|were)\b/i;
+const FOUNDER_HISTORY_PATTERN = /\b(?:experienced?|background|career|history|historical|previous(?:ly)?|past|prior|resume|worked|implemented|configured|trained|qualifications?|qualified|education|credentials?|degrees?|studied|before|ever|did|has|had|was|were)\b/i;
 // Topics the published bio states without using these exact words (degree, school).
-const BIO_TOPIC_WORDS = ['education', 'degree', 'school', 'university', 'study', 'studied', 'qualification', 'qualified', 'credential', 'certification'];
-const singular = (token: string) => (token.length > 3 ? token.replace(/s$/, '') : token);
+const BIO_TOPIC_WORDS = ['education', 'degree', 'school', 'university', 'study', 'studied', 'qualification', 'qualified',
+  'credential', 'certification', 'laboratory', 'laboratories'];
+// Light stemming for founder topics, so "configuring" finds the configuration excerpt.
+const stem = (token: string) => token.replace(/(?:ations?|ings?|ed|es|s)$/, '');
 
 export type QuestionIntent = 'founder' | 'product' | 'mixed' | 'contact';
 
@@ -212,7 +232,7 @@ export type QuestionIntent = 'founder' | 'product' | 'mixed' | 'contact';
  */
 export function classifyQuestionIntent(rawQuestion: unknown): QuestionIntent {
   if (typeof rawQuestion !== 'string') return 'product';
-  const question = rawQuestion.trim().slice(0, MAX_QUESTION_LENGTH);
+  const question = rawQuestion.trim().slice(0, MAX_QUESTION_LENGTH).replace(REQUEST_WRAPPER_PATTERN, '');
   // Normalize attribution noun phrases, not every mention of the product.
   const subject = question
     .replace(/\bfounder\s+of\s+(?:the\s+)?lims\s*(?:box|bot)\b/gi, 'founder')
@@ -233,10 +253,10 @@ export function classifyQuestionIntent(rawQuestion: unknown): QuestionIntent {
     || /\b(?:how\s+much|what\s+(?:is|are)\s+(?:the\s+)?(?:price|pricing|cost|subscription)|pricing\s+(?:today|for))\b/i.test(subject);
   // Compliance answers always lead with the locked positioning, which only the
   // product path gives, so a founder mention never takes a compliance question.
-  if (currentProduct || (founder && COMPLIANCE_PATTERN.test(subject))) return founder ? 'mixed' : 'product';
+  if (currentProduct || (founder && PRODUCT_COMPLIANCE_PATTERN.test(subject))) return founder ? 'mixed' : 'product';
   // "Has the founder worked with call centers?" is history, not a contact request.
-  if (/\b(?:talk|contact|call|email|speak|consultation|reach|meet)\b/i.test(subject)
-    && !(founder && FOUNDER_HISTORY_PATTERN.test(subject))) return 'contact';
+  if (CONTACT_PATTERN.test(subject) && !(founder && FOUNDER_HISTORY_PATTERN.test(subject))) return 'contact';
+  if (CURRENT_QUESTION_PATTERN.test(subject)) return founder ? 'mixed' : 'product';
   return founder ? 'founder' : 'product';
 }
 
@@ -249,14 +269,18 @@ function answerFounderQuestion(question: string): BotResponse {
   if (!FOUNDER_HISTORY_PATTERN.test(bounded)) return evidenceMissing();
   // Archive excerpts are scored on the topic alone, so founder or history
   // wording can never make an unrelated excerpt qualify.
+  const stemmedTopic = topic.map(stem);
   const top = loadFounderCorpus()
-    .map((entry) => ({ entry, score: scoreEntry(entry, topic) }))
+    .map((entry) => ({ entry, score: scoreEntry(
+      { ...entry, keywords: entry.keywords.map(stem), title: tokenize(entry.title).map(stem).join(' '), text: tokenize(entry.text).map(stem).join(' ') },
+      stemmedTopic,
+    ) }))
     .sort((a, b) => b.score - a.score)[0];
   if (!top || top.score < MIN_SCORE) {
     // The bio still answers a topic it states (water, public health, a degree).
     const bio = corpus.find((entry) => entry.id === 'founder-bio');
-    const bioWords = new Set([...tokenize(bio?.text ?? ''), ...BIO_TOPIC_WORDS].map(singular));
-    return topic.some((token) => bioWords.has(singular(token))) ? responseForEntry('founder-bio') : evidenceMissing();
+    const bioWords = new Set([...tokenize(bio?.text ?? ''), ...BIO_TOPIC_WORDS].map(stem));
+    return stemmedTopic.some((token) => bioWords.has(token)) ? responseForEntry('founder-bio') : evidenceMissing();
   }
 
   // Compliance questions never reach this path (classifyQuestionIntent).

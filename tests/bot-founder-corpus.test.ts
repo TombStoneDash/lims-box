@@ -186,6 +186,16 @@ const intentCases: { question: string; intent: QuestionIntent; entry?: string; e
   { question: 'Who is Mr. Taylor?', intent: 'founder', entry: 'founder-bio' },
   { question: 'Who started this company?', intent: 'founder', entry: 'founder-bio' },
   { question: 'What company did the founder work for?', intent: 'founder', entry: 'founder-bio' },
+  // Requests to the bot wrap the real question (HUD review at 07bbab81).
+  { question: 'Could you tell me who John Hudson Taylor is?', intent: 'founder', entry: 'founder-bio' },
+  { question: 'Do you know who built LIMS BOX?', intent: 'founder', entry: 'founder-bio' },
+  { question: 'Please introduce John Hudson Taylor.', intent: 'founder', entry: 'founder-bio' },
+  { question: 'Do you have any info on the founder?', intent: 'founder', entry: 'founder-bio' },
+  // A person's certifications and lab history are background, not product compliance.
+  { question: 'What prior laboratory experience has Hud Taylor had?', intent: 'founder', entry: 'founder-bio' },
+  { question: 'Was Hudson certified as a water specialist?', intent: 'founder', entry: 'founder-bio' },
+  { question: 'What certifications has John Hudson Taylor earned?', intent: 'founder', entry: 'founder-bio' },
+  { question: 'What experience does the founder have, if any?', intent: 'founder', entry: 'founder-bio' },
   // General background, and history topics the bio states.
   { question: 'What is the background of the founder of LIMS Box?', intent: 'founder', entry: 'founder-bio' },
   { question: "What is the founder's background?", intent: 'founder', entry: 'founder-bio' },
@@ -201,6 +211,9 @@ const intentCases: { question: string; intent: QuestionIntent; entry?: string; e
   { question: 'What did Hudson implement for instrument imports?', intent: 'founder', excerpt: 'instrument-imports' },
   { question: 'What was configured by the LIMS Box founder in the past?', intent: 'founder', excerpt: 'configuration' },
   { question: 'Which technicians were trained by the founder of LIMS BOX?', intent: 'founder', excerpt: 'training' },
+  { question: 'What previous work did John Hudson Taylor do configuring LIMS?', intent: 'founder', excerpt: 'configuration' },
+  { question: 'Did Hudson train anyone?', intent: 'founder', excerpt: 'training' },
+  { question: 'Can you tell me if Hudson has CSV experience?', intent: 'founder', excerpt: 'instrument-imports' },
   { question: 'What data recovery experience does Hudson have?', intent: 'founder', excerpt: 'data-recovery' },
   { question: 'What does LIMS BOX do?', intent: 'product', entry: 'what-is-lims-box' },
   { question: 'Tell me about LIMS Box', intent: 'product', entry: 'what-is-lims-box' },
@@ -227,11 +240,22 @@ const intentCases: { question: string; intent: QuestionIntent; entry?: string; e
   { question: 'Tell me about the founder and LIMS BOX pricing', intent: 'mixed', entry: 'pricing' },
   { question: 'Tell me about LIMS BOX given the founder background', intent: 'mixed', entry: 'what-is-lims-box' },
   { question: 'What is LIMS BOT given the founder background?', intent: 'mixed', entry: 'what-is-lims-bot' },
+  // A present-tense yes/no question about anything but the founder is a product
+  // question whatever its verb, not just the verbs in an allowlist.
+  { question: "Given Hudson's training background, is phone support offered?", intent: 'mixed', entry: 'support' },
+  { question: "Is phone support offered given the founder's experience?", intent: 'mixed', entry: 'support' },
+  { question: "Can you tell me if phone support is offered given Hudson's background?", intent: 'mixed', entry: 'support' },
+  { question: "With the founder's experience in mind, can samples be tracked?", intent: 'mixed', entry: 'sample-tracking-overview' },
+  { question: "How are samples tracked, given the founder's background?", intent: 'mixed', entry: 'sample-tracking-overview' },
+  { question: "Given Hud Taylor's background, is chain of custody handled?", intent: 'mixed', entry: 'chain-of-custody' },
   { question: 'Can I talk to the founder?', intent: 'contact', entry: 'talk-to-person' },
   // Reaching the founder is a contact request, never a bio lookup.
   { question: 'Can I meet Hudson?', intent: 'contact', entry: 'talk-to-person' },
   { question: 'How can I reach the founder?', intent: 'contact', entry: 'talk-to-person' },
   { question: 'Can I speak with Hud Taylor?', intent: 'contact', entry: 'talk-to-person' },
+  { question: 'May I email the LIMS BOX founder?', intent: 'contact', entry: 'talk-to-person' },
+  { question: 'Could I book a meeting with John Hudson Taylor?', intent: 'contact', entry: 'talk-to-person' },
+  { question: 'How do I get in touch with Hudson?', intent: 'contact', entry: 'talk-to-person' },
 ];
 
 test('founder questions about topics nothing published covers fail closed, even with the archive loaded', (t) => {
@@ -243,6 +267,7 @@ test('founder questions about topics nothing published covers fail closed, even 
     'Can Hudson help my lab migrate?',
     'What does Hudson think about competitors?',
     'Has the founder worked with call centers?',
+    'Has Hudson ever been to Paris?',
   ]) {
     const result = askBot(question);
     assert.equal(result.grounded, false, question);
