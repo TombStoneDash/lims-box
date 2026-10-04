@@ -184,10 +184,12 @@ const ROUND_TRIPPABLE_TITLES = new Set(
 );
 const DEFAULT_SUGGESTION_IDS = ['what-is-lims-box', 'pricing', 'pilot-program'];
 const FOUNDER_IDENTITY_PATTERN = /\bwho\s+(?:(?:originally\s+)?(?:built|founded|created|started|made|developed|designed)\s+(?:lims\s*(?:box|bot)|it|this)|(?:was|is)\s+(?:lims\s*(?:box|bot)|it|this)\s+(?:built|founded|created|started|made|developed|designed)\s+by)\b|\bby\s+whom\s+was\s+(?:lims\s*(?:box|bot)|it|this)\s+(?:built|founded|created|started|made|developed|designed)\b|\bwho(?:['’]s|\s+is|\s+was|\s+are)?\s+(?:the\s+)?(?:(?:person|people|team)\s+)?behind\s+(?:lims\s*(?:box|bot)|it|this)\b/i;
+// "Hudson's company" or "his team" is the product side, not the founder.
+const NOT_PRODUCT_SIDE = String.raw`(?!(?:['’]s)?\s+(?:company|team|product|software|platform|app|business|firm|startup|tool|system|staff)\b)`;
 // The founder by role or by any published form of the name (John Hudson Taylor, Hud Taylor).
-const FOUNDER_REFERENCE_PATTERN = /\b(?:co-?)?founder\b|\b(?:hudson|hud|taylor)\b/i;
+const FOUNDER_REFERENCE_PATTERN = new RegExp(String.raw`\b(?:(?:co-?)?founder|hudson|hud|taylor)\b${NOT_PRODUCT_SIDE}`, 'i');
 // The founder as the grammatical subject: "Does the founder have", "Is Hudson".
-const FOUNDER_SUBJECT = String.raw`(?:the\s+)?(?:(?:co-?)?founder|hudson|hud|taylor|john|mr\.?|he|his)\b`;
+const FOUNDER_SUBJECT = String.raw`(?:the\s+)?(?:(?:co-?)?founder|hudson|hud|taylor|john|mr\.?|he|his)\b${NOT_PRODUCT_SIDE}`;
 // A present-tense yes/no question (or "how ...", "if/whether ...") whose subject
 // is not the founder asks about the product today, whatever its verb:
 // "Is phone support offered?", "Can samples be tracked?", "how are results reported".
@@ -198,7 +200,7 @@ const CURRENT_QUESTION_PATTERN = new RegExp(
   'i',
 );
 // A request to the bot ("Could you tell me who ...?") wraps the real question.
-const REQUEST_WRAPPER_PATTERN = /^(?:please\s+)?(?:(?:can|could|would|will)\s+you\s+(?:please\s+)?(?:tell\s+me|tell|explain|describe|share|say|give\s+me|introduce)|do\s+you\s+know|do\s+you\s+have\s+(?:any\s+)?(?:info(?:rmation)?|details?)\s+(?:on|about)|i(?:['’]d|\s+would)?\s+(?:like|want)\s+to\s+know)\b\s*/i;
+const REQUEST_WRAPPER_PATTERN = /^(?:please\s+)?(?:(?:can|could|would|will)\s+you\s+(?:please\s+)?(?:tell\s+me|tell|explain|describe|share|say|give\s+me|introduce)|do\s+you\s+know|do\s+you\s+have\s+(?:any\s+)?(?:info(?:rmation)?|details?)\s+(?:on|about)|i(?:['’]d|\s+would)?\s+(?:like|want)\s+to\s+know|is\s+it\s+true(?:\s+that)?)\b\s*/i;
 // Regulatory compliance of the product. A person's certifications are background.
 const PRODUCT_COMPLIANCE_PATTERN = /clia|hipaa|complian|fda|15189|part\s*11|regulat/i;
 const CONTACT_PATTERN = /\b(?:talk|contact|call|email|speak|consultation|reach|meet|meeting|touch|book|schedule)\b/i;
@@ -214,7 +216,7 @@ const FOUNDER_FRAME_WORDS = new Set([
   'previously', 'past', 'resume', 'worked', 'work', 'done', 'has', 'had', 'have', 'was', 'were',
   'any', 'kind', 'give', 'share', 'describe', 'some', 'more', 'please', 'before', 'ago', 'ever',
   'prior', 'introduce', 'introduction', 'explain', 'say', 'info', 'information', 'detail', 'details',
-  'include', 'includes', 'including', 'want', 'like',
+  'include', 'includes', 'including', 'want', 'like', 'that', 'true',
 ]);
 // A topic is answered only when the question asks about the founder's past.
 const FOUNDER_HISTORY_PATTERN = /\b(?:experienced?|background|career|history|historical|previous(?:ly)?|past|prior|resume|worked|implemented|configured|trained|qualifications?|qualified|education|credentials?|degrees?|studied|before|ever|did|has|had|was|were)\b/i;
@@ -261,7 +263,7 @@ export function classifyQuestionIntent(rawQuestion: unknown): QuestionIntent {
 }
 
 function answerFounderQuestion(question: string): BotResponse {
-  const bounded = question.trim().slice(0, MAX_QUESTION_LENGTH);
+  const bounded = question.trim().slice(0, MAX_QUESTION_LENGTH).replace(REQUEST_WRAPPER_PATTERN, '');
   const topic = tokenize(bounded).filter((token) => !FOUNDER_FRAME_WORDS.has(token));
   // Identity ("Who is Hudson Taylor?", "founder bio") and general background
   // ("What is the founder's background?") are answered by the published bio.
@@ -299,8 +301,9 @@ export function askBot(rawQuestion: unknown): BotResponse {
   if (intent === 'contact' && typeof rawQuestion === 'string' && FOUNDER_REFERENCE_PATTERN.test(rawQuestion)) {
     return responseForEntry('talk-to-person');
   }
-  const isProduct = intent === 'product' || intent === 'mixed';
-  const productQuestion = isProduct && typeof rawQuestion === 'string'
+  // Founder words are removed from every non-founder question, so a founder
+  // mention or "Hudson's team" never boosts the bio over the real FAQ.
+  const productQuestion = intent !== 'founder' && typeof rawQuestion === 'string'
     ? rawQuestion.trim().slice(0, MAX_QUESTION_LENGTH).replace(/\b(?:(?:co-?)?founder|hudson|hud|taylor|john|experience|background|career)\b/gi, '')
     : rawQuestion;
   const response = intent === 'founder' && typeof rawQuestion === 'string'

@@ -13,13 +13,14 @@ implements; the eval table holds every phrasing a review has used.
 ## Rules, in order
 
 0. **Requests to the bot are unwrapped first.** "Could you tell me who ...", "Do you know who ...",
-   "Do you have any info on ..." are judged by the question inside them.
+   "Do you have any info on ...", "Is it true that ..." are judged by the question inside them.
 1. **Current product questions win.** A question is about the product today when it asks what
    LIMS BOX does, includes, supports, costs or makes available, or when it is a present-tense
    yes/no question (or a "how ...", "if/whether ..." clause) whose subject is not the founder, whatever
    its verb: "Is phone support offered?", "Can samples be tracked?", "Is chain of custody handled?".
    Questions about the founder use the founder as subject ("Does the founder have ...", "Is Hudson
-   ...") or the past tense ("Has Hudson worked ...", "Did the founder train ..."). A founder mention
+   ...") or the past tense ("Has Hudson worked ...", "Did the founder train ..."). "Hudson's company",
+   "the founder's team" or "his staff" is the product side, not the founder. A founder mention
    only makes a product question `mixed`, and `mixed` is answered from the product FAQ with the
    founder words removed. Historical founder excerpts never answer a current product question.
 2. **Product compliance always takes the product path.** Questions about CLIA, HIPAA, FDA, ISO 15189,

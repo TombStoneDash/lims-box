@@ -191,6 +191,7 @@ const intentCases: { question: string; intent: QuestionIntent; entry?: string; e
   { question: 'Do you know who built LIMS BOX?', intent: 'founder', entry: 'founder-bio' },
   { question: 'Please introduce John Hudson Taylor.', intent: 'founder', entry: 'founder-bio' },
   { question: 'Do you have any info on the founder?', intent: 'founder', entry: 'founder-bio' },
+  { question: 'Is it true that the founder built LIMS BOX?', intent: 'founder', entry: 'founder-bio' },
   // A person's certifications and lab history are background, not product compliance.
   { question: 'What prior laboratory experience has Hud Taylor had?', intent: 'founder', entry: 'founder-bio' },
   { question: 'Was Hudson certified as a water specialist?', intent: 'founder', entry: 'founder-bio' },
@@ -214,6 +215,7 @@ const intentCases: { question: string; intent: QuestionIntent; entry?: string; e
   { question: 'What previous work did John Hudson Taylor do configuring LIMS?', intent: 'founder', excerpt: 'configuration' },
   { question: 'Did Hudson train anyone?', intent: 'founder', excerpt: 'training' },
   { question: 'Can you tell me if Hudson has CSV experience?', intent: 'founder', excerpt: 'instrument-imports' },
+  { question: 'Is it true Hudson configured instrument imports?', intent: 'founder', excerpt: 'instrument-imports' },
   { question: 'What data recovery experience does Hudson have?', intent: 'founder', excerpt: 'data-recovery' },
   { question: 'What does LIMS BOX do?', intent: 'product', entry: 'what-is-lims-box' },
   { question: 'Tell me about LIMS Box', intent: 'product', entry: 'what-is-lims-box' },
@@ -248,6 +250,8 @@ const intentCases: { question: string; intent: QuestionIntent; entry?: string; e
   { question: "With the founder's experience in mind, can samples be tracked?", intent: 'mixed', entry: 'sample-tracking-overview' },
   { question: "How are samples tracked, given the founder's background?", intent: 'mixed', entry: 'sample-tracking-overview' },
   { question: "Given Hud Taylor's background, is chain of custody handled?", intent: 'mixed', entry: 'chain-of-custody' },
+  // "Hudson's team" or "his company" is the product side, not the founder.
+  { question: "Can the founder's team migrate our spreadsheets?", intent: 'product', entry: 'data-migration' },
   { question: 'Can I talk to the founder?', intent: 'contact', entry: 'talk-to-person' },
   // Reaching the founder is a contact request, never a bio lookup.
   { question: 'Can I meet Hudson?', intent: 'contact', entry: 'talk-to-person' },
@@ -256,6 +260,7 @@ const intentCases: { question: string; intent: QuestionIntent; entry?: string; e
   { question: 'May I email the LIMS BOX founder?', intent: 'contact', entry: 'talk-to-person' },
   { question: 'Could I book a meeting with John Hudson Taylor?', intent: 'contact', entry: 'talk-to-person' },
   { question: 'How do I get in touch with Hudson?', intent: 'contact', entry: 'talk-to-person' },
+  { question: "Can I talk to Hudson's team?", intent: 'contact', entry: 'talk-to-person' },
 ];
 
 test('founder questions about topics nothing published covers fail closed, even with the archive loaded', (t) => {
@@ -522,5 +527,20 @@ test('compliance questions that mention the founder keep the locked positioning 
     assert.ok(result.answer.startsWith(COMPLIANCE_POSITIONING), question);
     assert.equal(result.sources[0].path, '/compliance', question);
     assert.ok(result.sources.every((source) => !source.path.startsWith(FOUNDER_CITATION_PREFIX)), question);
+  }
+});
+
+test("questions about the founder's company or team never reach the founder archive", (t) => {
+  const bundle = fixture(t, FOUNDER_EXCERPTS.map((item) => item.text));
+  useBundle(t, bundle.root);
+  for (const question of [
+    "Does Hudson's company offer the training he did before?",
+    "Has Hudson's company trained users?",
+    'Does his team provide phone support?',
+  ]) {
+    assert.notEqual(classifyQuestionIntent(question), 'founder', question);
+    const result = askBot(question);
+    assert.ok(result.sources.every((source) => !source.path.startsWith(FOUNDER_CITATION_PREFIX)), question);
+    assert.doesNotMatch(result.answer, /historical experience/, question);
   }
 });
