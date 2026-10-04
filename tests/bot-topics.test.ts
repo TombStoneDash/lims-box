@@ -1,7 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { corpus } from '../../lib/bot/corpus';
-import { askBot, EVIDENCE_MISSING_ANSWER } from '../../lib/bot/engine';
+import { corpus } from '../lib/bot/corpus';
+import { askBot, EVIDENCE_MISSING_ANSWER } from '../lib/bot/engine';
+import { matchCommercialClaim } from '../lib/bot/commercial-claims';
+import { filterCommercialClaims } from '../lib/bot/output-claims-filter';
 
 const NEW_ENTRY_QUESTIONS = [
   ['field-scout', 'what is field scout'],
@@ -25,6 +27,11 @@ for (const [id, question] of NEW_ENTRY_QUESTIONS) {
       assert.equal(result.sources[0]?.path, entry.source, prompt);
       assert.equal(result.sources[0]?.title, entry.title, prompt);
       assert.equal(result.followUp, undefined, prompt);
+      assert.equal(matchCommercialClaim(result.answer), null, prompt);
+      assert.deepEqual(filterCommercialClaims(result.answer), {
+        answer: entry.text,
+        blocked: false,
+      }, prompt);
     }
   });
 

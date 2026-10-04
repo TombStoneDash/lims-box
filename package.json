@@ -11,7 +11,7 @@
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "test:bot": "node --import tsx --test tests/bot/engine.test.ts tests/bot/telemetry.test.ts tests/bot/demo-engine.test.ts tests/bot/demo-assistant-route.test.tsx",
+    "test:bot": "node --import tsx --test tests/bot/engine.test.ts tests/bot/telemetry.test.ts tests/bot/demo-engine.test.ts tests/bot/demo-assistant-route.test.tsx tests/bot-topics.test.ts",
     "test:bot-corpus": "node --import tsx --test tests/bot/corpus.test.ts",
     "test:notify": "node --import tsx --test tests/notify/fallback.test.ts",
     "test:blog": "node --import tsx --test tests/blog.test.ts",
