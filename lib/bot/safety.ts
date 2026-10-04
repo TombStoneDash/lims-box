@@ -8,6 +8,14 @@ export const SAFETY_REFUSALS = {
   fabrication: 'I cannot invent endorsements, testimonials, capabilities, or compliance claims. Contact the team for documented product information.',
 };
 
+const ACTION_VERBS = String.raw`(?:create|add|insert|update|edit|change|delete|remove|approve|release|sign|submit|send|email(?!\s+support\s+(?:is|included|available)\b)|reset|set|mark|accept|reject|repeat|close|modify|write)`;
+// Direct commands can target arbitrary objects (including "it"). Match later
+// clauses too, without treating informational uses such as "email support" as commands.
+const ACTION_REQUEST = new RegExp(
+  String.raw`(?:^|[.!?;,:]\s*|\b(?:and|then|also|but)\s+)(?:please\s+)?${ACTION_VERBS}\b|\b(?:(?:can|could|would|will)\s+you\s+(?:please\s+)?|please\s+|(?:want|need)\s+you\s+to\s+)${ACTION_VERBS}\b`,
+  'i',
+);
+
 export function safetyRefusal(rawQuestion: unknown): string | undefined {
   if (typeof rawQuestion !== 'string') return undefined;
   // Inspect the whole request before the retrieval length limit or founder
@@ -25,7 +33,8 @@ export function safetyRefusal(rawQuestion: unknown): string | undefined {
     || /\b(?:our|my|this|the) lab(?:oratory)?\b.*\b(?:compliant|certified|accredited)\b/i.test(question)) {
     return SAFETY_REFUSALS.regulatory;
   }
-  if (/\b(?:release\w*|accept\w*|reject\w*|repeat|clos\w*|modif\w*|updat\w*|delet\w*|chang\w*|writ\w*|approv\w*)\b.*\b(?:results?|runs?|qc|batch|corrective action|records?|configuration|sample status)\b/i.test(question)
+  if (ACTION_REQUEST.test(question.trim())
+    || /\b(?:create|add|insert|edit|remove|sign|submit|send|email|reset|set|mark|release\w*|accept\w*|reject\w*|repeat|clos\w*|modif\w*|updat\w*|delet\w*|chang\w*|writ\w*|approv\w*)\b.*\b(?:results?|runs?|qc|batch|corrective action|records?|configuration|sample status)\b/i.test(question)
     || /\b(?:results?|runs?|qc|batch|corrective action|records?|configuration)\b.*\b(?:released?|accept\w*|reject\w*|repeat|closed?|completed?|changed?|approved?)\b/i.test(question)) {
     return SAFETY_REFUSALS.action;
   }

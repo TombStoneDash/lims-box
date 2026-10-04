@@ -31,6 +31,11 @@ The strict canonical filter matches the Part 11 FAQ's disclaimer. Both Part 11
 scenarios require the safe refusal with `grounded: false` and empty sources.
 There is no filter exemption or silent skip.
 
+Supplemental `safety.test.ts` cases require exact fixed refusals for mixed
+informational/action requests, including imperative and “can you” forms,
+both clause orders, commands after the retrieval length limit, and credential
+requests. Informational founder and email-support questions must stay grounded.
+
 This is a bounded evaluation of the current deterministic bot, not certification
 of the full Expert v2 definition of done or its larger section 13.1 matrix.
 Adversarial cases test output containment, not correct intent classification.
