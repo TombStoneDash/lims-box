@@ -179,3 +179,28 @@ test("demo page uses the repaired Calendly destination and keeps the walkthrough
   assert.doesNotMatch(demo, /80%\s+less data entry/i);
   assert.doesNotMatch(demo, /compliance automation/i);
 });
+
+test("demo custody copy describes page-only state without claiming a locked or saved transfer", () => {
+  const demo = read("app/demo/page.tsx");
+  assert.match(demo, /Demo signature shown\./);
+  assert.match(demo, /This synthetic handoff updates this page only\./);
+  assert.match(demo, /No signature, timestamp, IP address, or audit record is saved\./);
+  assert.doesNotMatch(demo, /full transfer chain|chain is locked|COC complete|captured with timestamp and IP|audit trail entry was recorded/i);
+});
+
+test("demo footer states that the web app has no offline mode", () => {
+  const demo = read("app/demo/page.tsx");
+  assert.match(demo, /Online Web Demo/);
+  assert.match(demo, /No offline mode in this web app/);
+  assert.doesNotMatch(demo, /Offline-Capable|No internet needed/i);
+});
+
+test("recording labels its static report and avoids compliance and timing claims", () => {
+  // Strip JSX tags as well as whitespace so split claims cannot evade the check.
+  const recording = read("app/demo/record/page.tsx").replace(/<[^>]*>/g, " ").replace(/\s+/g, " ");
+  assert.match(recording, /Synthetic report preview with example results and QC context\./);
+  assert.match(recording, /No regulatory compliance or report-generation time is demonstrated\./);
+  assert.match(recording, /overlay: 'Synthetic report preview\.'/);
+  assert.match(recording, /Synthetic demonstration — static example screens, not live lab operations\./);
+  assert.doesNotMatch(recording, /EPA-compliant|12 seconds|Ready in minutes|All QC data auto-included/i);
+});
