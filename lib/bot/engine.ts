@@ -9,6 +9,8 @@
 //  - No customer-private data, no autonomous outreach, no secrets.
 
 import { corpus, type CorpusEntry, COMPLIANCE_POSITIONING } from './corpus';
+import { loadFounderCorpus } from './founder-corpus';
+import { filterCommercialClaims } from './output-claims-filter';
 
 export interface BotSource {
   title: string;
@@ -175,9 +177,53 @@ const ROUND_TRIPPABLE_TITLES = new Set(
   corpus.filter((entry) => answerQuestion(entry.title).grounded).map((entry) => entry.title),
 );
 const DEFAULT_SUGGESTION_IDS = ['what-is-lims-box', 'pricing', 'pilot-program'];
+const PRODUCT_CAPABILITY_PATTERN = /\b(?:can|could|does|will|is|has)\s+(?:the\s+)?lims\s*box\b(?!\s+founder|['’]s\s+founder)|\blims\s*box\s+(?:can|could|does|will|is|has|supports?|integrates?|imports?)\b/i;
+
+function isFounderQuestion(question: unknown): question is string {
+  if (typeof question !== 'string') return false;
+  const bounded = question.trim().slice(0, MAX_QUESTION_LENGTH);
+  // A founder mention cannot turn a question about today's product into a
+  // claim based on their past employment ("Can the founder confirm LIMS BOX
+  // can integrate instruments?"). Route explicit product capabilities first.
+  if (PRODUCT_CAPABILITY_PATTERN.test(bounded)) return false;
+  return /\b(?:founder|hudson)\b/i.test(bounded)
+    && !/\b(?:talk|contact|call|email|speak|consultation)\b/i.test(bounded);
+}
+
+function answerFounderQuestion(question: string): BotResponse {
+  const bounded = question.trim().slice(0, MAX_QUESTION_LENGTH);
+  if (!/\b(?:experience|background|career|history|historical|previously|past|resume|worked|implemented|configured|trained)\b|\bwhat\s+did\b/i.test(bounded)) {
+    return evidenceMissing();
+  }
+  const tokens = tokenize(bounded);
+  const top = loadFounderCorpus()
+    .map((entry) => ({ entry, score: scoreEntry(entry, tokens) }))
+    .sort((a, b) => b.score - a.score)[0];
+  if (!top || top.score < MIN_SCORE) return evidenceMissing();
+
+  const sources = [{ title: top.entry.title, path: top.entry.source }];
+  let answer = top.entry.text;
+  if (COMPLIANCE_PATTERN.test(bounded)) {
+    answer = `${COMPLIANCE_POSITIONING} ${answer}`;
+    sources.unshift({ title: 'LIMS BOX compliance positioning', path: '/compliance' });
+  }
+  const filtered = filterCommercialClaims(answer);
+  if (filtered.blocked) return { answer: filtered.answer, grounded: false, sources: [] };
+  return { answer: filtered.answer, grounded: true, sources };
+}
 
 export function askBot(rawQuestion: unknown): BotResponse {
-  const response = answerQuestion(rawQuestion);
+  // Historical first-person career excerpts must never answer a current
+  // product-capability question (e.g. whether LIMS BOX imports instruments).
+  // For explicit product questions, founder context must not boost the
+  // contact FAQ over the actual capability FAQ during keyword ranking.
+  const productQuestion = typeof rawQuestion === 'string'
+    && PRODUCT_CAPABILITY_PATTERN.test(rawQuestion.trim().slice(0, MAX_QUESTION_LENGTH))
+    ? rawQuestion.trim().slice(0, MAX_QUESTION_LENGTH).replace(/\b(?:founder|hudson|experience|background|career)\b/gi, '')
+    : rawQuestion;
+  const response = isFounderQuestion(rawQuestion)
+    ? answerFounderQuestion(rawQuestion)
+    : answerQuestion(productQuestion);
   if (response.grounded) return response;
 
   const tokens = typeof rawQuestion === 'string'
