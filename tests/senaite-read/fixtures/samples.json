@@ -1,0 +1,6 @@
+{
+  "items": [
+    { "uid": "synthetic-uid-001", "id": "SYN-001", "title": "Synthetic water sample", "review_state": "sample_received", "Client": "Ignored synthetic client" },
+    { "uid": "synthetic-uid-002", "id": "SYN-002" }
+  ]
+}

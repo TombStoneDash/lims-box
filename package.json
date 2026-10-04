@@ -27,6 +27,7 @@
     "test:ohworks": "node --import tsx --test tests/ohworks/pilot-contract.test.ts tests/ohworks/result-review-state.test.ts",
     "test:ohworks-nav-coverage": "node --import tsx --test tests/ohworks/pilot-nav-coverage.test.ts",
     "test:all": "node scripts/run-all-tests.mjs",
+    "test:senaite-read": "node --import tsx --test tests/senaite-read/adapter.test.ts",
     "postinstall": "prisma generate",
     "seed": "tsx prisma/seed.ts",
     "db:reset": "prisma migrate reset --force && tsx prisma/seed.ts",
