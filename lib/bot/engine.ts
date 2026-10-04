@@ -9,7 +9,6 @@
 //  - No customer-private data, no autonomous outreach, no secrets.
 
 import { corpus, type CorpusEntry, COMPLIANCE_POSITIONING } from './corpus';
-import { loadFounderCorpus } from './founder-corpus';
 import { filterCommercialClaims } from './output-claims-filter';
 
 export interface BotSource {
@@ -132,7 +131,10 @@ function answerQuestion(rawQuestion: unknown): BotResponse {
   const tokens = tokenize(question);
   if (tokens.length === 0) return evidenceMissing();
 
+  // The founder bio answers only founder questions; in product ranking its
+  // "five hospitals, ten labs" reads like a customer claim.
   const ranked = corpus
+    .filter((entry) => entry.id !== 'founder-bio')
     .map((entry) => ({ entry, score: scoreEntry(entry, tokens) }))
     .sort((a, b) => b.score - a.score);
 
@@ -183,9 +185,9 @@ const ROUND_TRIPPABLE_TITLES = new Set(
   corpus.filter((entry) => answerQuestion(entry.title).grounded).map((entry) => entry.title),
 );
 const DEFAULT_SUGGESTION_IDS = ['what-is-lims-box', 'pricing', 'pilot-program'];
-const FOUNDER_IDENTITY_PATTERN = /\b(?:founded|built|created|started|made|developed|designed|launched|wrote|coded|programmed|invented|conceived|came\s+up\s+with|thought\s+of|dreamed\s+up)\s+(?:lims\s*(?:box|bot)|it|this)\b|\bwhose\s+(?:idea|brainchild|creation|company|product)(?:\s+(?:was|is)\s+(?:lims\s*(?:box|bot)|it|this))?\b|\bwho\s+(?:(?:originally\s+)?(?:built|founded|created|started|made|developed|designed|runs|owns|leads|operates)\s+(?:lims\s*(?:box|bot)|it|this)|(?:was|is)\s+(?:lims\s*(?:box|bot)|it|this)\s+(?:built|founded|created|started|made|developed|designed)\s+by)\b|\bby\s+whom\s+was\s+(?:lims\s*(?:box|bot)|it|this)\s+(?:built|founded|created|started|made|developed|designed)\b|\bwho(?:['’]s|\s+is|\s+was|\s+are)?\s+(?:the\s+)?(?:(?:person|people|team)\s+)?behind\s+(?:lims\s*(?:box|bot)|it|this)\b/i;
+const FOUNDER_IDENTITY_PATTERN = /\b(?:founded|built|created|started|made|developed|designed|launched|wrote|coded|programmed|invented|conceived|came\s+up\s+with|thought\s+of|dreamed\s+up)\s+lims\s*(?:box|bot)\b|\bwhose\s+(?:idea|brainchild|creation|company|product)(?:\s+(?:was|is)\s+(?:lims\s*(?:box|bot)|it|this))?\b|\bwho\s+(?:(?:originally\s+)?(?:built|founded|created|started|made|developed|designed|runs|owns|leads|operates)\s+(?:lims\s*(?:box|bot)|it|this)|(?:was|is)\s+(?:lims\s*(?:box|bot)|it|this)\s+(?:built|founded|created|started|made|developed|designed)\s+by)\b|\bby\s+whom\s+was\s+(?:lims\s*(?:box|bot)|it|this)\s+(?:built|founded|created|started|made|developed|designed)\b|\bwho(?:['’]s|\s+is|\s+was|\s+are)?\s+(?:the\s+)?(?:(?:person|people|team)\s+)?behind\s+(?:lims\s*(?:box|bot)|it|this)\b/i;
 // "Hudson's company" or "his team" is the product side, not the founder.
-const NOT_PRODUCT_SIDE = String.raw`(?!(?:['’]s)?\s+(?:company|team|product|software|platform|app|business|firm|startup|tool|system|staff)\b)`;
+const NOT_PRODUCT_SIDE = String.raw`(?!(?:['’]s)?\s+(?:company|team|product|software|platform|app|business|firm|startup|tool|system|staff|lims)\b)`;
 // The founder by role or by any published form of the name (John Hudson Taylor, Hud Taylor).
 const FOUNDER_REFERENCE_PATTERN = new RegExp(String.raw`\b(?:(?:co-?)?founder|hudson|hud|taylor)\b${NOT_PRODUCT_SIDE}`, 'i');
 // The founder as the grammatical subject: "Does the founder have", "Is Hudson".
@@ -199,7 +201,7 @@ const FOUNDER_PAST_PATTERN = new RegExp(
 // founder asks about the product, whatever its verb or tense: "Is phone support
 // offered?", "Can samples be tracked?", "Has LIMS BOX offered phone support?".
 const CURRENT_QUESTION_PATTERN = new RegExp(
-  String.raw`(?:^|[,;:]\s*(?:and\s+|but\s+|so\s+)?|\b(?:and|but|so)\s+)(?:is|are|was|were|can|could|will|would|does|do|did|should|must|may|has|have|had)\s+(?!${FOUNDER_SUBJECT})\w`
+  String.raw`(?:^|[,;:.!?]\s*(?:and\s+|but\s+|so\s+)?|\b(?:and|but|so)\s+|^(?:with|given|considering|based\s+on|since|after)\b[^,;:.!?]*?\s)(?:is|are|was|were|can|could|will|would|does|do|did|should|must|may|has|have|had)\s+(?!${FOUNDER_SUBJECT})\w`
   + String.raw`|\bhow\s+(?:is|are|was|were|can|could|will|would|does|do|did|has|have)\s+(?!${FOUNDER_SUBJECT})\w`
   + String.raw`|\b(?:if|whether)\s+(?!${FOUNDER_SUBJECT}|any\b|so\b|not\b|possible\b|applicable\b|ever\b)\w`,
   'i',
@@ -250,8 +252,6 @@ const BIO_TOPIC_WORDS = ['education', 'degree', 'school', 'university', 'study',
   'credential', 'certification', 'laboratory', 'laboratories'];
 // Light stemming for founder topics, so "configure" and "configuring" find the configuration excerpt.
 const stem = (token: string) => token.replace(/(?:ations?|ings?|ed|es|e|s)$/, '');
-const stemmedWords = (entry: CorpusEntry) =>
-  new Set([...entry.keywords, ...tokenize(entry.title), ...tokenize(entry.text)].map(stem));
 
 export type QuestionIntent = 'founder' | 'product' | 'mixed' | 'contact';
 
@@ -303,26 +303,14 @@ function answerFounderQuestion(question: string): BotResponse {
   // ("What is the founder's background?") are answered by the published bio.
   if (topic.length === 0) return responseForEntry('founder-bio');
   if (!FOUNDER_HISTORY_PATTERN.test(bounded)) return evidenceMissing();
-  // An archive excerpt answers only when it covers every topic word; one shared
-  // word ("train" in "Did Hudson train for a marathon?") is not enough. Scores
-  // use the topic alone, so founder or history wording never qualifies an excerpt.
-  const top = loadFounderCorpus()
-    .filter((entry) => { const words = stemmedWords(entry); return topic.every((token) => words.has(token)); })
-    .map((entry) => ({ entry, score: scoreEntry(
-      { ...entry, keywords: entry.keywords.map(stem), title: tokenize(entry.title).map(stem).join(' '), text: tokenize(entry.text).map(stem).join(' ') },
-      topic,
-    ) }))
-    .sort((a, b) => b.score - a.score)[0];
-  if (!top || top.score < MIN_SCORE) {
-    // The bio answers a topic only when it states all of it (water testing, public health, a degree).
-    const bio = corpus.find((entry) => entry.id === 'founder-bio');
-    const bioWords = new Set([...tokenize(bio?.text ?? ''), ...BIO_TOPIC_WORDS].map(stem));
-    return topic.every((token) => bioWords.has(token)) ? responseForEntry('founder-bio') : evidenceMissing();
-  }
-
-  const filtered = filterCommercialClaims(top.entry.text);
-  if (filtered.blocked) return { answer: filtered.answer, grounded: false, sources: [] };
-  return { answer: filtered.answer, grounded: true, sources: [{ title: top.entry.title, path: top.entry.source }] };
+  // Archive excerpts are loaded and have citation pages, but the bot does not
+  // answer from them until a reviewed answer design and deployment wiring exist.
+  // Quantifiers and negation ("every", "only", "not") are never covered.
+  if (topic.some((token) => MEANING_WORDS.has(token) || token === 'not')) return evidenceMissing();
+  // The bio answers a topic only when it states all of it (water testing, public health, a degree).
+  const bio = corpus.find((entry) => entry.id === 'founder-bio');
+  const bioWords = new Set([...tokenize(bio?.text ?? ''), ...BIO_TOPIC_WORDS].map(stem));
+  return topic.every((token) => bioWords.has(token)) ? responseForEntry('founder-bio') : evidenceMissing();
 }
 
 export function askBot(rawQuestion: unknown): BotResponse {

@@ -22,8 +22,7 @@ export default function BotPage() {
         <p className="text-slate-600 dark:text-slate-300 mb-8 text-sm">
           Answers come only from published LIMS BOX documentation and always cite
           their source. If the documentation doesn&apos;t cover it, LIMS BOT says so
-          instead of guessing. Founder-background answers use approved redacted
-          excerpts from the founder archive.
+          instead of guessing.
         </p>
         <BotChat cards={CAPABILITY_CARDS} />
       </div>
