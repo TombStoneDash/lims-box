@@ -7,6 +7,15 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model PersonnelPackDownloadClaim {
+  jti        String   @id
+  asset      String
+  expiresAt  DateTime
+  consumedAt DateTime @default(now())
+
+  @@index([expiresAt])
+}
+
 model Prospect {
   id              String   @id @default(cuid())
   track           String // "clinical" or "environmental"
