@@ -183,34 +183,51 @@ const ROUND_TRIPPABLE_TITLES = new Set(
   corpus.filter((entry) => answerQuestion(entry.title).grounded).map((entry) => entry.title),
 );
 const DEFAULT_SUGGESTION_IDS = ['what-is-lims-box', 'pricing', 'pilot-program'];
-function isProductQuestion(question: string): boolean {
-  // Product mentions are independent of voice/word order. A founder's title
-  // ("the LIMS BOX founder") is not itself a reference to product capability.
-  const withoutFounderTitle = question.replace(/\blims\s*box(?:['’]s)?\s+founder\b/gi, 'founder');
-  if (/\blims\s*box\b/i.test(withoutFounderTitle)) return true;
+const FOUNDER_IDENTITY_PATTERN = /\bwho\s+(?:(?:originally\s+)?(?:built|founded|created|started)\s+(?:lims\s*(?:box|bot)|it|this)|(?:was|is)\s+(?:lims\s*(?:box|bot)|it|this)\s+(?:built|founded|created|started)\s+by)\b|\bby\s+whom\s+was\s+(?:lims\s*(?:box|bot)|it|this)\s+(?:built|founded|created|started)\b/i;
+const FOUNDER_OVERVIEW_PATTERN = /^(?:tell\s+me\s+about|who\s+is)\s+(?:the\s+)?(?:founder(?:\s+of\s+(?:the\s+)?lims\s*(?:box|bot))?|lims\s*(?:box|bot)(?:['’]s)?\s+founder|hudson)[?.!]*$/i;
 
-  // Preserve personal-history questions such as "What experience does Hudson
-  // have?". Any remaining present/modal clause is conservatively product intent,
-  // including passive questions that omit the product name entirely.
-  const withoutPersonalHistory = withoutFounderTitle
-    .replace(/\b(?:does\s+(?:the\s+)?(?:founder|hudson)\s+have|has\s+(?:the\s+)?(?:founder|hudson)\s+had)\b/gi, '')
-    .replace(/\bis\s+(?:the\s+)?(?:founder|hudson)['’]s\s+(?:experience|background|career|history)\b/gi, '');
-  return /\b(?:am|is|are|do|does|has|have|can|could|will|would|should|must|today|currently|available|supported)\b/i.test(withoutPersonalHistory);
-}
+export type QuestionIntent = 'founder' | 'product' | 'mixed' | 'contact';
 
-function isFounderQuestion(question: unknown): question is string {
-  if (typeof question !== 'string') return false;
-  const bounded = question.trim().slice(0, MAX_QUESTION_LENGTH);
-  return /\b(?:founder|hudson)\b/i.test(bounded)
-    && !/\b(?:talk|contact|call|email|speak|consultation)\b/i.test(bounded);
+/** Decide what is being asked before choosing an evidence corpus.
+ * A company name or an auxiliary verb alone says nothing about intent.
+ * Explicit current-product requests win over accompanying founder history.
+ */
+export function classifyQuestionIntent(rawQuestion: unknown): QuestionIntent {
+  if (typeof rawQuestion !== 'string') return 'product';
+  const question = rawQuestion.trim().slice(0, MAX_QUESTION_LENGTH);
+  // Normalize attribution noun phrases, not every mention of the product.
+  const subject = question
+    .replace(/\bfounder\s+of\s+(?:the\s+)?lims\s*(?:box|bot)\b/gi, 'founder')
+    .replace(/\blims\s*(?:box|bot)(?:['’]s)?\s+founder\b/gi, 'founder');
+  const founder = /\b(?:founder|hudson)\b/i.test(subject)
+    || FOUNDER_IDENTITY_PATTERN.test(subject);
+
+  // Active product questions and statements, passive capability questions,
+  // availability requests, and price requests. Personal predicates such as
+  // "does the founder have experience" are deliberately absent.
+  const currentProduct = LIMS_BOX_OVERVIEW_PATTERN.test(subject)
+    || LIMS_BOT_OVERVIEW_PATTERN.test(subject)
+    || /\b(?:what\s+(?:does|can)|can|could|does|will|would|should|must)\s+(?:the\s+)?(?:lims\s*(?:box|bot)|it|this|your\s+product)\b/i.test(subject)
+    || /\b(?:lims\s*(?:box|bot)|it|this|your\s+product)\s+(?:can|supports?|does|includes?|provides?|costs?)\b/i.test(subject)
+    || /\b(?:is|are|can|could|will|would|should|must)\b[^?!.;,]*\b(?:supported|provided|included|available|recorded|imported|migrated|exported|used)\b/i.test(subject)
+    || /\b(?:imports?|migration|methods|configuration|support|custody|operation|exports?)\s+availability\b/i.test(subject)
+    || /\blims\s*(?:box|bot)(?:['’]s)?\s+(?:pricing|prices?|costs?|subscription)\b|\b(?:pricing|prices?|costs?|subscription)\s+(?:of|for)\s+lims\s*(?:box|bot)\b/i.test(subject)
+    || /\b(?:how\s+much|what\s+(?:is|are)\s+(?:the\s+)?(?:price|pricing|cost|subscription)|pricing\s+(?:today|for))\b/i.test(subject);
+  if (currentProduct) return founder ? 'mixed' : 'product';
+  if (/\b(?:talk|contact|call|email|speak|consultation)\b/i.test(subject)) return 'contact';
+  return founder ? 'founder' : 'product';
 }
 
 function answerFounderQuestion(question: string): BotResponse {
   const bounded = question.trim().slice(0, MAX_QUESTION_LENGTH);
-  if (!/\b(?:experience|background|career|history|historical|previously|past|resume|worked|implemented|configured|trained)\b|\bwhat\s+did\b/i.test(bounded)) {
+  const overview = FOUNDER_OVERVIEW_PATTERN.test(bounded) || FOUNDER_IDENTITY_PATTERN.test(bounded);
+  if (!overview && !/\b(?:experience|background|career|history|historical|previously|past|resume|worked|implemented|configured|trained)\b|\bwhat\s+did\b/i.test(bounded)) {
     return evidenceMissing();
   }
   const tokens = tokenize(bounded);
+  // Identity/history requests without a literal 'founder' still search only
+  // admitted founder evidence, never the product FAQ.
+  if (overview) tokens.push('founder', 'experience');
   const top = loadFounderCorpus()
     .map((entry) => ({ entry, score: scoreEntry(entry, tokens) }))
     .sort((a, b) => b.score - a.score)[0];
@@ -232,12 +249,12 @@ export function askBot(rawQuestion: unknown): BotResponse {
   // product-capability question (e.g. whether LIMS BOX imports instruments).
   // For explicit product questions, founder context must not boost the
   // contact FAQ over the actual capability FAQ during keyword ranking.
-  const isProduct = typeof rawQuestion === 'string'
-    && isProductQuestion(rawQuestion.trim().slice(0, MAX_QUESTION_LENGTH));
+  const intent = classifyQuestionIntent(rawQuestion);
+  const isProduct = intent === 'product' || intent === 'mixed';
   const productQuestion = isProduct && typeof rawQuestion === 'string'
     ? rawQuestion.trim().slice(0, MAX_QUESTION_LENGTH).replace(/\b(?:founder|hudson|experience|background|career)\b/gi, '')
     : rawQuestion;
-  const response = !isProduct && isFounderQuestion(rawQuestion)
+  const response = intent === 'founder' && typeof rawQuestion === 'string'
     ? answerFounderQuestion(rawQuestion)
     : answerQuestion(productQuestion);
   if (response.grounded) return response;

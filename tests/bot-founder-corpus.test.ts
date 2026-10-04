@@ -8,7 +8,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import FounderSourcePage from '../app/bot/sources/[...path]/page';
 import { POST } from '../app/api/bot/route';
 import { NextRequest } from 'next/server';
-import { askBot, EVIDENCE_MISSING_ANSWER } from '../lib/bot/engine';
+import { askBot, classifyQuestionIntent, type QuestionIntent, EVIDENCE_MISSING_ANSWER } from '../lib/bot/engine';
 import { corpus } from '../lib/bot/corpus';
 import { FOUNDER_CITATION_PREFIX, loadFounderCorpus } from '../lib/bot/founder-corpus';
 import { filterCommercialClaims } from '../lib/bot/output-claims-filter';
@@ -112,6 +112,8 @@ test('missing bundle and off-topic founder questions fail closed; product and co
   const bundle = fixture(t);
   process.env.LIMS_FOUNDER_KNOWLEDGE_DIR = bundle.root;
   assert.equal(askBot('What is the founder SSN?').grounded, false);
+  assert.equal(askBot('Tell me about the founder SSN').grounded, false);
+  assert.equal(askBot('Who has the founder genetic report?').grounded, false);
   assert.equal(askBot('What does the founder genetic report say?').grounded, false);
   assert.match(askBot('Can LIMS BOX integrate with our instruments?').answer, /Not yet/);
   assert.match(askBot('Can I talk to the founder?').answer, /Schedule a live demo/);
@@ -151,6 +153,78 @@ test('a founder mention or mixed career intent cannot override current product c
     assert.ok(result.sources.some((source) => source.path.startsWith(FOUNDER_CITATION_PREFIX)));
   }
 });
+
+// Intent and observable answers are both asserted: a correct label alone must
+// not conceal a fallback to pricing or a historical answer to a capability ask.
+const intentCases: { question: string; intent: QuestionIntent; entry?: string; excerpt?: string }[] = [
+  { question: 'Tell me about the founder of LIMS BOX', intent: 'founder' },
+  { question: 'Who founded LIMS Box?', intent: 'founder' },
+  { question: 'Who built LIMS BOT?', intent: 'founder' },
+  { question: 'Who built it?', intent: 'founder' },
+  { question: 'Who was it founded by?', intent: 'founder' },
+  { question: 'Who created LIMS BOX?', intent: 'founder' },
+  { question: 'Who was LIMS Box founded by?', intent: 'founder' },
+  { question: 'By whom was LIMS BOT built?', intent: 'founder' },
+  { question: 'Who is the founder of LIMS Box?', intent: 'founder' },
+  { question: 'Tell me about the LIMS BOT founder', intent: 'founder' },
+  { question: 'What experience does the founder of LIMS BOX have with configuration?', intent: 'founder', excerpt: 'configuration' },
+  { question: 'What is the configuration background of the LIMS BOX founder?', intent: 'founder', excerpt: 'configuration' },
+  { question: 'What is the background of the founder of LIMS Box?', intent: 'founder' },
+  { question: 'What training experience does the founder of LIMS BOT have?', intent: 'founder', excerpt: 'training' },
+  { question: "What is Hudson's background in instrument imports?", intent: 'founder', excerpt: 'instrument-imports' },
+  { question: 'What did Hudson implement for instrument imports?', intent: 'founder', excerpt: 'instrument-imports' },
+  { question: 'What was configured by the LIMS Box founder in the past?', intent: 'founder', excerpt: 'configuration' },
+  { question: 'Which technicians were trained by the founder of LIMS BOX?', intent: 'founder', excerpt: 'training' },
+  { question: 'What data recovery experience does Hudson have?', intent: 'founder', excerpt: 'data-recovery' },
+  { question: 'What does LIMS BOX do?', intent: 'product', entry: 'what-is-lims-box' },
+  { question: 'Tell me about LIMS Box', intent: 'product', entry: 'what-is-lims-box' },
+  { question: 'What is LIMS BOT?', intent: 'product', entry: 'what-is-lims-bot' },
+  { question: 'Can LIMS Box import instrument data?', intent: 'product', entry: 'instruments' },
+  { question: 'Does LIMS BOT support instrument imports?', intent: 'product', entry: 'instruments' },
+  { question: 'Are instrument imports supported by LIMS BOX?', intent: 'product', entry: 'instruments' },
+  { question: 'Can instrument data be imported?', intent: 'product', entry: 'instruments' },
+  { question: 'Is configuration included?', intent: 'product', entry: 'implementation-fee' },
+  { question: 'Can LIMS BOX migrate spreadsheets?', intent: 'product', entry: 'data-migration' },
+  { question: 'Are EPA methods provided by LIMS Box?', intent: 'product', entry: 'methods' },
+  { question: 'What does LIMS Box cost?', intent: 'product', entry: 'pricing' },
+  { question: 'How much does LIMS BOX cost?', intent: 'product', entry: 'pricing' },
+  { question: 'What is the subscription price for LIMS Box?', intent: 'product', entry: 'pricing' },
+  { question: 'Is phone support provided?', intent: 'product', entry: 'support' },
+  { question: "Given Hudson's background, what does LIMS Box cost?", intent: 'mixed', entry: 'pricing' },
+  { question: 'Who founded LIMS Box and can it import instrument data?', intent: 'mixed', entry: 'instruments' },
+  { question: 'Tell me about the founder of LIMS BOX and whether LIMS BOX supports instrument imports.', intent: 'mixed', entry: 'instruments' },
+  { question: "Are instrument imports supported by LIMS BOT given Hudson's experience?", intent: 'mixed', entry: 'instruments' },
+  { question: 'Can the founder confirm instrument imports are available?', intent: 'mixed', entry: 'instruments' },
+  { question: "Given Hudson's experience, instrument import availability in LIMS BOX?", intent: 'mixed', entry: 'instruments' },
+  { question: 'What configuration experience does the founder have, and is configuration included today?', intent: 'mixed', entry: 'implementation-fee' },
+  { question: 'What configuration experience does the founder have and what does LIMS BOX cost?', intent: 'mixed', entry: 'pricing' },
+  { question: 'Tell me about the founder and LIMS BOX pricing', intent: 'mixed', entry: 'pricing' },
+  { question: 'Tell me about LIMS BOX given the founder background', intent: 'mixed', entry: 'what-is-lims-box' },
+  { question: 'What is LIMS BOT given the founder background?', intent: 'mixed', entry: 'what-is-lims-bot' },
+  { question: 'Can I talk to the founder?', intent: 'contact', entry: 'talk-to-person' },
+];
+
+for (const { question, intent, entry, excerpt } of intentCases) {
+  test(`intent ${intent}: ${question}`, (t) => {
+    const bundle = fixture(t, FOUNDER_EXCERPTS.map((item) => item.text));
+    useBundle(t, bundle.root);
+    assert.equal(classifyQuestionIntent(question), intent);
+    const result = askBot(question);
+    assert.equal(result.grounded, true);
+    if (intent === 'founder') {
+      assert.match(result.answer, /^Founder archive \(historical experience\):/);
+      assert.ok(result.sources.every((source) => source.path.startsWith(FOUNDER_CITATION_PREFIX)));
+      if (excerpt) assert.ok(result.sources.some((source) => source.path.endsWith(`#${excerpt}`)));
+      // Revoking the bundle must not let a founder question fall back to pricing.
+      delete process.env.LIMS_FOUNDER_KNOWLEDGE_DIR;
+      assert.equal(askBot(question).answer, EVIDENCE_MISSING_ANSWER);
+    } else {
+      assert.equal(result.answer, corpus.find((item) => item.id === entry)!.text);
+      assert.ok(result.sources.every((source) => !source.path.startsWith(FOUNDER_CITATION_PREFIX)));
+      if (entry === 'instruments') assert.match(result.answer, /Not yet/);
+    }
+  });
+}
 
 // Each topic exercises both voices, explicit/implicit product references, and
 // founder context in either position with an admitted historical corpus.
