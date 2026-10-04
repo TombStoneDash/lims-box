@@ -192,6 +192,13 @@ const intentCases: { question: string; intent: QuestionIntent; entry?: string; e
   { question: 'Please introduce John Hudson Taylor.', intent: 'founder', entry: 'founder-bio' },
   { question: 'Do you have any info on the founder?', intent: 'founder', entry: 'founder-bio' },
   { question: 'Is it true that the founder built LIMS BOX?', intent: 'founder', entry: 'founder-bio' },
+  // HUD review at d51b5805.
+  { question: 'Who exactly is John Hudson Taylor?', intent: 'founder', entry: 'founder-bio' },
+  { question: 'Who, exactly, founded LIMS BOX?', intent: 'founder', entry: 'founder-bio' },
+  { question: "Could you summarize Hudson's career?", intent: 'founder', entry: 'founder-bio' },
+  { question: "Give me an overview of Hud Taylor's career.", intent: 'founder', entry: 'founder-bio' },
+  { question: 'What can you tell me about John Hudson Taylor?', intent: 'founder', entry: 'founder-bio' },
+  { question: 'Would you please introduce me to the founder of LIMS BOX?', intent: 'founder', entry: 'founder-bio' },
   // A person's certifications and lab history are background, not product compliance.
   { question: 'What prior laboratory experience has Hud Taylor had?', intent: 'founder', entry: 'founder-bio' },
   { question: 'Was Hudson certified as a water specialist?', intent: 'founder', entry: 'founder-bio' },
@@ -216,6 +223,7 @@ const intentCases: { question: string; intent: QuestionIntent; entry?: string; e
   { question: 'Did Hudson train anyone?', intent: 'founder', excerpt: 'training' },
   { question: 'Can you tell me if Hudson has CSV experience?', intent: 'founder', excerpt: 'instrument-imports' },
   { question: 'Is it true Hudson configured instrument imports?', intent: 'founder', excerpt: 'instrument-imports' },
+  { question: 'Which LIMS systems did Hudson configure earlier?', intent: 'founder', excerpt: 'configuration' },
   { question: 'What data recovery experience does Hudson have?', intent: 'founder', excerpt: 'data-recovery' },
   { question: 'What does LIMS BOX do?', intent: 'product', entry: 'what-is-lims-box' },
   { question: 'Tell me about LIMS Box', intent: 'product', entry: 'what-is-lims-box' },
@@ -250,6 +258,7 @@ const intentCases: { question: string; intent: QuestionIntent; entry?: string; e
   { question: "With the founder's experience in mind, can samples be tracked?", intent: 'mixed', entry: 'sample-tracking-overview' },
   { question: "How are samples tracked, given the founder's background?", intent: 'mixed', entry: 'sample-tracking-overview' },
   { question: "Given Hud Taylor's background, is chain of custody handled?", intent: 'mixed', entry: 'chain-of-custody' },
+  { question: "Given Hudson's training background, has LIMS BOX offered phone support on its current plans?", intent: 'mixed', entry: 'support' },
   // "Hudson's team" or "his company" is the product side, not the founder.
   { question: "Can the founder's team migrate our spreadsheets?", intent: 'product', entry: 'data-migration' },
   { question: 'Can I talk to the founder?', intent: 'contact', entry: 'talk-to-person' },
@@ -261,6 +270,7 @@ const intentCases: { question: string; intent: QuestionIntent; entry?: string; e
   { question: 'Could I book a meeting with John Hudson Taylor?', intent: 'contact', entry: 'talk-to-person' },
   { question: 'How do I get in touch with Hudson?', intent: 'contact', entry: 'talk-to-person' },
   { question: "Can I talk to Hudson's team?", intent: 'contact', entry: 'talk-to-person' },
+  { question: "Given Hudson's background, how can I get in touch with him?", intent: 'contact', entry: 'talk-to-person' },
 ];
 
 test('founder questions about topics nothing published covers fail closed, even with the archive loaded', (t) => {
@@ -268,7 +278,8 @@ test('founder questions about topics nothing published covers fail closed, even 
   useBundle(t, bundle.root);
   for (const question of [
     "What is the founder's favorite color?",
-    'What did Hudson implement?',
+    'Did Hudson train for a marathon?',
+    'What music did Hudson listen to while configuring LIMS?',
     'Can Hudson help my lab migrate?',
     'What does Hudson think about competitors?',
     'Has the founder worked with call centers?',
@@ -512,14 +523,13 @@ test('public citation pages expose only reviewed excerpts, excluding private/cus
   }
 });
 
-test('compliance questions that mention the founder keep the locked positioning and never cite the archive', (t) => {
+test('product compliance questions keep the locked positioning; founder-only regulatory history never cites the archive', (t) => {
   const bundle = fixture(t, FOUNDER_EXCERPTS.map((item) => item.text));
   useBundle(t, bundle.root);
   for (const question of [
-    "What is the founder's experience with CLIA?",
-    'Is the founder HIPAA certified?',
-    'Has Hudson done validation for CLIA labs?',
     'Who is the founder and is LIMS BOX HIPAA compliant?',
+    "Given Hudson's background, is LIMS BOX HIPAA compliant?",
+    "Considering the founder's experience, does LIMS BOX support 21 CFR Part 11 workflows?",
   ]) {
     assert.equal(classifyQuestionIntent(question), 'mixed', question);
     const result = askBot(question);
@@ -527,6 +537,18 @@ test('compliance questions that mention the founder keep the locked positioning 
     assert.ok(result.answer.startsWith(COMPLIANCE_POSITIONING), question);
     assert.equal(result.sources[0].path, '/compliance', question);
     assert.ok(result.sources.every((source) => !source.path.startsWith(FOUNDER_CITATION_PREFIX)), question);
+  }
+  // A person's regulatory history is not a product compliance question, and no
+  // admitted excerpt covers it, so the bot says it has no approved material.
+  for (const question of [
+    "What is the founder's experience with CLIA?",
+    'Did Hudson ever work for the FDA?',
+    'What regulatory agencies did Hudson previously work for?',
+    'Is the founder HIPAA certified?',
+    'Has Hudson done validation for CLIA labs?',
+  ]) {
+    assert.equal(classifyQuestionIntent(question), 'founder', question);
+    assert.equal(askBot(question).answer, EVIDENCE_MISSING_ANSWER, question);
   }
 });
 
@@ -542,5 +564,28 @@ test("questions about the founder's company or team never reach the founder arch
     const result = askBot(question);
     assert.ok(result.sources.every((source) => !source.path.startsWith(FOUNDER_CITATION_PREFIX)), question);
     assert.doesNotMatch(result.answer, /historical experience/, question);
+  }
+});
+
+// Property check, not a phrasing list: every published product FAQ question,
+// wrapped in founder context in several positions and tenses, never cites the
+// founder archive.
+const productQuestions = corpus
+  .filter((entry) => !['founder-bio', 'talk-to-person', 'compliance-positioning'].includes(entry.id))
+  .map((entry) => entry.title.replace(/\?$/, ''));
+test('no product FAQ question cites the founder archive, whatever founder context surrounds it', (t) => {
+  const bundle = fixture(t, FOUNDER_EXCERPTS.map((item) => item.text));
+  useBundle(t, bundle.root);
+  for (const base of productQuestions) {
+    for (const question of [
+      `Given Hudson's training background, ${base.charAt(0).toLowerCase()}${base.slice(1)}?`,
+      `${base} given the founder's configuration experience?`,
+      `With Hud Taylor's instrument import history in mind, ${base.charAt(0).toLowerCase()}${base.slice(1)}?`,
+      `${base}? The founder trained technicians before.`,
+    ]) {
+      const result = askBot(question);
+      assert.ok(result.sources.every((source) => !source.path.startsWith(FOUNDER_CITATION_PREFIX)), question);
+      assert.doesNotMatch(result.answer, /historical experience/, question);
+    }
   }
 });
