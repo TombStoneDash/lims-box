@@ -320,7 +320,7 @@ function answerFounderQuestion(question: string): BotResponse {
   return topic.every((token) => bioWords.has(token)) ? responseForEntry('founder-bio') : evidenceMissing();
 }
 
-export function askBot(rawQuestion: unknown): BotResponse {
+function buildBotResponse(rawQuestion: unknown): BotResponse {
   // Historical first-person career excerpts must never answer a current
   // product-capability question (e.g. whether LIMS BOX imports instruments).
   // For explicit product questions, founder context must not boost the
@@ -359,4 +359,18 @@ export function askBot(rawQuestion: unknown): BotResponse {
   )].slice(0, 3);
 
   return { ...response, suggestions };
+}
+
+// Apply the output gate after every routing branch, including founder/contact
+// shortcuts. A blocked draft must not retain citations implying it is verified.
+export function askBot(rawQuestion: unknown): BotResponse {
+  const response = buildBotResponse(rawQuestion);
+  const filtered = filterCommercialClaims(response.answer);
+  if (!filtered.blocked) return response;
+  return {
+    answer: filtered.answer,
+    grounded: false,
+    sources: [],
+    followUp: CONTACT_FOLLOW_UP,
+  };
 }
