@@ -24,5 +24,6 @@ Emailed links carry `?asset=<key>&claim=<token>`. The claim is signed, expires a
 - `GET` with a claim only checks it (signature, expiry, asset) and returns a small confirm page. It never uses the claim up, so mail security scanners and link previews that open the link do not spend it.
 - The page's button `POST`s to `/api/personnel-pack-download/claim`, which uses the claim up (an atomic insert into `PersonnelPackDownloadClaim`) and returns the PDF.
 - A missing `PERSONNEL_PACK_DOWNLOAD_CLAIM_SECRET` or an unavailable claim store fails closed with 503.
+- A browser (`Accept: text/html`) that opens an expired or already-used link, or presses Download on one, gets a readable page with a "Request a new link" button to `/personnel-pack`, with the same 401/503 status. Other callers keep the JSON error. The page never echoes the claim.
 - The bare `?asset=<key>` address stays public, as above.
 
