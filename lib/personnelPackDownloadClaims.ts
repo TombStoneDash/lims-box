@@ -1,7 +1,15 @@
 import { createHmac, randomUUID, timingSafeEqual } from 'node:crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { loadDownloadableAsset } from '@/lib/personnelPackFulfillment';
+import { loadDownloadableAsset, resolvePersonnelPackAsset } from '@/lib/personnelPackFulfillment';
+
+// Shared claim protocol for reviewed bundled and generated Personnel Packs.
+// The loader is injectable so generated private PDFs use the same claim contract.
+export type DownloadAssetLoader = (key: string) => Promise<{
+  asset: { downloadFilename: string };
+  bytes: Buffer;
+} | null>;
+const PRIVATE_HEADERS = { 'Cache-Control': 'private, no-store', 'Referrer-Policy': 'no-referrer' };
 
 const DOWNLOAD_CLAIM_TTL_MS = 15 * 60 * 1000;
 
@@ -51,6 +59,9 @@ function isDownloadClaimPayload(value: unknown): value is DownloadClaimPayload {
 }
 
 function parseAndVerifyClaim(token: string, asset: string, secret: string, now: number): DownloadClaimResult {
+  if (token.length > 2048 || !/^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/.test(token)) {
+    return { ok: false, code: 'download_claim_malformed' };
+  }
   const separatorIndex = token.indexOf('.');
   if (
     separatorIndex <= 0 ||
@@ -161,38 +172,37 @@ const INVALID_MESSAGE = 'This download link is invalid or has expired. Request a
 export const DOWNLOAD_CLAIM_REDEEM_PATH = '/api/personnel-pack-download/claim';
 
 function claimUnavailable() {
-  return NextResponse.json({ error: UNAVAILABLE_MESSAGE, code: 'download_claim_unavailable' }, { status: 503 });
+  return NextResponse.json({ error: UNAVAILABLE_MESSAGE, code: 'download_claim_unavailable' }, { status: 503, headers: PRIVATE_HEADERS });
 }
 
 function claimRejected(asset: string, code: DownloadClaimFailureCode) {
-  console.error('[personnel-pack-download]', 'download_claim_rejected', JSON.stringify({ asset, stage: 'authorization', code }));
+  console.error('[personnel-pack-download]', 'download_claim_rejected', JSON.stringify({ asset: resolvePersonnelPackAsset(asset)?.key ?? 'unsupported', stage: 'authorization', code }));
   const unavailable = code === 'download_claim_unavailable';
   return NextResponse.json(
     { error: unavailable ? UNAVAILABLE_MESSAGE : INVALID_MESSAGE, code },
-    { status: unavailable ? 503 : 401 },
+    { status: unavailable ? 503 : 401, headers: PRIVATE_HEADERS },
   );
 }
 
-async function assetResponse(key: string) {
+async function assetResponse(key: string, loadAsset: DownloadAssetLoader) {
   let result;
   try {
-    result = await loadDownloadableAsset(key);
-  } catch (error) {
+    result = await loadAsset(key);
+  } catch {
     console.error('[personnel-pack-download]', 'asset_unavailable', JSON.stringify({
-      asset: key,
+      asset: resolvePersonnelPackAsset(key)?.key ?? 'unsupported',
       stage: 'download',
-      error: error instanceof Error ? error.message : String(error),
     }));
     return NextResponse.json(
       { error: 'Automatic fulfillment is temporarily unavailable. Email info@lims.bot directly.', code: 'asset_unavailable' },
-      { status: 503 },
+      { status: 503, headers: PRIVATE_HEADERS },
     );
   }
 
   if (!result) {
     return NextResponse.json(
       { error: 'Automatic fulfillment is currently available only for the reviewed ISO 15189 pack.', code: 'unsupported_pack_selection' },
-      { status: 404 },
+      { status: 404, headers: PRIVATE_HEADERS },
     );
   }
 
@@ -202,6 +212,7 @@ async function assetResponse(key: string) {
       'Content-Type': 'application/pdf',
       'Content-Disposition': `attachment; filename="${result.asset.downloadFilename}"`,
       'Cache-Control': 'private, no-store',
+      'Referrer-Policy': 'no-referrer',
       'X-Content-Type-Options': 'nosniff',
     },
   });
@@ -245,6 +256,7 @@ function confirmPage(asset: string, claim: string) {
  */
 export function createPersonnelPackGetHandler(
   resolveClaims: DownloadClaimServiceResolver = configuredDownloadClaimService,
+  loadAsset: DownloadAssetLoader = loadDownloadableAsset,
 ) {
   return async function personnelPackGet(request: NextRequest) {
     const key = request.nextUrl.searchParams.get('asset') ?? 'iso15189';
@@ -258,13 +270,16 @@ export function createPersonnelPackGetHandler(
       return confirmPage(key, claimToken);
     }
 
-    return assetResponse(key);
+    // Only the pre-existing reviewed public registry can bypass a claim.
+    // Never call the private loader for a bare generated key.
+    return assetResponse(key, resolvePersonnelPackAsset(key) ? loadAsset : async () => null);
   };
 }
 
-/** POST from the confirm page: uses the one-time claim up, then returns the PDF. */
+/** Verify and load bytes before atomically consuming; storage failures leave the claim usable. */
 export function createPersonnelPackClaimPostHandler(
   resolveClaims: DownloadClaimServiceResolver = configuredDownloadClaimService,
+  loadAsset: DownloadAssetLoader = loadDownloadableAsset,
 ) {
   return async function personnelPackClaimPost(request: NextRequest) {
     let key = 'iso15189';
@@ -281,8 +296,12 @@ export function createPersonnelPackClaimPostHandler(
 
     const claims = resolveClaims();
     if (!claims) return claimUnavailable();
+    const checked = claims.verify(claimToken, key, Date.now());
+    if (checked.ok === false) return claimRejected(key, checked.code);
+    const response = await assetResponse(key, loadAsset);
+    if (response.status !== 200) return response;
     const claimResult = await claims.verifyAndConsume(claimToken, key, Date.now());
     if (claimResult.ok === false) return claimRejected(key, claimResult.code);
-    return assetResponse(key);
+    return response;
   };
 }

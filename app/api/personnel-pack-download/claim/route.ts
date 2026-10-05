@@ -1,6 +1,6 @@
-import { createPersonnelPackClaimPostHandler } from '@/lib/personnelPackDownloadClaims';
+import { createPersonnelPackClaimPostHandler, configuredDownloadClaimService } from '@/lib/personnelPackDownloadClaims';
+import { loadPersonnelPackDownload } from '@/lib/personnel-pack/runtime';
 
 export const runtime = 'nodejs';
 
-/** Redeems a one-time download claim submitted by the confirm page's form. */
-export const POST = createPersonnelPackClaimPostHandler();
+export const POST = createPersonnelPackClaimPostHandler(configuredDownloadClaimService, loadPersonnelPackDownload);

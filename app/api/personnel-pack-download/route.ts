@@ -1,30 +1,17 @@
+import { NextRequest } from 'next/server';
 import {
   createPersonnelPackPostHandler,
-  resolveBundledAsset,
   type PersonnelPackDelivery,
 } from '@/lib/personnelPackFulfillment';
-import {
-  configuredDownloadClaimService,
-  createPersonnelPackGetHandler,
-} from '@/lib/personnelPackDownloadClaims';
 import { sendSubmissionNotice } from '@/lib/notify';
 import { getSupabase } from '@/lib/supabase';
+import { configuredDownloadClaimService, createPersonnelPackGetHandler } from '@/lib/personnelPackDownloadClaims';
+import { loadPersonnelPackDownload, resolveAutomaticPersonnelPack } from '@/lib/personnel-pack/runtime';
+import { personnelPackEmailEnabled } from '@/lib/personnel-pack/fulfillment';
 
 export const runtime = 'nodejs';
 
-/**
- * The bare `?asset=<key>` URL stays intentionally public (see
- * docs/personnel-pack-fulfillment-security.md) — a `claim` query param is an
- * additive, optional freshness/anti-replay check for links this route itself
- * mints via POST. Its absence never blocks a request; once present it must
- * be well-formed, unexpired, unused, and bound to the requested asset, or the
- * request fails closed. A claim link never uses the claim up on GET: it shows a
- * confirm page whose button POSTs to /api/personnel-pack-download/claim, so
- * email link scanners cannot spend it. Claim-bearing requests require a stable configured
- * signing key and a durable atomic claim store; missing infrastructure never
- * falls back to process-local state.
- */
-export const GET = createPersonnelPackGetHandler();
+export const GET = createPersonnelPackGetHandler(configuredDownloadClaimService, loadPersonnelPackDownload);
 
 async function createLead(record: { email: string; accred_type: string | null; source: 'personnel-pack-download' }) {
   const supabase = getSupabase();
@@ -94,29 +81,14 @@ async function sendPersonnelPackDelivery(
   }
 }
 
-/** Mints a fresh, single-use download claim for each newly issued delivery link. */
-async function resolveAssetWithDownloadClaim(
-  accredType: string | null,
-  origin: string,
-): Promise<PersonnelPackDelivery | null> {
-  const delivery = await resolveBundledAsset(accredType, origin);
-  if (!delivery) return null;
-
-  const url = new URL(delivery.assetUrl);
-  const asset = url.searchParams.get('asset');
-  if (!asset) return delivery;
-
-  const claims = configuredDownloadClaimService();
-  if (!claims) throw new Error('Applicant delivery is not configured');
-  const claim = claims.issue(asset);
-  url.searchParams.set('claim', claim);
-
-  return { ...delivery, assetUrl: url.toString() };
+export async function POST(request: NextRequest) {
+  return createPersonnelPackPostHandler({
+    createLead,
+    resolveAsset: resolveAutomaticPersonnelPack,
+    // Both outbound paths default OFF. The page delivers the PDF without email.
+    ...(personnelPackEmailEnabled() ? {
+      sendSubmissionNotice,
+      sendApplicantDelivery: sendPersonnelPackDelivery,
+    } : {}),
+  })(request);
 }
-
-export const POST = createPersonnelPackPostHandler({
-  createLead,
-  sendSubmissionNotice,
-  sendApplicantDelivery: sendPersonnelPackDelivery,
-  resolveAsset: resolveAssetWithDownloadClaim,
-});
