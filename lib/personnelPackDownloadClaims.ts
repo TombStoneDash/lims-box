@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { loadDownloadableAsset, resolvePersonnelPackAsset } from '@/lib/personnelPackFulfillment';
 
-// Claim protocol from #124, head 7e44e8f7b8240209e74a3c662c38308451d0e267.
+// Shared claim protocol for reviewed bundled and generated Personnel Packs.
 // The loader is injectable so generated private PDFs use the same claim contract.
 export type DownloadAssetLoader = (key: string) => Promise<{
   asset: { downloadFilename: string };

@@ -11,8 +11,21 @@ The API protects fulfillment integrity instead:
 - Operator-notice failure emits a redacted diagnostic and does not block applicant delivery or the verified download.
 - Applicant-email failure is reported honestly while the already-validated delivery URL remains usable.
 
-The delivered URL points at `GET /api/personnel-pack-download?asset=<key>`, which streams the reviewed bytes with `Content-Disposition: attachment; filename="<stable name>"` and `Cache-Control: private, no-store`. This keeps the filename an applicant sees stable across future asset revisions (the on-disk file may be renamed when the pack is re-reviewed; the download key and displayed filename do not change), and keeps the response out of shared/CDN caches. It does not change the access model below: the route requires no authentication.
+The bare public URL points at `GET /api/personnel-pack-download?asset=<key>`, which streams the reviewed bytes with `Content-Disposition: attachment; filename="<stable name>"` and `Cache-Control: private, no-store`. This keeps the filename an applicant sees stable across future asset revisions (the on-disk file may be renamed when the pack is re-reviewed; the download key and displayed filename do not change), and keeps the response out of shared/CDN caches. It does not change the access model below: the route requires no authentication.
 
 Because the asset is public, the PDF must not contain customer data, secrets, or private records. Search engines, caches, logs, and anyone who knows the URL may retrieve it without the lead form. If a future pack requires confidentiality or per-recipient authorization, it must move out of `public` and use a separately reviewed authenticated delivery design; renaming the file or hiding the link is not access control.
 
 The committed `.env.example` intentionally has no `PERSONNEL_PACK_PDF_URL`. The public path and reviewed hash are source-controlled with the fulfillment implementation so configuration drift cannot silently substitute another document.
+
+## One-time download links
+
+All form-issued delivery links carry `?asset=<key>&claim=<token>`. The claim is signed, expires after 15 minutes, and works once.
+
+- `GET` with a claim only checks it (signature, expiry, asset) and returns a small confirm page. It never uses the claim up, so mail security scanners and link previews that open the link do not spend it.
+- The page's button `POST`s to `/api/personnel-pack-download/claim`, which uses the claim up (an atomic insert into `PersonnelPackDownloadClaim`) and returns the PDF.
+- A missing `PERSONNEL_PACK_DOWNLOAD_CLAIM_SECRET` or an unavailable claim store fails closed with 503.
+- The bare `?asset=iso15189` address stays public, as above. Generated artifact keys require a claim and never bypass authorization.
+
+With `PERSONNEL_PACK_AUTO_PDF_ENABLED=true`, fulfillment stores generated blank worksheets privately in `PersonnelPackPdfArtifact`. Both bundled and generated delivery use the same `PERSONNEL_PACK_DOWNLOAD_CLAIM_SECRET`, claim service, and `PersonnelPackDownloadClaim` table. Redemption verifies and loads the PDF before atomically consuming the claim, so storage failures permit a retry.
+
+Applicant emails and operator notices default OFF; only `PERSONNEL_PACK_EMAIL_ENABLED=true` enables them. Auto-PDF also defaults OFF, preserving the bundled PDF while still issuing signed links. The schema change from #124 adds only the artifact table; existing claim and application tables remain unchanged for production `prisma db push`.

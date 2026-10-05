@@ -1,6 +1,6 @@
 # Route exposure inventory
 
-Snapshot of repository source at `917672a`, reviewed 2026-09-19. This is a test-only classification guard, not an authorization implementation or a live deployment check.
+Initial snapshot of repository source at `917672a`, reviewed 2026-09-19; founder citation classification added for PR #512. This is a test-only classification guard, not an authorization implementation or a live deployment check.
 
 Run directly from the repository root (with the existing dependencies available):
 
@@ -17,7 +17,7 @@ The matcher check verifies that middleware source names each protected prefix, f
 | Bucket | Discovered files / normalized paths | Meaning |
 | --- | --- | --- |
 | PROTECTED | 35 | Covered by the existing demo protection helper. |
-| PUBLIC_BY_DESIGN | 48 | Explicit public purpose recorded in the test. |
+| PUBLIC_BY_DESIGN | 51 | Explicit public purpose recorded in the test. |
 | KNOWN_UNPROTECTED_PENDING_OWNER_DECISION | 13 | Explicit OHWorks exceptions; no implied approval to expose real data. |
 
 Each row below is one discovered page or handler. Dynamic `x` values are inventory placeholders, not actual records.
@@ -83,12 +83,14 @@ Each row below is one discovered page or handler. Dynamic `x` values are invento
 | PUBLIC_BY_DESIGN | `/api/health` | Route handler | Stateless service health and timestamp; no personal data. |
 | PUBLIC_BY_DESIGN | `/api/newsletter` | Route handler | Public newsletter signup submission. |
 | PUBLIC_BY_DESIGN | `/api/personnel-pack-download` | Route handler | Public pack request; GET serves a fixed reviewed documentation PDF, no personal data. |
+| PUBLIC_BY_DESIGN | `/api/personnel-pack-download/claim` | Route handler | Public confirm-page POST; redeems a signed one-time claim for the same fixed reviewed PDF, no personal data. |
 | PUBLIC_BY_DESIGN | `/api/prospects` | Route handler | Public lab-interest intake submission. |
 | PUBLIC_BY_DESIGN | `/api/unsubscribe` | Route handler | Public opt-out; GET changes suppression state but returns a generic confirmation with no personal data. |
 | PUBLIC_BY_DESIGN | `/api/waitlist` | Route handler | Public waitlist signup submission. |
 | PUBLIC_BY_DESIGN | `/blog` | Page | Public article index. |
 | PUBLIC_BY_DESIGN | `/blog/x` | Page | Public published article. |
 | PUBLIC_BY_DESIGN | `/bot` | Page | Public prototype assistant interface. |
+| PUBLIC_BY_DESIGN | `/bot/sources/x` | Page | Public reviewed founder excerpts only; private source documents, customer material and metadata are excluded. |
 | PUBLIC_BY_DESIGN | `/case-study` | Page | Public product case study. |
 | PUBLIC_BY_DESIGN | `/clia` | Page | Public CLIA product information. |
 | PUBLIC_BY_DESIGN | `/clia-tracker` | Page | Public personnel-tracker product information. |
@@ -155,3 +157,7 @@ No existing public GET required a `NEEDS_REVIEW` exception during this source re
 - `/api/unsubscribe` returns generic confirmation/error HTML. It **does** process an email input and change suppression state; "no personal data" describes the response, not an absence of personal-data processing or side effects.
 
 Public POST endpoints can accept contact information. Their public classification does not claim that they never process personal data, nor does this inventory test invoke them, submit forms, or send email.
+
+## Founder citation route (PR #512)
+
+`/bot/sources/[...path]` is `PUBLIC_BY_DESIGN` because it renders only the four reviewed public passages in `FOUNDER_EXCERPTS`, after manifest, integrity and source-status checks. It never serves the underlying private resume or arbitrary file content. Surrounding personal/customer material and source metadata are excluded; original, extraction, metadata and unadmitted paths return 404. Public citation URLs use reviewed passage IDs independent of private document identities; original-document hashes and internal paths are never exposed. Holds revoke the excerpt page on the next request. Tests in `tests/bot-founder-corpus.test.ts` exercise these boundaries using synthetic private/customer material. Any future private content must be authenticated before it can be served; this classification does not approve publishing source documents.

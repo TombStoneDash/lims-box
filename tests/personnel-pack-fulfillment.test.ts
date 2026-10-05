@@ -5,7 +5,7 @@ import test from 'node:test';
 import { NextRequest } from 'next/server';
 import { createPersonnelPackPostHandler } from '../lib/personnelPackFulfillment';
 import {
-  createDownloadClaimService, createPersonnelPackClaimPostHandler,
+  configuredDownloadClaimService, createDownloadClaimService, createPersonnelPackClaimPostHandler,
   createPersonnelPackGetHandler, createPrismaDownloadClaimStore,
   type DownloadClaimPayload, type DownloadClaimService,
 } from '../lib/personnelPackDownloadClaims';
@@ -234,18 +234,25 @@ test('unsupported choices and absent claim configuration cannot generate or stor
   assert.equal(f.rows.size, 0);
 });
 
-test('new storage and all sender flags default OFF; OFF preserves static reviewed download without new work', async () => {
+test('new storage and all sender flags default OFF; bundled delivery still uses single-use claims', async () => {
   for (const value of [undefined, '', 'false', '1', 'TRUE']) {
     assert.equal(automaticPdfEnabled({ PERSONNEL_PACK_AUTO_PDF_ENABLED: value }), false);
     assert.equal(personnelPackEmailEnabled({ PERSONNEL_PACK_EMAIL_ENABLED: value }), false);
   }
   assert.equal(automaticPdfEnabled({ PERSONNEL_PACK_AUTO_PDF_ENABLED: 'true' }), true);
   assert.equal(personnelPackEmailEnabled({ PERSONNEL_PACK_EMAIL_ENABLED: 'true' }), true);
+  const f = fixture();
   const resolve = createAutomaticPersonnelPackResolver({ enabled: () => false,
     store: { read: async () => assert.fail('no new storage'), putIfAbsent: async () => assert.fail('no new storage') },
-    resolveClaims: () => assert.fail('no claims needed'), generate: async () => assert.fail('no generation') });
+    resolveClaims: f.claims, generate: async () => assert.fail('no generation') });
   const result = await resolve('iso15189', 'https://lims.bot');
-  assert.equal(result?.assetUrl, 'https://lims.bot/api/personnel-pack-download?asset=iso15189');
+  assert.ok(result);
+  const url = new URL(result.assetUrl);
+  assert.equal(url.searchParams.get('asset'), 'iso15189');
+  assert.equal(f.claims().verify(url.searchParams.get('claim')!, 'iso15189').ok, true);
+  const post = createPersonnelPackClaimPostHandler(f.claims);
+  assert.equal((await post(redeem(result.assetUrl))).status, 200);
+  assert.equal((await post(redeem(result.assetUrl))).status, 401);
   assert.equal(result?.emailed, false);
 });
 
@@ -345,4 +352,33 @@ test('CI explicitly runs the named fulfillment regression and live route wires g
   assert.match(route, /createPersonnelPackGetHandler\(configuredDownloadClaimService, loadPersonnelPackDownload\)/);
   const claim = await readFile('app/api/personnel-pack-download/claim/route.ts', 'utf8');
   assert.match(claim, /createPersonnelPackClaimPostHandler\(configuredDownloadClaimService, loadPersonnelPackDownload\)/);
+});
+
+
+test('both fulfillment modes fail closed when the shared claim secret is absent', async () => {
+  for (const enabled of [false, true]) {
+    const resolve = createAutomaticPersonnelPackResolver({ enabled: () => enabled,
+      store: { read: async () => assert.fail('no storage'), putIfAbsent: async () => assert.fail('no storage') },
+      resolveClaims: () => null });
+    assert.equal(await resolve('unsupported', 'https://lims.bot'), null);
+    await assert.rejects(resolve('iso15189', 'https://lims.bot'), /claim_unavailable/);
+  }
+});
+
+test('bundled and generated fulfillment use the configured #124 signing secret', async t => {
+  const previous = process.env.PERSONNEL_PACK_DOWNLOAD_CLAIM_SECRET;
+  t.after(() => {
+    if (previous === undefined) delete process.env.PERSONNEL_PACK_DOWNLOAD_CLAIM_SECRET;
+    else process.env.PERSONNEL_PACK_DOWNLOAD_CLAIM_SECRET = previous;
+  });
+  process.env.PERSONNEL_PACK_DOWNLOAD_CLAIM_SECRET = fixtureSecret;
+  const f = fixture();
+  for (const enabled of [false, true]) {
+    const resolve = createAutomaticPersonnelPackResolver({ enabled: () => enabled, store: f.store,
+      resolveClaims: configuredDownloadClaimService, generate: () => generated });
+    const delivery = await resolve('iso15189', 'https://lims.bot');
+    assert.ok(delivery);
+    const url = new URL(delivery.assetUrl);
+    assert.equal(f.claims().verify(url.searchParams.get('claim')!, url.searchParams.get('asset')!).ok, true);
+  }
 });
