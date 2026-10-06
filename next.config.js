@@ -16,6 +16,11 @@ const NON_CANONICAL_HOSTS = [
 const nextConfig = {
   reactStrictMode: true,
   serverExternalPackages: ['pdfkit'],
+  outputFileTracingIncludes: {
+    '/api/demo/assistant': ['./knowledge/founder/**'],
+    '/bot/sources/\\[\\.\\.\\.path\\]': ['./knowledge/founder/**'],
+    '/api/bot': ['./knowledge/founder/**'],
+  },
   typescript: {
     ignoreBuildErrors: true,
   },

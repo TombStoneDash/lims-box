@@ -77,7 +77,7 @@ function inventory(root: string) {
     assert.equal(bytes.length, Number(record.size));
     const text = new TextDecoder('utf-8', { fatal: true }).decode(bytes);
     // Same admission policy, independent implementation of the inventory walk.
-    const sensitive = /\b(?:ssn|social\s+security|genetic|genomic|ancestry|23andme|aamc|date\s+of\s+birth|dob|references)\b|\b\d{3}[-\s]\d{2}[-\s]\d{4}\b|\b\d{9,}\b|[\w.+-]+@[\w.-]+\.[a-z]{2,}|https?:\/\/|www\.|(?:\+?1[-.\s]?)?\(?\d{3}\)?[-.\s]\d{3}[-.\s]\d{4}\b/i;
+    const sensitive = /\b(?:ssn|social\s+security|genetic|genomic|ancestry|23andme|aamc|amcas|date\s+of\s+birth|dob|references)\b|\b\d{3}[-\s]\d{2}[-\s]\d{4}\b|\d{6,}|[\w.+-]+@[\w.-]+\.[a-z]{2,}|https?:\/\/|www\.|(?:\+?1[-.\s]?)?\(?\d{3}\)?[-.\s]\d{3}[-.\s]\d{4}\b/i;
     if (bytes.length > 256 * 1024 || text.includes('\uFFFD') || sensitive.test(text)) continue;
     const paragraphs: string[] = [];
     let lines: string[] = [];

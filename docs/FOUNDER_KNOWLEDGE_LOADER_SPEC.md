@@ -10,7 +10,10 @@ Sep 25 merge, subject to the admission and integrity rules below.
 The Sep 25 founder merge is in the separate `TombStoneDash/lims-knowledge`
 repository at `e2eeb98c8c0bb2f1fd374e543184662760c00f99`. A locally available
 partial checkout contains its manifest, source map, and redacted files.
-The runtime bundle root is `LIMS_FOUNDER_KNOWLEDGE_DIR`.
+The runtime bundle root is `LIMS_FOUNDER_KNOWLEDGE_DIR`, defaulting to
+`path.join(process.cwd(), 'knowledge/founder')` when unset. Explicit invalid
+overrides still produce an empty index. See `scripts/founder-bundle/README.md`
+for the deterministic ingest builder and its evidenced Administrator acceptance gate.
 
 Read only these paths relative to that root:
 
@@ -38,6 +41,22 @@ redacted file in that merge. The four `FOUNDER_EXCERPTS` remain the legacy
 public bot's excerpt inventory; they do not limit the assistant's new index.
 Held, invalid, sensitive, or otherwise inadmissible files remain excluded.
 No original documents or additional source collections enter the inventory.
+
+## Round-two privacy rule
+
+No private identifier survives redaction: any application/account/member/policy/
+license/case/reference/ID number (label-based: AMCAS, ID, No., #, account,
+application, SSN, DOB, passport, license, MRN, NPI, EIN, etc.); any digit string
+of 6 or more digits that is not a 4-digit year or a dated range; any email,
+phone, street address or P.O. box; plus names of people other than Hudson Taylor.
+Public company names are permitted. The third-party name review is tied to the
+hash-pinned input collection and must be repeated before admitting changed text.
+
+Sweep every paragraph in every shipped file directly from disk, including any
+file excluded by the loader. The AMCAS question and the previously exposed fact
+ID must return `EVIDENCE_MISSING_ANSWER`, `grounded: false`, and no sources.
+The Administrator acceptance test uses a fact present in the material; it does
+not invent a Senior LIMS Developer employment claim.
 
 ## Chunking and index
 

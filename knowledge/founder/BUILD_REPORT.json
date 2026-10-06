@@ -1,0 +1,170 @@
+{
+  "inputRows": 117,
+  "documents": 76,
+  "skips": [
+    {
+      "alias": "FLI-001",
+      "reason": "EXCLUDED_HOLD_FOR_HUDSON"
+    },
+    {
+      "alias": "FLI-016",
+      "reason": "REDACTED_NEEDS_HUMAN_REVIEW"
+    },
+    {
+      "alias": "FLI-017",
+      "reason": "NO_USABLE_TEXT"
+    },
+    {
+      "alias": "FLI-018",
+      "reason": "DUPLICATE"
+    },
+    {
+      "alias": "FLI-019",
+      "reason": "DUPLICATE"
+    },
+    {
+      "alias": "FLI-042",
+      "reason": "DUPLICATE"
+    },
+    {
+      "alias": "FLI-044",
+      "reason": "DUPLICATE"
+    },
+    {
+      "alias": "FLI-057",
+      "reason": "NO_TEXT"
+    },
+    {
+      "alias": "FLI-059",
+      "reason": "DUPLICATE"
+    },
+    {
+      "alias": "FLI-062",
+      "reason": "RESIDUAL_SENSITIVE_OR_INVALID_TEXT"
+    },
+    {
+      "alias": "FLI-065",
+      "reason": "REDACTED_NEEDS_HUMAN_REVIEW"
+    },
+    {
+      "alias": "FLI-068",
+      "reason": "DUPLICATE"
+    },
+    {
+      "alias": "FLI-086",
+      "reason": "REDACTED_NEEDS_HUMAN_REVIEW"
+    },
+    {
+      "alias": "FLI-089",
+      "reason": "EXCLUDED_HOLD_FOR_HUDSON"
+    },
+    {
+      "alias": "FLI-091",
+      "reason": "REDACTED_NEEDS_HUMAN_REVIEW"
+    },
+    {
+      "alias": "FLI-092",
+      "reason": "DUPLICATE"
+    },
+    {
+      "alias": "FLI-093",
+      "reason": "DUPLICATE"
+    },
+    {
+      "alias": "FLI-094",
+      "reason": "DUPLICATE"
+    },
+    {
+      "alias": "FLI-095",
+      "reason": "DUPLICATE"
+    },
+    {
+      "alias": "FLI-096",
+      "reason": "DUPLICATE"
+    },
+    {
+      "alias": "FLI-097",
+      "reason": "DUPLICATE"
+    },
+    {
+      "alias": "FLI-098",
+      "reason": "DUPLICATE"
+    },
+    {
+      "alias": "FLI-099",
+      "reason": "DUPLICATE"
+    },
+    {
+      "alias": "FLI-100",
+      "reason": "DUPLICATE"
+    },
+    {
+      "alias": "FLI-101",
+      "reason": "DUPLICATE"
+    },
+    {
+      "alias": "FLI-102",
+      "reason": "DUPLICATE"
+    },
+    {
+      "alias": "FLI-103",
+      "reason": "DUPLICATE"
+    },
+    {
+      "alias": "FLI-104",
+      "reason": "DUPLICATE"
+    },
+    {
+      "alias": "FLI-105",
+      "reason": "DUPLICATE"
+    },
+    {
+      "alias": "FLI-106",
+      "reason": "DUPLICATE"
+    },
+    {
+      "alias": "FLI-107",
+      "reason": "DUPLICATE"
+    },
+    {
+      "alias": "FLI-108",
+      "reason": "DUPLICATE"
+    },
+    {
+      "alias": "FLI-109",
+      "reason": "DUPLICATE"
+    },
+    {
+      "alias": "FLI-110",
+      "reason": "DUPLICATE"
+    },
+    {
+      "alias": "FLI-111",
+      "reason": "DUPLICATE"
+    },
+    {
+      "alias": "FLI-112",
+      "reason": "DUPLICATE"
+    },
+    {
+      "alias": "FLI-113",
+      "reason": "DUPLICATE"
+    },
+    {
+      "alias": "FLI-114",
+      "reason": "EXCLUDED_HOLD_FOR_HUDSON"
+    },
+    {
+      "alias": "FLI-115",
+      "reason": "DUPLICATE"
+    },
+    {
+      "alias": "FLI-116",
+      "reason": "DUPLICATE"
+    },
+    {
+      "alias": "FLI-117",
+      "reason": "DUPLICATE"
+    }
+  ]
+}

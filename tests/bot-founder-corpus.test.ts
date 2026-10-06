@@ -101,7 +101,7 @@ test('the bot API does not answer from the founder archive; excerpt citation pag
 });
 
 test('missing bundle and off-topic founder questions fail closed; product and contact answers still work', (t) => {
-  useBundle(t, undefined);
+  useBundle(t, '/not/a/knowledge/bundle');
   assert.deepEqual(loadFounderCorpus(), []);
   assert.deepEqual(loadFounderCorpus('/not/a/knowledge/bundle'), []);
   // General background is the published /about bio; archive topics fail closed.
