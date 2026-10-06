@@ -31,6 +31,7 @@ const PUBLIC_BY_DESIGN: readonly { path: string; reason: string }[] = [
   { path: "/api/demo", reason: "Hardcoded synthetic integration examples; no personal data." },
   { path: "/api/demo/assistant", reason: "Public synthetic assistant; GET returns usage instructions and no personal data." },
   { path: "/api/early-access", reason: "Public early-access application submission." },
+  { path: "/api/first-contact/unsubscribe", reason: "Public signed opt-out; GET only confirms and returns no personal data; POST requires a valid HMAC token before recording suppression." },
   { path: "/api/health", reason: "Stateless service health and timestamp; no personal data." },
   { path: "/api/newsletter", reason: "Public newsletter signup submission." },
   { path: "/api/personnel-pack-download", reason: "Public pack request; GET serves a fixed reviewed documentation PDF, no personal data." },

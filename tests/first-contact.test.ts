@@ -3,6 +3,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { createHash } from 'node:crypto'
+import { sendFirstContact } from '../lib/first-contact-send'
 
 import {
   classifySendResult,
@@ -21,6 +22,31 @@ const none: FirstContactFacts = {
 }
 const NOW = new Date('2026-09-26T12:00:00Z')
 const hoursAgo = (h: number) => new Date(NOW.getTime() - h * 3600_000).toISOString()
+
+test('sender flag defaults off and rejects every non-explicit activation without side effects', async () => {
+  for (const flag of [undefined, '', 'false', '0', 'off', '1', 'TRUE', ' true ', 'yes']) {
+    let effects = 0
+    const result = await sendFirstContact({
+      email: 'synthetic@example.test', known: false,
+      env: {
+        FIRST_CONTACT_EMAIL_ENABLED: flag,
+        FIRST_CONTACT_SCOPE: 'per-product', FIRST_CONTACT_HMAC_KEY: 'synthetic-key',
+        FIRST_CONTACT_POSTAL_ADDRESS: 'Synthetic address', RESEND_API_KEY: 'synthetic-key',
+        FIRST_CONTACT_KNOWN_HMACS: '[]', FIRST_CONTACT_NOTABLE_HMACS: '[]',
+        FIRST_CONTACT_NOTABLE_DOMAINS: '[]', FIRST_CONTACT_COPY_APPROVED: 'true',
+        FIRST_CONTACT_DOMAIN_VERIFIED: 'true', FIRST_CONTACT_QUOTA_APPROVED: 'true',
+        FIRST_CONTACT_SCHEMA_READY: 'true',
+      },
+      store: {
+        reserve: async () => { effects++; return true },
+        finish: async () => { effects++ },
+      },
+      fetcher: async () => { effects++; return new Response('{}') },
+    })
+    assert.equal(result, 'disabled', `flag=${String(flag)}`)
+    assert.equal(effects, 0, 'disabled sender must not reserve, write, or fetch')
+  }
+})
 
 test('config: off by default, and this build can never send', () => {
   assert.deepEqual(readFirstContactConfig({}).mode, 'off')
