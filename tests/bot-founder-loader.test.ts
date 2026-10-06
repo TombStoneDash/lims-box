@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
-import { cpSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { cpSync, symlinkSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import test, { type TestContext } from 'node:test';
@@ -27,29 +27,7 @@ const tsv = (rows: Record<string, string>[]) => {
 function bundle(t: TestContext) {
   const root = mkdtempSync(path.join(tmpdir(), 'founder-index-'));
   t.after(() => rmSync(root, { recursive: true, force: true }));
-  if (process.env.TEST_FOUNDER_BUNDLE_DIR) {
-    cpSync(process.env.TEST_FOUNDER_BUNDLE_DIR, root, { recursive: true, filter: (file) => !file.includes('/.git') });
-  } else {
-    mkdirSync(path.join(root, '15_HT_FOUNDER_INTAKE/redacted'), { recursive: true });
-    // Independent file inventory: no loader excerpts, titles, or question helpers.
-    const documents = [
-      'Configured a historical laboratory workflow.\nThe rollout included staff review.\n\nTrained laboratory staff on a historical system.',
-      'Trained laboratory staff on a historical system.\n\nRecovered legacy laboratory records.\n\f\nRetained the original recovery qualifications.',
-      'Configured a historical laboratory workflow.\nThe rollout included staff review.',
-    ];
-    const sources = documents.map((text, i) => {
-      const hash = sha(`original-${i}`);
-      const redacted = `15_HT_FOUNDER_INTAKE/redacted/${hash}.txt`;
-      writeFileSync(path.join(root, redacted), text);
-      return { alias: `FLI-00${i + 2}`, status: 'INTEGRATED', sha256: hash, redacted, bot_status: 'REDACTED_CANDIDATE' };
-    });
-    const sourceText = tsv(sources);
-    writeFileSync(path.join(root, FOUNDER_SOURCES_PATH), sourceText);
-    writeFileSync(path.join(root, 'MANIFEST.tsv'), tsv([
-      ...sources.map((source, i) => ({ path: source.redacted, sha256: sha(documents[i]), size: String(Buffer.byteLength(documents[i])), origin: 'HT_ORIGINAL', source_location: `derived:contact-redaction of sha256:${source.sha256}`, added: '2026-09-25T06:23:05Z' })),
-      { path: FOUNDER_SOURCES_PATH, sha256: sha(sourceText), size: String(Buffer.byteLength(sourceText)), origin: 'HT_ORIGINAL', source_location: 'derived:founder-source-map', added: '2026-09-25T06:23:05Z' },
-    ]));
-  }
+  cpSync(process.env.TEST_FOUNDER_BUNDLE_DIR ?? path.join(process.cwd(), 'knowledge/founder'), root, { recursive: true });
   const previous = process.env.LIMS_FOUNDER_KNOWLEDGE_DIR;
   process.env.LIMS_FOUNDER_KNOWLEDGE_DIR = root;
   t.after(() => {
@@ -77,7 +55,7 @@ function inventory(root: string) {
     assert.equal(bytes.length, Number(record.size));
     const text = new TextDecoder('utf-8', { fatal: true }).decode(bytes);
     // Same admission policy, independent implementation of the inventory walk.
-    const sensitive = /\b(?:ssn|social\s+security|genetic|genomic|ancestry|23andme|aamc|date\s+of\s+birth|dob|references)\b|\b\d{3}[-\s]\d{2}[-\s]\d{4}\b|\b\d{9,}\b|[\w.+-]+@[\w.-]+\.[a-z]{2,}|https?:\/\/|www\.|(?:\+?1[-.\s]?)?\(?\d{3}\)?[-.\s]\d{3}[-.\s]\d{4}\b/i;
+    const sensitive = /\b(?:ssn|social\s+security|genetic|genomic|ancestry|23andme|aamc|amcas|date\s+of\s+birth|dob|references)\b|\b\d{3}[-\s]\d{2}[-\s]\d{4}\b|\d{6,}|[\w.+-]+@[\w.-]+\.[a-z]{2,}|https?:\/\/|www\.|(?:\+?1[-.\s]?)?\(?\d{3}\)?[-.\s]\d{3}[-.\s]\d{4}\b/i;
     if (bytes.length > 256 * 1024 || text.includes('\uFFFD') || sensitive.test(text)) continue;
     const paragraphs: string[] = [];
     let lines: string[] = [];
@@ -154,10 +132,21 @@ test('each supporting file is revoked on the next request after deletion, corrup
   for (const document of documents) {
     const file = path.join(root, document.file);
     const original = readFileSync(file);
-    for (const mutation of ['remove', 'corrupt', 'alter', 'hold']) {
+    for (const mutation of ['remove', 'corrupt', 'alter', 'hold', 'rehash', 'symlink']) {
       if (mutation === 'remove') rmSync(file);
       if (mutation === 'corrupt') writeFileSync(file, Buffer.alloc(original.length));
       if (mutation === 'alter') writeFileSync(file, Buffer.concat([original, Buffer.from('\nNEW CLAIM')]));
+      if (mutation === 'symlink') {
+        rmSync(file);
+        symlinkSync(path.join(process.cwd(), 'knowledge/founder', document.file), file);
+      }
+      if (mutation === 'rehash') {
+        const altered = Buffer.concat([original, Buffer.from('\n\nAn unapproved new claim.')]);
+        writeFileSync(file, altered);
+        const manifest = parse(path.join(root, 'MANIFEST.tsv'));
+        Object.assign(manifest.find((row) => row.path === document.file)!, { sha256: sha(altered), size: String(altered.length) });
+        writeFileSync(path.join(root, 'MANIFEST.tsv'), tsv(manifest));
+      }
       if (mutation === 'hold') {
         const sources = parse(path.join(root, FOUNDER_SOURCES_PATH));
         sources.find((row) => row.redacted === document.file)!.bot_status = 'REDACTED_NEEDS_HUMAN_REVIEW';
@@ -177,6 +166,7 @@ test('each supporting file is revoked on the next request after deletion, corrup
           assert.equal(normalize(answer.answer.slice(attribution.length)), normalize(paragraph));
         } else refused(answer);
       }
+      if (mutation === 'symlink') rmSync(file);
       writeFileSync(file, original);
       writeFileSync(path.join(root, FOUNDER_SOURCES_PATH), originalSources);
       writeFileSync(path.join(root, 'MANIFEST.tsv'), originalManifest);
@@ -200,4 +190,39 @@ test('fact citations serve only that complete passage and revoke with their evid
   assert.ok(!html.includes('15_HT_FOUNDER_INTAKE'));
   writeFileSync(path.join(root, 'MANIFEST.tsv'), 'invalid');
   await assert.rejects(FounderSourcePage({ params: Promise.resolve({ path: [fact.id] }) }), /404/);
+});
+
+test('a valid manifest cannot admit an unlisted source or relocate an approved one into intake', (t) => {
+  const root = bundle(t);
+  const original = loadFounderFactIndex();
+  assert.ok(original.length > 0);
+  const sources = parse(path.join(root, FOUNDER_SOURCES_PATH));
+  const manifest = parse(path.join(root, 'MANIFEST.tsv'));
+  const text = 'A harmless but unapproved professional statement.';
+  const identity = sha('unlisted document');
+  const relative = `approved/redacted/${identity}.txt`;
+  writeFileSync(path.join(root, relative), text);
+  sources.push({ ...sources[0], alias: 'FLI-003', sha256: identity, redacted: relative });
+  // Use a unique alias, with fully consistent bytes and metadata.
+  sources[sources.length - 1].alias = 'FLI-004';
+  manifest.push({ ...manifest[0], path: relative, sha256: sha(text), size: String(Buffer.byteLength(text)),
+    source_location: `derived:contact-redaction of sha256:${identity}` });
+  const save = () => {
+    const sourceText = tsv(sources);
+    writeFileSync(path.join(root, FOUNDER_SOURCES_PATH), sourceText);
+    Object.assign(manifest.find((row) => row.path === FOUNDER_SOURCES_PATH)!,
+      { sha256: sha(sourceText), size: String(Buffer.byteLength(sourceText)) });
+    writeFileSync(path.join(root, 'MANIFEST.tsv'), tsv(manifest));
+  };
+  save();
+  assert.deepEqual(loadFounderFactIndex(), original);
+  for (const row of sources.slice(0, -1)) {
+    const record = manifest.find((entry) => entry.path === row.redacted)!;
+    const relocated = row.redacted.replace('approved/', '15_HT_FOUNDER_INTAKE/');
+    cpSync(path.join(root, 'approved'), path.join(root, '15_HT_FOUNDER_INTAKE'), { recursive: true });
+    record.path = relocated;
+    row.redacted = relocated;
+  }
+  save();
+  assert.deepEqual(loadFounderFactIndex(), []);
 });

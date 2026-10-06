@@ -1,3 +1,4 @@
+import founderAdmission from '../../scripts/founder-bundle/admission.json';
 // LIMS BOT source registry: admission and evidence-resolution policy.
 // Admission policy only. File reads live in founder-corpus.ts.
 // Spec: LIMS_BOT_EXPERT_V2_SPEC_20260902.md section 7.3, Slice S1 deliverable 1.
@@ -163,8 +164,8 @@ export function admitSource(
   return { ok: true, record };
 }
 
-export const FOUNDER_REDACTED_PATH = /^15_HT_FOUNDER_INTAKE\/redacted\/([a-f0-9]{64})\.txt$/;
-export const FOUNDER_SOURCES_PATH = '15_HT_FOUNDER_INTAKE/SOURCES.tsv';
+export const FOUNDER_REDACTED_PATH = /^approved\/redacted\/([a-f0-9]{64})\.txt$/;
+export const FOUNDER_SOURCES_PATH = 'approved/SOURCES.tsv';
 
 export interface FounderManifestRow {
   path: string;
@@ -183,14 +184,12 @@ export interface FounderSourceRow {
   bot_status: string;
 }
 
-// Ownership attestation: lims-knowledge#1 records Hudson's Sep 24 decision.
-// Bot use of eligible redacted candidates is authorized by
-// LIMS-FOUNDER-KNOWLEDGE-INTO-BOT-CORPUS-BUILDOUT-20261003-R1.
-// A merge alone never admits held or human-review-pending documents.
+// Round-four whole-document publication decision; no intake aliases or merge
+// status alone confer approval. The hash-pinned policy is checked below.
 const FOUNDER_RIGHTS_EVIDENCE: RightsEvidence = {
-  reference: 'https://github.com/TombStoneDash/lims-knowledge/pull/1',
+  reference: 'https://github.com/TombStoneDash/lims-box/pull/526',
   reviewer: 'TombStoneDash',
-  reviewedAt: '2026-09-25T17:24:12Z',
+  reviewedAt: '2026-10-06T00:00:00Z',
 };
 const HELD_FOUNDER_ALIASES = new Set(['FLI-001', 'FLI-089', 'FLI-114']);
 
@@ -198,6 +197,10 @@ export function admitFounderSource(
   manifest: FounderManifestRow,
   source: FounderSourceRow,
 ): SourceRecord | null {
+  // The shipped source/output digest pairs are the publication authority.
+  // A self-consistent external manifest cannot approve an unlisted document.
+  if (!founderAdmission.some((entry) => entry.alias === source.alias
+    && entry.sha256 === source.sha256 && entry.redactedSha256 === manifest.sha256)) return null;
   const pathMatch = FOUNDER_REDACTED_PATH.exec(manifest.path);
   if (!pathMatch || source.redacted !== manifest.path
     || source.sha256 !== pathMatch[1]

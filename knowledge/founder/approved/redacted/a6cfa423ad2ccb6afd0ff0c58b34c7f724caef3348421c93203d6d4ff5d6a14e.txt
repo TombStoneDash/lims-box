@@ -1,0 +1,138 @@
+# LIMS BOX 7-11-4 [name] [name]
+*[name]: 2026-04-10 | [name] on [name] [name] [name] methodology*
+
+## [name] [name] [name]
+[name] labs (under 50 people) are underserved by enterprise LIMS vendors. [name] forced to choose between:
+- **$[name]+ enterprise systems** they can't afford
+- **[name]** that don't scale
+- **[name] nightmares** requiring [name] staff they don't have
+
+LIMS BOX sits in the gap: **$500/mo, deploys in days, not months.**
+
+---
+
+## 🔢 [name] 7 [name]: [name] [name] [name] [name]
+
+[name] prospect needs ~7 hours of exposure to your thinking before they trust you enough to buy. [name] content they can consume across multiple sessions:
+
+### [name] 1-2: [name] [name]
+1. **[name] post:** "[name] [name] [name] [name] [name] [name] LIMS" (see lims.bot)
+2. **[name] post:** "[name] [name] [name] of [name] [name] [name]"
+3. **[name] (15 min):** "[name] [name] [name] [name]: [name] to [name] [name] Excel"
+
+### [name] 3-4: [name] [name]
+4. **[name]:** "LIMS [name] [name] for [name] [name] 50 [name]"
+5. **[name] recording (45 min):** "[name] LIMS: [name] [name] [name] [name] [name]"
+6. **[name] study:** "[name] [[name] [name]] [name] [name] [name] by 40% in 30 [name]"
+
+### [name] 5-6: [name] [name]
+7. **[name] blog:** "ISO 17025 [name] for [name] [name]: [name] [name] [name] [name]"
+8. **[name] chart:** "LIMS BOX vs LabWare vs [name] vs [name]"
+9. **[name] (20 min):** "LIMS BOX [name]: [name] [name] [name] to [name] in 5 [name]"
+
+### [name] 7: [name] & [name] [name]
+10. **[name] story:** "[name] [name] [name] LIMS BOX [name] 15 [name] in [name] [name]"
+11. **[name] testimonials:** [name] interviews with pilot labs
+12. **[name] recognition:** [name] presentations, magazine features
+
+---
+
+## 🎯 [name] 11 [name]: [name] to [name]
+
+[name] lab director needs ~11 meaningful interactions before signing. [name] the journey:
+
+| # | [name] | [name] | [name] [name] [name] |
+|---|------------|-------|-----------------|
+| 1 | [name] search | "LIMS for small labs" | [name] has a name |
+| 2 | [name] post | lims.bot | [name] not alone in the struggle |
+| 3 | [name] post | [name] | [name] lab credibility ([name] [name], 15yr LIMS) |
+| 4 | [name] capture | [name] download | [name] content |
+| 5 | [name] email 1 | [name] study | "[name] like mine succeeded" |
+| 6 | [name] comment | [name] post | [name] leadership in context |
+| 7 | [name] invite | [name] | [name] interaction opportunity |
+| 8 | [name] attendance | [name] | [name] the product, meet the founder |
+| 9 | [name] request | lims.bot | 1:1 attention |
+| 10 | [name] call | [name] | [name] walkthrough |
+| 11 | [name] proposal | [name] | [name] trial terms |
+
+### [name] [name]
+**[name] 1-7 happen [name] they ever talk to us.** [name] why content marketing matters. [name] the time they request a demo, they're already 70% sold.
+
+---
+
+## 📍 [name] 4 [name]: [name] to [name] [name]
+
+[name] beats fragmentation. [name] dominant on 4 platforms vs. mediocre on 10:
+
+#[private identifier redacted]
+- **[name]:** [name] directors are professionals. [name] is where [name] decisions start.
+- **[name]:** [name] personal profile as thought leader. [name] 3x/week on lab pain points.
+- **[name]:** [name] insights, "from the trenches" stories, LIMS tips
+- **[name]:** 5,000 lab professional connections by [name]
+
+#[private identifier redacted]
+- **[name]:** "LIMS for small labs" gets searched by exactly our buyers
+- **[name]:** [name] the long-tail keywords enterprise vendors ignore
+- **[name]:** lims.bot blog optimized for small lab queries
+- **[name]:**
+  - "LIMS for small labs" (primary)
+  - "affordable LIMS software"
+  - "LIMS implementation small laboratory"
+  - "laboratory management system small business"
+
+#[private identifier redacted]
+- **[name]:** r/labrats has [name]+ members asking LIMS questions
+- **[name]:** r/labrats, r/biotech, r/sysadmin
+- **[name]:** [name] answers, [name] selling. [name] karma first.
+- **[name]:** [name] the person who actually helps when LIMS questions arise
+
+#[private identifier redacted]
+- **[name] [name] [name] [name]** (May 6-8, [name]) — [name] [name] for small labs
+- **[name] [name] [name] [name]** (June 28-July 2, [name]. [name])
+- **[name] 2026** (July 26-30, [name]) — larger but good exposure
+- **[name]:** [name] or speaking slot at [name]. [name]/networker at [name]/[name].
+
+---
+
+## 🎪 [name] [name]
+
+| [name] | % of [name] | [name] | [name] |
+|----------|-------------|-----------|-------|
+| [name] | 40% | [name] posts, comments | [name] |
+| [name]/[name] | 30% | 2 posts/week | [name] drafts, [name] approves |
+| [name] | 15% | 3-5 helpful comments/week | [name] (personal, authentic) |
+| [name] | 15% | 1-2 per quarter | [name] (in-person) |
+
+---
+
+## 📅 [name] 2026 [name] [name]
+
+### April 2026
+- [ ] [name] "[name] [name] [name] [name] [name] [name] LIMS" on lims.bot
+- [ ] [name] launch: [name] starts posting lab content
+- [ ] [name] [name] speaking proposal (if deadline allows)
+
+### May 2026
+- [ ] [name] [name] [name] [name] (May 6-8, [name])
+- [ ] 2 more blog posts live
+- [ ] [name]: [name] karma building in r/labrats
+
+### June 2026
+- [ ] [name] [name] [name] (June 28-July 2, [name]. [name])
+- [ ] [name] webinar: "LIMS for [name] [name] 50"
+- [ ] [name] study from [name] [name] [name] pilot (if launched)
+
+---
+
+## 🎯 [name] [name]
+
+**[name] end of [name] 2026:**
+- [ ] 10+ qualified demo requests via lims.bot
+- [ ] 1 paying pilot customer
+- [ ] 2,500+ [name] connections (lab professionals)
+- [ ] [name] 10 [name] ranking for "LIMS for small labs"
+- [ ] 500+ karma on r/labrats from [name]
+
+---
+
+*"[name] so good they can't ignore you, then be everywhere they're looking."*

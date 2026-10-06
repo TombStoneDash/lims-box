@@ -1,0 +1,14 @@
+[
+  {
+    "path": "clawd/intel/lims-box-7-11-4-framework.md",
+    "alias": "FLI-002",
+    "sha256": "a6cfa423ad2ccb6afd0ff0c58b34c7f724caef3348421c93203d6d4ff5d6a14e",
+    "redactedSha256": "b4f50c5734d5e2f1eefab304e16c0d6e5c9977919d6981ed942be47a66ab0eb2"
+  },
+  {
+    "path": "Projects/lims-box/content/blog/why-small-labs-dont-need-enterprise-lims.md",
+    "alias": "FLI-003",
+    "sha256": "3d680e83790f1977e09e93a4882e44a19ef3241cc30489226214879b07bd2bec",
+    "redactedSha256": "4b7623afc8258bddcebbdfb530d18a16a569fc93075770922fb81e5ea9895902"
+  }
+]

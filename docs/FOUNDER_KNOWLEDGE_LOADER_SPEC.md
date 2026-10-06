@@ -1,43 +1,48 @@
 # Founder knowledge loader
 
-Status: **implemented locally; draft PR awaits the runner's commit/push**.
-Hudson resolved the inputs on 2026-10-06: use
-`app/api/demo/assistant/route.ts` and every founder-knowledge file in the
-Sep 25 merge, subject to the admission and integrity rules below.
+Status: **round-four scope cut implemented locally; runner commits/publishes**.
 
 ## Source files and admission
 
-The Sep 25 founder merge is in the separate `TombStoneDash/lims-knowledge`
-repository at `e2eeb98c8c0bb2f1fd374e543184662760c00f99`. A locally available
-partial checkout contains its manifest, source map, and redacted files.
-The runtime bundle root is `LIMS_FOUNDER_KNOWLEDGE_DIR`.
+The bundle is built ONLY from exact source documents committed in
+`scripts/founder-bundle/ALLOWLIST.txt`. The entire `15_HT_FOUNDER_INTAKE`
+folder and all unlisted documents are excluded. Content filters do not grant
+admission. The evidence library's FOUNDER_STORY_SAFE/PUBLIC tags guide whole
+professional-document review; a safe claim does not approve a mixed document.
+When uncertain, exclude the document.
 
-Read only these paths relative to that root:
+The builder reads only those listed documents, checks pinned source bytes, and
+applies the existing identifier/contact and proper-noun redaction as a second
+layer. It then checks the reviewed output digest. Changed sources or outputs
+fail closed. No partial-document salvage or intake fallback exists. See
+`scripts/founder-bundle/README.md` for the selected sources and reproducible build.
 
-- `MANIFEST.tsv`: file paths, byte sizes, SHA-256 digests, and provenance.
-- `15_HT_FOUNDER_INTAKE/SOURCES.tsv`: source identity and admission status;
-  its bytes must first match its own manifest record.
-- `15_HT_FOUNDER_INTAKE/redacted/<64 lowercase hex characters>.txt`: only
-  paths listed in the manifest and uniquely associated with a source row.
+The runtime root defaults to `knowledge/founder`; explicit invalid overrides
+return no evidence. Read only `MANIFEST.tsv`, `approved/SOURCES.tsv`, and
+`approved/redacted/<64 lowercase hex characters>.txt`. Runtime admission checks
+source identity AND the compiled reviewed output hash against `admission.json`.
+A valid replacement manifest cannot authorize altered or unlisted content.
 
-Retain `admitFounderSource` and the integrity checks in
-`lib/bot/founder-corpus.ts`: integrated, redacted candidates of original
-provenance only; matching identity, byte size, digest, and source location;
-no symlinks, traversal, non-files, ambiguous aliases, or oversized inputs.
-Metadata is limited to 4 MiB and each document to 256 KiB. Reject invalid
-text and residual sensitive markers. Never fall back to original documents,
-text extractions, customer files, web searches, or model knowledge.
+Retain byte-size, digest, status, provenance, unique-alias, UTF-8 and path checks.
+Reject symlinks, traversal, non-files and ambiguous metadata. Metadata is limited
+to 4 MiB, documents to 256 KiB, and the built bundle to less than 20 MiB. Never
+fall back to originals, extractions, customer data, web search or model knowledge.
 
-The observed source map contains 117 records: 77 `REDACTED_CANDIDATE`, four
-`REDACTED_NEEDS_HUMAN_REVIEW`, three `EXCLUDED_HOLD_FOR_HUDSON`, 31 duplicates,
-one `NO_USABLE_TEXT`, and one `NO_TEXT`. Held aliases `FLI-001`, `FLI-089`,
-and `FLI-114` remain excluded. Merge status alone does not publish a source.
+The inventory is every complete paragraph in the two admitted professional
+company documents: 79 occurrences / 72 distinct paragraphs. Earlier intake
+excerpts and the Administrator passage are no longer admitted. Citation routes
+for removed evidence return 404. The historical attribution and exact-question
+retrieval contract remain unchanged.
 
-The approved fact inventory is every complete paragraph in every eligible
-redacted file in that merge. The four `FOUNDER_EXCERPTS` remain the legacy
-public bot's excerpt inventory; they do not limit the assistant's new index.
-Held, invalid, sensitive, or otherwise inadmissible files remain excluded.
-No original documents or additional source collections enter the inventory.
+## Privacy verification
+
+Independently sweep every shipped paragraph for medication, surgery, diagnosis,
+appointment, leave, therapy, prescription, hospital, doctor, symptom, recovery,
+patient, DOB and MRN, plus contact/identifier patterns and names outside the
+public vocabulary. No third-party person name is allowed. This assertion is
+verification of the reviewed selection, not a content-based admission policy.
+All reported medical fact IDs and prior AMCAS/patient queries must return
+`EVIDENCE_MISSING_ANSWER`, `grounded: false`, and no sources.
 
 ## Chunking and index
 
@@ -132,21 +137,12 @@ facts would never enter the test and coverage could pass incorrectly.
 
 `tests/bot-founder-loader.test.ts` independently enumerates admitted files and
 paragraphs, checks index equality and both question forms through the API,
-perturbs every question, and revokes each supporting file in turn. It uses a
-small synthetic bundle by default; set `TEST_FOUNDER_BUNDLE_DIR` to the merged
-bundle root to run the same properties against the complete approved inventory.
-The tests copy the bundle to a temporary directory before mutating it.
+perturbs every question, and revokes each supporting file in turn. It copies the
+real shipped bundle by default; `TEST_FOUNDER_BUNDLE_DIR` selects another copy.
+Rehashed alterations, unlisted documents and intake relocation are also rejected.
 
-Run `npm run test:all`, focused founder tests, the merged-bundle property run,
-and `npm run typecheck`. Work remains uncommitted and unpushed on
-`codex/old-16c-founder-loader-impl` for the runner. Create one draft PR after
-the runner publishes the branch; do not merge.
-
-Verified on 2026-10-06: `npm run test:all` passed 4,548 tests; focused founder
-and assistant-route tests passed 185 tests; type checking and `git diff --check`
-passed. The property run against merged commit
-`e2eeb98c8c0bb2f1fd374e543184662760c00f99` passed all three inventory, refusal,
-and revocation properties: 71 admitted files and 488 distinct paragraphs.
-The admission rules exclude the remaining files; they were not silently omitted
-from the coverage domain. GitHub reported no remote commit for the assigned
-branch, so a reviewable draft PR cannot exist until the runner publishes it.
+Run the full suite, focused founder tests, redaction/allow-list properties,
+deterministic rebuild and TypeScript checks. Keep draft PR #526 open and unmerged.
+No commit or push is authorized for this worker; the runner publishes the assigned
+`codex/r4-526-founder-bundle-allowlist` branch. Its supplied HEAD was `f8fb7ac`;
+round-three files from `a2a40c4` were applied before the scope cut. See `PR_BODY.md`.
