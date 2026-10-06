@@ -1,0 +1,231 @@
+node:internal/modules/esm/load:195
+    throw new ERR_UNSUPPORTED_ESM_URL_SCHEME(parsed, schemes);
+          ^
+
+Error [ERR_UNSUPPORTED_ESM_URL_SCHEME]: Only URLs with a scheme in: file, data, and node are supported by the default ESM loader. On Windows, absolute paths must be valid file:// URLs. Received protocol 'c:'
+    at throwIfUnsupportedURLScheme (node:internal/modules/esm/load:195:11)
+    at defaultLoadSync (node:internal/modules/esm/load:142:3)
+    at #loadAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:796:12)
+    at nextStep (node:internal/modules/customization_hooks:189:26)
+    at load2 (file:///C:/TombstoneDash/codex-lane/worktrees/hud-review-lims-box-517/node_modules/tsx/dist/register-lJYvHe5s.mjs:2:4144)
+    at nextStep (node:internal/modules/customization_hooks:189:26)
+    at loadWithHooks (node:internal/modules/customization_hooks:374:18)
+    at #loadSync (node:internal/modules/esm/loader:813:14)
+    at ModuleLoader.load (node:internal/modules/esm/loader:781:26)
+    at ModuleLoader.loadAndTranslate (node:internal/modules/esm/loader:526:31) {
+  code: 'ERR_UNSUPPORTED_ESM_URL_SCHEME'
+}
+
+Node.js v24.14.1
+node:internal/modules/esm/load:195
+    throw new ERR_UNSUPPORTED_ESM_URL_SCHEME(parsed, schemes);
+          ^
+
+Error [ERR_UNSUPPORTED_ESM_URL_SCHEME]: Only URLs with a scheme in: file, data, and node are supported by the default ESM loader. On Windows, absolute paths must be valid file:// URLs. Received protocol 'c:'
+    at throwIfUnsupportedURLScheme (node:internal/modules/esm/load:195:11)
+    at defaultLoadSync (node:internal/modules/esm/load:142:3)
+    at #loadAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:796:12)
+    at nextStep (node:internal/modules/customization_hooks:189:26)
+    at load2 (file:///C:/TombstoneDash/codex-lane/worktrees/hud-review-lims-box-517/node_modules/tsx/dist/register-lJYvHe5s.mjs:2:4144)
+    at nextStep (node:internal/modules/customization_hooks:189:26)
+    at loadWithHooks (node:internal/modules/customization_hooks:374:18)
+    at #loadSync (node:internal/modules/esm/loader:813:14)
+    at ModuleLoader.load (node:internal/modules/esm/loader:781:26)
+    at ModuleLoader.loadAndTranslate (node:internal/modules/esm/loader:526:31) {
+  code: 'ERR_UNSUPPORTED_ESM_URL_SCHEME'
+}
+
+Node.js v24.14.1
+✖ formatCalendarDate renders UTC-midnight date-only values without a day shift west of UTC (300.1759ms)
+✔ formatCalendarDate renders an em dash for null and invalid inputs (0.3939ms)
+✖ formatTimestampDate preserves local calendar semantics for real timestamps (295.3402ms)
+✔ formatCalendarDate uses timeZone: UTC in its toLocaleDateString call (15.0883ms)
+✔ admin StatusBadge formatDate delegates to formatCalendarDate (7.1259ms)
+✔ remaining date-only paths use the calendar formatter (20.0269ms)
+✔ every wall-clock timestamp display uses the local timestamp formatter (19.956ms)
+✔ audit-trail timestamps use the local timestamp formatter (34.4077ms)
+✔ the question input has a real associated label (22.9504ms)
+✔ the initial conversation is a polite live log (1.4608ms)
+✔ buttons have explicit types, starter focus rings, and an initially disabled Ask (3.0061ms)
+✔ the published disclaimer remains verbatim (0.9854ms)
+✖ dynamic accessibility semantics preserve the single bot request (12.4376ms)
+✖ fabricated fixture: quoted delimiters/escaped quotes, numeric values and UTC timestamps (11.3102ms)
+✔ unknown code does not prevent a separate valid row from importing (1.0124ms)
+✔ mapping requires an own, nonempty keyword (1.1832ms)
+✔ rejects missing sample id (0.3329ms)
+✔ rejects invalid numbers instead of coercing or truncating (1.1125ms)
+✔ rejects all duplicates, including an earlier row and duplicates with invalid values (0.3841ms)
+✔ rejects bad, ambiguous and impossible timestamps (1.5906ms)
+✔ detects tab and semicolon from the required header (0.433ms)
+✔ fails closed for absent/incorrect headers and malformed records (0.7778ms)
+✔ quoted newlines preserve content and subsequent rejection physical line numbers (0.478ms)
+ℹ tests 23
+ℹ suites 0
+ℹ pass 19
+ℹ fail 4
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2339.2855
+
+✖ failing tests:
+
+test at tests\admin-calendar-date.test.ts:2:2420
+✖ formatCalendarDate renders UTC-midnight date-only values without a day shift west of UTC (300.1759ms)
+  Error: Command failed: C:\Program Files\nodejs\node.exe --import tsx --eval 
+        import calendarDate from "C:\TombstoneDash\codex-lane\worktrees\hud-review-lims-box-517\lib\admin-calendar-date.ts";
+        process.stdout.write(calendarDate.formatCalendarDate(new Date("2026-10-02")));
+      
+  node:internal/modules/esm/load:195
+      throw new ERR_UNSUPPORTED_ESM_URL_SCHEME(parsed, schemes);
+            ^
+  
+  Error [ERR_UNSUPPORTED_ESM_URL_SCHEME]: Only URLs with a scheme in: file, data, and node are supported by the default ESM loader. On Windows, absolute paths must be valid file:// URLs. Received protocol 'c:'
+      at throwIfUnsupportedURLScheme (node:internal/modules/esm/load:195:11)
+      at defaultLoadSync (node:internal/modules/esm/load:142:3)
+      at #loadAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:796:12)
+      at nextStep (node:internal/modules/customization_hooks:189:26)
+      at load2 (file:///C:/TombstoneDash/codex-lane/worktrees/hud-review-lims-box-517/node_modules/tsx/dist/register-lJYvHe5s.mjs:2:4144)
+      at nextStep (node:internal/modules/customization_hooks:189:26)
+      at loadWithHooks (node:internal/modules/customization_hooks:374:18)
+      at #loadSync (node:internal/modules/esm/loader:813:14)
+      at ModuleLoader.load (node:internal/modules/esm/loader:781:26)
+      at ModuleLoader.loadAndTranslate (node:internal/modules/esm/loader:526:31) {
+    code: 'ERR_UNSUPPORTED_ESM_URL_SCHEME'
+  }
+  
+  Node.js v24.14.1
+  
+      at genericNodeError (node:internal/errors:985:15)
+      at wrappedFn (node:internal/errors:539:14)
+      at checkExecSyncError (node:child_process:925:11)
+      at execFileSync (node:child_process:961:15)
+      at TestContext.<anonymous> (C:\TombstoneDash\codex-lane\worktrees\hud-review-lims-box-517\tests\admin-calendar-date.test.ts:50:18)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.start (node:internal/test_runner/test:1015:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:358:17) {
+    status: 1,
+    signal: null,
+    output: [ null, '', "node:internal/modules/esm/load:195\r\n    throw new ERR_UNSUPPORTED_ESM_URL_SCHEME(parsed, schemes);\r\n          ^\r\n\r\nError [ERR_UNSUPPORTED_ESM_URL_SCHEME]: Only URLs with a scheme in: file, data, and node are supported by the default ESM loader. On Windows, absolute paths must be valid file:// URLs. Received protocol 'c:'\r\n    at throwIfUnsupportedURLScheme (node:internal/modules/esm/load:195:11)\r\n    at defaultLoadSync (node:internal/modules/esm/load:142:3)\r\n    at #loadAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:796:12)\r\n    at nextStep (node:internal/modules/customization_hooks:189:26)\r\n    at load2 (file:///C:/TombstoneDash/codex-lane/worktrees/hud-review-lims-box-517/node_modules/tsx/dist/register-lJYvHe5s.mjs:2:4144)\r\n    at nextStep (node:internal/modules/customization_hooks:189:26)\r\n    at loadWithHooks (node:internal/modules/customization_hooks:374:18)\r\n    at #loadSync (node:internal/modules/esm/loader:813:14)\r\n    at ModuleLoader.load (node:internal/modules/esm/loader:781:26)\r\n    at ModuleLoader.loadAndTranslate (node:internal/modules/esm/loader:526:31) {\r\n  code: 'ERR_UNSUPPORTED_ESM_URL_SCHEME'\r\n}\r\n\r\nNode.js v24.14.1\r\n" ],
+    pid: 5156,
+    stdout: '',
+    stderr: "node:internal/modules/esm/load:195\r\n    throw new ERR_UNSUPPORTED_ESM_URL_SCHEME(parsed, schemes);\r\n          ^\r\n\r\nError [ERR_UNSUPPORTED_ESM_URL_SCHEME]: Only URLs with a scheme in: file, data, and node are supported by the default ESM loader. On Windows, absolute paths must be valid file:// URLs. Received protocol 'c:'\r\n    at throwIfUnsupportedURLScheme (node:internal/modules/esm/load:195:11)\r\n    at defaultLoadSync (node:internal/modules/esm/load:142:3)\r\n    at #loadAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:796:12)\r\n    at nextStep (node:internal/modules/customization_hooks:189:26)\r\n    at load2 (file:///C:/TombstoneDash/codex-lane/worktrees/hud-review-lims-box-517/node_modules/tsx/dist/register-lJYvHe5s.mjs:2:4144)\r\n    at nextStep (node:internal/modules/customization_hooks:189:26)\r\n    at loadWithHooks (node:internal/modules/customization_hooks:374:18)\r\n    at #loadSync (node:internal/modules/esm/loader:813:14)\r\n    at ModuleLoader.load (node:internal/modules/esm/loader:781:26)\r\n    at ModuleLoader.loadAndTranslate (node:internal/modules/esm/loader:526:31) {\r\n  code: 'ERR_UNSUPPORTED_ESM_URL_SCHEME'\r\n}\r\n\r\nNode.js v24.14.1\r\n"
+  }
+
+test at tests\admin-calendar-date.test.ts:5:664
+✖ formatTimestampDate preserves local calendar semantics for real timestamps (295.3402ms)
+  Error: Command failed: C:\Program Files\nodejs\node.exe --import tsx --eval 
+        import calendarDate from "C:\TombstoneDash\codex-lane\worktrees\hud-review-lims-box-517\lib\admin-calendar-date.ts";
+        process.stdout.write(calendarDate.formatTimestampDate(new Date("2026-10-02T01:00:00Z")));
+      
+  node:internal/modules/esm/load:195
+      throw new ERR_UNSUPPORTED_ESM_URL_SCHEME(parsed, schemes);
+            ^
+  
+  Error [ERR_UNSUPPORTED_ESM_URL_SCHEME]: Only URLs with a scheme in: file, data, and node are supported by the default ESM loader. On Windows, absolute paths must be valid file:// URLs. Received protocol 'c:'
+      at throwIfUnsupportedURLScheme (node:internal/modules/esm/load:195:11)
+      at defaultLoadSync (node:internal/modules/esm/load:142:3)
+      at #loadAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:796:12)
+      at nextStep (node:internal/modules/customization_hooks:189:26)
+      at load2 (file:///C:/TombstoneDash/codex-lane/worktrees/hud-review-lims-box-517/node_modules/tsx/dist/register-lJYvHe5s.mjs:2:4144)
+      at nextStep (node:internal/modules/customization_hooks:189:26)
+      at loadWithHooks (node:internal/modules/customization_hooks:374:18)
+      at #loadSync (node:internal/modules/esm/loader:813:14)
+      at ModuleLoader.load (node:internal/modules/esm/loader:781:26)
+      at ModuleLoader.loadAndTranslate (node:internal/modules/esm/loader:526:31) {
+    code: 'ERR_UNSUPPORTED_ESM_URL_SCHEME'
+  }
+  
+  Node.js v24.14.1
+  
+      at genericNodeError (node:internal/errors:985:15)
+      at wrappedFn (node:internal/errors:539:14)
+      at checkExecSyncError (node:child_process:925:11)
+      at execFileSync (node:child_process:961:15)
+      at TestContext.<anonymous> (C:\TombstoneDash\codex-lane\worktrees\hud-review-lims-box-517\tests\admin-calendar-date.test.ts:69:18)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12) {
+    status: 1,
+    signal: null,
+    output: [ null, '', "node:internal/modules/esm/load:195\r\n    throw new ERR_UNSUPPORTED_ESM_URL_SCHEME(parsed, schemes);\r\n          ^\r\n\r\nError [ERR_UNSUPPORTED_ESM_URL_SCHEME]: Only URLs with a scheme in: file, data, and node are supported by the default ESM loader. On Windows, absolute paths must be valid file:// URLs. Received protocol 'c:'\r\n    at throwIfUnsupportedURLScheme (node:internal/modules/esm/load:195:11)\r\n    at defaultLoadSync (node:internal/modules/esm/load:142:3)\r\n    at #loadAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:796:12)\r\n    at nextStep (node:internal/modules/customization_hooks:189:26)\r\n    at load2 (file:///C:/TombstoneDash/codex-lane/worktrees/hud-review-lims-box-517/node_modules/tsx/dist/register-lJYvHe5s.mjs:2:4144)\r\n    at nextStep (node:internal/modules/customization_hooks:189:26)\r\n    at loadWithHooks (node:internal/modules/customization_hooks:374:18)\r\n    at #loadSync (node:internal/modules/esm/loader:813:14)\r\n    at ModuleLoader.load (node:internal/modules/esm/loader:781:26)\r\n    at ModuleLoader.loadAndTranslate (node:internal/modules/esm/loader:526:31) {\r\n  code: 'ERR_UNSUPPORTED_ESM_URL_SCHEME'\r\n}\r\n\r\nNode.js v24.14.1\r\n" ],
+    pid: 9264,
+    stdout: '',
+    stderr: "node:internal/modules/esm/load:195\r\n    throw new ERR_UNSUPPORTED_ESM_URL_SCHEME(parsed, schemes);\r\n          ^\r\n\r\nError [ERR_UNSUPPORTED_ESM_URL_SCHEME]: Only URLs with a scheme in: file, data, and node are supported by the default ESM loader. On Windows, absolute paths must be valid file:// URLs. Received protocol 'c:'\r\n    at throwIfUnsupportedURLScheme (node:internal/modules/esm/load:195:11)\r\n    at defaultLoadSync (node:internal/modules/esm/load:142:3)\r\n    at #loadAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:796:12)\r\n    at nextStep (node:internal/modules/customization_hooks:189:26)\r\n    at load2 (file:///C:/TombstoneDash/codex-lane/worktrees/hud-review-lims-box-517/node_modules/tsx/dist/register-lJYvHe5s.mjs:2:4144)\r\n    at nextStep (node:internal/modules/customization_hooks:189:26)\r\n    at loadWithHooks (node:internal/modules/customization_hooks:374:18)\r\n    at #loadSync (node:internal/modules/esm/loader:813:14)\r\n    at ModuleLoader.load (node:internal/modules/esm/loader:781:26)\r\n    at ModuleLoader.loadAndTranslate (node:internal/modules/esm/loader:526:31) {\r\n  code: 'ERR_UNSUPPORTED_ESM_URL_SCHEME'\r\n}\r\n\r\nNode.js v24.14.1\r\n"
+  }
+
+test at tests\bot\bot-chat-accessibility.test.tsx:2:4259
+✖ dynamic accessibility semantics preserve the single bot request (12.4376ms)
+  AssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:
+  
+    assert.ok(source.includes(`ask(${question});\n`))
+  
+      at TestContext.<anonymous> (C:\TombstoneDash\codex-lane\worktrees\hud-review-lims-box-517\tests\bot\bot-chat-accessibility.test.tsx:70:12)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at tests\ohworks\liaison-import.test.ts:2:2010
+✖ fabricated fixture: quoted delimiters/escaped quotes, numeric values and UTC timestamps (11.3102ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+    {
+  +   rejected: [
+  -   rejected: [],
+  -   results: [
+        {
+  +       line: 2,
+  +       reason: 'malformed-record'
+  -       capturedAtIso: '2026-09-20T10:15:30.000Z',
+  -       flag: '',
+  -       instrument: 'SYNTHETIC-INSTRUMENT-001',
+  -       keyword: 'SYNTHETIC-SERVICE-A',
+  -       sampleId: 'SYNTHETIC-SAMPLE-001',
+  -       unit: 'SYNTHETIC-UNIT',
+  -       value: 12.5
+        },
+        {
+  +       line: 3,
+  +       reason: 'malformed-record'
+  -       capturedAtIso: '2026-09-20T10:15:30.123Z',
+  -       flag: 'SYNTHETIC-FLAG "RECHECK", HIGH',
+  -       instrument: 'SYNTHETIC-INSTRUMENT-001',
+  -       keyword: 'SYNTHETIC-SERVICE-B',
+  -       sampleId: 'SYNTHETIC-SAMPLE,002',
+  -       unit: 'SYNTHETIC-UNIT',
+  -       value: -23
+        },
+  +     {
+  +       line: 4,
+  +       reason: 'malformed-record'
+  +     }
+      ],
+  +   results: []
+    }
+  
+      at TestContext.<anonymous> (C:\TombstoneDash\codex-lane\worktrees\hud-review-lims-box-517\tests\ohworks\liaison-import.test.ts:25:10)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.start (node:internal/test_runner/test:1015:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:358:17) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: { results: [], rejected: [ [Object], [Object], [Object] ] },
+    expected: { results: [ [Object], [Object] ], rejected: [] },
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
