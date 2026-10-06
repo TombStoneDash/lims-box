@@ -38,7 +38,7 @@ export const corpus: CorpusEntry[] = [
     title: 'What is LIMS BOT?',
     source: '/bot',
     keywords: ['bot', 'assistant', 'prototype', 'questions', 'answers', 'documentation'],
-    text: 'LIMS BOT is an initial beta release. It only answers from published LIMS BOX documentation and never stores your questions.',
+    text: 'LIMS BOT is a prototype. It only answers from published LIMS BOX documentation and never stores your questions.',
   },
   {
     id: 'sample-tracking-overview',

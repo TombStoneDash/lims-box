@@ -1,3 +1,4 @@
+import { recordAcceptedTransactional } from '@/lib/first-contact-store';
 import { prisma } from '@/lib/prisma';
 import { sendSubmissionNotice, sendApplicantConfirmation } from '@/lib/notify';
 import { createWaitlistPostHandler } from '@/lib/waitlistHandler';
@@ -15,5 +16,6 @@ export const POST = createWaitlistPostHandler({
   createProspect: (record) => prisma.prospect.create({ data: record }),
   sendSubmissionNotice,
   sendApplicantConfirmation,
+  recordAcceptedTransactional,
   firstContactDryRun: (input) => limsFirstContactDryRun({ endpoint: 'waitlist', sources: limsHistorySources, ...input }),
 });
