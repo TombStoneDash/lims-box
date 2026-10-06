@@ -6,6 +6,7 @@ import { createHash } from 'node:crypto';
 import { closeSync, constants, fstatSync, lstatSync, openSync, readFileSync, realpathSync } from 'node:fs';
 import path from 'node:path';
 import type { CorpusEntry } from './corpus';
+import { EVIDENCE_MISSING_ANSWER, type BotResponse } from './engine';
 import { filterCommercialClaims } from './output-claims-filter';
 import {
   admitFounderSource,
@@ -60,17 +61,18 @@ function parseTsv<T>(text: string, required: string[], uniqueKey: string): T[] {
 }
 
 // Defense in depth: reject an entire candidate if these residual sensitive
-// markers appear. Privacy does not depend on this regex being exhaustive:
-// only the exact, reviewed FOUNDER_EXCERPTS may enter the answer corpus.
+// markers appear. The legacy corpus remains excerpt-only; the founder-only
+// index uses the task-approved paragraph scope after the same admission checks.
 const SENSITIVE_DOCUMENT = /\b(?:ssn|social\s+security|genetic|genomic|ancestry|23andme|aamc|date\s+of\s+birth|dob|references)\b|\b\d{3}[-\s]\d{2}[-\s]\d{4}\b|\b\d{9,}\b|[\w.+-]+@[\w.-]+\.[a-z]{2,}|https?:\/\/|www\.|(?:\+?1[-.\s]?)?\(?\d{3}\)?[-.\s]\d{3}[-.\s]\d{4}\b/i;
 
 /** Re-read on each founder request so a hold/removal takes effect immediately. */
-export function loadFounderCorpus(root = process.env.LIMS_FOUNDER_KNOWLEDGE_DIR): CorpusEntry[] {
+function loadVerifiedDocuments(root: string | undefined): string[] {
   if (!root) return [];
   try {
+    if (lstatSync(root).isSymbolicLink()) return [];
     const bundleRoot = realpathSync(root);
     const manifest = parseTsv<FounderManifestRow>(
-      readBundleFile(bundleRoot, 'MANIFEST.tsv', MAX_METADATA_BYTES).toString('utf8'),
+      new TextDecoder('utf-8', { fatal: true }).decode(readBundleFile(bundleRoot, 'MANIFEST.tsv', MAX_METADATA_BYTES)),
       ['path', 'sha256', 'size', 'origin', 'source_location', 'added'], 'path',
     );
     const sourceBytes = readBundleFile(bundleRoot, FOUNDER_SOURCES_PATH, MAX_METADATA_BYTES);
@@ -79,11 +81,10 @@ export function loadFounderCorpus(root = process.env.LIMS_FOUNDER_KNOWLEDGE_DIR)
       || sourceBytes.length !== Number(sourceManifest.size)
       || createHash('sha256').update(sourceBytes).digest('hex') !== sourceManifest.sha256.toLowerCase()) return [];
     const sources = parseTsv<FounderSourceRow>(
-      sourceBytes.toString('utf8'),
+      new TextDecoder('utf-8', { fatal: true }).decode(sourceBytes),
       ['alias', 'status', 'sha256', 'redacted', 'bot_status'], 'alias',
     );
-    const entries: CorpusEntry[] = [];
-    const admittedPassages = new Set<string>();
+    const documents: string[] = [];
     for (const record of manifest) {
       if (!FOUNDER_REDACTED_PATH.test(record.path)) continue;
       const matching = sources.filter((source) => source.redacted === record.path);
@@ -100,25 +101,69 @@ export function loadFounderCorpus(root = process.env.LIMS_FOUNDER_KNOWLEDGE_DIR)
       if (bytes.length !== size || createHash('sha256').update(bytes).digest('hex') !== record.sha256.toLowerCase()) continue;
       const text = bytes.toString('utf8');
       if (text.includes('\uFFFD') || SENSITIVE_DOCUMENT.test(text)) continue;
-      const normalized = text.replace(/\s+/g, ' ').trim();
-      for (const excerpt of FOUNDER_EXCERPTS) {
-        if (admittedPassages.has(excerpt.id) || !normalized.includes(excerpt.text)) continue;
-        const answer = `Founder archive (historical experience): ${excerpt.text}`;
-        if (filterCommercialClaims(`${excerpt.title} ${answer}`).blocked) continue;
-        entries.push({
-          id: `founder-${excerpt.id}`,
-          title: excerpt.title,
-          // Public IDs identify reviewed passages, never private documents.
-          source: `${FOUNDER_CITATION_PREFIX}founder-${excerpt.id}#${excerpt.id}`,
-          keywords: [...excerpt.keywords],
-          text: answer,
-        });
-        admittedPassages.add(excerpt.id);
-      }
+      documents.push(text);
     }
-    return entries;
+    return documents;
   } catch {
     // No document, private path, parser input, or identifier enters logs.
     return [];
   }
+}
+
+/** Legacy public citations retain their reviewed excerpt boundary. */
+export function loadFounderCorpus(root = process.env.LIMS_FOUNDER_KNOWLEDGE_DIR): CorpusEntry[] {
+  const entries: CorpusEntry[] = [];
+  const admittedPassages = new Set<string>();
+  for (const text of loadVerifiedDocuments(root)) {
+    const normalized = text.replace(/\s+/g, ' ').trim();
+    for (const excerpt of FOUNDER_EXCERPTS) {
+      if (admittedPassages.has(excerpt.id) || !normalized.includes(excerpt.text)) continue;
+      const answer = `Founder archive (historical experience): ${excerpt.text}`;
+      if (filterCommercialClaims(`${excerpt.title} ${answer}`).blocked) continue;
+      entries.push({
+        id: `founder-${excerpt.id}`,
+        title: excerpt.title,
+        // Public IDs identify reviewed passages, never private documents.
+        source: `${FOUNDER_CITATION_PREFIX}founder-${excerpt.id}#${excerpt.id}`,
+        keywords: [...excerpt.keywords],
+        text: answer,
+      });
+      admittedPassages.add(excerpt.id);
+    }
+  }
+  return entries;
+}
+
+/** Request-local index of complete approved paragraphs; no persistent cache. */
+export function loadFounderIndex(root = process.env.LIMS_FOUNDER_KNOWLEDGE_DIR): CorpusEntry[] {
+  const passages = new Map<string, CorpusEntry>();
+  for (const document of loadVerifiedDocuments(root)) {
+    for (const paragraph of document.split(/\r?\n[ \t]*\r?\n/).filter((p) => p.trim().length > 0)) {
+      const normalized = paragraph.replace(/\s+/g, ' ').trim();
+      if (passages.has(normalized)) continue;
+      // Public fact identity is derived from passage content, never a file hash.
+      const token = createHash('sha256').update(normalized).digest('hex')
+        .replace(/[0-9a-f]/g, (digit) => String.fromCharCode(97 + parseInt(digit, 16)));
+      const id = `founder-fact-${token}`;
+      const title = normalized.split(/(?<=[.!?])\s/)[0].slice(0, 160);
+      const text = `Founder archive (historical experience): ${paragraph}`;
+      if (filterCommercialClaims(`${title} ${text}`).blocked) continue;
+      passages.set(normalized, { id, title, text, keywords: [],
+        source: `${FOUNDER_CITATION_PREFIX}${id}#${id}` });
+    }
+  }
+  return [...passages.values()];
+}
+
+/** Named questions only: no scoring, inference, generation or user interpolation. */
+export function askFounderQuestion(question: string): BotResponse {
+  const refusal: BotResponse = { answer: EVIDENCE_MISSING_ANSWER, grounded: false, sources: [] };
+  const match = /^(?:What is the founder fact|Tell me about the founder fact|Quote the founder fact) "([^"\r\n]+)"[?.]?$/i.exec(question.trim());
+  if (!match) return refusal;
+  const name = match[1].toLowerCase();
+  const matches = loadFounderIndex().filter((entry) =>
+    entry.id.toLowerCase() === name || entry.title.toLowerCase() === name);
+  if (matches.length !== 1) return refusal;
+  const entry = matches[0];
+  return { answer: entry.text, grounded: true, sources: [{ title: entry.title, path: entry.source }] };
 }

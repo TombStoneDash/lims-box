@@ -456,10 +456,13 @@ test('candidate file and directory symlinks cannot escape the bundle', (t) => {
   const outside = fixture(t);
   const file = path.join(bundle.root, bundle.sources[0].redacted);
   rmSync(file);
-  symlinkSync(path.join(outside.root, outside.sources[0].redacted), file);
+  // Windows junctions exercise link rejection without SeCreateSymbolicLinkPrivilege.
+  symlinkSync(process.platform === 'win32' ? path.dirname(path.join(outside.root, outside.sources[0].redacted))
+    : path.join(outside.root, outside.sources[0].redacted), file, process.platform === 'win32' ? 'junction' : 'file');
   assert.deepEqual(loadFounderCorpus(bundle.root), []);
   rmSync(path.dirname(file), { recursive: true });
-  symlinkSync(path.join(outside.root, '15_HT_FOUNDER_INTAKE/redacted'), path.dirname(file), 'dir');
+  symlinkSync(path.join(outside.root, '15_HT_FOUNDER_INTAKE/redacted'), path.dirname(file),
+    process.platform === 'win32' ? 'junction' : 'dir');
   assert.deepEqual(loadFounderCorpus(bundle.root), []);
 });
 

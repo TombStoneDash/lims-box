@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { askFounderQuestion } from '@/lib/bot/founder-corpus';
 import {
   askDemoAssistant,
   DEMO_MAX_QUESTION_BYTES,
@@ -97,7 +98,11 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  return NextResponse.json(askDemoAssistant(normalizedQuestion), {
+  // Founder questions must never fall through to synthetic or product evidence.
+  const result = /\b(?:founder|hudson|hud taylor)\b/i.test(normalizedQuestion)
+    ? askFounderQuestion(normalizedQuestion)
+    : askDemoAssistant(normalizedQuestion);
+  return NextResponse.json(result, {
     headers: { 'Cache-Control': 'no-store' },
   });
 }

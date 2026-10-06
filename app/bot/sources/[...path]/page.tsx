@@ -1,6 +1,6 @@
 import React from 'react';
 import { notFound } from 'next/navigation';
-import { FOUNDER_CITATION_PREFIX, loadFounderCorpus } from '../../../../lib/bot/founder-corpus';
+import { FOUNDER_CITATION_PREFIX, loadFounderCorpus, loadFounderIndex } from '../../../../lib/bot/founder-corpus';
 
 export const dynamic = 'force-dynamic';
 export const metadata = {
@@ -13,7 +13,7 @@ export default async function FounderSourcePage({ params }: {
 }) {
   const sourcePath = (await params).path.join('/');
   if (!/^founder-[a-z-]+$/.test(sourcePath)) notFound();
-  const entries = loadFounderCorpus().filter((entry) =>
+  const entries = (sourcePath.startsWith('founder-fact-') ? loadFounderIndex() : loadFounderCorpus()).filter((entry) =>
     entry.source.split('#')[0] === `${FOUNDER_CITATION_PREFIX}${sourcePath}`);
   if (!entries.length) notFound();
 

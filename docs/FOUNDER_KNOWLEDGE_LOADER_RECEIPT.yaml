@@ -1,0 +1,97 @@
+task_id: OLD-16C-FOUNDER-LOADER-IMPL
+run_id: old-16c-founder-loader-20261006T181112Z
+host_id: DESKTOP-1TV907A
+host_role: lenovo
+repo: lims-box
+branch_or_worktree: codex-lenovo/old-16c-founder-loader-impl
+base_revision: 32cb79d3c77902c50929160b0d78a1934564635d
+owner: current worker under direct user assignment; initially clean assigned worktree
+objective: Implement founder paragraph retrieval in the existing demo assistant route.
+constraints:
+  - Repository-local work only; no commit, push, merge, deployment or external send.
+  - Runner owns commit and push; resulting PR must be draft.
+  - Preserve admission, integrity, sensitive-marker and commercial-claims checks.
+inputs:
+  - User resolved route as app/api/demo/assistant/route.ts.
+  - User approved every merged founder-knowledge file; no additional scope approval requested.
+  - docs/FOUNDER_KNOWLEDGE_LOADER_SPEC.md
+requested_model: not-exposed
+requested_reasoning_effort: not-exposed
+client_effective_model: not-exposed
+provider_returned_model_id: not-exposed
+model_evidence_source: not-exposed
+route_id: not-exposed
+started_at: '2026-10-06T18:11:12Z'
+ended_at: '2026-10-06T18:22:18Z'
+timeout: current interactive task
+retry_cap: one corrected full-suite rerun
+terminal_state: BLOCKED
+verification:
+  - 'npm ci --ignore-scripts: exit 0; repository-local cache; 459 packages installed.'
+  - 'npx prisma generate: exit 0; generated client in ignored node_modules.'
+  - 'Focused founder, existing corpus and demo-route tests: exit 0; 194 passed, zero skipped.'
+  - 'npm run typecheck: exit 0, including separate archive integration check.'
+  - 'npm run test:all: exit 1; 292 files, 4557 tests, 4553 passed, 4 failed, zero skipped.'
+  - 'git diff --check: exit 0.'
+  - 'git diff --quiet HEAD on unrelated failure sources/tests: exit 0; unchanged.'
+  - 'Archive inventory integration check: exit 1; required merged bundle is absent.'
+full_suite_failures:
+  - 'admin-calendar-date: two tests interpolate Windows absolute paths as ESM import URLs; ERR_UNSUPPORTED_ESM_URL_SCHEME.'
+  - 'bot-chat-accessibility: source assertion requires LF while checkout has CRLF.'
+  - 'liaison-import: quoted fabricated CSV fixture is rejected with this checkout line ending format.'
+artifacts:
+  - lib/bot/founder-corpus.ts
+  - app/api/demo/assistant/route.ts
+  - 'app/bot/sources/[...path]/page.tsx'
+  - tests/bot/founder-loader-route.test.ts
+  - tests/bot/founder-inventory.integration.ts
+  - tests/bot-founder-corpus.test.ts
+  - 'Local logs: node_modules/.founder-verification/ (ignored, not for commit).'
+implementation:
+  - Request-local complete-paragraph index, duplicate collapse and content-derived public fact IDs.
+  - Exact named-question forms return verbatim historical evidence and citations; other founder questions refuse.
+  - Index and citation pages rebuild from verified files; source removal or holds revoke answers immediately.
+  - Legacy excerpt API and public corpus retain existing boundaries.
+  - Windows link regression uses junctions without requiring symlink privileges.
+coverage_boundary: >-
+  Synthetic file-derived properties passed. Actual merged-file inventory coverage is
+  NOT verified. The independent integration check requires nonempty source inventory
+  and exact inventory/index equality; it fails rather than skipping when no bundle
+  exists. It also catches facts dropped by an admission/output veto instead of
+  silently shrinking the expected inventory.
+inventory_evidence: >-
+  The requested git log --diff-filter=A --since=2026-09-20 -- '*founder*' '*knowledge*'
+  finds loader/tests in 6c14fc0 and routing documentation in 07bbab8, not archive files.
+  origin/main has no MANIFEST.tsv, SOURCES.tsv or founder redacted documents.
+  The spec locates the Sep 25 archive in a separate lims-knowledge repository at
+  e2eeb98c8c0bb2f1fd374e543184662760c00f99. LIMS_FOUNDER_KNOWLEDGE_DIR is unset.
+usage_delta: not-exposed
+blocker: >-
+  Merged founder bundle unavailable within the authorized repository boundary;
+  cannot reconcile/pin its exact approved files or prove exhaustive actual archive
+  coverage. Four unchanged full-suite tests also fail on this Windows checkout.
+rollback: Revert only the listed implementation/test changes; no runtime or production activation occurred.
+next_safe_action: >-
+  Runner stages the existing approved merged bundle within this repository and runs
+  node --import tsx --test tests/bot/founder-inventory.integration.ts with
+  LIMS_FOUNDER_KNOWLEDGE_DIR set. Resolve any inventory mismatch before marking
+  complete. Runner owns commit/push and exactly one draft PR; do not merge.
+receipt_location: >-
+  Repository-local handoff only. No canonical external worker-results location was
+  written because the task prohibits touching anything outside this repository.
+draft_pr:
+  state: prepared-not-opened
+  title: 'Wire founder paragraph evidence into the demo assistant'
+  body: |-
+    Founder questions in /api/demo/assistant now resolve exact named facts from a
+    request-local index of verified, admitted bundle paragraphs. Answers preserve
+    complete source text and historical attribution, include revocable citations,
+    and refuse absent, ambiguous or unsupported facts without model generation.
+
+    Added file-derived API coverage, mutation/revocation and citation tests, plus
+    an independent merged-inventory integration gate. Focused tests: 194 passed.
+    Type checking passed. Full suite: 4553/4557 passed; four unchanged Windows
+    path/line-ending failures remain. Real archive coverage remains blocked until
+    the approved merged bundle is staged and the inventory gate passes.
+
+    Keep this PR draft. Do not merge or deploy.
