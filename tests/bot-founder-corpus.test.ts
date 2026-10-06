@@ -10,7 +10,7 @@ import { POST } from '../app/api/bot/route';
 import { NextRequest } from 'next/server';
 import { askBot, classifyQuestionIntent, type QuestionIntent, EVIDENCE_MISSING_ANSWER } from '../lib/bot/engine';
 import { corpus, COMPLIANCE_POSITIONING } from '../lib/bot/corpus';
-import { FOUNDER_CITATION_PREFIX, loadFounderCorpus } from '../lib/bot/founder-corpus';
+import { FOUNDER_CITATION_PREFIX, loadFounderCorpus, loadFounderFactIndex } from '../lib/bot/founder-corpus';
 import { filterCommercialClaims } from '../lib/bot/output-claims-filter';
 import { COMMERCIAL_CLAIM_RULES } from '../lib/bot/commercial-claims';
 import { parseHistory, serializeHistory } from '../lib/bot/chat-history';
@@ -101,7 +101,7 @@ test('the bot API does not answer from the founder archive; excerpt citation pag
 });
 
 test('missing bundle and off-topic founder questions fail closed; product and contact answers still work', (t) => {
-  useBundle(t, undefined);
+  useBundle(t, '/not/a/knowledge/bundle');
   assert.deepEqual(loadFounderCorpus(), []);
   assert.deepEqual(loadFounderCorpus('/not/a/knowledge/bundle'), []);
   // General background is the published /about bio; archive topics fail closed.
@@ -678,4 +678,14 @@ test('questions about anything the founder owns or runs never get the personal b
     checked += 1;
   }
   assert.equal(checked, owners.length * modifiers.length * organizations.length * templates.length);
+});
+
+
+test('clinical content revokes the whole valid document including otherwise safe career paragraphs', (t) => {
+  const markers = ['patient', 'PATIENTS', 'diagnosis', 'diagnosed', 'DOB', 'MRN', 'D.O.B.', 'M.R.N.', 'patient_name', 'date_of_birth', 'specimen result', 'clinical-case', 'ＰＡＴＩＥＮＴ', 'pa\u200btient'];
+  for (const marker of markers) {
+    const bundle = fixture(t, [`${FOUNDER_EXCERPTS[0].text}\n\n${marker}: synthetic case\n\nconfigured data imports.`]);
+    assert.deepEqual(loadFounderCorpus(bundle.root), []);
+    assert.deepEqual(loadFounderFactIndex(bundle.root), []);
+  }
 });

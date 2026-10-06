@@ -10,7 +10,10 @@ Sep 25 merge, subject to the admission and integrity rules below.
 The Sep 25 founder merge is in the separate `TombStoneDash/lims-knowledge`
 repository at `e2eeb98c8c0bb2f1fd374e543184662760c00f99`. A locally available
 partial checkout contains its manifest, source map, and redacted files.
-The runtime bundle root is `LIMS_FOUNDER_KNOWLEDGE_DIR`.
+The runtime bundle root is `LIMS_FOUNDER_KNOWLEDGE_DIR`, defaulting to
+`path.join(process.cwd(), 'knowledge/founder')` when unset. Explicit invalid
+overrides still produce an empty index. See `scripts/founder-bundle/README.md`
+for the deterministic ingest builder and its evidenced Administrator acceptance gate.
 
 Read only these paths relative to that root:
 
@@ -38,6 +41,34 @@ redacted file in that merge. The four `FOUNDER_EXCERPTS` remain the legacy
 public bot's excerpt inventory; they do not limit the assistant's new index.
 Held, invalid, sensitive, or otherwise inadmissible files remain excluded.
 No original documents or additional source collections enter the inventory.
+
+## Round-three privacy rule
+
+Retain all contact/identifier redaction from round two. Name handling is now
+FAIL-CLOSED: replace every capitalized proper-noun token or sequence with
+`[name]` unless it is on the short public allow-list in
+`lib/bot/founder-name-allowlist.mjs`. This includes inverted Last, First forms,
+initials, possessives, uppercase/mixed-case words, and Unicode-normalized forms.
+Ordinary capitalized words are also redacted; never exempt an English dictionary
+or attempt to enumerate private names. Allow only the listed founder variants,
+products, instruments/vendors, public companies/institutions, US states/cities,
+and months/days. The list is part of the reviewed repository change.
+
+Drop the whole original document BEFORE redaction when it contains patient,
+clinical-case, diagnosis, DOB, MRN, date-of-birth, medical-record-number, or
+specimen-result content. This includes resumes mentioning patients. Do not
+salvage individual paragraphs. Retain holds and integrity/provenance checks.
+Record excluded paths and reasons in the build report and list them in the PR.
+The loader also rejects clinical content in otherwise integrity-valid bundles.
+
+Sweep every shipped paragraph directly from disk against the public allow-list
+and contact/identifier patterns. The AMCAS question and
+`founder-fact-f5b392827c54da07c7cf476cbd353f4e` (with and without trailing period)
+must return `EVIDENCE_MISSING_ANSWER`, `grounded: false`, and no sources.
+Apply the full inventory/retrieval/refusal/revocation property to every remaining
+paragraph; clinical exclusions and redacted duplicates reduce the prior count.
+Career acceptance uses the actual redacted Administrator passage, not an inferred
+Senior LIMS Developer claim or an exemption for capitalized job-title words.
 
 ## Chunking and index
 
@@ -137,16 +168,9 @@ small synthetic bundle by default; set `TEST_FOUNDER_BUNDLE_DIR` to the merged
 bundle root to run the same properties against the complete approved inventory.
 The tests copy the bundle to a temporary directory before mutating it.
 
-Run `npm run test:all`, focused founder tests, the merged-bundle property run,
-and `npm run typecheck`. Work remains uncommitted and unpushed on
-`codex/old-16c-founder-loader-impl` for the runner. Create one draft PR after
-the runner publishes the branch; do not merge.
-
-Verified on 2026-10-06: `npm run test:all` passed 4,548 tests; focused founder
-and assistant-route tests passed 185 tests; type checking and `git diff --check`
-passed. The property run against merged commit
-`e2eeb98c8c0bb2f1fd374e543184662760c00f99` passed all three inventory, refusal,
-and revocation properties: 71 admitted files and 488 distinct paragraphs.
-The admission rules exclude the remaining files; they were not silently omitted
-from the coverage domain. GitHub reported no remote commit for the assigned
-branch, so a reviewable draft PR cannot exist until the runner publishes it.
+Run `npm run test:all`, focused founder tests, the shipped-bundle property run,
+redaction properties, deterministic rebuild, and `npm run typecheck`. Prepare
+one draft PR; do not merge. Work remains uncommitted and unpushed on the assigned
+`codex/r3-525-founder-bundle-names` branch for the runner to publish. The round-two
+changes from `8135b4fa` are included in this worktree; Git HEAD remains the
+supplied base `f8fb7ac`. See `PR_BODY.md` for current validation and exclusions.
