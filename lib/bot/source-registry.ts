@@ -163,8 +163,8 @@ export function admitSource(
   return { ok: true, record };
 }
 
-export const FOUNDER_REDACTED_PATH = /^15_HT_FOUNDER_INTAKE\/redacted\/([a-f0-9]{64})\.txt$/;
-export const FOUNDER_SOURCES_PATH = '15_HT_FOUNDER_INTAKE/SOURCES.tsv';
+export const FOUNDER_REDACTED_PATH = /^16_FOUNDER_PUBLIC\/redacted\/([a-f0-9]{64})\.txt$/;
+export const FOUNDER_SOURCES_PATH = '16_FOUNDER_PUBLIC/SOURCES.tsv';
 
 export interface FounderManifestRow {
   path: string;

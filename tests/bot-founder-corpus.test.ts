@@ -10,7 +10,7 @@ import { POST } from '../app/api/bot/route';
 import { NextRequest } from 'next/server';
 import { askBot, classifyQuestionIntent, type QuestionIntent, EVIDENCE_MISSING_ANSWER } from '../lib/bot/engine';
 import { corpus, COMPLIANCE_POSITIONING } from '../lib/bot/corpus';
-import { FOUNDER_CITATION_PREFIX, loadFounderCorpus } from '../lib/bot/founder-corpus';
+import { FOUNDER_CITATION_PREFIX, loadFounderCorpus, loadFounderFactIndex } from '../lib/bot/founder-corpus';
 import { filterCommercialClaims } from '../lib/bot/output-claims-filter';
 import { COMMERCIAL_CLAIM_RULES } from '../lib/bot/commercial-claims';
 import { parseHistory, serializeHistory } from '../lib/bot/chat-history';
@@ -19,6 +19,7 @@ import {
   type FounderManifestRow, type FounderSourceRow,
 } from '../lib/bot/source-registry';
 
+const repositoryCwd = process.cwd();
 const sha = (text: string) => createHash('sha256').update(text).digest('hex');
 const manifestHeaders = ['path', 'sha256', 'size', 'origin', 'source_location', 'added'];
 // Match the merged bundle schema, including metadata that must never be exposed.
@@ -30,13 +31,13 @@ const tsv = (headers: string[], rows: object[]) => `${headers.join('\t')}\r\n${r
 function fixture(t: TestContext, texts = [FOUNDER_EXCERPTS[0].text as string]) {
   const root = mkdtempSync(path.join(tmpdir(), 'bot-founder-test-'));
   t.after(() => rmSync(root, { recursive: true, force: true }));
-  mkdirSync(path.join(root, '15_HT_FOUNDER_INTAKE/redacted'), { recursive: true });
+  mkdirSync(path.join(root, '16_FOUNDER_PUBLIC/redacted'), { recursive: true });
   const sources: FounderSourceRow[] = [];
   const manifest: FounderManifestRow[] = [];
   texts.forEach((text, index) => {
     // Synthetic file identities. No private source documents live in fixtures.
     const originalHash = sha(`synthetic-original-${index}`);
-    const file = `15_HT_FOUNDER_INTAKE/redacted/${originalHash}.txt`;
+    const file = `16_FOUNDER_PUBLIC/redacted/${originalHash}.txt`;
     sources.push({ alias: `FLI-${String(index + 2).padStart(3, '0')}`, status: 'INTEGRATED',
       sha256: originalHash, redacted: file, bot_status: 'REDACTED_CANDIDATE' });
     manifest.push({ path: file, sha256: sha(text), size: String(Buffer.byteLength(text)),
@@ -53,6 +54,14 @@ function fixture(t: TestContext, texts = [FOUNDER_EXCERPTS[0].text as string]) {
     }]));
   }
   save();
+  // Independent synthetic publication policy; never edit the real allow-list.
+  const policyRoot = mkdtempSync(path.join(tmpdir(), 'founder-policy-'));
+  mkdirSync(path.join(policyRoot, 'scripts/founder-bundle'), { recursive: true });
+  writeFileSync(path.join(policyRoot, 'scripts/founder-bundle/ALLOWLIST.txt'), sources.map((source, i) =>
+    ['professional/source-' + i + '.txt', source.sha256, manifest[i].sha256, 'PUBLIC'].join('\t')).join('\n'));
+  const previousCwd = repositoryCwd;
+  process.chdir(policyRoot);
+  t.after(() => { process.chdir(previousCwd); rmSync(policyRoot, { recursive: true, force: true }); });
   return { root, sources, manifest, save };
 }
 
@@ -76,7 +85,7 @@ test('manifest-backed redacted candidates produce only reviewed passages and pub
     assert.equal(entry.text, `Founder archive (historical experience): ${FOUNDER_EXCERPTS[index].text}`);
     assert.equal(entry.source, `${FOUNDER_CITATION_PREFIX}founder-${FOUNDER_EXCERPTS[index].id}#${FOUNDER_EXCERPTS[index].id}`);
     assert.doesNotMatch(JSON.stringify(entry), /Synthetic Private Person|private career|Private closing|source_relpaths/);
-    assert.doesNotMatch(JSON.stringify(entry), /[a-f0-9]{64}|15_HT_FOUNDER_INTAKE|sha256|FLI-\d{3}/);
+    assert.doesNotMatch(JSON.stringify(entry), /[a-f0-9]{64}|16_FOUNDER_PUBLIC|sha256|FLI-\d{3}/);
     assert.equal(filterCommercialClaims(entry.text).blocked, false);
     assert.equal(admitFounderSource(bundle.manifest[index], bundle.sources[index])?.rightsClass, 'ORIGINAL_INTERNAL');
   }
@@ -97,11 +106,11 @@ test('the bot API does not answer from the founder archive; excerpt citation pag
   const html = renderToStaticMarkup(page);
   assert.ok(html.includes(`Founder archive (historical experience): ${FOUNDER_EXCERPTS[0].text}`));
   assert.match(html, /id="configuration"/);
-  assert.doesNotMatch(html + JSON.stringify(result), /[a-f0-9]{64}|15_HT_FOUNDER_INTAKE|sha256|lims-knowledge/);
+  assert.doesNotMatch(html + JSON.stringify(result), /[a-f0-9]{64}|16_FOUNDER_PUBLIC|sha256|lims-knowledge/);
 });
 
 test('missing bundle and off-topic founder questions fail closed; product and contact answers still work', (t) => {
-  useBundle(t, undefined);
+  useBundle(t, '/not/a/knowledge/bundle');
   assert.deepEqual(loadFounderCorpus(), []);
   assert.deepEqual(loadFounderCorpus('/not/a/knowledge/bundle'), []);
   // General background is the published /about bio; archive topics fail closed.
@@ -385,10 +394,10 @@ for (const change of [
   { source_location: 'derived:raw-text' }, { added: 'yesterday' },
   { sha256: 'a'.repeat(64) }, { size: '1' }, { size: 'NaN' }, { size: '99999999999999999' },
   { path: '../private.txt' }, { path: '/tmp/private.txt' },
-  { path: `15_HT_FOUNDER_INTAKE/text/${'a'.repeat(64)}.txt` },
-  { path: `15_HT_FOUNDER_INTAKE/originals/${'a'.repeat(64)}.txt` },
-  { path: `15_HT_FOUNDER_INTAKE/redacted/../text/${'a'.repeat(64)}.txt` },
-  { path: `15_HT_FOUNDER_INTAKE/redacted/%2e%2e/${'a'.repeat(64)}.txt` },
+  { path: `16_FOUNDER_PUBLIC/text/${'a'.repeat(64)}.txt` },
+  { path: `16_FOUNDER_PUBLIC/originals/${'a'.repeat(64)}.txt` },
+  { path: `16_FOUNDER_PUBLIC/redacted/../text/${'a'.repeat(64)}.txt` },
+  { path: `16_FOUNDER_PUBLIC/redacted/%2e%2e/${'a'.repeat(64)}.txt` },
 ]) {
   test(`manifest provenance, integrity and path policy fail closed: ${JSON.stringify(change)}`, (t) => {
     const bundle = fixture(t);
@@ -407,7 +416,7 @@ test('unlisted files, originals and extraction text cannot supply a missing reda
     writeFileSync(file, FOUNDER_EXCERPTS[0].text);
   }
   rmSync(path.join(bundle.root, redacted));
-  writeFileSync(path.join(bundle.root, '15_HT_FOUNDER_INTAKE/redacted/unlisted.txt'), FOUNDER_EXCERPTS[0].text);
+  writeFileSync(path.join(bundle.root, '16_FOUNDER_PUBLIC/redacted/unlisted.txt'), FOUNDER_EXCERPTS[0].text);
   assert.deepEqual(loadFounderCorpus(bundle.root), []);
 });
 
@@ -456,10 +465,18 @@ test('candidate file and directory symlinks cannot escape the bundle', (t) => {
   const outside = fixture(t);
   const file = path.join(bundle.root, bundle.sources[0].redacted);
   rmSync(file);
-  symlinkSync(path.join(outside.root, outside.sources[0].redacted), file);
+  try {
+    symlinkSync(path.join(outside.root, outside.sources[0].redacted), file);
+  } catch (error) {
+    if (process.platform === 'win32' && (error as NodeJS.ErrnoException).code === 'EPERM') {
+      t.skip('Windows host does not grant file-symlink creation');
+      return;
+    }
+    throw error;
+  }
   assert.deepEqual(loadFounderCorpus(bundle.root), []);
   rmSync(path.dirname(file), { recursive: true });
-  symlinkSync(path.join(outside.root, '15_HT_FOUNDER_INTAKE/redacted'), path.dirname(file), 'dir');
+  symlinkSync(path.join(outside.root, '16_FOUNDER_PUBLIC/redacted'), path.dirname(file), 'dir');
   assert.deepEqual(loadFounderCorpus(bundle.root), []);
 });
 
@@ -500,7 +517,7 @@ test('duplicates collapse; holds and bundle removal revoke answers and citation 
   // ... and a hold removes it at once (no stale cache).
   assert.deepEqual(loadFounderCorpus(), []);
   await assert.rejects(FounderSourcePage({ params: Promise.resolve({ path: ['founder-configuration'] }) }), /NEXT_HTTP_ERROR_FALLBACK;404/);
-  for (const route of ['15_HT_FOUNDER_INTAKE/originals/private.doc', '../MANIFEST.tsv', '15_HT_FOUNDER_INTAKE/SOURCES.tsv']) {
+  for (const route of ['16_FOUNDER_PUBLIC/originals/private.doc', '../MANIFEST.tsv', '16_FOUNDER_PUBLIC/SOURCES.tsv']) {
     await assert.rejects(FounderSourcePage({ params: Promise.resolve({ path: route.split('/') }) }), /NEXT_HTTP_ERROR_FALLBACK;404/);
   }
 });
@@ -523,10 +540,10 @@ test('public citation pages expose only reviewed excerpts, excluding private/cus
   const hash = bundle.sources[0].sha256;
   for (const route of [
     bundle.sources[0].redacted,
-    `15_HT_FOUNDER_INTAKE/originals/${hash}.txt`,
-    `15_HT_FOUNDER_INTAKE/text/${hash}.txt`,
-    '15_HT_FOUNDER_INTAKE/SOURCES.tsv', 'MANIFEST.tsv', '../MANIFEST.tsv',
-    `15_HT_FOUNDER_INTAKE/redacted/${'a'.repeat(64)}.txt`,
+    `16_FOUNDER_PUBLIC/originals/${hash}.txt`,
+    `16_FOUNDER_PUBLIC/text/${hash}.txt`,
+    '16_FOUNDER_PUBLIC/SOURCES.tsv', 'MANIFEST.tsv', '../MANIFEST.tsv',
+    `16_FOUNDER_PUBLIC/redacted/${'a'.repeat(64)}.txt`,
   ]) {
     await assert.rejects(FounderSourcePage({ params: Promise.resolve({ path: route.split('/') }) }),
       /NEXT_HTTP_ERROR_FALLBACK;404/);
@@ -678,4 +695,14 @@ test('questions about anything the founder owns or runs never get the personal b
     checked += 1;
   }
   assert.equal(checked, owners.length * modifiers.length * organizations.length * templates.length);
+});
+
+
+test('clinical content revokes the whole valid document including otherwise safe career paragraphs', (t) => {
+  const markers = ['patient', 'PATIENTS', 'diagnosis', 'diagnosed', 'DOB', 'MRN', 'D.O.B.', 'M.R.N.', 'patient_name', 'date_of_birth', 'specimen result', 'clinical-case', 'ＰＡＴＩＥＮＴ', 'pa\u200btient'];
+  for (const marker of markers) {
+    const bundle = fixture(t, [`${FOUNDER_EXCERPTS[0].text}\n\n${marker}: synthetic case\n\nconfigured data imports.`]);
+    assert.deepEqual(loadFounderCorpus(bundle.root), []);
+    assert.deepEqual(loadFounderFactIndex(bundle.root), []);
+  }
 });

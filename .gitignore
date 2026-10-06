@@ -63,3 +63,8 @@ prisma/dev.db-journal
 config/youtube-client-secret.json
 config/youtube-oauth-token.json
 config/youtube-*.json
+
+# Local founder-bundle verification artifacts
+/.npm-cache/
+/.test-tmp/
+/.founder-*.log

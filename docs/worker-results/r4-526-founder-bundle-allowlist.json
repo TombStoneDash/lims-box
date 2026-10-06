@@ -1,0 +1,48 @@
+{
+  "task_id": "r4-526-founder-bundle-allowlist",
+  "run_id": "r4-526-1791326247804",
+  "host_id": "DESKTOP-1TV907A",
+  "host_role": "lenovo",
+  "repo": "lims-box",
+  "branch_or_worktree": "codex-lenovo/r4-526-founder-bundle-allowlist",
+  "objective": "Replace content-based founder admission with an explicit reviewed document allow-list; exclude all intake material.",
+  "constraints": [
+    "Repository-only changes",
+    "No commit or push",
+    "One runner-created draft PR; no merge or deployment"
+  ],
+  "owner": "User-assigned bounded worktree; no separate local lease artifact found",
+  "base_revision": "f8fb7ac658cdb762769a07094620042113c1274d",
+  "upstream_revision": "a2a40c4",
+  "requested_model": "not-exposed",
+  "requested_reasoning_effort": "not-exposed",
+  "client_effective_model": "not-exposed",
+  "provider_returned_model_id": "not-exposed",
+  "model_evidence_source": "not-exposed",
+  "route_id": "not-exposed",
+  "started_at": "not-exposed",
+  "ended_at": "2026-10-06T22:37:27.804Z",
+  "terminal_state": "BLOCKED",
+  "budget": "not-exposed",
+  "timeout": "not-exposed",
+  "retry_cap": "No source-acquisition retries outside repository scope",
+  "verification": [
+    "Focused suites: exit 0; 202 pass, 0 fail, 2 skips (Windows symlink permission; missing employment sources)",
+    "npm run test:bot: exit 0; 50 pass",
+    "npm run typecheck: exit 0 after local Prisma client generation",
+    "git diff --check: exit 0",
+    "Actual shipped inventory: 0 documents, 0 paragraphs; synthetic retrieval: 3 files, 4 distinct paragraphs"
+  ],
+  "artifacts": [
+    "scripts/founder-bundle/ALLOWLIST.txt",
+    "scripts/founder-bundle/build.mjs",
+    "lib/bot/founder-document-policy.mjs",
+    "knowledge/founder/BUILD_REPORT.json",
+    "PR_BODY.md"
+  ],
+  "usage_delta": "not-exposed",
+  "blocker": "Requested tagged evidence library and non-intake source documents are absent from the repository and available Git history. Nonempty source selection and acceptance cannot be completed without them.",
+  "rollback": "Discard only task changes or revert eventual runner commit; no runtime activation occurred.",
+  "next_safe_action": "Runner supplies tagged evidence library and source documents in repository; select full professional-only documents, rebuild, test, update counts, then create one draft PR.",
+  "receipt_location_note": "Repository-local handoff; canonical external host directory unavailable within repository-only write scope."
+}

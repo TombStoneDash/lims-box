@@ -1,0 +1,7 @@
+# Explicit document admission only. Everything not listed is excluded.
+# 15_HT_FOUNDER_INTAKE is forbidden, including nested/case variants.
+# Format: source-relative-path<TAB>source-sha256<TAB>redacted-sha256<TAB>tag
+# Tags: FOUNDER_STORY_SAFE or PUBLIC from LEGACY_LIMS_EVIDENCE_LIBRARY.md.
+# Review the ENTIRE document for professional/career/company content only.
+# No entries yet: requested evidence library and non-intake sources are absent
+# from this worktree and its available Git history. Do not infer approval.

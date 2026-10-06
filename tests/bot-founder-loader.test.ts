@@ -12,6 +12,7 @@ import { loadFounderFactIndex } from '../lib/bot/founder-corpus';
 import { EVIDENCE_MISSING_ANSWER } from '../lib/bot/engine';
 import { admitFounderSource, FOUNDER_SOURCES_PATH } from '../lib/bot/source-registry';
 
+const repositoryCwd = process.cwd();
 const sha = (text: string | Buffer) => createHash('sha256').update(text).digest('hex');
 const normalize = (text: string) => text.replace(/\s+/g, ' ').trim();
 const attribution = 'Founder archive (historical experience): ';
@@ -30,7 +31,7 @@ function bundle(t: TestContext) {
   if (process.env.TEST_FOUNDER_BUNDLE_DIR) {
     cpSync(process.env.TEST_FOUNDER_BUNDLE_DIR, root, { recursive: true, filter: (file) => !file.includes('/.git') });
   } else {
-    mkdirSync(path.join(root, '15_HT_FOUNDER_INTAKE/redacted'), { recursive: true });
+    mkdirSync(path.join(root, '16_FOUNDER_PUBLIC/redacted'), { recursive: true });
     // Independent file inventory: no loader excerpts, titles, or question helpers.
     const documents = [
       'Configured a historical laboratory workflow.\nThe rollout included staff review.\n\nTrained laboratory staff on a historical system.',
@@ -39,7 +40,7 @@ function bundle(t: TestContext) {
     ];
     const sources = documents.map((text, i) => {
       const hash = sha(`original-${i}`);
-      const redacted = `15_HT_FOUNDER_INTAKE/redacted/${hash}.txt`;
+      const redacted = `16_FOUNDER_PUBLIC/redacted/${hash}.txt`;
       writeFileSync(path.join(root, redacted), text);
       return { alias: `FLI-00${i + 2}`, status: 'INTEGRATED', sha256: hash, redacted, bot_status: 'REDACTED_CANDIDATE' };
     });
@@ -49,6 +50,15 @@ function bundle(t: TestContext) {
       ...sources.map((source, i) => ({ path: source.redacted, sha256: sha(documents[i]), size: String(Buffer.byteLength(documents[i])), origin: 'HT_ORIGINAL', source_location: `derived:contact-redaction of sha256:${source.sha256}`, added: '2026-09-25T06:23:05Z' })),
       { path: FOUNDER_SOURCES_PATH, sha256: sha(sourceText), size: String(Buffer.byteLength(sourceText)), origin: 'HT_ORIGINAL', source_location: 'derived:founder-source-map', added: '2026-09-25T06:23:05Z' },
     ]));
+  }
+  if (!process.env.TEST_FOUNDER_BUNDLE_DIR) {
+    const policyRoot = mkdtempSync(path.join(tmpdir(), 'founder-policy-'));
+    mkdirSync(path.join(policyRoot, 'scripts/founder-bundle'), { recursive: true });
+    const records = parse(path.join(root, 'MANIFEST.tsv')).filter(row => row.path.endsWith('.txt'));
+    writeFileSync(path.join(policyRoot, 'scripts/founder-bundle/ALLOWLIST.txt'), records.map((row, i) =>
+      ['professional/source-' + i + '.txt', path.basename(row.path, '.txt'), row.sha256, 'PUBLIC'].join('\t')).join('\n'));
+    process.chdir(policyRoot);
+    t.after(() => { process.chdir(repositoryCwd); rmSync(policyRoot, { recursive: true, force: true }); });
   }
   const previous = process.env.LIMS_FOUNDER_KNOWLEDGE_DIR;
   process.env.LIMS_FOUNDER_KNOWLEDGE_DIR = root;
@@ -77,7 +87,7 @@ function inventory(root: string) {
     assert.equal(bytes.length, Number(record.size));
     const text = new TextDecoder('utf-8', { fatal: true }).decode(bytes);
     // Same admission policy, independent implementation of the inventory walk.
-    const sensitive = /\b(?:ssn|social\s+security|genetic|genomic|ancestry|23andme|aamc|date\s+of\s+birth|dob|references)\b|\b\d{3}[-\s]\d{2}[-\s]\d{4}\b|\b\d{9,}\b|[\w.+-]+@[\w.-]+\.[a-z]{2,}|https?:\/\/|www\.|(?:\+?1[-.\s]?)?\(?\d{3}\)?[-.\s]\d{3}[-.\s]\d{4}\b/i;
+    const sensitive = /\b(?:ssn|social\s+security|genetic|genomic|ancestry|23andme|aamc|amcas|date\s+of\s+birth|dob|references)\b|\b\d{3}[-\s]\d{2}[-\s]\d{4}\b|\d{6,}|[\w.+-]+@[\w.-]+\.[a-z]{2,}|https?:\/\/|www\.|(?:\+?1[-.\s]?)?\(?\d{3}\)?[-.\s]\d{3}[-.\s]\d{4}\b/i;
     if (bytes.length > 256 * 1024 || text.includes('\uFFFD') || sensitive.test(text)) continue;
     const paragraphs: string[] = [];
     let lines: string[] = [];
@@ -197,7 +207,7 @@ test('fact citations serve only that complete passage and revoke with their evid
   assert.ok(html.includes('id="fact"'));
   assert.ok(html.includes('Founder archive (historical experience):'));
   assert.ok(!html.includes(root));
-  assert.ok(!html.includes('15_HT_FOUNDER_INTAKE'));
+  assert.ok(!html.includes('16_FOUNDER_PUBLIC'));
   writeFileSync(path.join(root, 'MANIFEST.tsv'), 'invalid');
   await assert.rejects(FounderSourcePage({ params: Promise.resolve({ path: [fact.id] }) }), /404/);
 });
