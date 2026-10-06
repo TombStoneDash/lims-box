@@ -1,0 +1,6 @@
+# Complete source-document inventory, relative to SOURCE_ROOT (/Users/ops).
+# Whole professional documents reviewed for round four; no directory/glob admission.
+# Evidence guide: LEGACY_LIMS_EVIDENCE_LIBRARY.md, cluster 4 (#78-86)
+# and cluster 12 (PUBLIC product/marketing material). See README.md for scope.
+clawd/intel/lims-box-7-11-4-framework.md
+Projects/lims-box/content/blog/why-small-labs-dont-need-enterprise-lims.md

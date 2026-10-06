@@ -1,0 +1,10 @@
+{
+  "documents": 2,
+  "paragraphOccurrences": 79,
+  "distinctParagraphs": 72,
+  "selection": "ALLOWLIST_ONLY",
+  "excludedTrees": [
+    "15_HT_FOUNDER_INTAKE"
+  ],
+  "unlistedSources": "EXCLUDED"
+}

@@ -1,6 +1,6 @@
 // Server-side, read-only loader for a locally supplied lims-knowledge bundle.
 // Set LIMS_FOUNDER_KNOWLEDGE_DIR to its root (MANIFEST.tsv + SOURCES.tsv +
-// redacted/). Unset/missing/invalid input yields no founder answers. There is
+// redacted/). Unset uses the shipped bundle; missing/invalid yields no answers. There is
 // no download, recursive scan, original/text fallback, write, or paid path.
 import { createHash } from 'node:crypto';
 import { closeSync, constants, fstatSync, lstatSync, openSync, readFileSync, realpathSync } from 'node:fs';
@@ -19,6 +19,7 @@ import {
 
 const MAX_METADATA_BYTES = 4 * 1024 * 1024;
 const MAX_DOCUMENT_BYTES = 256 * 1024;
+const founderBundleRoot = () => process.env.LIMS_FOUNDER_KNOWLEDGE_DIR ?? path.join(process.cwd(), 'knowledge/founder');
 export const FOUNDER_CITATION_PREFIX = '/bot/sources/';
 
 function readBundleFile(root: string, relative: string, maxBytes: number): Buffer {
@@ -63,7 +64,7 @@ function parseTsv<T>(text: string, required: string[], uniqueKey: string): T[] {
 // Defense in depth: reject an entire candidate if these residual sensitive
 // markers appear. Only the explicitly approved, admitted file inventory is
 // eligible; the legacy public corpus additionally admits only FOUNDER_EXCERPTS.
-const SENSITIVE_DOCUMENT = /\b(?:ssn|social\s+security|genetic|genomic|ancestry|23andme|aamc|date\s+of\s+birth|dob|references)\b|\b\d{3}[-\s]\d{2}[-\s]\d{4}\b|\b\d{9,}\b|[\w.+-]+@[\w.-]+\.[a-z]{2,}|https?:\/\/|www\.|(?:\+?1[-.\s]?)?\(?\d{3}\)?[-.\s]\d{3}[-.\s]\d{4}\b/i;
+const SENSITIVE_DOCUMENT = /\b(?:ssn|social\s+security|genetic|genomic|ancestry|23andme|aamc|amcas|date\s+of\s+birth|dob|references)\b|\b\d{3}[-\s]\d{2}[-\s]\d{4}\b|\d{6,}|[\w.+-]+@[\w.-]+\.[a-z]{2,}|https?:\/\/|www\.|(?:\+?1[-.\s]?)?\(?\d{3}\)?[-.\s]\d{3}[-.\s]\d{4}\b/i;
 
 /** Shared admission gate; never read originals or unlisted files. */
 function verifiedFounderDocuments(root: string | undefined): string[] {
@@ -112,7 +113,7 @@ function verifiedFounderDocuments(root: string | undefined): string[] {
 }
 
 /** Existing public excerpt pages retain their narrow publication boundary. */
-export function loadFounderCorpus(root = process.env.LIMS_FOUNDER_KNOWLEDGE_DIR): CorpusEntry[] {
+export function loadFounderCorpus(root = founderBundleRoot()): CorpusEntry[] {
   const entries: CorpusEntry[] = [];
   const admittedPassages = new Set<string>();
   for (const text of verifiedFounderDocuments(root)) {
@@ -145,7 +146,7 @@ export interface FounderFact {
  * Whitespace normalization is for identity only; answers preserve source text.
  * This index lives for one request, so holds/deletion revoke it immediately.
  */
-export function loadFounderFactIndex(root = process.env.LIMS_FOUNDER_KNOWLEDGE_DIR): FounderFact[] {
+export function loadFounderFactIndex(root = founderBundleRoot()): FounderFact[] {
   const facts = new Map<string, FounderFact>();
   for (const document of verifiedFounderDocuments(root)) {
     for (const paragraph of document.split(/\r?\n[^\S\r\n]*\r?\n(?:[^\S\r\n]*\r?\n)*/)) {
