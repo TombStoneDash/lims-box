@@ -55,7 +55,7 @@ test('buttons have explicit types, starter focus rings, and an initially disable
 
 test('the published disclaimer remains verbatim', () => {
   const markup = renderToStaticMarkup(React.createElement(BotChat));
-  assert.ok(markup.includes('LIMS BOT is an initial beta release. It only answers from published LIMS BOX documentation and never stores your questions.'));
+  assert.ok(markup.includes('LIMS BOT is a prototype. It only answers from published LIMS BOX documentation and never stores your questions.'));
 });
 
 test('dynamic accessibility semantics preserve the single bot request', () => {
@@ -67,7 +67,7 @@ test('dynamic accessibility semantics preserve the single bot request', () => {
   assert.ok(source.includes('aria-busy={busy}'));
   assert.ok(source.includes('<nav aria-label="Sources for this answer"'));
   for (const question of ['s', 'suggestion', 'card.question']) {
-    assert.ok(source.includes(`ask(${question});\n`));
+    assert.ok(source.replace(/\r\n/g, '\n').includes(`ask(${question});\n`));
     assert.match(source, new RegExp(`ask\\(${question}\\);\\s*inputRef\\.current\\?\\.focus\\(\\);`));
   }
   assert.equal(source.split('disabled={busy}').length - 1, 3);
