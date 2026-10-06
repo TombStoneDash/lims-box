@@ -3,7 +3,7 @@ import { BotChat } from './bot-chat';
 import { CAPABILITY_CARDS } from '../../lib/bot/front-door';
 
 export const metadata: Metadata = {
-  title: 'LIMS BOT (Prototype) — LIMS BOX',
+  title: 'LIMS BOT (initial beta release) — LIMS BOX',
   description:
     'Ask LIMS BOT about LIMS BOX. Answers come only from published LIMS BOX documentation, with sources.',
   robots: { index: false, follow: false },
@@ -14,7 +14,7 @@ export default function BotPage() {
     <main className="min-h-screen bg-slate-50 dark:bg-slate-950 py-12 px-4">
       <div className="max-w-2xl mx-auto">
         <h1 className="text-3xl font-bold text-slate-900 dark:text-white mb-2">
-          LIMS BOT <span className="text-sm font-medium text-slate-500 align-middle">prototype</span>
+          LIMS BOT <span className="text-sm font-medium text-slate-500 align-middle">initial beta release</span>
         </h1>
         <p className="text-lg text-slate-800 dark:text-slate-100 mb-3">
           Ask me how to get your analyzer&apos;s data into a system that will survive a survey.
