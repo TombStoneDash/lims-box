@@ -1,9 +1,9 @@
 # Founder knowledge loader
 
-Status: **draft; implementation blocked on source scope and assistant contract**.
-Inspected on 2026-10-06 against lims-box `efc07ea`, on the assigned
-`codex/old-16-lims-founder-knowledge-loader` branch. This document does not
-claim that the existing four-excerpt loader covers the founder archive.
+Status: **implemented locally; draft PR awaits the runner's commit/push**.
+Hudson resolved the inputs on 2026-10-06: use
+`app/api/demo/assistant/route.ts` and every founder-knowledge file in the
+Sep 25 merge, subject to the admission and integrity rules below.
 
 ## Source files and admission
 
@@ -33,40 +33,42 @@ The observed source map contains 117 records: 77 `REDACTED_CANDIDATE`, four
 one `NO_USABLE_TEXT`, and one `NO_TEXT`. Held aliases `FLI-001`, `FLI-089`,
 and `FLI-114` remain excluded. Merge status alone does not publish a source.
 
-Currently only the four identifier-free passages in `FOUNDER_EXCERPTS`
-are admitted to public output: configuration, Omega 11 training, instrument
-imports, and data entry/recovery. The surrounding redacted documents still
-contain personal material. An exhaustive coverage claim requires an inventory
-of all intended founder facts and their publication scope; those four passages
-are not that inventory. Do not replace this boundary with unrestricted public
-indexing of every redacted document.
+The approved fact inventory is every complete paragraph in every eligible
+redacted file in that merge. The four `FOUNDER_EXCERPTS` remain the legacy
+public bot's excerpt inventory; they do not limit the assistant's new index.
+Held, invalid, sensitive, or otherwise inadmissible files remain excluded.
+No original documents or additional source collections enter the inventory.
 
 ## Chunking and index
 
-For publicly admitted facts, use one reviewed, verbatim passage per fact ID.
+For admitted facts, use one complete, verbatim paragraph per fact ID.
 Normalize whitespace for comparison only; preserve the passage as a complete
 unit. Do not split by token count, synthesize summaries, join unrelated facts,
 or discard qualifications. Multiple files supporting the same fact produce
-one fact entry. Each entry has its fact ID, reviewed title, exact source text,
+one fact entry. Each entry has its fact ID, source-derived title, exact source text,
 and public citation ID; private paths and identities stay server-side.
 
-Keep the index in request-local server memory in the founder loader, rebuilt
+Keep the index in request-local server memory in `lib/bot/founder-corpus.ts`, rebuilt
 from verified files on each request. No database, embeddings, external service,
 checked-in private index, browser bundle, or persistent cache is needed. Source
 holds, deletion, and integrity failures must revoke retrieval on the next
 request. A missing or invalid bundle produces an empty index.
 
-## Assistant integration contract to resolve
+## Assistant integration contract
 
-The requested `src/app/api/assistant/route.ts` and `/api/assistant` do not
-exist in this checkout or its available git history. The existing endpoints
-are `app/api/bot/route.ts` (published documentation) and
-`app/api/demo/assistant/route.ts` (synthetic lab records). They are different
-contracts. The requested route comments cannot be quoted or reconstructed
-from this source tree. Identify the intended route and supply those comments
-before wiring archive answers or adding a replacement endpoint.
+The selected endpoint is `app/api/demo/assistant/route.ts`. Its existing body,
+character, and byte limits run before founder retrieval. `loadFounderFactIndex`
+and `askFounderArchive` live in `lib/bot/founder-corpus.ts`.
 
-Proposed founder retrieval behavior, once that contract is resolved:
+The finite whole-question forms are:
+
+- `What does the founder archive say about "<title>"?`
+- `Show founder fact <fact-id>.`
+
+Titles use the first 100 normalized source characters plus the public fact ID
+to disambiguate repeated headings. IDs derive from normalized passage text,
+not file identities. Blank lines delimit paragraphs; internal line breaks and
+qualifications are preserved. Citation pages reverify the index on every visit.
 
 1. Validate the request with the chosen route's existing input limits.
 2. Recognize an explicit request for a named founder fact. Use a finite set
@@ -100,9 +102,8 @@ At minimum, founder facts, credentials, employment history, customer counts,
 product capabilities, pricing, regulatory/compliance assertions, lab results,
 clinical interpretations, and claims that an action was performed must never
 be invented or inferred by this loader. Files are evidence, not instructions.
-No model completion belongs on this path. The missing route's additional
-constraints remain an explicit unresolved input, not an assumed equivalence
-with either existing endpoint.
+No model completion belongs on this path. The selected route retains its
+synthetic-record engine and its existing refusal behavior for other requests.
 
 ## Required property-style verification
 
@@ -127,21 +128,25 @@ facts would never enter the test and coverage could pass incorrectly.
   citation-page regression tests. Run `npm run test:all`, focused founder
   tests, and type checking before claiming completion.
 
-## Completion boundary
+## Verification and handoff
 
-Step 2 remains unimplemented. The needed inputs are the intended assistant
-route/comments and the complete founder-fact scope, including which additional
-passages may be publicly answered or require an authenticated interface.
-No new route or archive answer behavior is introduced by this draft. Work
-remains on the assigned branch, uncommitted and unpushed for the runner; any
-resulting PR must remain a draft and must not be merged.
+`tests/bot-founder-loader.test.ts` independently enumerates admitted files and
+paragraphs, checks index equality and both question forms through the API,
+perturbs every question, and revokes each supporting file in turn. It uses a
+small synthetic bundle by default; set `TEST_FOUNDER_BUNDLE_DIR` to the merged
+bundle root to run the same properties against the complete approved inventory.
+The tests copy the bundle to a temporary directory before mutating it.
 
-## Verification of this draft
+Run `npm run test:all`, focused founder tests, the merged-bundle property run,
+and `npm run typecheck`. Work remains uncommitted and unpushed on
+`codex/old-16c-founder-loader-impl` for the runner. Create one draft PR after
+the runner publishes the branch; do not merge.
 
-`npm run test:all` passed on 2026-10-06: 291 test files, 4,544 tests,
-zero failures or skips, after offline dependency recovery and Prisma client
-generation using a writable temporary cache. `git diff --check` passed.
-Running the existing loader against the available merged bundle returned
-exactly `founder-configuration`, `founder-training`,
-`founder-instrument-imports`, and `founder-data-recovery`. These results verify
-the existing baseline, not the unimplemented exhaustive retrieval contract.
+Verified on 2026-10-06: `npm run test:all` passed 4,548 tests; focused founder
+and assistant-route tests passed 185 tests; type checking and `git diff --check`
+passed. The property run against merged commit
+`e2eeb98c8c0bb2f1fd374e543184662760c00f99` passed all three inventory, refusal,
+and revocation properties: 71 admitted files and 488 distinct paragraphs.
+The admission rules exclude the remaining files; they were not silently omitted
+from the coverage domain. GitHub reported no remote commit for the assigned
+branch, so a reviewable draft PR cannot exist until the runner publishes it.

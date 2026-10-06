@@ -1,6 +1,6 @@
 import React from 'react';
 import { notFound } from 'next/navigation';
-import { FOUNDER_CITATION_PREFIX, loadFounderCorpus } from '../../../../lib/bot/founder-corpus';
+import { FOUNDER_CITATION_PREFIX, loadFounderCorpus, loadFounderFactIndex } from '../../../../lib/bot/founder-corpus';
 
 export const dynamic = 'force-dynamic';
 export const metadata = {
@@ -12,8 +12,11 @@ export default async function FounderSourcePage({ params }: {
   params: Promise<{ path: string[] }>;
 }) {
   const sourcePath = (await params).path.join('/');
-  if (!/^founder-[a-z-]+$/.test(sourcePath)) notFound();
-  const entries = loadFounderCorpus().filter((entry) =>
+  if (!/^founder-(?:[a-z-]+|fact-[a-f0-9]{32})$/.test(sourcePath)) notFound();
+  const corpus = sourcePath.startsWith('founder-fact-')
+    ? loadFounderFactIndex().map((fact) => ({ ...fact, text: `Founder archive (historical experience): ${fact.text}` }))
+    : loadFounderCorpus();
+  const entries = corpus.filter((entry) =>
     entry.source.split('#')[0] === `${FOUNDER_CITATION_PREFIX}${sourcePath}`);
   if (!entries.length) notFound();
 
