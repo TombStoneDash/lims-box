@@ -55,7 +55,7 @@ test('buttons have explicit types, starter focus rings, and an initially disable
 
 test('the published disclaimer remains verbatim', () => {
   const markup = renderToStaticMarkup(React.createElement(BotChat));
-  assert.ok(markup.includes('LIMS BOT is a prototype. It only answers from published LIMS BOX documentation and never stores your questions.'));
+  assert.ok(markup.includes('LIMS BOT is an initial beta release. It only answers from published LIMS BOX documentation and never stores your questions.'));
 });
 
 test('dynamic accessibility semantics preserve the single bot request', () => {
