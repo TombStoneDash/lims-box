@@ -1,0 +1,40 @@
+task_id: r3-519-lims-sender
+run_id: r3-519-lims-sender-20261006
+host_id: DESKTOP-1TV907A
+host_role: lenovo
+repo: lims-box
+branch_or_worktree: codex-lenovo/r3-519-lims-sender
+requested_model: not-exposed
+requested_reasoning_effort: not-exposed
+client_effective_model: not-exposed
+provider_returned_model_id: not-exposed
+model_evidence_source: not-exposed
+route_id: not-exposed
+started_at: 2026-10-06T18:31:02.7014289Z
+ended_at: 2026-10-06T18:37:53.2227149Z
+terminal_state: BLOCKED
+objective: Fix all supplied round-2 findings for PR 519 without commit or push
+owner: user-assigned repository worktree
+inputs: d23b981b and round-2 P2 source-resolution starvation finding
+constraints: local repository only; draft PR; no email, commit, push, merge, or deployment
+budget: not-exposed
+timeout: bounded interactive run
+retry_cap: one isolated rerun of failing full-suite test
+definition_of_done: starvation fix, generated property coverage, focused and full suites green
+verification:
+  - "node --import tsx --test tests/first-contact*.test.ts tests/contact-submission-validation.test.ts tests/waitlist-repeat-dedup.test.ts tests/api/newsletter-unconfigured.test.ts tests/content/newsletter*.test.ts tests/content/newsletter*.test.tsx tests/unsubscribe/contract.test.ts tests/security/route-exposure-inventory.test.ts: exit 0, 77 passed"
+  - "npm run test:all: exit 1, 4562 passed, 1 failed, 0 skipped, 295 files"
+  - "isolated founder-corpus symlink test: exit 1, EPERM at tests/bot-founder-corpus.test.ts:459"
+  - "npm run typecheck: exit 0"
+  - "git diff --check: exit 0"
+artifacts:
+  - lib/first-contact-maintenance.ts
+  - scripts/first-contact-maintenance.ts
+  - tests/first-contact-maintenance.test.ts
+  - tests/first-contact-maintenance-run.test.ts
+  - PR_BODY.md
+usage_delta: not-exposed
+blocker: Windows denies symlink creation needed by the unrelated founder-corpus test; full-suite green cannot be certified here
+rollback: discard the task-owned uncommitted patch; source-unavailable contacts require explicit operator review before re-eligibility
+next_safe_action: runner reruns full suite with symlink support, applies PR_BODY.md while keeping PR draft, and handles commit
+receipt_location_note: repository-local receipt because the user restricts all writes to this repository; canonical worker-results path not supplied

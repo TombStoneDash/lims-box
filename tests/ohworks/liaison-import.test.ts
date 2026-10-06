@@ -22,7 +22,7 @@ test('fabricated fixture: quoted delimiters/escaped quotes, numeric values and U
       flag: 'SYNTHETIC-FLAG "RECHECK", HIGH', capturedAtIso: '2026-09-20T10:15:30.123Z', instrument: base[6] },
   ], rejected: [] };
   assert.deepEqual(parseLiaisonExport(fixture, options), expected);
-  assert.deepEqual(parseLiaisonExport('\uFEFF' + fixture.replace(/\n/g, '\r\n') + '\r\n', options), expected);
+  assert.deepEqual(parseLiaisonExport('\uFEFF' + fixture.replace(/\r?\n/g, '\r\n') + '\r\n', options), expected);
 });
 
 test('unknown code does not prevent a separate valid row from importing', () => {

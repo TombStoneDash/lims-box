@@ -187,3 +187,16 @@ test('failed signups never reach the dry run', async () => {
   assert.equal((await handler(post('https://lims.bot/api/early-access', application))).status, 500);
   assert.equal(called, false);
 });
+
+test('waitlist coverage receipt requires explicit accepted provider status and never duplicates sender',async()=>{
+  for (const state of ['accepted','void','rejected','fallback']) {
+    let sends=0, receipts=0;
+    const handler=createWaitlistPostHandler({
+      hasExistingSignup:async()=>false,createProspect:async()=>({id:'mock-id'}),sendSubmissionNotice:async()=>{},
+      sendApplicantConfirmation:async()=>{sends++; if(state==='rejected')throw Error('mock provider failure'); return state==='accepted'?{status:'sent'}:state==='fallback'?{status:'sent_via_fallback'}:undefined;},
+      recordAcceptedTransactional:async()=>{receipts++;},
+    });
+    const response=await handler(post('https://lims.bot/api/waitlist',{email:'test@example.test'}));
+    assert.equal(response.status,200);assert.equal(sends,1);assert.equal(receipts,state==='accepted'?1:0);
+  }
+});
