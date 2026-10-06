@@ -1,6 +1,8 @@
 # LIMS BOT founder question routing
 
-This is the contract for questions that mention the founder. The executable eval set is
+This is the `/api/bot` contract for questions that mention the founder.
+The separate `/api/demo/assistant` named-fact contract is documented in
+[`FOUNDER_KNOWLEDGE_LOADER_SPEC.md`](../FOUNDER_KNOWLEDGE_LOADER_SPEC.md). The executable eval set is
 `tests/bot-founder-corpus.test.ts`: the `intentCases` table (every phrasing a review has used), the
 fail-closed, compliance and product-path tests, and a property test that wraps every published
 product FAQ question in founder context and requires that none of them cites the founder archive.

@@ -1,3 +1,4 @@
+import { askFounderArchive } from '@/lib/bot/founder-corpus';
 import { NextRequest, NextResponse } from 'next/server';
 import {
   askDemoAssistant,
@@ -97,7 +98,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  return NextResponse.json(askDemoAssistant(normalizedQuestion), {
+  return NextResponse.json(askFounderArchive(normalizedQuestion) ?? askDemoAssistant(normalizedQuestion), {
     headers: { 'Cache-Control': 'no-store' },
   });
 }
