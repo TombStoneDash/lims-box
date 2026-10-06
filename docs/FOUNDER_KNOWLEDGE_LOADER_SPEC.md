@@ -10,7 +10,10 @@ Sep 25 merge, subject to the admission and integrity rules below.
 The Sep 25 founder merge is in the separate `TombStoneDash/lims-knowledge`
 repository at `e2eeb98c8c0bb2f1fd374e543184662760c00f99`. A locally available
 partial checkout contains its manifest, source map, and redacted files.
-The runtime bundle root is `LIMS_FOUNDER_KNOWLEDGE_DIR`.
+The runtime bundle root is `LIMS_FOUNDER_KNOWLEDGE_DIR`, defaulting to
+`path.join(process.cwd(), 'knowledge/founder')` when unset. Explicit invalid
+overrides still produce an empty index. See `scripts/founder-bundle/README.md`
+for the deterministic ingest builder and its separate employment acceptance gate.
 
 Read only these paths relative to that root:
 

@@ -1,0 +1,74 @@
+Don't forget to figure in the cost of at least 1-2 test batches on your system.  They don't need to be full batches, but you need to make sure you're familiar wiht the actual system that is in the brewery, even if it's the same exact euipqment that you've used elsewhere, it's always different.  Allow for the time and money to do the test batches.  The first beers you are serving should be great from the start.  The beer consumer community is very fickle, so it's better to get your system dialed in and have great beer from the beginning, rather than waiting for people to come back and give your beer a second chance. 
+
+Question:
+We are teaming up again for the final project and we are currently working on the recipes, assumptions, and exec summary.
+ 
+Just a few questions before we move along:
+We assume that it is okay to use different batch sizes in the recipe cost sheet since the price per bbl is whatís been carried over into the other sheets. Can you please confirm? Also, we are reusing some of the recipes from the prior homework and like to make sure that that is okay.
+ 
+As we are creating the exec summary, we were discussing initial start-up costs and timing needed to set up the brewery, such as renovating the rental place, updating plumbing, setting up refrigeration and cold storage etc., as well as buying a start-up supply of ingredients for the first month of production. We assume a starting capital of $250K and are wondering where to enter these positions in the assumption tab. Does your model assume that we produce beer on Jan 1 of Year 1 or should we reserve the first few months of Year 1 to set up the brewery?
+ 
+Answer:
+Yes, okay to use different batch sizes, yes, okay to use recipes from class. 
+ 
+Starting capital on assumptions page, owner investment, Equip
+Equipment purchases and the costs involved in getting them in place and running go in equipment/capital assets. 
+ 
+Assume the model begins when you get cash, so if you recd cash in March, you'd start seeing costs right away, but typically brewery ops won't start for another 6-9 mos minimum. More often than not, it's 12-24 mos from when you start planning until you open. Everything takes longer and costs more.  
+With regard to starting time, assuming that you feel you can get the equipment in, permits, licenses, inspections, etc done in 8 mos, you will still need at least 2-3 weeks to brew your beer and have it ready to be sold. 
+ 
+If you decide to bottle condition rather than force carb, youíll need to allow more time.  I had a client that keg conditioned, not a good idea, caused all sorts of quality/consistency issues, lots of returned goods and lots of wasted time with the kegs sitting around waiting for carbonation to be happening instead of being out the door. 
+
+Question:
+ So, I was originally thinking of doing a small 3 bbl brewhouse that sells predominantly through their tasting room, but maybe with some self-distributing of 1/6 bbl kegs to a few local bars/restaurants (assuming the capacity is there).  As I dig into it on the internet, I ran across an article about how BAD an idea that is, to start anything less than a 7 bbl brewhouse unless youíre 1) a satelite of a larger brewery or 2) setting up a pilot plant in an established brewery.  Sounds like the amount of work per bbl is huge, thereís a lack of significant capital equipment cost savings compared to 7 or 10 bbl brewhouse equipment, the in-house cost/bbl is nearly equal to distributor pricing on other bigger breweryís beers, and the real worry of consistently running out of beer (assuming people like your stuff).
+ 
+Iím now thinking I should start a 7 or 10 bbl brewhouse, even though thatís a bit bigger than I was originally planning (was kind of basing it arounda brewery in my vicinity with a 3 bbl / 100 gal system, that sells only in their tasting room, but theyíve only been around a couple of months, and yes, they do run out of beer!).
+ 
+I really donít want to go through the whole project and find that at 3 bbls itís doomed for failure (breakeven or lose money, and/or way too much labor/work to keep the taps pouring).
+ 
+Any thoughts or comments or direction on this?
+ 
+Answer:
+There are a couple of companies in SD that are doing mobile canning, so thatís something to look at.  Also, thereís always a crowler, I believe theyíre in the neighborhood of about $5k plus pkg materials.  [URL REDACTED] You might even be able to find a used one.  The crowler is also one of those novelty item that can drive sales with a high margin. 
+Keep in mind that for larger capital purchases, you can oftentimes get the equipment company to finance the equipment.  If you default, then they have title on the equipment, and have the skill, staffing, and tools to take it apart and get it out.  As well as knowing where to resell it.
+ Also think about using combo tanks fermentor/brights initially as the cost is lower than individual tanks.  Not sure how or if it affects quality as Iím not a brewer. 
+ Some breweries also start out where the owner still works a regular job and the brewery is only open Fri-Sun.  Or there are partners and they both keep their regular jobs and split the coverage of the brewery.  
+Iíd definitely recommend going with at least a 7bbl system, because if you go smaller, you will be spending so much of your time brewing that you wonít be able to work on marketing, managing, accounting, and growing your business, let alone time for yourself.  But you may want to consider going with larger fermentors and bright tanks, or even combo tanks so you can double batch more popular beers. Having space in fermentors and/or bright tanks is the key. If necessary, you can always brew around the clock, but thereís got to be a place for it to go.
+ 
+Regarding work, remember it takes about the same amount of time to brew a 15 gal batch of beer on homebrew equipment as it does to brew a 15bbl batch on  a professional system.  Thatís part of the logic of a bigger system.
+ 
+Something else to consider with regard to going through with a 3bbl on your project vs 7bbl.  You could do the model with a 3bbl, see what it looks like, save a copy and on the copy change it to 7bbl.  Add some addíl labor, increase your recipes by  2.3 times, change your equipment (Iíd recommend pulling costs for both a 3 & a 7 bbl system at the same time to keep your research time down. Increase related monthly costs: insurance, utilities, related. Now you can compare the two easily.  It would also give you back up as to why you chose a particular size system.
+ 
+Also keep in mind that tasting rooms are great for covering your monthly nut (payroll, rent, utilities, insurance), but distribution (self or otherwise) is where youíll make your money in a production brewery.  Brew pub is the opposite.
+-------------------
+I believe the formulas on line 72 have an error in them, since they're using lines 45 and 52 in the calculations, which refer to "Sold-Wholesale".  I believe they should use lines 46 and 53 instead, which refer to "Ending" (inventory).  Anyone else find this issue?
+aaaaaaaaaaaa
+RE: Total Ending Inventory on Production Tab
+COLLAPSE
+View Original Post Parent Post
+Good catch.  Just enter this formula into cell G72: =(G26+(G39/(Lists!$D$7/12))+(G$46/6)+(G$53/2)) 
+Next, drag it from G72 to R72 to copy the cells, then copy that whole selection, then paste at cell T72, AG72, AU72, and BG72. That should take care of it.  Thanks.
+--------
+Growler calculation in Sales tab
+Matt,
+
+The calculation in the Sales tab for the growler sales under merchandise seems wrong to me. I've listened to the explanation on the sunday recording again and I'm still puzzled.
+
+It seems to me that if you sell 100 growler fills in the tasting room (G15) and that you assume 5% of people who bought a growler fill also purchase the glass (C48) you should get .05*100*8$ in G48 so 40$ in glass growlers. Right now the spreadsheet spits out 600$ which seems wrong. Somehow, the formulae seems to take 5% of the beer filled growler  $ amount into account and I don't know why. Can you clarify if this is the intent of the spreadsheet?
+
+Thanks
+cccDavid Claas 
+RE: Growler calculation in Sales tabRE: Growler calculation in Sales tab
+I agree Eric, just ran across that now.  I think it's calculating the growler sales as a percentage of growler refill revenue, not the actual number number of growler refills, hence the $40 number is getting multiplied by the $15 growler refill price to $600.  I'll be changing that formula and removing the B15 and B25 cell multipliers.
+AAAAA Matthew Dolman  
+COLLAPSE
+View Original Post Parent Post
+Eric, you're right and David's solution is correct.
+Just enter this formula into cell G48: =$B48*($C48*(G$15+G$25)) 
+Next, drag it from G48 to R48 to copy the cells, then copy that whole selection, then paste at cell T48, AG48, AU48, and BG48. That should take care of it.  Thanks.
+-----------
+
+
+ 
+
+
