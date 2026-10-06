@@ -1,0 +1,37 @@
+task_id: r3-519-lims-sender
+run_id: r3-519-lims-sender-20261006-local
+host_id: DESKTOP-1TV907A
+host_role: lenovo
+repo: lims-box
+branch_or_worktree: codex-lenovo/r3-519-lims-sender
+owner: user-assigned isolated worktree
+objective: Fix per-contact source failure starvation and verify the retry class invariant
+constraints: No commit, push, merge, deployment, or external email; repository-local changes only
+inputs: Review P2 and locally available d23b981bbcf3d8be68233fb7a587f6511556db0e
+base_revision: 80783a7f71d963d86bb6f501c5ceb82be18344d8
+requested_model: not-exposed
+requested_reasoning_effort: not-exposed
+client_effective_model: not-exposed
+provider_returned_model_id: not-exposed
+model_evidence_source: not-exposed
+route_id: not-exposed
+started_at: 2026-10-06T18:40:57.9840108Z
+ended_at: 2026-10-06T18:47:49.5428999Z
+terminal_state: BLOCKED
+verification:
+  - 'First-contact test files: exit 0; 41 passed, including 364 exhaustive ordered mixtures.'
+  - 'Expanded focused run: exit 0; 79 passed.'
+  - 'npm run typecheck: exit 0.'
+  - 'npm run test:all: exit 1; 4562 passed, 1 failed, 0 skipped, 4563 total.'
+  - 'Independent founder-corpus rerun: exit 1; 169 passed, same symlink EPERM failure.'
+  - 'git diff --check: exit 0.'
+artifacts:
+  - lib/first-contact-maintenance.ts
+  - scripts/first-contact-maintenance.ts
+  - tests/first-contact-maintenance.test.ts
+  - tests/first-contact-maintenance-run.test.ts
+  - PR_BODY.md
+usage_delta: not-exposed
+blocker: 'Full green suite requires symlink creation permission; existing tests/bot-founder-corpus.test.ts:459 fails with Windows EPERM. No test was skipped or weakened. Canonical outside-repository receipt and live PR update are outside this task boundary; PR body staged locally for runner.'
+rollback: 'Runner may discard this uncommitted task patch; HEAD is unchanged. No production state changed.'
+next_safe_action: 'Runner reruns full suite on a symlink-capable host, commits the patch, and uses PR_BODY.md while keeping the PR draft.'

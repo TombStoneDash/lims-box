@@ -19,6 +19,7 @@ export interface EarlyAccessDependencies {
   /** First-contact dry run (read-only, logs a hashed decision); optional. */
   firstContactDryRun?: (input: { email: string; requestStartedAt: Date; coveredByTransactional: boolean }) => Promise<void>;
   now?: () => string;
+  recordAcceptedTransactional?: (email: string) => Promise<void>;
 }
 
 export function createEarlyAccessPostHandler(dependencies: EarlyAccessDependencies) {
@@ -78,7 +79,11 @@ export function createEarlyAccessPostHandler(dependencies: EarlyAccessDependenci
       }
 
       try {
-        await dependencies.sendApplicantConfirmation(submission.email, submission.name);
+        const delivery = await dependencies.sendApplicantConfirmation(submission.email, submission.name);
+        if (delivery && delivery.status === 'sent') {
+          try { await dependencies.recordAcceptedTransactional?.(submission.email); }
+          catch { console.warn('[first-contact] transactional_receipt_unavailable'); }
+        }
       } catch (err) {
         console.error('[early-access] Applicant confirmation failed (non-fatal)', safeErrorMeta(err));
       }
