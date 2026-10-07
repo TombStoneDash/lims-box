@@ -39,7 +39,8 @@ client generation; no install, network access, or lockfile changes were made.
 The three initial Prisma import failures were local setup failures and are not
 exclusions. Hosted `npm ci` verification remains for the runner/PR workflow.
 
-All `.test.mjs` files are intentionally outside this runner's selection.
-In particular, `tests/ohworks/senaite-synthetic-workflow.test.mjs` imports
-`lib/ohworks-senaite.ts`, which awaits still-open, owner-gated PR #103. That
-harness remains unchanged and is not an `EXCLUDED` entry.
+The runner still excludes `.test.mjs` by extension. The SENAITE workflow harness
+has been migrated to `tests/ohworks/senaite-synthetic-workflow.test.ts`, so all
+12 checks now run in CI and import the generic `lib/senaite-read` adapter.
+Closed, unmerged PR #103 and its missing `lib/ohworks-senaite.ts` are no longer
+prerequisites. See `docs/senaite-read.md` for configuration and fixture scope.

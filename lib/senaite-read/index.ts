@@ -1,9 +1,6 @@
-import { Buffer } from 'node:buffer';
-
 export type SenaiteReadEnvironment = {
-  SENAITE_READ_URL?: string;
-  SENAITE_READ_USER?: string;
-  SENAITE_READ_PASSWORD?: string;
+  SENAITE_BASE_URL?: string;
+  SENAITE_API_TOKEN?: string;
 };
 
 export type SenaiteSample = {
@@ -15,7 +12,7 @@ export type SenaiteSample = {
 
 export type SenaiteReadResult =
   | { status: 'ok'; samples: SenaiteSample[] }
-  | { status: 'disabled' }
+  | { status: 'not_configured' }
   | { status: 'error'; code: 'invalid-query' | 'request-failed' | 'invalid-response' };
 
 export type SenaiteSampleQuery = {
@@ -25,14 +22,14 @@ export type SenaiteSampleQuery = {
 };
 
 function configuration(env: SenaiteReadEnvironment) {
-  const { SENAITE_READ_URL: rawUrl, SENAITE_READ_USER: user, SENAITE_READ_PASSWORD: password } = env;
-  if (!rawUrl?.trim() || !user?.trim() || !password?.trim() || user.includes(':')) return null;
+  const { SENAITE_BASE_URL: rawUrl, SENAITE_API_TOKEN: token } = env;
+  if (!rawUrl?.trim() || !token?.trim() || /[\s\x00-\x1f\x7f]/.test(token)) return null;
   try {
     const url = new URL(rawUrl);
     // Credentials travel only over TLS, to this configured origin, without redirects.
     if (url.protocol !== 'https:' || url.username || url.password || url.search || url.hash) return null;
     url.pathname = `${url.pathname.replace(/\/+$/, '')}/@@API/senaite/v1/AnalysisRequest`;
-    return { url, authorization: `Basic ${Buffer.from(`${user}:${password}`).toString('base64')}` };
+    return { url, authorization: `Bearer ${token}` };
   } catch {
     return null;
   }
@@ -63,9 +60,8 @@ function samplesFromPayload(payload: unknown, limit: number): SenaiteSample[] | 
 /** Server-side only. Construction is inert; the sole operation is a bounded GET. */
 export function createSenaiteReadAdapter(
   env: SenaiteReadEnvironment = {
-    SENAITE_READ_URL: process.env.SENAITE_READ_URL,
-    SENAITE_READ_USER: process.env.SENAITE_READ_USER,
-    SENAITE_READ_PASSWORD: process.env.SENAITE_READ_PASSWORD,
+    SENAITE_BASE_URL: process.env.SENAITE_BASE_URL,
+    SENAITE_API_TOKEN: process.env.SENAITE_API_TOKEN,
   },
   transport: typeof fetch = globalThis.fetch,
 ) {
@@ -73,7 +69,7 @@ export function createSenaiteReadAdapter(
   return {
     enabled: config !== null,
     async listSamples(query: SenaiteSampleQuery = {}): Promise<SenaiteReadResult> {
-      if (!config) return { status: 'disabled' };
+      if (!config) return { status: 'not_configured' };
       if (!record(query)) return { status: 'error', code: 'invalid-query' };
       const limit = query.limit ?? 25;
       if (!Number.isInteger(limit) || limit < 1 || limit > 100 ||

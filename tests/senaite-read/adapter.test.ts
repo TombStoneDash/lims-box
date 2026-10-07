@@ -4,9 +4,8 @@ import fixture from './fixtures/samples.json';
 import { createSenaiteReadAdapter, type SenaiteReadEnvironment } from '../../lib/senaite-read';
 
 const env = {
-  SENAITE_READ_URL: 'https://lab.example.invalid/site/',
-  SENAITE_READ_USER: 'fixture-reader',
-  SENAITE_READ_PASSWORD: 'synthetic-password',
+  SENAITE_BASE_URL: 'https://lab.example.invalid/site/',
+  SENAITE_API_TOKEN: 'synthetic-token',
 };
 
 // Every adapter gets an in-memory transport; no test can contact a SENAITE server.
@@ -15,27 +14,47 @@ const jsonFetch = (payload: unknown): typeof fetch => async () => Response.json(
 
 test('all partial configurations fail closed without a request', async () => {
   const keys = Object.keys(env) as (keyof SenaiteReadEnvironment)[];
-  for (let mask = 0; mask < 7; mask++) {
+  for (let mask = 0; mask < 3; mask++) {
     const partial: SenaiteReadEnvironment = {};
     keys.forEach((key, index) => { if (mask & (1 << index)) partial[key] = env[key]; });
     const adapter = createSenaiteReadAdapter(partial, forbiddenFetch);
     assert.equal(adapter.enabled, false);
-    assert.deepEqual(await adapter.listSamples(), { status: 'disabled' });
+    assert.deepEqual(await adapter.listSamples(), { status: 'not_configured' });
   }
   for (const key of keys) {
     const adapter = createSenaiteReadAdapter({ ...env, [key]: '  ' }, forbiddenFetch);
     assert.equal(adapter.enabled, false);
-    assert.deepEqual(await adapter.listSamples(), { status: 'disabled' });
+    assert.deepEqual(await adapter.listSamples(), { status: 'not_configured' });
   }
 });
 
-test('invalid or unsafe configuration is disabled', async () => {
+test('invalid or unsafe configuration is explicitly not configured', async () => {
   for (const url of ['not a url', 'http://lab.example.invalid', 'file:///lab',
     'https://user:password@lab.example.invalid', 'https://lab.example.invalid/?x=1', 'https://lab.example.invalid/#fragment']) {
-    const adapter = createSenaiteReadAdapter({ ...env, SENAITE_READ_URL: url }, forbiddenFetch);
-    assert.deepEqual(await adapter.listSamples(), { status: 'disabled' });
+    const adapter = createSenaiteReadAdapter({ ...env, SENAITE_BASE_URL: url }, forbiddenFetch);
+    assert.deepEqual(await adapter.listSamples(), { status: 'not_configured' });
   }
-  assert.equal(createSenaiteReadAdapter({ ...env, SENAITE_READ_USER: 'user:other' }, forbiddenFetch).enabled, false);
+  for (const token of ['token\nheader', 'token\rheader', 'token with spaces', 'token\x00']) {
+    assert.equal(createSenaiteReadAdapter({ ...env, SENAITE_API_TOKEN: token }, forbiddenFetch).enabled, false);
+  }
+});
+
+test('default environment is inert when unset and uses the generic token settings', async () => {
+  const keys = ['SENAITE_BASE_URL', 'SENAITE_API_TOKEN'] as const;
+  const previous = keys.map(key => process.env[key]);
+  try {
+    keys.forEach(key => { delete process.env[key]; });
+    assert.deepEqual(await createSenaiteReadAdapter(undefined, forbiddenFetch).listSamples(), { status: 'not_configured' });
+    process.env.SENAITE_BASE_URL = env.SENAITE_BASE_URL;
+    assert.deepEqual(await createSenaiteReadAdapter(undefined, forbiddenFetch).listSamples(), { status: 'not_configured' });
+    process.env.SENAITE_API_TOKEN = env.SENAITE_API_TOKEN;
+    assert.deepEqual(await createSenaiteReadAdapter(undefined, jsonFetch({ items: [] })).listSamples(), { status: 'ok', samples: [] });
+  } finally {
+    keys.forEach((key, i) => {
+      if (previous[i] === undefined) delete process.env[key];
+      else process.env[key] = previous[i];
+    });
+  }
 });
 
 test('construction is inert and GET maps only supported fields', async () => {
@@ -57,7 +76,7 @@ test('construction is inert and GET maps only supported fields', async () => {
     assert.ok(init?.signal instanceof AbortSignal);
     const headers = new Headers(init?.headers);
     assert.equal(headers.get('accept'), 'application/json');
-    assert.equal(headers.get('authorization'), `Basic ${Buffer.from('fixture-reader:synthetic-password').toString('base64')}`);
+    assert.equal(headers.get('authorization'), 'Bearer synthetic-token');
     return Response.json(fixture);
   };
   const adapter = createSenaiteReadAdapter(env, transport);

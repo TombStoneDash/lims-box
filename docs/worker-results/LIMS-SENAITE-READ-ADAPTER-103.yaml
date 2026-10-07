@@ -1,0 +1,50 @@
+task_id: LIMS-SENAITE-READ-ADAPTER-103
+run_id: LIMS-SENAITE-READ-ADAPTER-103-20261007T043116Z
+host_id: DESKTOP-1TV907A
+host_role: lenovo
+repo: lims-box
+branch_or_worktree: codex-lenovo/bo-lims-senaite-read-adapter
+base_revision: 7cd31aac738cd7a2d3333e1ded17bc666e40159b
+owner: assigned Codex worker under direct user authorization
+objective: Re-land the generic read-only token adapter and restore all 12 missing-module workflow checks.
+constraints: Repository-only work; no commit, push, merge, deployment, or external sends.
+inputs: Existing generic adapter, synthetic fixtures, and the OHWorks workflow harness.
+definition_of_done: Local adapter and tests ready for one runner-created draft PR; repository test command executed and results disclosed.
+requested_model: not-exposed
+requested_reasoning_effort: not-exposed
+client_effective_model: not-exposed
+provider_returned_model_id: not-exposed
+model_evidence_source: not-exposed
+route_id: not-exposed
+started_at: 2026-10-07T04:31:16Z
+timing_note: Start records the observed dependency-setup timestamp; initial inspection timing is not-exposed.
+ended_at: 2026-10-07T04:40:02Z
+budget: not-exposed
+timeout: not-exposed
+retry_cap: One full-suite retry after restoring Git-exact fixture bytes.
+terminal_state: BLOCKED
+result: Implementation complete; all 19 SENAITE checks pass. Green full-suite verification is blocked by host symlink permissions.
+verification:
+  - Assigned branch and base verified; initial working tree clean.
+  - npm ci --cache .npm-cache --no-audit --no-fund; exit 0; Prisma client generated, cache removed, lockfile unchanged.
+  - npm run test:senaite-read; exit 0; 7 passed.
+  - node --import tsx --test tests/ohworks/senaite-synthetic-workflow.test.ts; exit 0; 12 passed.
+  - npm run typecheck; exit 0.
+  - Targeted ESLint on adapter and both test files; exit 0.
+  - npm run test:all; exit 1; 299 files, 4586 tests, 4583 passed, 3 failed, 0 skipped.
+  - First full run had 40 founder fixture failures; Git-exact bytes reduced this to 3 EPERM symlink failures. Original checkout bytes restored afterward; no founder changes remain.
+  - git diff --check; exit 0.
+artifacts:
+  - lib/senaite-read/index.ts
+  - tests/senaite-read/adapter.test.ts
+  - tests/senaite-read/fixtures/samples.json
+  - tests/senaite-read/fixtures/README.md
+  - tests/ohworks/senaite-synthetic-workflow.test.ts
+  - docs/senaite-read.md
+  - PR_BODY.md
+  - node_modules/senaite-test-all.log (ignored local full output)
+usage_delta: not-exposed
+blocker: Three existing founder tests cannot create symlinks on this Windows host (EPERM). No green full-suite claim or GitHub draft PR exists yet.
+rollback: Revert this task's adapter, tests, documentation and environment example changes; no runtime activation or data writes occurred.
+next_safe_action: Runner commits and pushes the assigned branch, reruns full tests on a symlink-capable host, and opens exactly one draft PR against main without merging.
+receipt_location_note: Repository-local handoff only; no host-configured canonical results directory was available within the user-authorized repository scope.
