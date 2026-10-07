@@ -66,26 +66,65 @@ function parseTsv<T>(text: string, required: string[], uniqueKey: string): T[] {
 // eligible; the legacy public corpus additionally admits only FOUNDER_EXCERPTS.
 const SENSITIVE_DOCUMENT = /\b(?:ssn|social\s+security|genetic|genomic|ancestry|23andme|aamc|amcas|date\s+of\s+birth|dob|references)\b|\b\d{3}[-\s]\d{2}[-\s]\d{4}\b|\d{6,}|[\w.+-]+@[\w.-]+\.[a-z]{2,}|https?:\/\/|www\.|(?:\+?1[-.\s]?)?\(?\d{3}\)?[-.\s]\d{3}[-.\s]\d{4}\b/i;
 
+export interface FounderBundleDiagnostics {
+  root: string;
+  exists: boolean;
+  manifestRows: number;
+  sourcesRows: number;
+  documents: number;
+  error: string | null;
+}
+
+// Shared across route bundles in the same Node process. Never log parser input,
+// document content, or arbitrary exception messages.
+const failureLogged = Symbol.for('lims.founderBundle.failureLogged');
+const bundleReasons = new Set([
+  'invalid_path', 'symlink', 'outside_bundle', 'invalid_file', 'oversize',
+  'invalid_headers', 'invalid_row', 'ambiguous_row', 'sources_integrity',
+  'document_integrity', 'document_rejected',
+]);
+
 /** Shared admission gate; never read originals or unlisted files. */
-function verifiedFounderDocuments(root: string | undefined): string[] {
-  if (!root) return [];
+function readFounderBundle(root: string) {
+  const diagnostics: FounderBundleDiagnostics = {
+    root: path.resolve(root), exists: false, manifestRows: 0, sourcesRows: 0, documents: 0, error: null,
+  };
+  let file = '.';
+  const fail = (error: unknown) => {
+    const name = error instanceof Error ? error.name : 'UnknownError';
+    const reason = error instanceof Error && bundleReasons.has(error.message) ? error.message
+      : error && typeof error === 'object' && 'code' in error && typeof error.code === 'string'
+        && /^E[A-Z]+$/.test(error.code) ? error.code : 'load_failed';
+    diagnostics.error ??= `${file}: ${name} (${reason})`;
+    const state = globalThis as typeof globalThis & { [failureLogged]?: boolean };
+    if (!state[failureLogged]) {
+      state[failureLogged] = true;
+      console.error(`[founder-bundle] ${JSON.stringify({ root: diagnostics.root, file, name, reason })}`);
+    }
+  };
   try {
-    if (lstatSync(root).isSymbolicLink()) return [];
-    const bundleRoot = realpathSync(root);
+    // The deployment root may itself be a symlink (or have symlinked parents).
+    // Canonicalize once; readBundleFile still rejects every link below this root.
+    const bundleRoot = realpathSync(diagnostics.root);
+    diagnostics.exists = true;
+    file = 'MANIFEST.tsv';
     const decode = (bytes: Buffer) => new TextDecoder('utf-8', { fatal: true }).decode(bytes);
     const manifest = parseTsv<FounderManifestRow>(
       decode(readBundleFile(bundleRoot, 'MANIFEST.tsv', MAX_METADATA_BYTES)),
       ['path', 'sha256', 'size', 'origin', 'source_location', 'added'], 'path',
     );
+    diagnostics.manifestRows = manifest.length;
+    file = FOUNDER_SOURCES_PATH;
     const sourceBytes = readBundleFile(bundleRoot, FOUNDER_SOURCES_PATH, MAX_METADATA_BYTES);
     const sourceManifest = manifest.find((record) => record.path === FOUNDER_SOURCES_PATH);
     if (!sourceManifest || sourceManifest.origin !== 'HT_ORIGINAL'
       || sourceBytes.length !== Number(sourceManifest.size)
-      || createHash('sha256').update(sourceBytes).digest('hex') !== sourceManifest.sha256.toLowerCase()) return [];
+      || createHash('sha256').update(sourceBytes).digest('hex') !== sourceManifest.sha256.toLowerCase()) throw new Error('sources_integrity');
     const sources = parseTsv<FounderSourceRow>(
       decode(sourceBytes),
       ['alias', 'status', 'sha256', 'redacted', 'bot_status'], 'alias',
     );
+    diagnostics.sourcesRows = sources.length;
     const documents: string[] = [];
     for (const record of manifest) {
       if (!FOUNDER_REDACTED_PATH.test(record.path)) continue;
@@ -94,29 +133,43 @@ function verifiedFounderDocuments(root: string | undefined): string[] {
       if (matching.length !== 1 || !admitFounderSource(record, matching[0])) continue;
       const size = Number(record.size);
       if (!Number.isSafeInteger(size) || size > MAX_DOCUMENT_BYTES) continue;
+      file = record.path;
       let bytes: Buffer;
       try {
         bytes = readBundleFile(bundleRoot, record.path, MAX_DOCUMENT_BYTES);
-      } catch {
+      } catch (error) {
+        fail(error);
         continue;
       }
-      if (bytes.length !== size || createHash('sha256').update(bytes).digest('hex') !== record.sha256.toLowerCase()) continue;
+      if (bytes.length !== size || createHash('sha256').update(bytes).digest('hex') !== record.sha256.toLowerCase()) {
+        fail(new Error('document_integrity'));
+        continue;
+      }
       const text = bytes.toString('utf8');
-      if (text.includes('\uFFFD') || SENSITIVE_DOCUMENT.test(text)) continue;
+      if (text.includes('\uFFFD') || SENSITIVE_DOCUMENT.test(text)) {
+        fail(new Error('document_rejected'));
+        continue;
+      }
       documents.push(text);
     }
-    return documents;
-  } catch {
-    // No document, private path, parser input, or identifier enters logs.
-    return [];
+    diagnostics.documents = documents.length;
+    return { documents, diagnostics };
+  } catch (error) {
+    fail(error);
+    return { documents: [], diagnostics };
   }
+}
+
+/** Read-only snapshot using the same admission checks as answers. */
+export function getFounderBundleDiagnostics(root = founderBundleRoot()): FounderBundleDiagnostics {
+  return readFounderBundle(root).diagnostics;
 }
 
 /** Existing public excerpt pages retain their narrow publication boundary. */
 export function loadFounderCorpus(root = founderBundleRoot()): CorpusEntry[] {
   const entries: CorpusEntry[] = [];
   const admittedPassages = new Set<string>();
-  for (const text of verifiedFounderDocuments(root)) {
+  for (const text of readFounderBundle(root).documents) {
     const normalized = text.replace(/\s+/g, ' ').trim();
     for (const excerpt of FOUNDER_EXCERPTS) {
       if (admittedPassages.has(excerpt.id) || !normalized.includes(excerpt.text)) continue;
@@ -148,7 +201,7 @@ export interface FounderFact {
  */
 export function loadFounderFactIndex(root = founderBundleRoot()): FounderFact[] {
   const facts = new Map<string, FounderFact>();
-  for (const document of verifiedFounderDocuments(root)) {
+  for (const document of readFounderBundle(root).documents) {
     for (const paragraph of document.split(/\r?\n[^\S\r\n]*\r?\n(?:[^\S\r\n]*\r?\n)*/)) {
       const text = paragraph.trim();
       if (!text) continue;

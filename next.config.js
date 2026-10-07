@@ -17,6 +17,7 @@ const nextConfig = {
   reactStrictMode: true,
   serverExternalPackages: ['pdfkit'],
   outputFileTracingIncludes: {
+    '/api/health': ['./knowledge/founder/**'],
     '/api/demo/assistant': ['./knowledge/founder/**'],
     '/bot/sources/\\[\\.\\.\\.path\\]': ['./knowledge/founder/**'],
     '/api/bot': ['./knowledge/founder/**'],

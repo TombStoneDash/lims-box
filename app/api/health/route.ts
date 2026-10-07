@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { getFounderBundleDiagnostics } from '@/lib/bot/founder-corpus';
 
 /**
  * Lightweight health probe.
@@ -8,7 +9,8 @@ import { NextResponse } from 'next/server';
  * automated checks, and external probes have a clean target that does
  * NOT depend on Prisma, Neon, or any auth state.
  *
- * Intentionally stateless: no DB read, no env var dependency. If this
+ * Read-only founder bundle diagnostics contain counts and paths, never content.
+ * No DB read. If this
  * route is unreachable, something is wrong at the edge / runtime layer.
  */
 
@@ -20,6 +22,7 @@ export async function GET() {
     {
       status: 'ok',
       service: 'lims-box',
+      founderBundle: getFounderBundleDiagnostics(),
       timestamp: new Date().toISOString(),
     },
     {
