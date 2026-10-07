@@ -125,7 +125,7 @@ function ReportScreen() {
         </div>
       </div>
       <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3 text-xs text-blue-300">
-        EPA-compliant report generated in <strong>12 seconds</strong>. All QC data auto-included.
+        Synthetic report preview with example results and QC context. No regulatory compliance or report-generation time is demonstrated.
       </div>
     </div>
   );
@@ -157,7 +157,7 @@ const steps: RecordStep[] = [
   { id: 'intake', title: 'Sample Intake', overlay: 'Every sample. Tracked.', icon: ClipboardList, content: <IntakeScreen /> },
   { id: 'audit', title: 'Audit Trail', overlay: 'Every action. Logged.', icon: Shield, content: <AuditScreen /> },
   { id: 'qc', title: 'QC Dashboard', overlay: 'Enterprise-grade traceability.', icon: BarChart3, content: <QCScreen /> },
-  { id: 'report', title: 'Reporting', overlay: 'Ready in minutes.', icon: FileText, content: <ReportScreen /> },
+  { id: 'report', title: 'Reporting', overlay: 'Synthetic report preview.', icon: FileText, content: <ReportScreen /> },
   { id: 'bot', title: 'LIMS BOT', overlay: 'Ask in plain English.', icon: MessageSquare, content: <BotScreen /> },
 ];
 
@@ -268,6 +268,9 @@ export default function RecordPage() {
           <h2 className="text-3xl md:text-4xl font-bold text-white mb-8 tracking-tight text-center">
             {step.overlay}
           </h2>
+          <p className="text-sm text-slate-300 mb-4 text-center">
+            Synthetic demonstration — static example screens, not live lab operations.
+          </p>
 
           {/* Screen content */}
           <div className="bg-[#1E293B] border border-white/10 rounded-2xl p-6">
