@@ -1,19 +1,21 @@
-Draft PR title: Re-land generic read-only SENAITE adapter and restore 12 workflow tests
+Draft PR title: Re-land LIMS first-contact sender v4; supersedes #522
 
-PR #103 was closed unmerged, leaving the OHWorks HTTP harness importing a missing module. Use the existing generic `lib/senaite-read` adapter with `SENAITE_BASE_URL` and `SENAITE_API_TOKEN` (Bearer authentication). Missing, blank, or unsafe configuration returns `{ status: 'not_configured' }` without HTTP. Request and response failures return fixed safe result codes rather than throwing into pages.
+Supersedes #522. Reconcile its maintenance changes with main while preserving main's terminal-state compare-and-set, existing unsubscribe timestamps, failed-only retry limits, and fail-closed handling of ambiguous sends. Missing, unsubscribed, malformed, empty, or whitespace-only source addresses cannot hold up later healthy contacts. Persistence failures and HMAC binding mismatches still fail closed.
 
-Preserve a single bounded GET to the AnalysisRequest collection, HTTPS-only credentials, no redirects/cookies/cache/retries, a ten-second timeout, query validation, and strict summary projection. No route activation or write operations are introduced. Legacy Basic-auth environment settings no longer enable this adapter; the deployment API/gateway must support a provisioned read-only Bearer token.
+Most sender changes from #522 are already on main. This patch retains its blank-address guard, expands bounded-batch coverage with mixed source failures, checks 1,093 source-state orderings, and verifies terminal persistence errors are surfaced. The existing production-resolver permutation coverage is preserved and extended to empty/blank addresses.
 
-Migrate all 12 OHWorks workflow checks to the generic contract, including the Westgard QC hold scenario. Rename the harness to `.test.ts` so the unchanged full-suite runner discovers it. Replay recorded synthetic response fixtures; verify client/analysis fields and pagination URLs do not escape the summary boundary. Add missing/partial/default environment and token-header validation coverage. Fixture provenance explicitly records that these are synthetic snapshots, not live captures.
+Sending remains OFF unless FIRST_CONTACT_EMAIL_ENABLED is exactly true and every existing approval/configuration gate passes. The example environment explicitly sets false. No deployment settings are changed and no email was sent.
 
-Validation on Node 24.14.1:
-- `npm run test:senaite-read`: 7 passed, exit 0.
-- `node --import tsx --test tests/ohworks/senaite-synthetic-workflow.test.ts`: 12 passed, exit 0.
-- `npm run typecheck`: passed, exit 0.
-- Targeted ESLint for adapter and both test files: passed, exit 0.
-- `git diff --check`: passed.
-- `npm run test:all`: 299 files, 4,586 tests; 4,583 passed, 3 failed, zero skipped; exit 1. All 19 SENAITE checks passed. The remaining failures are existing founder tests calling `symlinkSync`, rejected by this Windows host with EPERM (bot-founder-corpus line 458, bot-founder-diagnostics line 27, and bot-founder-loader line 141). A green full-suite result remains required from a symlink-capable runner.
+Validation on Node 24.14.1 (no email sent; synthetic/mocked sender calls):
+- npm ci: exit 0; dependency manifests and lockfiles unchanged.
+- node --import tsx --test tests/first-contact*.test.ts: exit 0, 43 passed, zero skipped.
+- npm run lint: exit 0, including a final run after the test fixture correction.
+- npm run typecheck: exit 0, including a final run after the test fixture correction.
+- npm run test:all: exit 1; all 299 files discovered, 4,608 tests, 4,605 passed, 3 failed, zero skipped. The failures are unchanged founder tests requiring symlink creation: tests/bot-founder-corpus.test.ts:458, tests/bot-founder-diagnostics.test.ts:27, tests/bot-founder-loader.test.ts:141. All fail with EPERM on this Windows host. Full-suite green remains blocked pending a symlink-capable runner.
+- Supplemental four .test.mjs files (not discovered by test:all): 26 passed, 2 failed. Both failures are in unchanged tests/tooling/provenance-classifier.test.mjs: symlink EPERM at line 110 and POSIX chmod-unreadable behavior not enforced on Windows at line 135.
+- git diff --check: exit 0; no unresolved conflict markers.
 
-Windows setup detail: the first full run had 40 founder-bundle failures because Git CRLF checkout conversion changed hash-checked fixture bytes. Temporarily restoring four knowledge/founder files to exact HEAD bytes reduced this to the three symlink permission failures. Their original checkout line endings were restored afterward; there is no founder source change in this PR. Dependencies were installed within the repository using `npm ci`; the lockfile is unchanged. Full local output remains at ignored `node_modules/senaite-test-all.log`.
+For validation only, four hash-checked knowledge/founder files were restored to exact HEAD bytes to avoid Git CRLF conversion changing content hashes. Their original checkout bytes were restored afterward; no founder files are part of this patch. Test temporary directories and install cache stayed inside the repository. Local logs are under ignored node_modules/.validation (test-all-final.log, first-contact.log, lint-final.log, typecheck-final.log, test-mjs.log).
 
-Runner handoff: commit and push only `codex-lenovo/bo-lims-senaite-read-adapter`, then open exactly one draft PR against main. Do not merge. Changes are intentionally uncommitted and unpushed; no GitHub PR has been created by this worker. Re-run the full suite on the runner before claiming a green result.
+
+Runner handoff: commit and push the assigned codex-lenovo/bo-lims-box-first-contact-sender-v4 branch and open exactly one draft PR against main using this title/body. Do not merge. Git metadata writes are sandbox-blocked because this worktree's shared git directory is outside the writable repository: reset and merge could not begin. The working-tree resolution was produced with git merge-file using merge base 80783a7f71d963d86bb6f501c5ceb82be18344d8, #522 head 770bef43134fbc68fef78dd16e6aa4055022cc29, and main ef1f4da1633e6d4e90348ea613055691f1131580. Branch HEAD remains main; no merge ancestry is claimed. The runner must establish the requested PR-branch/main ancestry if required before committing the resolved tree. No commit, push, or draft PR was created by this worker.

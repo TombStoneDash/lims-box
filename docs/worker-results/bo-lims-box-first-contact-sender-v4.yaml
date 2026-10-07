@@ -1,0 +1,62 @@
+task_id: bo-lims-box-first-contact-sender-v4
+run_id: bo-lims-box-first-contact-sender-v4-20261007
+host_id: DESKTOP-1TV907A
+host_role: lenovo
+repo: lims-box
+branch_or_worktree: codex-lenovo/bo-lims-box-first-contact-sender-v4
+requested_model: not-exposed
+requested_reasoning_effort: not-exposed
+client_effective_model: not-exposed
+provider_returned_model_id: not-exposed
+model_evidence_source: not-exposed
+route_id: not-exposed
+started_at: 2026-10-07T21:51:39.395Z
+started_at_evidence: first repository-local installation log creation; initial inspection preceded this timestamp
+ended_at: 2026-10-07T22:04:52.047Z
+terminal_state: BLOCKED
+objective: Reconcile PR 522 with main, preserve maintenance progress and default-OFF sending, verify and hand off one superseding draft PR
+owner: user-assigned fresh worktree; direct authorization in task
+inputs:
+  - PR 522 head 770bef43134fbc68fef78dd16e6aa4055022cc29
+  - main and unchanged worktree HEAD ef1f4da1633e6d4e90348ea613055691f1131580
+  - merge base 80783a7f71d963d86bb6f501c5ceb82be18344d8
+constraints: repository-local writes only; no outreach, email, commit, push, merge to main, or deployment
+budget: not-exposed
+timeout: bounded interactive task
+retry_cap: one full-suite rerun after correcting the new Prisma test mock
+definition_of_done: reconciled source, default-OFF guard, full suite/lint/typecheck green, runner opens one draft superseding PR 522
+verification:
+  - 'npm ci: exit 0; package manifests and lockfiles unchanged'
+  - 'node --import tsx --test tests/first-contact*.test.ts: exit 0; 43 passed, zero skipped'
+  - 'npm run lint: exit 0 on final source'
+  - 'npm run typecheck: exit 0 on final source'
+  - 'npm run test:all final: exit 1; 299 files, 4608 tests, 4605 passed, 3 symlink EPERM failures, zero skipped'
+  - 'supplemental .test.mjs files: exit 1; 26 passed, 2 Windows symlink/POSIX-permission failures in unchanged provenance tests'
+  - 'git diff --check: exit 0; no unresolved conflict markers'
+  - 'FIRST_CONTACT_EMAIL_ENABLED requires exact true and existing gates; example explicitly false; disabled maintenance has zero database/network effects'
+  - 'founder fixture checkout bytes restored after validation; no founder source changes'
+artifacts:
+  - .env.example
+  - scripts/first-contact-maintenance.ts
+  - tests/first-contact-maintenance-run.test.ts
+  - tests/first-contact-maintenance.test.ts
+  - PR_BODY.md
+  - node_modules/.validation/test-all-final.log (ignored local evidence)
+  - node_modules/.validation/first-contact.log (ignored local evidence)
+  - node_modules/.validation/lint-final.log (ignored local evidence)
+  - node_modules/.validation/typecheck-final.log (ignored local evidence)
+  - node_modules/.validation/test-mjs.log (ignored local evidence)
+usage_delta: not-exposed
+blocker: >-
+  Shared Git metadata is outside the sandbox writable root. git reset --keep could not create index.lock;
+  git merge --no-commit --no-ff could not create ORIG_HEAD.lock. No branch reset or merge started.
+  Resolved working-tree contents were produced using git merge-file against the recorded three revisions;
+  HEAD remains main with no merge ancestry. Windows denies symlinks required by three full-suite tests;
+  supplemental provenance checks additionally require POSIX chmod semantics. No commit/push allowed for this worker,
+  so a GitHub draft PR cannot be opened from these unpublished changes.
+rollback: discard only task-owned uncommitted changes; no remote or production state changed
+next_safe_action: >-
+  Runner preserves this resolved tree, establishes requested ancestry if required, reruns checks on a symlink-capable
+  host with POSIX permissions, commits/pushes the assigned branch, and opens exactly one draft PR using PR_BODY.md
+  naming 522 as superseded. Do not merge or enable sending.
+receipt_location_note: repository-local worker-results directory; external canonical receipt writes prohibited by task

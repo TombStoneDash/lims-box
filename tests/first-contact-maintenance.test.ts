@@ -25,10 +25,10 @@ test('source changed address fails HMAC binding before private export or retry',
     async resolveEmail(){return 'different@example.test';},async writeDraft(){throw Error('not expected');},async markDrafted(){},async retry(){throw Error('not expected');}}),/binding mismatch/);
 });
 
-// Exhaust all 364 sequences of length 0..5, then replay each snapshot with duplicates.
+// Exhaust all 1,093 sequences of length 0..6, then replay each snapshot with duplicates.
 test('every ordering of healthy/unsubscribed/unavailable sources retries each healthy row exactly once', async () => {
   const kinds = ['healthy', 'unsubscribed', 'unavailable'] as const;
-  for (let length = 0; length <= 5; length++) {
+  for (let length = 0; length <= 6; length++) {
     for (let pattern = 0; pattern < 3 ** length; pattern++) {
       const states = Array.from({ length }, (_, i) => kinds[Math.floor(pattern / 3 ** i) % 3]);
       const rows: MaintenanceRow[] = states.map((_, i) => ({
@@ -66,4 +66,14 @@ test('every ordering of healthy/unsubscribed/unavailable sources retries each he
       assert.deepEqual(retried, healthy);
     }
   }
+});
+
+test('terminal persistence failure is surfaced rather than reported as successful maintenance', async () => {
+  await assert.rejects(maintainFirstContacts([{email_hmac:hash,source_id:'id',outcome:'failed'}],
+    {drafts:false,retry:true}, {
+      key, async resolveEmail(){throw Error('unavailable');},
+      async markTerminal(){throw Error('terminal write failed');},
+      async retry(){throw Error('unexpected retry');},
+      async writeDraft(){return false;}, async markDrafted(){},
+    }), /terminal write failed/);
 });

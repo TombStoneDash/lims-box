@@ -32,14 +32,14 @@ export async function runMaintenance(options:string[]) {
       if(row.source_kind==='contact') {
         const client=getSupabase(); if(!client) throw Error('Private source unavailable');
         const {data,error}=await client.from('limsbox_early_access').select('email').eq('id',id).single();
-        if(error || typeof data?.email!=='string') throw Error('Private source unavailable');
+        if(error || typeof data?.email!=='string' || !data.email.trim()) throw Error('Private source unavailable');
         return data.email;
       }
       const r=await fetch(`https://api.resend.com/contacts/${encodeURIComponent(id)}`,{headers:{Authorization:`Bearer ${apiKey}`},signal:AbortSignal.timeout(5000)});
       if(!r.ok) throw Error('Private source unavailable');
       const body=await r.json();
       if(body?.unsubscribed===true) throw new UnsubscribedContactError();
-      if(typeof body?.email!=='string') throw Error('Private source unavailable');
+      if(typeof body?.email!=='string' || !body.email.trim()) throw Error('Private source unavailable');
       return body.email;
     },
     async markTerminal(row,outcome) {
