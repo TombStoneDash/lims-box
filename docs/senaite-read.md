@@ -1,30 +1,46 @@
 # SENAITE read adapter
 
-`lib/senaite-read` exports `createSenaiteReadAdapter()` for server-side callers.
-It is inert until `listSamples()` is called, and disabled unless all three
-environment values are nonblank: `SENAITE_READ_URL`, `SENAITE_READ_USER`, and
-`SENAITE_READ_PASSWORD`. No routes, UI, jobs, or existing integrations activate it.
+`lib/senaite-read` exports `readSenaiteSamples()` and an inert
+`createSenaiteReadAdapter()` factory with `enabled` and `listSamples()`.
+The module is server-only. No pages, routes, or jobs activate live reads.
 
-The URL is the SENAITE **site root**, such as `https://lab.example.invalid/site`,
-not the API endpoint. HTTPS is required; embedded credentials, query strings,
-and fragments are rejected. Keep these variables server-side, never `NEXT_PUBLIC_`.
-Use a separately provisioned read-only account; this adapter does not manage accounts.
+Set both `SENAITE_BASE_URL` and `SENAITE_API_TOKEN` on the server. The URL is
+an HTTPS SENAITE **site root**, for example `https://lab.example.invalid/site`.
+Embedded credentials, query strings, fragments, and non-HTTPS URLs are rejected.
+The token is sent as `Authorization: Bearer <token>`; the target deployment must
+support bearer authentication and the token must be provisioned with read-only
+permissions. This adapter does not provision users or tokens. Do not expose
+these variables with `NEXT_PUBLIC_`.
 
-The only operation is GET to `@@API/senaite/v1/AnalysisRequest`, following the
-existing repository client contract in `senaite/client.py`. Optional `sampleId`
-and `reviewState` filters are encoded as query parameters. `limit` defaults to 25
-and accepts integers from 1 through 100. It reads one page; it never follows
-pagination links, redirects, or upstream URLs. Requests disable caching, time out
-after 10 seconds, and have no retries. There is no arbitrary endpoint or write API.
+Missing, blank, or invalid configuration resolves to:
 
-Results distinguish `disabled`, `ok` (including an empty collection), and `error`.
-Successful records expose only `uid`, `id`, nullable `title`, and nullable
-`reviewState`. Missing identities, malformed collections, and oversized pages fail
-closed. Errors expose fixed codes only, without raw server bodies or credentials.
-Callers must handle errors explicitly; there is no fallback to synthetic data.
+```json
+{"status":"unavailable","reason":"not_configured","detail":"SENAITE_BASE_URL and SENAITE_API_TOKEN must both be set to valid values"}
+```
 
-Run `npm run test:senaite-read` and `npm run typecheck`. The existing CI command
-`npm run test:all` recursively discovers `tests/senaite-read/adapter.test.ts`.
-All adapter tests inject in-memory transports and use synthetic fixtures; no live
-SENAITE access or credentials are needed. These tests validate the local contract,
-not compatibility with a live deployment.
+It makes no request in this state. Pages can handle this result explicitly;
+connection failures also resolve to results rather than throwing or showing
+synthetic samples as live data. This replaces the older `SENAITE_READ_*` Basic
+auth configuration and PR #103's OHWorks-specific credentials/mode switch.
+
+The sole operation is GET `@@API/senaite/v1/AnalysisRequest`. Optional `sampleId`
+and `reviewState` filters are encoded; review state defaults to `sample_received`.
+The integer limit defaults to 25 and accepts 1–100. Reads fetch one page and
+never follow redirects, pagination links, or upstream URLs. Each request uses
+`no-store`, omits browser credentials, and aborts after ten seconds, including
+while reading its body. There are no retries or write operations.
+
+Results distinguish `ok`, `empty`, `invalid`, and `unavailable`. Successful
+records contain only `source`, `id`, `sampleType`, `reviewState`, `clientId`, and
+`dateReceived`. The parser retains PR #103's documented wire aliases and optional
+field defaults. Missing identities/states, malformed envelopes, and oversized
+pages fail closed, with no partial records. Errors do not expose upstream bodies,
+URLs, tokens, or transport exception text. `real_senaite` identifies the adapter
+path, not independently verified live data.
+
+Run `npm run test:senaite-read` for adapter contracts, or `npm run test:all` for
+the entire repository, including the migrated twelve-test OHWorks HTTP/QC
+harness. Tests replay checked-in synthetic HTTP fixtures and inject transports;
+they require no server or credentials. Fixture provenance is documented beside
+the payload. Timer tests advance a mock clock to prove request abortion.
+These are local contract tests, not proof of compatibility with a live deployment.

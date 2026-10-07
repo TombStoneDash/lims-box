@@ -5,7 +5,6 @@ import { before, after, test } from 'node:test';
 // Deliberately fails if the upstream adapter is absent. Never skip, copy its
 // implementation into tests, or substitute the supervised-demo fixture path.
 let readSenaiteSamples;
-let resolveOHWorksSenaiteMode;
 let unexpectedFetches = 0;
 const originalFetch = globalThis.fetch;
 before(async () => {
@@ -24,7 +23,7 @@ before(async () => {
     },
   });
   try {
-    ({ readSenaiteSamples, resolveOHWorksSenaiteMode } = await import('../../lib/ohworks-senaite.ts'));
+    ({ readSenaiteSamples } = await import('../../lib/senaite-read/index.ts'));
   } finally {
     hooks.deregister();
   }
@@ -36,10 +35,8 @@ after(() => {
 
 // These are public test literals, never process.env or stored credentials.
 const env = Object.freeze({
-  OHWORKS_SENAITE_MODE: 'real',
-  OHWORKS_SENAITE_BASE_URL: 'https://synthetic-ohworks.invalid/senaite/',
-  OHWORKS_SENAITE_USERNAME: 'SYNTHETIC-NOT-A-REAL-USER',
-  OHWORKS_SENAITE_PASSWORD: 'SYNTHETIC-NOT-A-REAL-PASSWORD',
+  SENAITE_BASE_URL: 'https://synthetic-ohworks.invalid/senaite/',
+  SENAITE_API_TOKEN: 'SYNTHETIC-NOT-A-REAL-TOKEN',
 });
 
 function syntheticSample(index, state = 'sample_received') {
@@ -82,8 +79,11 @@ function transport(respond) {
       assert.equal(init.signal.aborted, false);
       assert.deepEqual(init, {
         method: 'GET',
+        redirect: 'error',
+        cache: 'no-store',
+        credentials: 'omit',
         headers: {
-          Authorization: `Basic ${Buffer.from('SYNTHETIC-NOT-A-REAL-USER:SYNTHETIC-NOT-A-REAL-PASSWORD').toString('base64')}`,
+          Authorization: 'Bearer SYNTHETIC-NOT-A-REAL-TOKEN',
           Accept: 'application/json',
         },
         signal: init.signal,
@@ -93,7 +93,6 @@ function transport(respond) {
 }
 
 test('synthetic HTTP sample summaries flow through the real adapter on successive reads', async () => {
-  assert.equal(resolveOHWorksSenaiteMode(env), 'real');
   // Change upstream responses between reads to catch caching/fixture fallback.
   // This supplies HTTP states; it does not simulate an unimplemented transition.
   for (const [index, state] of [[1, 'sample_received'], [2, 'verified']]) {
@@ -151,7 +150,7 @@ for (const [label, body, detail] of [
 
 for (const [label, respond, expected] of [
   ['HTTP failure', () => Response.json({ items: [syntheticSample(1)] }, { status: 503 }), { status: 'unavailable', reason: 'http_error', detail: 'SENAITE responded with HTTP 503' }],
-  ['transport rejection', () => { throw new Error('SYNTHETIC-OFFLINE'); }, { status: 'unavailable', reason: 'network_error', detail: 'SYNTHETIC-OFFLINE' }],
+  ['transport rejection', () => { throw new Error('SYNTHETIC-OFFLINE'); }, { status: 'unavailable', reason: 'network_error', detail: 'SENAITE request failed' }],
   ['abort rejection', () => { throw new DOMException('SYNTHETIC-ABORT', 'AbortError'); }, { status: 'unavailable', reason: 'timeout', detail: 'SENAITE request timed out' }],
 ]) {
   test(`${label} has the complete unavailable shape`, async () => {
@@ -165,15 +164,14 @@ test('missing explicit test configuration performs no HTTP request', async () =>
   const http = transport(() => Response.json({ items: [syntheticSample(1)] }));
   assert.deepEqual(await readSenaiteSamples({ env: {}, fetchImpl: http.fetchImpl }), {
     status: 'unavailable', reason: 'not_configured',
-    detail: 'OHWORKS_SENAITE_BASE_URL, OHWORKS_SENAITE_USERNAME, and OHWORKS_SENAITE_PASSWORD must all be set',
+    detail: 'SENAITE_BASE_URL and SENAITE_API_TOKEN must both be set to valid values',
   });
   assert.deepEqual(http.calls, []);
 });
 
 test('a received specimen with a Westgard 1_3s failure is held before automatic result release', async () => {
-  // tsx loads this repository's TypeScript as CommonJS under the ESM harness.
-  const { default: { evaluateQCWestgardMultirule } } = await import('../../lib/ohworks-qc-westgard.ts');
-  const { default: { evaluateAutoVerification } } = await import('../../lib/ohworks-autoverification.ts');
+  const { evaluateQCWestgardMultirule } = await import('../../lib/ohworks-qc-westgard.ts');
+  const { evaluateAutoVerification } = await import('../../lib/ohworks-autoverification.ts');
   const http = transport(() => Response.json({ items: [syntheticSample('QC-FAILURE')] }));
   const received = await readSenaiteSamples({ env, fetchImpl: http.fetchImpl });
   http.assertRequest();

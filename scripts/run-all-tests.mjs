@@ -8,7 +8,7 @@ function walk(directory) {
   return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
     const file = `${directory}/${entry.name}`;
     if (entry.isDirectory()) return walk(file);
-    return entry.isFile() && /\.test\.tsx?$/.test(file) ? [file] : [];
+    return entry.isFile() && /\.test\.(?:tsx?|mjs)$/.test(file) ? [file] : [];
   });
 }
 

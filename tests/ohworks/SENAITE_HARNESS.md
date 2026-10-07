@@ -6,11 +6,10 @@ Run with Node 22.15+ (verified with 22.22.2), using the existing package script:
 npm run test:ohworks -- tests/ohworks/senaite-synthetic-workflow.test.mjs
 ```
 
-Prerequisite: `lib/ohworks-senaite.ts` from [PR #103](https://github.com/TombStoneDash/lims-box/pull/103).
-It is absent from this task's base `c1a2ab5`. The harness deliberately fails
-when the adapter is missing; it does not skip or carry a duplicate implementation.
-The package script's existing explicit test list is unchanged. Include the
-argument above to run this harness after the upstream dependency is integrated.
+The harness now imports `lib/senaite-read/index.ts`, the generic token-based
+re-land of closed PR #103. `npm run test:all` also discovers this `.mjs` harness.
+It deliberately fails if the adapter is absent; it never skips the dependency
+or carries a duplicate implementation.
 
 The harness calls `readSenaiteSamples` directly and mocks only its injected
 HTTP transport. It uses actual `Response` JSON serialization, asserts the
@@ -22,8 +21,8 @@ scoped Node loader resolves only Next's `server-only` bundler marker.
 Coverage: successive sample-summary reads with different upstream records,
 60 synthetic records, query encoding, optional field aliases/defaults, empty
 results, malformed envelopes/records, HTTP failure, transport rejection,
-AbortError classification, and missing configuration. AbortError coverage
-does not prove the ten-second timer fires. Each transport request is asserted
+AbortError classification, and missing configuration. The adapter contract suite additionally proves the ten-second timer aborts
+a pending transport. Each transport request is asserted
 outside the adapter's catch block so assertion failures cannot masquerade as
 expected network failures.
 
@@ -44,11 +43,10 @@ Context reviewed: Hudson's handoff item 1 (available on this host at
 PR #88 concerns conversion reporting, not the SENAITE adapter; the current
 checkout includes its replacement #216. No reporting or auth changes are needed.
 
-Local verification: temporarily staged the unchanged adapter addition from
-PR #103 head `3328c86c77de417008e11ff036c979b3be649544`, ran the command above
-(83 passed, including 11 new tests), then removed the staged production file.
-The final branch still requires upstream adapter integration before this
-harness can pass. No production files, package scripts, or credentials changed.
+Current configuration uses `SENAITE_BASE_URL` and `SENAITE_API_TOKEN` with Bearer
+authentication. Request assertions additionally require redirects to be rejected,
+caching disabled, and browser credentials omitted. Transport errors return fixed
+safe text. All original twelve workflow cases remain active.
 
 ## In-process synthetic lab-day harness
 
@@ -80,4 +78,4 @@ once per held result, so multiple reasons can exceed the held-result total.
 This is synthetic in-process proof only: it proves no live SENAITE connection,
 persistence, instrument integration, or operational release authority. A human
 technical review is still required, including for `AUTO_RELEASE` decisions.
-The existing HTTP harness and its owner-gated adapter dependency are unchanged.
+The HTTP harness uses the generic adapter described above.
