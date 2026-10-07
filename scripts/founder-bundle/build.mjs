@@ -13,11 +13,11 @@ const tsv = (keys, rows) => `${keys.join('\t')}\n${rows.map((row) => keys.map((k
 
 // Label-based identifiers include short and alphanumeric values. Remove the
 // remainder of an identifier line, including wrapped values, conservatively.
-export const IDENTIFIER = /\b(?:AMCAS|AAMC|SSN|social\s+security|date\s+of\s+birth|DOB|passport|MRN|NPI|EIN)\b[^\r\n\u2028]*(?:\r?\n[ \t]*[A-Z]*-?\d[\w-]*)?|(?:\b(?:application|account|member|policy|licen[cs]e|case|reference|ID|No\.)(?:[ \t]+(?:number|no\.?|ID))*[ \t]*(?:[:#=–—-][ \t]*)?(?:\r?\n[ \t]*)?|#\s*(?:(?:ID|number|No\.)\s*)?(?:[:#=–—-]\s*)?)(?:[A-Z]*-?\d[\w./-]*|[A-Z]{2,}(?=[ \t]*(?:$|[.,;])))[^\r\n\u2028]*/gim;
+export const IDENTIFIER = /\b(?:AMCAS|AAMC|SSN|social\s+security|date\s+of\s+birth|DOB|passport|MRN|NPI|EIN)\b[^\r\n\u2028]*(?:\r?\n[ \t]*[A-Z]*-?\d[\w-]*)?|(?:\b(?:application|account|member|policy|licen[cs]e|case|reference|ID|No\.)(?:[ \t]+(?:number|no\.?|ID))*[ \t]*(?:[:#=–—-][ \t]*)?(?:\r?\n[ \t]*)?|(?<!#)#(?!#)\s*(?:(?:ID|number|No\.)\s*)?(?:[:#=–—-]\s*)?)(?:[A-Z]*-?\d[\w./-]*|[A-Z]{2,}(?=[ \t]*(?:$|[.,;])))[^\r\n\u2028]*/gim;
 
 // Secondary redaction cannot authorize a document outside the allow-list.
-export function redact(text) {
-  return redactFounderNames(normalizeFounderText(text)
+export function redact(text, sourcePath) {
+  const cleaned = normalizeFounderText(text)
     .replace(IDENTIFIER, '[private identifier redacted]')
     .replace(/[\w.+-]+@[\w.-]+\.[a-z]{2,}/gi, '[email redacted]')
     .replace(/(?:https?:\/\/|www\.)[^\s<>]+/gi, '[url redacted]')
@@ -30,7 +30,9 @@ export function redact(text) {
     .replace(/\b[A-Z]{2},?\s+\d{5}(?:-\d{4})?\b/g, '[statezip redacted]')
     .replace(/\b\d{5}-\d{4}\b/g, '[postal code redacted]')
     .replace(/\d{6,}/g, '[private identifier redacted]')
-    .replace(/[ \t]+$/gm, ''));
+    .replace(/[ \t]+$/gm, '');
+  // Only this reviewed, hash-locked resume-level story keeps proper nouns.
+  return sourcePath === 'docs/founder/FOUNDER_STORY.md' ? cleaned : redactFounderNames(cleaned);
 }
 
 const sensitive = /\b(?:ssn|social\s+security|genetic|genomic|ancestry|23andme|aamc|amcas|date\s+of\s+birth|dob|references)\b|\b\d{3}[-\s]\d{2}[-\s]\d{4}\b|\d{6,}|[\w.+-]+@[\w.-]+\.[a-z]{2,}|https?:\/\/|www\.|(?:\+?1[-.\s]?)?\(?\d{3}\)?[-.\s]\d{3}[-.\s]\d{4}\b/i;
@@ -74,7 +76,7 @@ export function build(input, output) {
     if (sha(raw) !== approved.sha256) throw new Error('changed_allowlisted_source');
     const original = new TextDecoder('utf-8', { fatal: true }).decode(raw);
     // Admission was decided by whole-document review, not by content filters.
-    const text = redact(original);
+    const text = redact(original, relative);
     const redacted = Buffer.from(text);
     if (!text.trim() || text.includes('\uFFFD') || text.includes('\0') || sensitive.test(text)
       || redacted.length > MAX_DOCUMENT) throw new Error('invalid_redacted_source');

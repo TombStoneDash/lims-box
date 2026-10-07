@@ -49,7 +49,7 @@ try {
       const assistant = require('./.next/server/app/api/demo/assistant/route.js').routeModule.userland;
       const diagnostics = (await (await health.GET()).json()).founderBundle;
       if (!${baseline}) {
-        assert.equal(diagnostics.documents, 2);
+        assert.equal(diagnostics.documents, 1);
         assert.equal(diagnostics.error, null);
         assert.equal(diagnostics.root, path.join(process.cwd(), 'knowledge/founder'));
       }
@@ -83,7 +83,7 @@ try {
   if (!baseline) {
     assert.deepEqual(health.founderBundle, {
       root: path.join(task, 'knowledge/founder'), exists: true,
-      manifestRows: 3, sourcesRows: 2, documents: 2, error: null,
+      manifestRows: 2, sourcesRows: 1, documents: 1, error: null,
     });
   }
   const docs = path.join(repo, 'knowledge/founder/approved/redacted');

@@ -17,7 +17,7 @@ test('allow-list is a finite inventory of exact paths; intake, traversal and glo
 test('every selected document has exactly one reviewed source and output hash lock', () => {
   const paths = parseAllowlist(readFileSync(new URL('./ALLOWLIST.txt', import.meta.url), 'utf8'));
   const policy = JSON.parse(readFileSync(new URL('./admission.json', import.meta.url), 'utf8'));
-  assert.equal(paths.length, 2);
+  assert.deepEqual(paths, ['docs/founder/FOUNDER_STORY.md']);
   assert.deepEqual(policy.map((row) => row.path).sort(), paths.slice().sort());
   assert.equal(new Set(policy.map((row) => row.alias)).size, paths.length);
   for (const row of policy) {

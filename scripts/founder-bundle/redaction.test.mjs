@@ -10,8 +10,10 @@ test('redacts each contact and identifier class from the integration receipt', (
     'CA 90210', 'CA, 90210', '90210-1234', 'DOB: 01/02/1900',
     'Date of birth: January 2, 1900', 'AAMC ID: 12345678',
   ]) {
-    assert.ok(!redact(value).includes(value), value);
-    assert.match(redact(value), /redacted/);
+    for (const source of [undefined, 'docs/founder/FOUNDER_STORY.md']) {
+      assert.ok(!redact(value, source).includes(value), value);
+      assert.match(redact(value, source), /redacted/);
+    }
   }
 });
 
@@ -69,3 +71,15 @@ test('every public allow-list entry survives including normalization and possess
   }
 });
 
+
+test('proper-noun exception is restricted to the exact reviewed story path', () => {
+  const text = 'Hudson Taylor built a DiaSorin LIAISON XL interface at the State of Alaska Department of Health.';
+  assert.equal(redact(text, 'docs/founder/FOUNDER_STORY.md'), text);
+  for (const source of [undefined, 'other.md', 'FOUNDER_STORY.md', 'docs/founder/other.md']) {
+    assert.ok(redact(text, source).includes('[name]'));
+  }
+});
+
+test('numbered Markdown headings are not identifier labels', () => {
+  assert.equal(redact('## 1. Career Timeline', 'docs/founder/FOUNDER_STORY.md'), '## 1. Career Timeline');
+});
