@@ -1,7 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import path from 'node:path';
 import { corpus } from '../../lib/bot/corpus';
-import { askBot, EVIDENCE_MISSING_ANSWER } from '../../lib/bot/engine';
+import { askBot, classifyQuestionIntent, EVIDENCE_MISSING_ANSWER } from '../../lib/bot/engine';
+import { filterCommercialClaims } from '../../lib/bot/output-claims-filter';
 
 const NEW_ENTRY_QUESTIONS = [
   ['field-scout', 'what is field scout'],
@@ -15,6 +18,30 @@ const NEW_ENTRY_QUESTIONS = [
 ] as const;
 
 for (const [id, question] of NEW_ENTRY_QUESTIONS) {
+  test(`${id}: answer is verbatim copy from its published source page`, () => {
+    const entry = corpus.find((candidate) => candidate.id === id)!;
+    const page = readFileSync(path.join(__dirname, '../../app', entry.source, 'page.tsx'), 'utf8');
+    // Normalize JSX line wrapping and the entities used by the published pages.
+    const published = page.replace(/&mdash;/g, '—').replace(/&apos;/g, "'").replace(/\s+/g, ' ');
+    assert.ok(published.includes(entry.text), `${id}: answer drifted from ${entry.source}`);
+    assert.deepEqual(filterCommercialClaims(entry.text), { answer: entry.text, blocked: false });
+  });
+
+  test(`${id}: founder context preserves the product answer and citation`, () => {
+    const entry = corpus.find((candidate) => candidate.id === id)!;
+    for (const prompt of [
+      `Given Hudson's background, for LIMS BOX: ${entry.title}`,
+      `For LIMS BOX: ${entry.title} The founder trained technicians before.`,
+    ]) {
+      assert.equal(classifyQuestionIntent(prompt), 'mixed', prompt);
+      const result = askBot(prompt);
+      assert.equal(result.grounded, true, prompt);
+      assert.equal(result.answer, entry.text, prompt);
+      assert.equal(result.sources[0]?.path, entry.source, prompt);
+      assert.ok(result.sources.every((source) => source.path !== '/about' && !source.path.startsWith('/bot/sources/')), prompt);
+    }
+  });
+
   test(`${id}: natural question and title return verbatim copy without lead routing`, () => {
     const entry = corpus.find((candidate) => candidate.id === id);
     assert.ok(entry, `Missing corpus entry: ${id}`);
