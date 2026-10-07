@@ -41,7 +41,7 @@ test('symlinked root and symlinked ancestors work from a different cwd; internal
   assert.equal(response.headers.get('cache-control'), 'no-store, no-cache, must-revalidate');
   assert.deepEqual(body.founderBundle, {
     root: path.join(realpathSync(task), 'knowledge/founder'), exists: true,
-    manifestRows: 3, sourcesRows: 2, documents: 2, error: null,
+    manifestRows: 2, sourcesRows: 1, documents: 1, error: null,
   });
   for (const fact of expected) assert.ok(!JSON.stringify(body).includes(fact.text));
   assert.equal(await (await HEAD()).text(), '');
@@ -82,7 +82,7 @@ test('health reports missing/corrupt metadata without content and failure logs o
   cpSync(shipped, temp, { recursive: true });
   writeFileSync(path.join(temp, 'approved/SOURCES.tsv'), 'SECRET_DOCUMENT_CONTENT');
   const integrity = (await (await GET()).json()).founderBundle;
-  assert.equal(integrity.manifestRows, 3);
+  assert.equal(integrity.manifestRows, 2);
   assert.equal(integrity.sourcesRows, 0);
   assert.equal(integrity.error, 'approved/SOURCES.tsv: Error (sources_integrity)');
   assert.ok(!JSON.stringify(integrity).includes('SECRET_DOCUMENT_CONTENT'));
@@ -96,7 +96,7 @@ test('health reports missing/corrupt metadata without content and failure logs o
   });
   // A failed read is never cached: restored evidence is visible immediately.
   cpSync(shipped, temp, { recursive: true });
-  assert.equal(getFounderBundleDiagnostics().documents, 2);
+  assert.equal(getFounderBundleDiagnostics().documents, 1);
   assert.equal(getFounderBundleDiagnostics().error, null);
   assert.ok(readFileSync(path.join(temp, 'MANIFEST.tsv')).length > 0);
 });

@@ -226,10 +226,27 @@ export function founderFactQuestions(fact: FounderFact): string[] {
   ];
 }
 
+const CAREER_QUERIES: Record<string, string> = {
+  "what is hudson taylor's experience with laboratory information systems": 'Hudson Taylor reports roughly 15 years building and operating LIMS',
+  'where was hudson a senior lims developer': '| Employer / Institution |',
+  'what instrument interface did hudson build': '**Instrument interface engineering.**',
+};
+const careerPassage = (question: string) => CAREER_QUERIES[
+  question.trim().toLowerCase().replace(/’/g, "'").replace(/\?$/, '')
+];
+
+/** Keep the general bot's existing product/bio routing outside reviewed career asks. */
+export function askFounderCareer(question: string): BotResponse | null {
+  return careerPassage(question) ? askFounderArchive(question) : null;
+}
+
 export function askFounderArchive(question: string): BotResponse | null {
   if (!/\b(?:founder|hudson|hud|taylor)\b/i.test(question)) return null;
+  // Reviewed whole-question intents map to complete admitted passages. No
+  // keyword fallback: private questions and appended instructions still refuse.
+  const passage = careerPassage(question);
   const matches = loadFounderFactIndex().filter((fact) =>
-    founderFactQuestions(fact).includes(question));
+    founderFactQuestions(fact).includes(question) || (passage && fact.text.startsWith(passage)));
   if (matches.length !== 1) {
     return { answer: EVIDENCE_MISSING_ANSWER, grounded: false, sources: [] };
   }

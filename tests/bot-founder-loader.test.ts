@@ -204,7 +204,7 @@ test('a valid manifest cannot admit an unlisted source or relocate an approved o
   writeFileSync(path.join(root, relative), text);
   sources.push({ ...sources[0], alias: 'FLI-003', sha256: identity, redacted: relative });
   // Use a unique alias, with fully consistent bytes and metadata.
-  sources[sources.length - 1].alias = 'FLI-004';
+  sources[sources.length - 1].alias = 'FLI-UNLISTED';
   manifest.push({ ...manifest[0], path: relative, sha256: sha(text), size: String(Buffer.byteLength(text)),
     source_location: `derived:contact-redaction of sha256:${identity}` });
   const save = () => {

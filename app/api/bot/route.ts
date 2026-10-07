@@ -1,3 +1,4 @@
+import { askFounderCareer } from '@/lib/bot/founder-corpus';
 import { NextRequest, NextResponse } from 'next/server';
 import { askBot, MAX_QUESTION_LENGTH } from '@/lib/bot/engine';
 import {
@@ -47,7 +48,7 @@ export async function POST(request: NextRequest) {
 
     // Privacy: questions are answered statelessly. Nothing is persisted and
     // neither question content nor client/network identifiers enter telemetry.
-    const result = askBot(question);
+    const result = askFounderCareer(question) ?? askBot(question);
     recordBotTelemetry(telemetryForBotResponse(result));
     return NextResponse.json(result, {
       headers: { 'Cache-Control': 'no-store' },

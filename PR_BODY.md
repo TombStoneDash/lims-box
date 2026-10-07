@@ -1,17 +1,19 @@
-Draft PR title: Fix symlinked founder bundle roots and expose read-only diagnostics
+Draft PR title: Restore readable founder career evidence and cited career answers
 
-A deployment whose `knowledge/founder` root is a symlink silently loses its founder facts. Resolve the configured root once and allow that deployment-level link, while preserving all checks against links inside the bundle, path escapes, oversized/nonregular files, invalid metadata, unapproved sources, and altered content.
+Replace the two over-redacted sources with `docs/founder/FOUNDER_STORY.md`, the factual career material from sections 1–4 of the approved FOUNDER_STORY_SAFE narrative. Remove editorial notes, verification columns, unsupported claims, and disputed figures; retain attribution for self-reported experience. The allow-list now contains only that document, and the rebuilt bundle contains one document with 26 complete, distinct paragraphs.
 
-Add one structured error line per Node process on the first load failure, containing the root, failing relative file, exception name, and a controlled reason. Arbitrary exception messages and document content are excluded. `GET /api/health` now includes `founderBundle: {root, exists, manifestRows, sourcesRows, documents, error}` and traces the founder files into its deployment. Counts reflect parsed metadata and admitted documents; errors describe the first failure in that read. Health remains HTTP 200 with no-store headers; HEAD remains bodyless. Reads are not cached, so revocation and recovery remain immediate.
+Preserve proper nouns only for this exact, hash-locked document while retaining identifier/contact redaction and all runtime integrity checks. Preserve numbered Markdown headings instead of mistaking them for single-hash identifier labels. Remove the stale bundled files completely.
 
-The baseline already canonicalized the root but rejected root symlinks before doing so. Direct comparison confirms 72 facts through a real root, zero through a symlink on the baseline, and 72 through the same symlink after this change.
-
-The reported `What is the LIMS BOX 7-11-4 framework?` question is separately excluded by the existing founder routing gate: it returns null before reading the bundle. This PR preserves that routing policy and verifies retrieval using a supported founder-fact question.
+Both the chat (`/api/bot`) and demo assistant (`/api/demo/assistant`) now answer the three reviewed natural-language career questions with complete admitted passages and working fact citations. Matching remains bounded to whole questions, so appended instructions, private-data questions, and revoked fact IDs still refuse. Other documents retain the existing proper-noun redaction policy.
 
 Validation:
-- 253 relevant tests passed, including symlinked roots/ancestors from a different cwd, internal-link rejection, health shape and content exclusion, corrupt/missing metadata, once-per-process logging, and recovery.
-- TypeScript checking and targeted ESLint passed.
-- Baseline and fixed clean-copy production builds passed. The fixed compiled health and assistant handlers passed from the separate symlinked `var/task` layout: 3 manifest rows, 2 source rows, 2 documents, no error, and a grounded founder-fact response. `next start` was attempted and rejected by the sandbox before listening.
-- Production-layout reproduction script: `node scripts/diagnostics/founder-production-layout.mjs`; add `--baseline` to build the HEAD loader and health route. It builds a clean source copy, starts from a separate `var/task` directory with a symlinked founder bundle, and checks health, founder retrieval, and failure logging. It also invokes the compiled handlers before attempting the listener for environments that restrict sockets.
+- `npm run test:all`: 4,573 passed, zero failures.
+- Founder suite plus career acceptance: 184 passed; after adding chat-endpoint wiring, the three career acceptance tests passed again against both endpoints and rendered citations.
+- Allow-list and redaction suite: 10 passed, including contact/identifier redaction under the story exception and default proper-noun redaction for other paths.
+- The disk sweep passed for personal-health terms, identifiers, emails, phones, and addresses. Previous leak queries and revoked fact IDs still refuse.
+- `npm run typecheck`, targeted ESLint, `npm run build`, and `git diff --check` passed.
+- Rebuilding from the repository into a fresh directory reproduced every shipped bundle file byte-for-byte. The reviewed story also survives processing byte-for-byte.
 
-Execution constraints: localhost listeners are prohibited by this sandbox (`listen EPERM`). GitHub API access also failed. Full HTTP verification and creation of the single draft PR must be completed by the runner. No commit, push, or merge was performed.
+Test setup: reused local dependencies with a byte-identical package lock and Prisma schema after the first dependency directory proved to lack its generated Prisma client. The final full-suite run has no skips or failures.
+
+Runner handoff: create exactly one draft PR from `codex/r5-founder-bundle-career-story`; do not merge. Changes are intentionally uncommitted and unpushed, as requested. The GitHub draft PR cannot contain these changes until the runner commits and pushes this branch.
