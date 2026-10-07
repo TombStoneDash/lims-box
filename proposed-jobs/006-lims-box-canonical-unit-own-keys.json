@@ -1,0 +1,15 @@
+{
+  "id": "LIMSBOX-CANONICAL-UNIT-OWN-KEYS-SECOND-20261007-R1",
+  "repo": "TombStoneDash/lims-box",
+  "project": "LIMS BOX",
+  "title": "Reject inherited names in canonical unit registries",
+  "mod": "lib/ohworks-result-units.ts",
+  "test": "tests/ohworks/result-units.test.ts",
+  "paths": [
+    "lib/ohworks-result-units.ts",
+    "tests/ohworks/result-units.test.ts"
+  ],
+  "priority": "1",
+  "source": "lib/ohworks-result-units.ts:64-90 defines ordinary object registries; :229-238 uses direct bracket lookup with undefined-only checks. Inline reproduction: analyte=toString, valueText=1.50, fromUnit=mg/L raises native TypeError at canonicalDefinition.family. Planning verification on ef1f4da1633e6d4e90348ea613055691f1131580: the eight assigned existing test files passed 291/291 tests using TSX_DISABLE_CACHE=1 node --import /private/tmp/actorlab-654-review-base/node_modules/tsx/dist/loader.mjs --test followed by their exact paths (read-only existing loader; no dependency installation). All eight defect reproductions were separately asserted inline against unchanged source. Standalone source-verified bug; reviewed held issues #72, #94, #95 are not fully closed by this change.",
+  "prompt": "Ensure canonical unit conversion recognizes only explicitly declared registry entries. lib/ohworks-result-units.ts:64-90 defines UNIT_TABLE and ANALYTE_CANONICAL_UNITS as frozen ordinary objects. Lines 229-238 use bracket lookups and reject only undefined values, so inherited Object.prototype names pass the unknown-key checks. Calling convertResultToCanonicalUnit with analyte toString, valueText 1.50, and fromUnit mg/L reproduced a native TypeError when canonicalDefinition.family is accessed. An inherited source-unit name can also produce an incorrect cross-family error instead of the documented unknown-unit result.\n\nRequire own-property membership before accepting either caller-controlled registry key. Use a safe own-property check or equivalent local representation without changing exported registry contents or adding dependencies. Unknown analytes must produce ResultUnitConversionError with analyte-canonical-unit-undeclared; unknown source units must produce from-unit-unknown. Preserve valid conversions, significant figures, overflow and underflow handling, and the existing validation order for malformed value text.\n\nExtend tests/ohworks/result-units.test.ts with toString, constructor, and __proto__ separately in each input field, using valid companion fields and numeric text. Assert the exact typed error codes and keep a normal declared conversion as a control. Run node --import tsx --test tests/ohworks/result-units.test.ts. work on the assigned branch you are on. Edit only the listed source and test; no merges, rebases, commits, pushes, authentication, database, configuration, or external-service changes."
+}

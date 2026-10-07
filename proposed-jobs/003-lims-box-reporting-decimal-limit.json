@@ -1,0 +1,15 @@
+{
+  "id": "LIMSBOX-REPORTING-DECIMAL-LIMIT-SECOND-20261007-R1",
+  "repo": "TombStoneDash/lims-box",
+  "project": "LIMS BOX",
+  "title": "Validate the report formatter decimal precision limit",
+  "mod": "lib/ohworks-reporting-format.ts",
+  "test": "tests/ohworks/reporting-format.test.ts",
+  "paths": [
+    "lib/ohworks-reporting-format.ts",
+    "tests/ohworks/reporting-format.test.ts"
+  ],
+  "priority": "1",
+  "source": "lib/ohworks-reporting-format.ts:162-164 accepts any finite integer precision, :250-251 only rejects negatives, and :195 calls toFixed. Inline reproduction: a valid format with decimalPlaces=101 and value=12 throws native RangeError. Planning verification on ef1f4da1633e6d4e90348ea613055691f1131580: the eight assigned existing test files passed 291/291 tests using TSX_DISABLE_CACHE=1 node --import /private/tmp/actorlab-654-review-base/node_modules/tsx/dist/loader.mjs --test followed by their exact paths (read-only existing loader; no dependency installation). All eight defect reproductions were separately asserted inline against unchanged source. Standalone source-verified bug; reviewed held issues #72, #94, #95 are not fully closed by this change.",
+  "prompt": "Bound the decimal precision accepted by the synthetic report formatter. lib/ohworks-reporting-format.ts:162-164 accepts every finite integer decimalPlaces, and lines 250-251 reject only negative values. The helper at line 195 passes the accepted number directly to toFixed. A reproduced valid synthetic format with limits 0.1 and 100, value 12, and decimalPlaces=101 throws a native RangeError. That bypasses the module's documented ReportingFormatError contract and makes malformed format behavior depend on whether the reading is censored.\n\nValidate the supported upper bound of 100 before selecting any numeric or censored rendering path. Add a specific typed error code and human-readable explanation for precision above the supported maximum. Preserve the existing negative-decimal-places behavior, integer validation, censoring thresholds, and ordinary formatting. Update the nearby precision documentation in the same source file so the accepted interval is explicit.\n\nExtend tests/ohworks/reporting-format.test.ts with precision 101 for in-range, below-detection, and above-quantitation values, and valid boundary cases at 0 and 100. Assert ReportingFormatError and its exact code, not a generic thrown exception. Keep existing fractional, negative, and non-finite precision tests passing. Run node --import tsx --test tests/ohworks/reporting-format.test.ts. work on the assigned branch you are on. Change only the two allowed files; no merges, rebases, commits, pushes, dependencies, deployments, or external services."
+}

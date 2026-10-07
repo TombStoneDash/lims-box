@@ -1,0 +1,15 @@
+{
+  "id": "LIMSBOX-REFERENCE-RANGE-NULL-INPUT-SECOND-20261007-R1",
+  "repo": "TombStoneDash/lims-box",
+  "project": "LIMS BOX",
+  "title": "Keep reference-range evaluation total for missing requests",
+  "mod": "lib/ohworks-reference-range.ts",
+  "test": "tests/ohworks/reference-range.test.ts",
+  "paths": [
+    "lib/ohworks-reference-range.ts",
+    "tests/ohworks/reference-range.test.ts"
+  ],
+  "priority": "1",
+  "source": "lib/ohworks-reference-range.ts:5-11 promises a total, never-throwing evaluator; :144 dereferences input before validation, whereas :194-196 already returns structured invalid results. Inline reproduction: evaluateReferenceRange(null) throws native TypeError. Planning verification on ef1f4da1633e6d4e90348ea613055691f1131580: the eight assigned existing test files passed 291/291 tests using TSX_DISABLE_CACHE=1 node --import /private/tmp/actorlab-654-review-base/node_modules/tsx/dist/loader.mjs --test followed by their exact paths (read-only existing loader; no dependency installation). All eight defect reproductions were separately asserted inline against unchanged source. Standalone source-verified bug; reviewed held issues #72, #94, #95 are not fully closed by this change.",
+  "prompt": "Honor the reference-range evaluator's documented non-throwing boundary for missing requests. lib/ohworks-reference-range.ts:5-11 describes a total function that classifies uninterpretable input as invalid. The implementation at line 144 dereferences input.unit before validating the enclosing request, so evaluateReferenceRange(null) reproduced a native TypeError. Undefined has the same problem, while malformed individual fields already flow into the structured invalid result at lines 194-196. This is a local input-boundary defect, not a change to range classification policy.\n\nAdd an early guard for null, undefined, primitive, and array request values before any property access. Return classification invalid with the existing invalid report flag and a deterministic input-malformed reason added to the local reason-code union. Keep the valid ReferenceRangeInput caller contract usable; tests may use explicit casts to exercise runtime-invalid input. Do not introduce exceptions, I/O, broad exception swallowing, or changes to numeric and censored-result classification. Preserve sorted existing reasons for object requests with malformed fields.\n\nExtend tests/ohworks/reference-range.test.ts with null, undefined, primitives, and arrays, asserting that every call returns the expected invalid shape without throwing. Retain valid baseline and malformed-field controls. Run node --import tsx --test tests/ohworks/reference-range.test.ts. work on the assigned branch you are on. Edit only the allowed source and test; no merges, rebases, commits, pushes, database, credentials, authentication, or deployment work."
+}

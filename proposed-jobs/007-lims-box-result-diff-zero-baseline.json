@@ -1,0 +1,15 @@
+{
+  "id": "LIMSBOX-RESULT-DIFF-ZERO-BASELINE-SECOND-20261007-R1",
+  "repo": "TombStoneDash/lims-box",
+  "project": "LIMS BOX",
+  "title": "Flag changed results when a percent-only threshold is undefined",
+  "mod": "lib/ohworks-result-diff.ts",
+  "test": "tests/ohworks/result-diff.test.ts",
+  "paths": [
+    "lib/ohworks-result-diff.ts",
+    "tests/ohworks/result-diff.test.ts"
+  ],
+  "priority": "1",
+  "source": "lib/ohworks-result-diff.ts:424-428 sets percent=null for zero old values; :446-452 treats a percent-only threshold as within-threshold when no comparison is possible. Inline reproduction: value 0 to 100, absolute=null, percent=10 yields significant=false. Planning verification on ef1f4da1633e6d4e90348ea613055691f1131580: the eight assigned existing test files passed 291/291 tests using TSX_DISABLE_CACHE=1 node --import /private/tmp/actorlab-654-review-base/node_modules/tsx/dist/loader.mjs --test followed by their exact paths (read-only existing loader; no dependency installation). All eight defect reproductions were separately asserted inline against unchanged source. Standalone source-verified bug; reviewed held issues #72, #94, #95 are not fully closed by this change.",
+  "prompt": "Make a changed result conservative when its only declared significance threshold cannot be evaluated. lib/ohworks-result-diff.ts:424-428 correctly represents percentage change from zero as null. However, lines 446-452 skip the null percentage comparison and then label the change within-threshold. An inline reproduction comparing synthetic analyte SYNTH from 0 to 100 mg/L with absolute=null and percent=10 returned significant=false. No usable threshold justified that classification. The existing zero-baseline test at tests/ohworks/result-diff.test.ts:189-195 includes an absolute threshold and does not cover this gap.\n\nWhen a numeric value changes, the old numeric value is zero, and the declared threshold is percentage-only, mark the change significant. Add a precise reason such as percent-delta-undefined and its explanation rather than claiming that a numeric percentage exceeded a limit. Preserve delta.percent=null. Keep existing absolute-threshold behavior when an absolute limit is present, including the existing combined-threshold test. Preserve flag-change precedence and qualitative comparisons.\n\nExtend tests/ohworks/result-diff.test.ts with positive and negative changes from zero under percentage-only thresholds, unchanged zero, numeric-string zero, and absolute-threshold controls. Assert significant, significanceReason, hasSignificantChange, and footer wording. Run node --import tsx --test tests/ohworks/result-diff.test.ts. work on the assigned branch you are on. Change only the allowed files; no merges, rebases, commits, pushes, database work, clinical policy configuration, or external operations."
+}
