@@ -174,6 +174,25 @@ function hasPatientIdentity(record: unknown): record is { resultId: string; time
   );
 }
 
+function validateTimestamp(timestamp: string): void {
+  // Check the written calendar date before Date.parse normalizes it or applies
+  // an offset. Comparing UTC date parts would reject valid offset timestamps.
+  const date = /^([+-]\d{6}|\d{4})-(\d{2})-(\d{2})(?=T|t|\s|$)/.exec(timestamp);
+  if (date) {
+    const year = Number(date[1]);
+    const month = Number(date[2]);
+    const day = Number(date[3]);
+    const leapYear = year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
+    const daysInMonth = [31, leapYear ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+    if (month < 1 || month > 12 || day < 1 || day > daysInMonth[month - 1]) {
+      throw new QCBracketInputError('timestamp-invalid');
+    }
+  }
+  if (!Number.isFinite(Date.parse(timestamp))) {
+    throw new QCBracketInputError('timestamp-invalid');
+  }
+}
+
 function findDuplicateKey(keys: string[]): string | undefined {
   const seen = new Set<string>();
   for (const key of keys) {
@@ -312,6 +331,13 @@ export function evaluateQCBracketing(run: QCBracketRun): QCBracketDecision[] {
     }
   }
 
+  for (const qc of run.qcResults) {
+    validateTimestamp(qc.timestamp);
+  }
+  for (const result of run.patientResults) {
+    validateTimestamp(result.timestamp);
+  }
+
   const parsedQC: ParsedQCResult[] = run.qcResults.map((qc) => ({
     qcId: qc.qcId,
     outcome: qc.outcome as QCBracketOutcome,
@@ -322,18 +348,6 @@ export function evaluateQCBracketing(run: QCBracketRun): QCBracketDecision[] {
     resultId: result.resultId,
     parsedTime: Date.parse(result.timestamp),
   }));
-
-  for (const qc of parsedQC) {
-    if (!Number.isFinite(qc.parsedTime)) {
-      throw new QCBracketInputError('timestamp-invalid');
-    }
-  }
-
-  for (const result of parsedPatient) {
-    if (!Number.isFinite(result.parsedTime)) {
-      throw new QCBracketInputError('timestamp-invalid');
-    }
-  }
 
   for (let i = 1; i < parsedQC.length; i += 1) {
     if (parsedQC[i].parsedTime < parsedQC[i - 1].parsedTime) {
