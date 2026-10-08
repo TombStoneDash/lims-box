@@ -156,7 +156,22 @@ function isNonEmptyString(value: unknown): value is string {
 }
 
 function isUtcTimestamp(value: string): boolean {
-  return value.endsWith('Z') && Number.isFinite(Date.parse(value));
+  const components = /^(\d{4}|[+-]\d{6})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.\d+)?Z$/.exec(value);
+  if (!components) {
+    return false;
+  }
+  const parsed = new Date(value);
+  // Date parsing can normalize impossible dates; require the UTC calendar
+  // and clock components to match the input before trusting the instant.
+  return (
+    Number.isFinite(parsed.getTime()) &&
+    parsed.getUTCFullYear() === Number(components[1]) &&
+    parsed.getUTCMonth() + 1 === Number(components[2]) &&
+    parsed.getUTCDate() === Number(components[3]) &&
+    parsed.getUTCHours() === Number(components[4]) &&
+    parsed.getUTCMinutes() === Number(components[5]) &&
+    parsed.getUTCSeconds() === Number(components[6])
+  );
 }
 
 function isStructurallyValidLotRecord(raw: unknown): raw is CalibratorLotRecordInput {
