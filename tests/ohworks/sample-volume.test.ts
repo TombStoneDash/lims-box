@@ -228,6 +228,50 @@ test('explainSampleVolumeError returns deterministic, non-empty text for every e
   }
 });
 
+test('allows a decimal panel whose binary subtraction leaves roundoff residue instead of an exact fit', () => {
+  // 0.3 - 0.1 - 0.2 leaves a 2.7755575615628914e-17 mL binary residue; a
+  // strict comparison would wrongly mark CBC short by that residue.
+  const tests: SampleVolumeTestRequest[] = [
+    request({ testCode: 'GLUCOSE', requiredVolumeMl: 0.1, priority: 'routine', sequence: 0 }),
+    request({ testCode: 'CBC', requiredVolumeMl: 0.2, priority: 'routine', sequence: 1 }),
+  ];
+  const result = evaluateSampleVolumeSufficiency(0.3, 0, tests);
+  assert.deepEqual(result.runnableTestCodes, ['GLUCOSE', 'CBC']);
+  assert.deepEqual(result.shortTestCodes, []);
+  for (const outcome of result.outcomes) {
+    assert.equal(outcome.status, 'runnable');
+    assert.ok(outcome.remainingVolumeAfterMl >= 0);
+  }
+  const cbcOutcome = result.outcomes.find((outcome) => outcome.testCode === 'CBC');
+  assert.equal(cbcOutcome?.remainingVolumeAfterMl, 0);
+});
+
+test('allows a decimal fit after a decimal container dead-volume subtraction leaves roundoff residue', () => {
+  // 0.3 - 0.1 does not land on exactly 0.2 in binary floating point either.
+  const result = evaluateSampleVolumeSufficiency(0.3, 0.1, [request({ requiredVolumeMl: 0.2 })]);
+  assert.equal(result.outcomes[0].status, 'runnable');
+  assert.ok(result.availableVolumeMl >= 0);
+  assert.ok(result.outcomes[0].status === 'runnable' && result.outcomes[0].remainingVolumeAfterMl === 0);
+});
+
+test('still marks a decimal test short when the shortfall is a genuine amount, not roundoff', () => {
+  // 0.1 mL short is many orders of magnitude larger than the scale-aware
+  // roundoff tolerance, so this must remain a real shortage.
+  const result = evaluateSampleVolumeSufficiency(0.3, 0, [request({ requiredVolumeMl: 0.4 })]);
+  assert.equal(result.outcomes[0].status, 'short');
+  assert.ok(result.outcomes[0].status === 'short' && result.outcomes[0].shortfallMl > 0.09);
+  assert.ok(result.outcomes[0].remainingVolumeAfterMl >= 0);
+  assert.deepEqual(result.runnableTestCodes, []);
+});
+
+test('marks a very small positive requirement short against zero supply instead of tolerating it as roundoff', () => {
+  const result = evaluateSampleVolumeSufficiency(0, 0, [request({ requiredVolumeMl: 1e-10 })]);
+  assert.equal(result.outcomes[0].status, 'short');
+  assert.ok(result.outcomes[0].status === 'short' && result.outcomes[0].shortfallMl > 0);
+  assert.ok(result.outcomes[0].remainingVolumeAfterMl >= 0);
+  assert.deepEqual(result.runnableTestCodes, []);
+});
+
 test('is deterministic: identical inputs always produce identical output', () => {
   const tests: SampleVolumeTestRequest[] = [
     request({ testCode: 'TSH', requiredVolumeMl: 3, priority: 'stat', sequence: 0 }),

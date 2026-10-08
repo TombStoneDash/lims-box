@@ -151,6 +151,20 @@ function validateTests(tests: ReadonlyArray<SampleVolumeTestRequest>): void {
   }
 }
 
+/**
+ * Number of floating-point ULPs (at the scale of the values being compared)
+ * treated as binary subtraction roundoff rather than a real volume
+ * difference. Scaled by the compared magnitudes rather than a fixed
+ * absolute epsilon, so it never grows large enough to paper over a genuine
+ * shortage on a very small required volume.
+ */
+const ROUNDOFF_TOLERANCE_ULPS = 8;
+
+function roundoffTolerance(a: number, b: number): number {
+  const scale = Math.max(Math.abs(a), Math.abs(b));
+  return ROUNDOFF_TOLERANCE_ULPS * Number.EPSILON * scale;
+}
+
 function comparePrecedence(a: SampleVolumeTestRequest, b: SampleVolumeTestRequest): number {
   const rankDelta = PRIORITY_RANK[a.priority as SampleVolumeTestPriority] - PRIORITY_RANK[b.priority as SampleVolumeTestPriority];
   if (rankDelta !== 0) {
@@ -199,8 +213,15 @@ export function evaluateSampleVolumeSufficiency(
   let remainingVolumeMl = availableVolumeMl;
 
   for (const test of orderedTests) {
-    if (remainingVolumeMl >= test.requiredVolumeMl) {
-      remainingVolumeMl -= test.requiredVolumeMl;
+    const tolerance = roundoffTolerance(remainingVolumeMl, test.requiredVolumeMl);
+    const shortfallMl = test.requiredVolumeMl - remainingVolumeMl;
+
+    if (shortfallMl <= tolerance) {
+      let updatedRemainingVolumeMl = remainingVolumeMl - test.requiredVolumeMl;
+      if (updatedRemainingVolumeMl < 0 && updatedRemainingVolumeMl >= -tolerance) {
+        updatedRemainingVolumeMl = 0;
+      }
+      remainingVolumeMl = updatedRemainingVolumeMl;
       outcomes.push({
         testCode: test.testCode,
         status: 'runnable',
@@ -212,7 +233,7 @@ export function evaluateSampleVolumeSufficiency(
       outcomes.push({
         testCode: test.testCode,
         status: 'short',
-        shortfallMl: test.requiredVolumeMl - remainingVolumeMl,
+        shortfallMl,
         remainingVolumeAfterMl: remainingVolumeMl,
       });
       shortTestCodes.push(test.testCode);
