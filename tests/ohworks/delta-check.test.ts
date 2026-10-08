@@ -249,6 +249,52 @@ test('an unparsable prior timestamp fails closed to block', () => {
   assert.equal(result.reasonCode, 'prior-timestamp-invalid');
 });
 
+test('an impossible calendar date (February 30) in the current timestamp fails closed to block instead of being normalized forward', () => {
+  const input = baselineInput();
+  input.current.capturedAt = '2026-02-30T12:00:00Z';
+  input.prior = null;
+  const result = evaluateResultDelta(input);
+  assert.equal(result.status, 'block');
+  assert.equal(result.reasonCode, 'current-timestamp-invalid');
+  assert.equal(result.delta, null);
+  assert.equal(result.rule, null);
+});
+
+test('an impossible calendar date (February 30) in the prior timestamp fails closed to block', () => {
+  const input = baselineInput();
+  input.prior.capturedAt = '2026-02-30T12:00:00Z';
+  const result = evaluateResultDelta(input);
+  assert.equal(result.status, 'block');
+  assert.equal(result.reasonCode, 'prior-timestamp-invalid');
+});
+
+test('February 29 in a non-leap year fails closed to block', () => {
+  const input = baselineInput();
+  input.current.capturedAt = '2026-02-29T12:00:00Z'; // 2026 is not a leap year
+  input.prior = null;
+  const result = evaluateResultDelta(input);
+  assert.equal(result.status, 'block');
+  assert.equal(result.reasonCode, 'current-timestamp-invalid');
+});
+
+test('February 29 in a leap year is accepted as a valid calendar date', () => {
+  const input = baselineInput();
+  input.prior.capturedAt = '2024-02-29T12:00:00Z'; // 2024 is a leap year
+  input.current.capturedAt = '2024-03-01T12:00:00Z';
+  const result = evaluateResultDelta(input);
+  assert.notEqual(result.reasonCode, 'prior-timestamp-invalid');
+  assert.equal(result.status, 'pass');
+});
+
+test('a valid explicit-offset ISO timestamp is accepted, not rejected as a UTC-only restriction', () => {
+  const input = baselineInput();
+  input.current.capturedAt = '2026-01-02T17:00:00+05:00'; // equivalent instant to the baseline Z timestamp
+  const result = evaluateResultDelta(input);
+  assert.notEqual(result.reasonCode, 'current-timestamp-invalid');
+  assert.equal(result.status, 'pass');
+  assert.equal(result.reasonCode, 'within-limits');
+});
+
 test('a prior result at the same instant as current fails closed to block', () => {
   const input = baselineInput();
   input.prior.capturedAt = input.current.capturedAt;
