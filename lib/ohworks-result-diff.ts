@@ -67,7 +67,8 @@ export type ResultDiffSignificanceReason =
   | 'nonnumeric-value-changed'
   | 'no-threshold-declared'
   | 'exceeds-threshold'
-  | 'within-threshold';
+  | 'within-threshold'
+  | 'percent-delta-undefined';
 
 export type ResultDiffChangedEntry = Readonly<{
   analyteCode: string;
@@ -145,6 +146,8 @@ const SIGNIFICANCE_REASON_MESSAGES: Record<ResultDiffSignificanceReason, string>
   'no-threshold-declared': 'The result value changed and no significance threshold was declared for this analyte, so the change is treated as clinically significant.',
   'exceeds-threshold': "The result value changed by more than the analyte's declared significance threshold.",
   'within-threshold': "The result value changed but stayed within the analyte's declared significance threshold.",
+  'percent-delta-undefined':
+    'The old value was zero, so the percent change is undefined and the declared percent-only threshold could not be evaluated, so the change is treated as clinically significant.',
 };
 
 /** Deterministic, privacy-safe human-readable text for a result diff significance reason code. */
@@ -448,8 +451,19 @@ export function diffResultVersions(
         const exceeds =
           (threshold.absolute !== null && magnitudeAbs > threshold.absolute) ||
           (threshold.percent !== null && magnitudePercent !== null && magnitudePercent > threshold.percent);
-        significant = exceeds;
-        significanceReason = exceeds ? 'exceeds-threshold' : 'within-threshold';
+        if (exceeds) {
+          significant = true;
+          significanceReason = 'exceeds-threshold';
+        } else if (threshold.absolute === null && magnitudePercent === null) {
+          // Old value is 0, no absolute limit was declared, so the only declared
+          // (percent) threshold cannot be evaluated: fail closed rather than
+          // calling an unevaluable comparison "within threshold".
+          significant = true;
+          significanceReason = 'percent-delta-undefined';
+        } else {
+          significant = false;
+          significanceReason = 'within-threshold';
+        }
       }
     }
 
