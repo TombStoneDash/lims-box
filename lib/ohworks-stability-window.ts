@@ -233,6 +233,22 @@ function outcome(
   return Object.freeze({ status, reasonCode, segments: Object.freeze([...segments]) });
 }
 
+function parseCalendarTimestamp(value: string): number {
+  const date = /^([+-]\d{6}|\d{4})-(\d{2})-(\d{2})(?=[Tt\s]|$)/.exec(value);
+  if (!date) return NaN;
+
+  // Validate the supplied calendar date, not the UTC date after applying an offset.
+  // Date.parse alone normalizes impossible dates such as February 30.
+  const year = Number(date[1]);
+  const month = Number(date[2]);
+  const day = Number(date[3]);
+  const leapYear = year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
+  const daysInMonth = [31, leapYear ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+  if (month < 1 || month > 12 || day < 1 || day > daysInMonth[month - 1]) return NaN;
+
+  return Date.parse(value);
+}
+
 /**
  * Evaluate a fabricated specimen's storage condition history against
  * declared per-condition stability windows for its analyte, and return a
@@ -255,12 +271,12 @@ export function evaluateSpecimenStability(input: StabilityCheckInput): Stability
     throw new StabilityWindowInputError('specimen-malformed');
   }
 
-  const collectedTime = Date.parse(input.collectedAt);
+  const collectedTime = parseCalendarTimestamp(input.collectedAt);
   if (!Number.isFinite(collectedTime)) {
     return outcome('expired', 'collected-timestamp-invalid', []);
   }
 
-  const resultTime = Date.parse(input.resultAt);
+  const resultTime = parseCalendarTimestamp(input.resultAt);
   if (!Number.isFinite(resultTime)) {
     return outcome('expired', 'result-timestamp-invalid', []);
   }
@@ -275,7 +291,7 @@ export function evaluateSpecimenStability(input: StabilityCheckInput): Stability
 
   const entryTimes: number[] = [];
   for (const entry of input.history) {
-    const parsed = Date.parse(entry.at);
+    const parsed = parseCalendarTimestamp(entry.at);
     if (!Number.isFinite(parsed)) {
       return outcome('expired', 'entry-timestamp-invalid', []);
     }
