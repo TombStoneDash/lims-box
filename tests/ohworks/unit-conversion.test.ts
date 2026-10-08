@@ -38,6 +38,7 @@ const ALL_ERROR_CODES: UnitConversionErrorCode[] = [
   'unit-mismatched',
   'value-not-finite',
   'value-negative',
+  'conversion-overflow',
 ];
 
 test('the factor table declares exactly the four documented analytes', () => {
@@ -246,6 +247,7 @@ test('every declared error code is reachable and carries a non-empty message', (
     () => convertResultUnit({ analyteCode: 'GLUCOSE', value: 1, fromUnit: 'mg/dL', toUnit: 'mg/dL' }),
     () => convertResultUnit({ analyteCode: 'GLUCOSE', value: NaN, fromUnit: 'mg/dL', toUnit: 'mmol/L' }),
     () => convertResultUnit({ analyteCode: 'GLUCOSE', value: -1, fromUnit: 'mg/dL', toUnit: 'mmol/L' }),
+    () => convertResultUnit({ analyteCode: 'GLUCOSE', value: Number.MAX_VALUE, fromUnit: 'mmol/L', toUnit: 'mg/dL' }),
   ];
   for (const attempt of attempts) {
     try {
@@ -258,4 +260,54 @@ test('every declared error code is reachable and carries a non-empty message', (
     }
   }
   assert.deepEqual(codes.sort(), [...ALL_ERROR_CODES].sort());
+});
+
+test('dividing a huge finite SI value by a sub-1 conventional factor overflows and is refused (the original reported defect)', () => {
+  // GLUCOSE conventionalToSi (~0.0555) is less than 1, so converting SI -> conventional divides by
+  // it, which is equivalent to multiplying by ~18. Number.MAX_VALUE * 18 overflows to Infinity.
+  assert.throws(
+    () => convertResultUnit({ analyteCode: 'GLUCOSE', value: Number.MAX_VALUE, fromUnit: 'mmol/L', toUnit: 'mg/dL' }),
+    (error: unknown) => error instanceof UnitConversionError && error.code === 'conversion-overflow',
+  );
+});
+
+test('multiplying a huge finite conventional value by the declared creatinine factor overflows and is refused', () => {
+  // CREATININE conventionalToSi (~88.47) is greater than 1, so converting conventional -> SI
+  // multiplies by it directly. Number.MAX_VALUE * 88.47 overflows to Infinity.
+  assert.throws(
+    () =>
+      convertResultUnit({ analyteCode: 'CREATININE', value: Number.MAX_VALUE, fromUnit: 'mg/dL', toUnit: 'umol/L' }),
+    (error: unknown) => error instanceof UnitConversionError && error.code === 'conversion-overflow',
+  );
+});
+
+test('a large but representable converted value that previously overflowed only during decimal scaling is now returned finite', () => {
+  // The converted value (~5.55e306) is well within Number.MAX_VALUE, but scaling it by
+  // 10**siDecimals (100) during rounding would push it past Number.MAX_VALUE to Infinity.
+  // Rounding must fall back to the unrounded (but finite) converted value instead.
+  const result = convertResultUnit({ analyteCode: 'GLUCOSE', value: 1e308, fromUnit: 'mg/dL', toUnit: 'mmol/L' });
+  assert.ok(Number.isFinite(result.value));
+  assert.equal(result.value, 1e308 * (10 / 180.156));
+  assert.equal(result.unit, 'mmol/L');
+});
+
+test('ordinary conversions remain unaffected and still round-trip finitely', () => {
+  for (const factor of ANALYTE_UNIT_FACTORS) {
+    for (const original of CONVENTIONAL_FIXTURES[factor.analyteCode]) {
+      const toSi = convertResultUnit({
+        analyteCode: factor.analyteCode,
+        value: original,
+        fromUnit: factor.conventionalUnit,
+        toUnit: factor.siUnit,
+      });
+      assert.ok(Number.isFinite(toSi.value));
+      const backToConventional = convertResultUnit({
+        analyteCode: factor.analyteCode,
+        value: toSi.value,
+        fromUnit: factor.siUnit,
+        toUnit: factor.conventionalUnit,
+      });
+      assert.ok(Number.isFinite(backToConventional.value));
+    }
+  }
 });
