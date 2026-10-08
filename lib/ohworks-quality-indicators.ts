@@ -389,10 +389,12 @@ export function computeQualityIndicators(input: MonthlyQualityIndicatorInput): Q
 
   const rejectionRateByReason: Record<string, QualityIndicatorResult> = {};
   for (const reasonCode of declaredReasons) {
-    const numerator = specimensRejected.filter((event) => event.reasonCode === reasonCode).length;
+    const rejectedIds = new Set(
+      specimensRejected.filter((event) => event.reasonCode === reasonCode).map((event) => event.specimenId),
+    );
     rejectionRateByReason[reasonCode] = computeResult(
-      numerator,
-      specimensReceived.length,
+      rejectedIds.size,
+      receivedIds.size,
       targets.rejectionRatePercentByReason[reasonCode],
     );
   }
