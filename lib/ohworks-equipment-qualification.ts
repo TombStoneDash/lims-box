@@ -211,7 +211,19 @@ function isNonEmptyString(value: unknown): value is string {
 }
 
 function isUtcTimestamp(value: string): boolean {
-  return value.endsWith('Z') && Number.isFinite(Date.parse(value));
+  const match = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.\d+)?Z$/.exec(value);
+  if (!match) {
+    return false;
+  }
+  const [year, month, day, hour, minute, second] = match.slice(1).map(Number);
+  const leapYear = year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
+  const daysInMonth = [31, leapYear ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+  // Check literal fields before Date.parse can normalize an impossible date.
+  if (month < 1 || month > 12 || day < 1 || day > daysInMonth[month - 1]
+    || hour > 23 || minute > 59 || second > 59) {
+    return false;
+  }
+  return Number.isFinite(Date.parse(value));
 }
 
 function isStructurallyValidStage(raw: unknown): raw is QualificationStageInput {
