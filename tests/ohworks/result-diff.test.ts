@@ -74,6 +74,7 @@ const ALL_SIGNIFICANCE_REASONS: ResultDiffSignificanceReason[] = [
   'no-threshold-declared',
   'exceeds-threshold',
   'within-threshold',
+  'percent-delta-undefined',
 ];
 
 // --- identical versions: no diff at all ---
@@ -193,6 +194,75 @@ test('a zero old value yields a null percent delta and only the absolute thresho
   const diff = diffResultVersions(oldVersion, newVersion, thresholds);
   assert.equal(diff.changed[0].delta?.percent, null);
   assert.equal(diff.changed[0].significant, false);
+});
+
+// --- changed: zero baseline with a percent-only threshold (undefined percent) ---
+
+test('a positive change from a zero old value with only a percent threshold declared is clinically significant', () => {
+  const oldVersion: ResultRow[] = [{ analyteCode: 'ANALYTE-SYNTH-A', value: 0, unit: 'mg/L' }];
+  const newVersion: ResultRow[] = [{ analyteCode: 'ANALYTE-SYNTH-A', value: 100, unit: 'mg/L' }];
+  const thresholds: SignificanceThreshold[] = [{ analyteCode: 'ANALYTE-SYNTH-A', absolute: null, percent: 10 }];
+  const diff = diffResultVersions(oldVersion, newVersion, thresholds);
+  const entry = diff.changed[0];
+  assert.equal(entry.delta?.absolute, 100);
+  assert.equal(entry.delta?.percent, null);
+  assert.equal(entry.significant, true);
+  assert.equal(entry.significanceReason, 'percent-delta-undefined');
+  assert.equal(diff.hasSignificantChange, true);
+  assert.equal(diff.changeLines[0], 'ANALYTE-SYNTH-A: 0 mg/L -> 100 mg/L (clinically significant)');
+});
+
+test('a negative change from a zero old value with only a percent threshold declared is clinically significant', () => {
+  const oldVersion: ResultRow[] = [{ analyteCode: 'ANALYTE-SYNTH-A', value: 0, unit: 'mg/L' }];
+  const newVersion: ResultRow[] = [{ analyteCode: 'ANALYTE-SYNTH-A', value: -50, unit: 'mg/L' }];
+  const thresholds: SignificanceThreshold[] = [{ analyteCode: 'ANALYTE-SYNTH-A', absolute: null, percent: 10 }];
+  const diff = diffResultVersions(oldVersion, newVersion, thresholds);
+  const entry = diff.changed[0];
+  assert.equal(entry.delta?.absolute, -50);
+  assert.equal(entry.delta?.percent, null);
+  assert.equal(entry.significant, true);
+  assert.equal(entry.significanceReason, 'percent-delta-undefined');
+});
+
+test('a numeric-string zero old value with only a percent threshold declared is clinically significant', () => {
+  const oldVersion: ResultRow[] = [{ analyteCode: 'ANALYTE-SYNTH-A', value: '0', unit: 'mg/L' }];
+  const newVersion: ResultRow[] = [{ analyteCode: 'ANALYTE-SYNTH-A', value: 100, unit: 'mg/L' }];
+  const thresholds: SignificanceThreshold[] = [{ analyteCode: 'ANALYTE-SYNTH-A', absolute: null, percent: 10 }];
+  const diff = diffResultVersions(oldVersion, newVersion, thresholds);
+  const entry = diff.changed[0];
+  assert.equal(entry.delta?.percent, null);
+  assert.equal(entry.significant, true);
+  assert.equal(entry.significanceReason, 'percent-delta-undefined');
+});
+
+test('an unchanged zero value under a percent-only threshold produces no changed entry', () => {
+  const oldVersion: ResultRow[] = [{ analyteCode: 'ANALYTE-SYNTH-A', value: 0, unit: 'mg/L' }];
+  const newVersion: ResultRow[] = [{ analyteCode: 'ANALYTE-SYNTH-A', value: 0, unit: 'mg/L' }];
+  const thresholds: SignificanceThreshold[] = [{ analyteCode: 'ANALYTE-SYNTH-A', absolute: null, percent: 10 }];
+  const diff = diffResultVersions(oldVersion, newVersion, thresholds);
+  assert.deepEqual(diff.changed, []);
+  assert.equal(diff.hasSignificantChange, false);
+});
+
+test('a change from a zero old value within a declared absolute-only threshold stays not clinically significant', () => {
+  const oldVersion: ResultRow[] = [{ analyteCode: 'ANALYTE-SYNTH-A', value: 0, unit: 'mg/L' }];
+  const newVersion: ResultRow[] = [{ analyteCode: 'ANALYTE-SYNTH-A', value: 3, unit: 'mg/L' }];
+  const thresholds: SignificanceThreshold[] = [{ analyteCode: 'ANALYTE-SYNTH-A', absolute: 5, percent: null }];
+  const diff = diffResultVersions(oldVersion, newVersion, thresholds);
+  const entry = diff.changed[0];
+  assert.equal(entry.delta?.percent, null);
+  assert.equal(entry.significant, false);
+  assert.equal(entry.significanceReason, 'within-threshold');
+});
+
+test('a change from a zero old value exceeding a declared absolute-only threshold is clinically significant', () => {
+  const oldVersion: ResultRow[] = [{ analyteCode: 'ANALYTE-SYNTH-A', value: 0, unit: 'mg/L' }];
+  const newVersion: ResultRow[] = [{ analyteCode: 'ANALYTE-SYNTH-A', value: 10, unit: 'mg/L' }];
+  const thresholds: SignificanceThreshold[] = [{ analyteCode: 'ANALYTE-SYNTH-A', absolute: 5, percent: null }];
+  const diff = diffResultVersions(oldVersion, newVersion, thresholds);
+  const entry = diff.changed[0];
+  assert.equal(entry.significant, true);
+  assert.equal(entry.significanceReason, 'exceeds-threshold');
 });
 
 test('a negative delta magnitude is evaluated the same as a positive one', () => {
