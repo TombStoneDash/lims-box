@@ -133,7 +133,8 @@ export type MethodComparisonErrorCode =
   | 'candidate-unit-missing'
   | 'reference-unit-mismatched'
   | 'candidate-unit-mismatched'
-  | 'insufficient-reference-value-spread';
+  | 'insufficient-reference-value-spread'
+  | 'percent-bias-unavailable';
 
 const ERROR_MESSAGES: Record<MethodComparisonErrorCode, string> = {
   'declaration-malformed': 'The declared comparison parameters are not structurally valid.',
@@ -149,6 +150,8 @@ const ERROR_MESSAGES: Record<MethodComparisonErrorCode, string> = {
   'candidate-unit-mismatched': 'A declared pair candidate-method unit does not match the declared comparison unit.',
   'insufficient-reference-value-spread':
     'Every declared reference-method value is identical, so no pairwise slope can be computed.',
+  'percent-bias-unavailable':
+    'Percent bias cannot be evaluated because the mean reference-method value is zero and no absolute mean-difference limit is declared.',
 };
 
 /** Deterministic, human-readable text for a fail-closed error code. */
@@ -259,6 +262,8 @@ function median(values: readonly number[]): number {
  * reference values with no spread all throw MethodComparisonError instead of
  * guessing at a decision. Structurally invalid declared parameters throw the
  * same way.
+ * A zero mean reference value also throws when percent bias is the sole
+ * declared acceptance axis, since that criterion cannot be evaluated.
  *
  * When both declared allowable-bias axes are exceeded at once, the
  * governing criterion is chosen by a fixed priority: mean difference, then
@@ -361,6 +366,14 @@ export function evaluateMethodComparison(
     intercept,
     pairwiseSlopeCount: pairwiseSlopes.length,
   });
+
+  if (
+    percentBias === null &&
+    declaration.allowableBias.maxPercentBias !== null &&
+    declaration.allowableBias.maxMeanDifference === null
+  ) {
+    throw new MethodComparisonError('percent-bias-unavailable');
+  }
 
   const meanDifferenceExceeded =
     declaration.allowableBias.maxMeanDifference !== null &&
