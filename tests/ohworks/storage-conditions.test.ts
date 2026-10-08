@@ -155,6 +155,74 @@ test('fails closed on a non-UTC (no trailing Z) reading timestamp', () => {
   );
 });
 
+test('fails closed on a February 30 timestamp (impossible calendar date)', () => {
+  assert.throws(
+    () => evaluateStorageConditionLog('refrigerated', [readingAt(0, { timestamp: '2026-02-30T12:00:00Z' })]),
+    (error: unknown) => error instanceof StorageConditionLogError && error.code === 'reading-timestamp-invalid',
+  );
+});
+
+test('fails closed on an April 31 timestamp (April has only 30 days)', () => {
+  assert.throws(
+    () => evaluateStorageConditionLog('refrigerated', [readingAt(0, { timestamp: '2026-04-31T12:00:00Z' })]),
+    (error: unknown) => error instanceof StorageConditionLogError && error.code === 'reading-timestamp-invalid',
+  );
+});
+
+test('fails closed on February 29 in a non-leap year', () => {
+  assert.throws(
+    () => evaluateStorageConditionLog('refrigerated', [readingAt(0, { timestamp: '2025-02-29T12:00:00Z' })]),
+    (error: unknown) => error instanceof StorageConditionLogError && error.code === 'reading-timestamp-invalid',
+  );
+});
+
+test('accepts a valid leap-day timestamp (February 29 in a leap year)', () => {
+  const result = evaluateStorageConditionLog('refrigerated', [readingAt(0, { timestamp: '2024-02-29T12:00:00Z' })]);
+  assert.equal(result.readingClassifications[0].severity, 'within_tolerance');
+  assert.equal(result.usable, true);
+});
+
+test('fails closed on malformed clock fields (hour 24, minute 60, second 60)', () => {
+  assert.throws(
+    () => evaluateStorageConditionLog('refrigerated', [readingAt(0, { timestamp: '2026-02-01T24:00:00Z' })]),
+    (error: unknown) => error instanceof StorageConditionLogError && error.code === 'reading-timestamp-invalid',
+  );
+  assert.throws(
+    () => evaluateStorageConditionLog('refrigerated', [readingAt(0, { timestamp: '2026-02-01T00:60:00Z' })]),
+    (error: unknown) => error instanceof StorageConditionLogError && error.code === 'reading-timestamp-invalid',
+  );
+  assert.throws(
+    () => evaluateStorageConditionLog('refrigerated', [readingAt(0, { timestamp: '2026-02-01T00:00:60Z' })]),
+    (error: unknown) => error instanceof StorageConditionLogError && error.code === 'reading-timestamp-invalid',
+  );
+});
+
+test('accepts ordinary timestamps with and without fractional seconds', () => {
+  const withoutFraction = evaluateStorageConditionLog('refrigerated', [
+    readingAt(0, { timestamp: '2026-02-01T00:00:00Z' }),
+  ]);
+  assert.equal(withoutFraction.usable, true);
+
+  const withFraction = evaluateStorageConditionLog('refrigerated', [
+    readingAt(0, { timestamp: '2026-02-01T00:00:00.123Z' }),
+  ]);
+  assert.equal(withFraction.usable, true);
+});
+
+test('reports the correct reading index when an invalid timestamp follows a valid reading', () => {
+  assert.throws(
+    () =>
+      evaluateStorageConditionLog('refrigerated', [
+        readingAt(0),
+        readingAt(60_000, { timestamp: '2026-02-30T12:00:00Z' }),
+      ]),
+    (error: unknown) =>
+      error instanceof StorageConditionLogError &&
+      error.code === 'reading-timestamp-invalid' &&
+      error.readingIndex === 1,
+  );
+});
+
 test('fails closed on unordered (non-increasing) timestamps', () => {
   assert.throws(
     () => evaluateStorageConditionLog('refrigerated', [readingAt(60_000), readingAt(0)]),
