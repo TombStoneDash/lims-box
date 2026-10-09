@@ -30,9 +30,11 @@
  *                           analyte has no declared measuring range (or the
  *                           declared range's unit does not match the
  *                           result's unit), the declared ladder is invalid
- *                           for this analyte, or a rerun would be required
+ *                           for this analyte, a rerun would be required
  *                           but the declared maximum rerun count has already
- *                           been reached.
+ *                           been reached, or the derived reportable product
+ *                           (a corrected result or greater-than limit) is
+ *                           not representable as a finite number.
  *
  * It performs no I/O, reads no system clock, mutates no SENAITE or database
  * state, and touches no real specimen, instrument, or customer data. Every
@@ -53,7 +55,8 @@ export type DilutionRerunReasonCode =
   | 'below-range'
   | 'max-reruns-exceeded'
   | 'rerun-required'
-  | 'max-dilution-reached';
+  | 'max-dilution-reached'
+  | 'non-finite-result';
 
 export type DilutionRerunRawResult = {
   /** Fabricated analyte/parameter code. */
@@ -120,6 +123,7 @@ const REASON_DECISIONS: Record<DilutionRerunReasonCode, DilutionRerunDecision> =
   'max-reruns-exceeded': 'block',
   'rerun-required': 'rerun_with_dilution',
   'max-dilution-reached': 'report_as_greater_than',
+  'non-finite-result': 'block',
 };
 
 const REASON_MESSAGES: Record<DilutionRerunReasonCode, string> = {
@@ -131,6 +135,7 @@ const REASON_MESSAGES: Record<DilutionRerunReasonCode, string> = {
   'max-reruns-exceeded': 'A rerun at a higher dilution is required, but the declared maximum rerun count has already been reached.',
   'rerun-required': 'The raw reading exceeds the analyte\'s measuring range; a rerun at the next declared dilution factor is required.',
   'max-dilution-reached': 'The raw reading exceeds the analyte\'s measuring range and no further declared dilution factor is available.',
+  'non-finite-result': 'The derived reportable result could not be represented as a finite number at the currently applied dilution.',
 };
 
 /** Deterministic, privacy-safe human-readable text for a dilution/rerun reason code, suitable for UI display. */
@@ -312,10 +317,18 @@ export function evaluateDilutionRerun(request: DilutionRerunRequest): DilutionRe
   }
 
   if (result.rawReading < range.lowerLimit) {
-    return outcome('below-range', result.rawReading * result.appliedDilutionFactor, null, null);
+    const correctedResult = result.rawReading * result.appliedDilutionFactor;
+    if (!Number.isFinite(correctedResult)) {
+      return outcome('non-finite-result', null, null, null);
+    }
+    return outcome('below-range', correctedResult, null, null);
   }
   if (result.rawReading <= range.upperLimit) {
-    return outcome('within-range', result.rawReading * result.appliedDilutionFactor, null, null);
+    const correctedResult = result.rawReading * result.appliedDilutionFactor;
+    if (!Number.isFinite(correctedResult)) {
+      return outcome('non-finite-result', null, null, null);
+    }
+    return outcome('within-range', correctedResult, null, null);
   }
 
   const maxDilutionFactor = request.maxDilutionFactor;
@@ -324,7 +337,11 @@ export function evaluateDilutionRerun(request: DilutionRerunRequest): DilutionRe
   );
 
   if (candidateFactors.length === 0) {
-    return outcome('max-dilution-reached', null, null, range.upperLimit * result.appliedDilutionFactor);
+    const greaterThanLimit = range.upperLimit * result.appliedDilutionFactor;
+    if (!Number.isFinite(greaterThanLimit)) {
+      return outcome('non-finite-result', null, null, null);
+    }
+    return outcome('max-dilution-reached', null, null, greaterThanLimit);
   }
 
   const nextDilutionFactor = candidateFactors.reduce((smallest, factor) => (factor < smallest ? factor : smallest));
