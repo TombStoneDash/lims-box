@@ -259,6 +259,45 @@ function validatePolicy(policy: CriticalRepeatPolicy): string {
   return policyUnit;
 }
 
+const STRICT_ISO_TIMESTAMP_PATTERN =
+  /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/;
+
+/**
+ * Parse an ISO 8601 timestamp strictly, rejecting calendar dates and clock
+ * fields that are out of range (e.g. a February 30th, a 24th hour) instead
+ * of letting `Date.parse` silently roll them over into a neighboring,
+ * never-requested date. Accepts both `Z` and explicit numeric-offset
+ * timestamps. Returns the epoch millisecond value, or undefined if the
+ * timestamp does not denote a real instant.
+ */
+function parseStrictIsoTimestamp(raw: string): number | undefined {
+  const match = STRICT_ISO_TIMESTAMP_PATTERN.exec(raw);
+  if (!match) {
+    return undefined;
+  }
+  const [, yearStr, monthStr, dayStr, hourStr, minuteStr, secondStr] = match;
+  const year = Number(yearStr);
+  const month = Number(monthStr);
+  const day = Number(dayStr);
+  const hour = Number(hourStr);
+  const minute = Number(minuteStr);
+  const second = Number(secondStr);
+
+  if (month < 1 || month > 12) {
+    return undefined;
+  }
+  const daysInMonth = new Date(Date.UTC(year, month, 0)).getUTCDate();
+  if (day < 1 || day > daysInMonth) {
+    return undefined;
+  }
+  if (hour > 23 || minute > 59 || second > 59) {
+    return undefined;
+  }
+
+  const time = Date.parse(raw);
+  return Number.isFinite(time) ? time : undefined;
+}
+
 function outcome(
   status: CriticalRepeatStatus,
   reasonCode: CriticalRepeatReasonCode,
@@ -302,11 +341,11 @@ export function evaluateCriticalRepeat(input: CriticalRepeatInput): CriticalRepe
     throw new CriticalRepeatPolicyInputError('repeats-exceed-maximum');
   }
 
-  const firstTime = Date.parse(first.capturedAt);
+  const firstTime = parseStrictIsoTimestamp(first.capturedAt);
   const firstValue = toFiniteNumber(first.value);
   const firstUnit = canonicalizeUnit(first.unit);
 
-  if (!Number.isFinite(firstTime)) {
+  if (firstTime === undefined) {
     return outcome('discordant', 'first-result-timestamp-invalid', null, 0, true);
   }
   if (firstValue === undefined) {
@@ -345,11 +384,11 @@ export function evaluateCriticalRepeat(input: CriticalRepeatInput): CriticalRepe
       return outcome('discordant', 'repeat-analyte-mismatch', null, attemptNumber, true);
     }
 
-    const repeatTime = Date.parse(repeat.capturedAt);
+    const repeatTime = parseStrictIsoTimestamp(repeat.capturedAt);
     const repeatValue = toFiniteNumber(repeat.value);
     const repeatUnit = canonicalizeUnit(repeat.unit);
 
-    if (!Number.isFinite(repeatTime)) {
+    if (repeatTime === undefined) {
       return outcome('discordant', 'repeat-timestamp-invalid', null, attemptNumber, true);
     }
     if (repeatTime <= previousTime) {
