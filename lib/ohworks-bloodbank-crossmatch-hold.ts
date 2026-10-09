@@ -70,6 +70,14 @@ export function evaluateCrossmatchHold(input: CrossmatchHoldInput): CrossmatchHo
     throw new Error(`requestedUnitCount must be at least 1, received ${input.requestedUnitCount}`);
   }
 
+  if (!Number.isFinite(input.sampleAgeHours) || input.sampleAgeHours < 0) {
+    throw new Error('sampleAgeHours must be a finite non-negative number');
+  }
+
+  if (!Number.isFinite(input.maxSampleAgeHoursForType) || input.maxSampleAgeHoursForType <= 0) {
+    throw new Error('maxSampleAgeHoursForType must be a finite positive number');
+  }
+
   if (input.sampleAgeHours > input.maxSampleAgeHoursForType) {
     return {
       status: 'hold_sample_expired',
