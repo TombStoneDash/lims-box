@@ -237,8 +237,50 @@ function isOptionalString(value: unknown): value is string | undefined {
   return value === undefined || typeof value === 'string';
 }
 
-function isUtcTimestamp(value: string): boolean {
-  return value.endsWith('Z') && Number.isFinite(Date.parse(value));
+const TIMESTAMP_PATTERN = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.\d+)?(Z|[+-]\d{2}:\d{2})?$/;
+
+type TimestampCheck =
+  | { kind: 'valid'; epochMs: number }
+  | { kind: 'invalid' }
+  | { kind: 'not-utc' };
+
+function isLeapYear(year: number): boolean {
+  return year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
+}
+
+/**
+ * Validate the literal calendar and clock fields of a timestamp before ever
+ * handing it to Date.parse, which silently normalizes impossible dates
+ * (e.g. "2026-02-30") into a nearby valid one instead of rejecting them.
+ */
+function checkTimestamp(value: string): TimestampCheck {
+  const match = TIMESTAMP_PATTERN.exec(value);
+  if (!match) {
+    return { kind: 'invalid' };
+  }
+  const [, yearStr, monthStr, dayStr, hourStr, minuteStr, secondStr, zoneStr] = match;
+  const year = Number(yearStr);
+  const month = Number(monthStr);
+  const day = Number(dayStr);
+  const hour = Number(hourStr);
+  const minute = Number(minuteStr);
+  const second = Number(secondStr);
+  const daysInMonth = [31, isLeapYear(year) ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+  if (
+    month < 1 || month > 12 ||
+    day < 1 || day > daysInMonth[month - 1] ||
+    hour > 23 || minute > 59 || second > 59
+  ) {
+    return { kind: 'invalid' };
+  }
+  if (zoneStr !== 'Z') {
+    return { kind: 'not-utc' };
+  }
+  const epochMs = Date.parse(value);
+  if (!Number.isFinite(epochMs)) {
+    return { kind: 'invalid' };
+  }
+  return { kind: 'valid', epochMs };
 }
 
 function isStructurallyValidAction(raw: unknown): raw is NonconformanceActionInput {
@@ -370,16 +412,24 @@ export function transitionNonconformance(
   if (!KNOWN_STATES.has(record.state)) {
     return refuse('unknown-state');
   }
-  if (typeof occurredAt !== 'string' || !Number.isFinite(Date.parse(occurredAt))) {
+  if (typeof occurredAt !== 'string') {
     return refuse('timestamp-invalid');
   }
-  if (!isUtcTimestamp(occurredAt)) {
+  const timestampCheck = checkTimestamp(occurredAt);
+  if (timestampCheck.kind === 'invalid') {
+    return refuse('timestamp-invalid');
+  }
+  if (timestampCheck.kind === 'not-utc') {
     return refuse('timestamp-not-utc');
   }
 
   const previous = record.history.at(-1);
-  if (previous && Date.parse(occurredAt) <= Date.parse(previous.occurredAt)) {
-    return refuse('timestamp-backwards');
+  if (previous) {
+    const previousCheck = checkTimestamp(previous.occurredAt);
+    const previousEpochMs = previousCheck.kind === 'valid' ? previousCheck.epochMs : Date.parse(previous.occurredAt);
+    if (timestampCheck.epochMs <= previousEpochMs) {
+      return refuse('timestamp-backwards');
+    }
   }
 
   if (!ROLES_BY_ACTION[action.kind].has(actorRole)) {
