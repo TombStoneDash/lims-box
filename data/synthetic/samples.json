@@ -1,0 +1,2806 @@
+[
+  {
+    "id": "SYN-26041-0001",
+    "customer_id": "SYN-CUST-001",
+    "matrix": "serum",
+    "container": "SST",
+    "status": "in_progress",
+    "priority": "rush",
+    "received_at": "2026-02-01T08:00:00Z",
+    "test_codes": [
+      "CHEM-ALT",
+      "CHEM-AST",
+      "SER-AB-HBV"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26042-0002",
+    "customer_id": "SYN-CUST-002",
+    "matrix": "plasma",
+    "container": "EDTA",
+    "status": "in_progress",
+    "priority": "routine",
+    "received_at": "2026-02-02T09:00:00Z",
+    "test_codes": [
+      "CHEM-ALT",
+      "CHEM-GLU"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26043-0003",
+    "customer_id": "SYN-CUST-003",
+    "matrix": "swab",
+    "container": "VTM",
+    "status": "in_progress",
+    "priority": "routine",
+    "received_at": "2026-02-03T10:00:00Z",
+    "test_codes": [
+      "MOL-FLU-B",
+      "MOL-NG",
+      "MOL-RSV"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26044-0004",
+    "customer_id": "SYN-CUST-004",
+    "matrix": "urine",
+    "container": "STERILE_CUP",
+    "status": "in_progress",
+    "priority": "routine",
+    "received_at": "2026-02-04T11:00:00Z",
+    "test_codes": [
+      "CHEM-K"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26045-0005",
+    "customer_id": "SYN-CUST-005",
+    "matrix": "serum",
+    "container": "SST",
+    "status": "in_progress",
+    "priority": "routine",
+    "received_at": "2026-02-05T12:00:00Z",
+    "test_codes": [
+      "CHEM-AST",
+      "SER-SYPH"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26046-0006",
+    "customer_id": "SYN-CUST-006",
+    "matrix": "plasma",
+    "container": "EDTA",
+    "status": "in_progress",
+    "priority": "routine",
+    "received_at": "2026-02-06T13:00:00Z",
+    "test_codes": [
+      "SER-SYPH"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26047-0007",
+    "customer_id": "SYN-CUST-007",
+    "matrix": "swab",
+    "container": "VTM",
+    "status": "in_progress",
+    "priority": "routine",
+    "received_at": "2026-02-07T14:00:00Z",
+    "test_codes": [
+      "MOL-CT"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26048-0008",
+    "customer_id": "SYN-CUST-008",
+    "matrix": "urine",
+    "container": "STERILE_CUP",
+    "status": "in_progress",
+    "priority": "routine",
+    "received_at": "2026-02-08T15:00:00Z",
+    "test_codes": [
+      "MOL-CT"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26049-0009",
+    "customer_id": "SYN-CUST-009",
+    "matrix": "serum",
+    "container": "SST",
+    "status": "in_progress",
+    "priority": "routine",
+    "received_at": "2026-02-09T16:00:00Z",
+    "test_codes": [
+      "CHEM-ALT",
+      "CHEM-K",
+      "CHEM-NA"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26050-0010",
+    "customer_id": "SYN-CUST-010",
+    "matrix": "plasma",
+    "container": "EDTA",
+    "status": "in_progress",
+    "priority": "routine",
+    "received_at": "2026-02-10T08:00:00Z",
+    "test_codes": [
+      "CHEM-NA"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26051-0011",
+    "customer_id": "SYN-CUST-011",
+    "matrix": "swab",
+    "container": "VTM",
+    "status": "in_progress",
+    "priority": "routine",
+    "received_at": "2026-02-11T09:00:00Z",
+    "test_codes": [
+      "MOL-FLU-A",
+      "MOL-FLU-B"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26052-0012",
+    "customer_id": "SYN-CUST-012",
+    "matrix": "urine",
+    "container": "STERILE_CUP",
+    "status": "in_progress",
+    "priority": "routine",
+    "received_at": "2026-02-12T10:00:00Z",
+    "test_codes": [
+      "CHEM-CREA",
+      "CHEM-NA",
+      "MOL-NG"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26053-0013",
+    "customer_id": "SYN-CUST-013",
+    "matrix": "serum",
+    "container": "SST",
+    "status": "received",
+    "priority": "routine",
+    "received_at": "2026-02-13T11:00:00Z",
+    "test_codes": [
+      "CHEM-NA"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26054-0014",
+    "customer_id": "SYN-CUST-014",
+    "matrix": "plasma",
+    "container": "EDTA",
+    "status": "received",
+    "priority": "rush",
+    "received_at": "2026-02-14T12:00:00Z",
+    "test_codes": [
+      "SER-AB-HCV",
+      "SER-AG-HBV"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26055-0015",
+    "customer_id": "SYN-CUST-015",
+    "matrix": "swab",
+    "container": "VTM",
+    "status": "received",
+    "priority": "routine",
+    "received_at": "2026-02-15T13:00:00Z",
+    "test_codes": [
+      "MOL-FLU-A",
+      "MOL-FLU-B"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26056-0016",
+    "customer_id": "SYN-CUST-016",
+    "matrix": "urine",
+    "container": "STERILE_CUP",
+    "status": "pending_review",
+    "priority": "routine",
+    "received_at": "2026-02-16T14:00:00Z",
+    "test_codes": [
+      "CHEM-GLU"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26057-0017",
+    "customer_id": "SYN-CUST-017",
+    "matrix": "serum",
+    "container": "SST",
+    "status": "pending_review",
+    "priority": "routine",
+    "received_at": "2026-02-17T15:00:00Z",
+    "test_codes": [
+      "SER-AB-HBV"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26058-0018",
+    "customer_id": "SYN-CUST-018",
+    "matrix": "plasma",
+    "container": "EDTA",
+    "status": "completed",
+    "priority": "routine",
+    "received_at": "2026-02-18T16:00:00Z",
+    "test_codes": [
+      "CHEM-BILI"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26059-0019",
+    "customer_id": "SYN-CUST-019",
+    "matrix": "swab",
+    "container": "VTM",
+    "status": "completed",
+    "priority": "routine",
+    "received_at": "2026-02-19T08:00:00Z",
+    "test_codes": [
+      "MOL-COV2",
+      "MOL-FLU-B"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26060-0020",
+    "customer_id": "SYN-CUST-020",
+    "matrix": "urine",
+    "container": "STERILE_CUP",
+    "status": "completed",
+    "priority": "routine",
+    "received_at": "2026-02-20T09:00:00Z",
+    "test_codes": [
+      "CHEM-GLU"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26061-0021",
+    "customer_id": "SYN-CUST-021",
+    "matrix": "serum",
+    "container": "SST",
+    "status": "in_progress",
+    "priority": "routine",
+    "received_at": "2026-02-21T10:00:00Z",
+    "test_codes": [
+      "CHEM-K",
+      "CHEM-NA",
+      "SER-AG-HBV"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26062-0022",
+    "customer_id": "SYN-CUST-022",
+    "matrix": "plasma",
+    "container": "EDTA",
+    "status": "in_progress",
+    "priority": "routine",
+    "received_at": "2026-02-22T11:00:00Z",
+    "test_codes": [
+      "SER-AG-HIV",
+      "TB-IGRA-B"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26063-0023",
+    "customer_id": "SYN-CUST-023",
+    "matrix": "swab",
+    "container": "VTM",
+    "status": "in_progress",
+    "priority": "routine",
+    "received_at": "2026-02-23T12:00:00Z",
+    "test_codes": [
+      "MOL-CT"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26064-0024",
+    "customer_id": "SYN-CUST-024",
+    "matrix": "urine",
+    "container": "STERILE_CUP",
+    "status": "in_progress",
+    "priority": "routine",
+    "received_at": "2026-02-24T13:00:00Z",
+    "test_codes": [
+      "CHEM-GLU",
+      "MOL-CT",
+      "MOL-NG"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26065-0025",
+    "customer_id": "SYN-CUST-001",
+    "matrix": "serum",
+    "container": "SST",
+    "status": "in_progress",
+    "priority": "routine",
+    "received_at": "2026-02-01T14:00:00Z",
+    "test_codes": [
+      "CHEM-AST",
+      "CHEM-NA"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26066-0026",
+    "customer_id": "SYN-CUST-002",
+    "matrix": "plasma",
+    "container": "EDTA",
+    "status": "in_progress",
+    "priority": "routine",
+    "received_at": "2026-02-02T15:00:00Z",
+    "test_codes": [
+      "CHEM-ALT",
+      "TB-IGRA-A"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26067-0027",
+    "customer_id": "SYN-CUST-003",
+    "matrix": "swab",
+    "container": "VTM",
+    "status": "in_progress",
+    "priority": "rush",
+    "received_at": "2026-02-03T16:00:00Z",
+    "test_codes": [
+      "MOL-NG"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26068-0028",
+    "customer_id": "SYN-CUST-004",
+    "matrix": "urine",
+    "container": "STERILE_CUP",
+    "status": "in_progress",
+    "priority": "routine",
+    "received_at": "2026-02-04T08:00:00Z",
+    "test_codes": [
+      "CHEM-CREA",
+      "CHEM-K"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26069-0029",
+    "customer_id": "SYN-CUST-005",
+    "matrix": "serum",
+    "container": "SST",
+    "status": "in_progress",
+    "priority": "routine",
+    "received_at": "2026-02-05T09:00:00Z",
+    "test_codes": [
+      "CHEM-AST",
+      "SER-AG-HBV"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26070-0030",
+    "customer_id": "SYN-CUST-006",
+    "matrix": "plasma",
+    "container": "EDTA",
+    "status": "in_progress",
+    "priority": "routine",
+    "received_at": "2026-02-06T10:00:00Z",
+    "test_codes": [
+      "CHEM-GLU",
+      "SER-SYPH"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26071-0031",
+    "customer_id": "SYN-CUST-007",
+    "matrix": "swab",
+    "container": "VTM",
+    "status": "in_progress",
+    "priority": "routine",
+    "received_at": "2026-02-07T11:00:00Z",
+    "test_codes": [
+      "MOL-FLU-B"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26072-0032",
+    "customer_id": "SYN-CUST-008",
+    "matrix": "urine",
+    "container": "STERILE_CUP",
+    "status": "in_progress",
+    "priority": "routine",
+    "received_at": "2026-02-08T12:00:00Z",
+    "test_codes": [
+      "CHEM-NA",
+      "MOL-CT"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26073-0033",
+    "customer_id": "SYN-CUST-009",
+    "matrix": "serum",
+    "container": "SST",
+    "status": "received",
+    "priority": "routine",
+    "received_at": "2026-02-09T13:00:00Z",
+    "test_codes": [
+      "CHEM-AST",
+      "SER-AB-HAV"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26074-0034",
+    "customer_id": "SYN-CUST-010",
+    "matrix": "plasma",
+    "container": "EDTA",
+    "status": "received",
+    "priority": "routine",
+    "received_at": "2026-02-10T14:00:00Z",
+    "test_codes": [
+      "SER-AG-HBV",
+      "SER-SYPH",
+      "TB-NIL"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26075-0035",
+    "customer_id": "SYN-CUST-011",
+    "matrix": "swab",
+    "container": "VTM",
+    "status": "received",
+    "priority": "routine",
+    "received_at": "2026-02-11T15:00:00Z",
+    "test_codes": [
+      "MOL-NG"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26076-0036",
+    "customer_id": "SYN-CUST-012",
+    "matrix": "urine",
+    "container": "STERILE_CUP",
+    "status": "pending_review",
+    "priority": "routine",
+    "received_at": "2026-02-12T16:00:00Z",
+    "test_codes": [
+      "CHEM-GLU",
+      "CHEM-K"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26077-0037",
+    "customer_id": "SYN-CUST-013",
+    "matrix": "serum",
+    "container": "SST",
+    "status": "pending_review",
+    "priority": "routine",
+    "received_at": "2026-02-13T08:00:00Z",
+    "test_codes": [
+      "CHEM-CREA",
+      "SER-AG-HIV"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26078-0038",
+    "customer_id": "SYN-CUST-014",
+    "matrix": "plasma",
+    "container": "EDTA",
+    "status": "completed",
+    "priority": "routine",
+    "received_at": "2026-02-14T09:00:00Z",
+    "test_codes": [
+      "TB-NIL"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26079-0039",
+    "customer_id": "SYN-CUST-015",
+    "matrix": "swab",
+    "container": "VTM",
+    "status": "completed",
+    "priority": "routine",
+    "received_at": "2026-02-15T10:00:00Z",
+    "test_codes": [
+      "MOL-RSV"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26080-0040",
+    "customer_id": "SYN-CUST-016",
+    "matrix": "urine",
+    "container": "STERILE_CUP",
+    "status": "completed",
+    "priority": "rush",
+    "received_at": "2026-02-16T11:00:00Z",
+    "test_codes": [
+      "CHEM-K"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26081-0041",
+    "customer_id": "SYN-CUST-017",
+    "matrix": "serum",
+    "container": "SST",
+    "status": "in_progress",
+    "priority": "routine",
+    "received_at": "2026-02-17T12:00:00Z",
+    "test_codes": [
+      "CHEM-K"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26082-0042",
+    "customer_id": "SYN-CUST-018",
+    "matrix": "plasma",
+    "container": "EDTA",
+    "status": "in_progress",
+    "priority": "routine",
+    "received_at": "2026-02-18T13:00:00Z",
+    "test_codes": [
+      "TB-MIT"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26083-0043",
+    "customer_id": "SYN-CUST-019",
+    "matrix": "swab",
+    "container": "VTM",
+    "status": "in_progress",
+    "priority": "routine",
+    "received_at": "2026-02-19T14:00:00Z",
+    "test_codes": [
+      "MOL-COV2",
+      "MOL-CT"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26084-0044",
+    "customer_id": "SYN-CUST-020",
+    "matrix": "urine",
+    "container": "STERILE_CUP",
+    "status": "in_progress",
+    "priority": "routine",
+    "received_at": "2026-02-20T15:00:00Z",
+    "test_codes": [
+      "CHEM-GLU",
+      "MOL-CT"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26085-0045",
+    "customer_id": "SYN-CUST-021",
+    "matrix": "serum",
+    "container": "SST",
+    "status": "in_progress",
+    "priority": "routine",
+    "received_at": "2026-02-21T16:00:00Z",
+    "test_codes": [
+      "CHEM-ALT",
+      "CHEM-K",
+      "SER-AB-HBV"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26086-0046",
+    "customer_id": "SYN-CUST-022",
+    "matrix": "plasma",
+    "container": "EDTA",
+    "status": "in_progress",
+    "priority": "routine",
+    "received_at": "2026-02-22T08:00:00Z",
+    "test_codes": [
+      "TB-IGRA-A"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26087-0047",
+    "customer_id": "SYN-CUST-023",
+    "matrix": "swab",
+    "container": "VTM",
+    "status": "in_progress",
+    "priority": "routine",
+    "received_at": "2026-02-23T09:00:00Z",
+    "test_codes": [
+      "MOL-FLU-A"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26088-0048",
+    "customer_id": "SYN-CUST-024",
+    "matrix": "urine",
+    "container": "STERILE_CUP",
+    "status": "in_progress",
+    "priority": "routine",
+    "received_at": "2026-02-24T10:00:00Z",
+    "test_codes": [
+      "CHEM-NA"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26089-0049",
+    "customer_id": "SYN-CUST-001",
+    "matrix": "serum",
+    "container": "SST",
+    "status": "in_progress",
+    "priority": "routine",
+    "received_at": "2026-02-01T11:00:00Z",
+    "test_codes": [
+      "CHEM-ALT",
+      "CHEM-CREA",
+      "CHEM-K"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26090-0050",
+    "customer_id": "SYN-CUST-002",
+    "matrix": "plasma",
+    "container": "EDTA",
+    "status": "in_progress",
+    "priority": "routine",
+    "received_at": "2026-02-02T12:00:00Z",
+    "test_codes": [
+      "SER-AB-HCV"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26091-0051",
+    "customer_id": "SYN-CUST-003",
+    "matrix": "swab",
+    "container": "VTM",
+    "status": "in_progress",
+    "priority": "routine",
+    "received_at": "2026-02-03T13:00:00Z",
+    "test_codes": [
+      "MOL-CT",
+      "MOL-FLU-A",
+      "MOL-RSV"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26092-0052",
+    "customer_id": "SYN-CUST-004",
+    "matrix": "urine",
+    "container": "STERILE_CUP",
+    "status": "in_progress",
+    "priority": "routine",
+    "received_at": "2026-02-04T14:00:00Z",
+    "test_codes": [
+      "CHEM-CREA",
+      "CHEM-NA",
+      "MOL-CT"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26093-0053",
+    "customer_id": "SYN-CUST-005",
+    "matrix": "serum",
+    "container": "SST",
+    "status": "received",
+    "priority": "rush",
+    "received_at": "2026-02-05T15:00:00Z",
+    "test_codes": [
+      "SER-SYPH"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26094-0054",
+    "customer_id": "SYN-CUST-006",
+    "matrix": "plasma",
+    "container": "EDTA",
+    "status": "received",
+    "priority": "routine",
+    "received_at": "2026-02-06T16:00:00Z",
+    "test_codes": [
+      "CHEM-ALB",
+      "CHEM-CREA",
+      "CHEM-NA"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26095-0055",
+    "customer_id": "SYN-CUST-007",
+    "matrix": "swab",
+    "container": "VTM",
+    "status": "received",
+    "priority": "routine",
+    "received_at": "2026-02-07T08:00:00Z",
+    "test_codes": [
+      "MOL-COV2",
+      "MOL-NG"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26096-0056",
+    "customer_id": "SYN-CUST-008",
+    "matrix": "urine",
+    "container": "STERILE_CUP",
+    "status": "pending_review",
+    "priority": "routine",
+    "received_at": "2026-02-08T09:00:00Z",
+    "test_codes": [
+      "CHEM-GLU",
+      "MOL-CT"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26097-0057",
+    "customer_id": "SYN-CUST-009",
+    "matrix": "serum",
+    "container": "SST",
+    "status": "pending_review",
+    "priority": "routine",
+    "received_at": "2026-02-09T10:00:00Z",
+    "test_codes": [
+      "CHEM-ALB",
+      "SER-AG-HBV"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26098-0058",
+    "customer_id": "SYN-CUST-010",
+    "matrix": "plasma",
+    "container": "EDTA",
+    "status": "completed",
+    "priority": "routine",
+    "received_at": "2026-02-10T11:00:00Z",
+    "test_codes": [
+      "CHEM-NA",
+      "TB-NIL"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26099-0059",
+    "customer_id": "SYN-CUST-011",
+    "matrix": "swab",
+    "container": "VTM",
+    "status": "completed",
+    "priority": "routine",
+    "received_at": "2026-02-11T12:00:00Z",
+    "test_codes": [
+      "MOL-CT"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26100-0060",
+    "customer_id": "SYN-CUST-012",
+    "matrix": "urine",
+    "container": "STERILE_CUP",
+    "status": "completed",
+    "priority": "routine",
+    "received_at": "2026-02-12T13:00:00Z",
+    "test_codes": [
+      "CHEM-CREA",
+      "CHEM-NA",
+      "MOL-CT"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26101-0061",
+    "customer_id": "SYN-CUST-013",
+    "matrix": "serum",
+    "container": "SST",
+    "status": "in_progress",
+    "priority": "routine",
+    "received_at": "2026-02-13T14:00:00Z",
+    "test_codes": [
+      "CHEM-AST",
+      "CHEM-NA",
+      "SER-SYPH"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26102-0062",
+    "customer_id": "SYN-CUST-014",
+    "matrix": "plasma",
+    "container": "EDTA",
+    "status": "in_progress",
+    "priority": "routine",
+    "received_at": "2026-02-14T15:00:00Z",
+    "test_codes": [
+      "CHEM-CREA",
+      "SER-AG-HIV",
+      "TB-MIT"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26103-0063",
+    "customer_id": "SYN-CUST-015",
+    "matrix": "swab",
+    "container": "VTM",
+    "status": "in_progress",
+    "priority": "routine",
+    "received_at": "2026-02-15T16:00:00Z",
+    "test_codes": [
+      "MOL-RSV"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26104-0064",
+    "customer_id": "SYN-CUST-016",
+    "matrix": "urine",
+    "container": "STERILE_CUP",
+    "status": "in_progress",
+    "priority": "routine",
+    "received_at": "2026-02-16T08:00:00Z",
+    "test_codes": [
+      "CHEM-CREA",
+      "CHEM-GLU",
+      "MOL-CT"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26105-0065",
+    "customer_id": "SYN-CUST-017",
+    "matrix": "serum",
+    "container": "SST",
+    "status": "in_progress",
+    "priority": "routine",
+    "received_at": "2026-02-17T09:00:00Z",
+    "test_codes": [
+      "CHEM-K",
+      "CHEM-NA",
+      "SER-AB-HBV"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26106-0066",
+    "customer_id": "SYN-CUST-018",
+    "matrix": "plasma",
+    "container": "EDTA",
+    "status": "in_progress",
+    "priority": "rush",
+    "received_at": "2026-02-18T10:00:00Z",
+    "test_codes": [
+      "CHEM-ALB",
+      "SER-AG-HIV",
+      "TB-NIL"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26107-0067",
+    "customer_id": "SYN-CUST-019",
+    "matrix": "swab",
+    "container": "VTM",
+    "status": "in_progress",
+    "priority": "routine",
+    "received_at": "2026-02-19T11:00:00Z",
+    "test_codes": [
+      "MOL-COV2"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26108-0068",
+    "customer_id": "SYN-CUST-020",
+    "matrix": "urine",
+    "container": "STERILE_CUP",
+    "status": "in_progress",
+    "priority": "routine",
+    "received_at": "2026-02-20T12:00:00Z",
+    "test_codes": [
+      "CHEM-CREA",
+      "MOL-CT"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26109-0069",
+    "customer_id": "SYN-CUST-021",
+    "matrix": "serum",
+    "container": "SST",
+    "status": "in_progress",
+    "priority": "routine",
+    "received_at": "2026-02-21T13:00:00Z",
+    "test_codes": [
+      "CHEM-AST",
+      "CHEM-GLU",
+      "SER-AB-HBV"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26110-0070",
+    "customer_id": "SYN-CUST-022",
+    "matrix": "plasma",
+    "container": "EDTA",
+    "status": "in_progress",
+    "priority": "routine",
+    "received_at": "2026-02-22T14:00:00Z",
+    "test_codes": [
+      "CHEM-ALT",
+      "CHEM-NA",
+      "SER-AG-HIV"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26111-0071",
+    "customer_id": "SYN-CUST-023",
+    "matrix": "swab",
+    "container": "VTM",
+    "status": "in_progress",
+    "priority": "routine",
+    "received_at": "2026-02-23T15:00:00Z",
+    "test_codes": [
+      "MOL-CT"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26112-0072",
+    "customer_id": "SYN-CUST-024",
+    "matrix": "urine",
+    "container": "STERILE_CUP",
+    "status": "in_progress",
+    "priority": "routine",
+    "received_at": "2026-02-24T16:00:00Z",
+    "test_codes": [
+      "CHEM-GLU",
+      "CHEM-K"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26113-0073",
+    "customer_id": "SYN-CUST-001",
+    "matrix": "serum",
+    "container": "SST",
+    "status": "received",
+    "priority": "routine",
+    "received_at": "2026-02-01T08:00:00Z",
+    "test_codes": [
+      "CHEM-K",
+      "SER-AB-HCV"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26114-0074",
+    "customer_id": "SYN-CUST-002",
+    "matrix": "plasma",
+    "container": "EDTA",
+    "status": "received",
+    "priority": "routine",
+    "received_at": "2026-02-02T09:00:00Z",
+    "test_codes": [
+      "CHEM-CREA",
+      "SER-AB-HCV",
+      "TB-NIL"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26115-0075",
+    "customer_id": "SYN-CUST-003",
+    "matrix": "swab",
+    "container": "VTM",
+    "status": "received",
+    "priority": "routine",
+    "received_at": "2026-02-03T10:00:00Z",
+    "test_codes": [
+      "MOL-COV2"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26116-0076",
+    "customer_id": "SYN-CUST-004",
+    "matrix": "urine",
+    "container": "STERILE_CUP",
+    "status": "pending_review",
+    "priority": "routine",
+    "received_at": "2026-02-04T11:00:00Z",
+    "test_codes": [
+      "CHEM-GLU",
+      "CHEM-K"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26117-0077",
+    "customer_id": "SYN-CUST-005",
+    "matrix": "serum",
+    "container": "SST",
+    "status": "pending_review",
+    "priority": "routine",
+    "received_at": "2026-02-05T12:00:00Z",
+    "test_codes": [
+      "CHEM-NA",
+      "SER-AG-HBV"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26118-0078",
+    "customer_id": "SYN-CUST-006",
+    "matrix": "plasma",
+    "container": "EDTA",
+    "status": "completed",
+    "priority": "routine",
+    "received_at": "2026-02-06T13:00:00Z",
+    "test_codes": [
+      "SER-SYPH"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26119-0079",
+    "customer_id": "SYN-CUST-007",
+    "matrix": "swab",
+    "container": "VTM",
+    "status": "completed",
+    "priority": "rush",
+    "received_at": "2026-02-07T14:00:00Z",
+    "test_codes": [
+      "MOL-CT",
+      "MOL-FLU-B"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26120-0080",
+    "customer_id": "SYN-CUST-008",
+    "matrix": "urine",
+    "container": "STERILE_CUP",
+    "status": "completed",
+    "priority": "routine",
+    "received_at": "2026-02-08T15:00:00Z",
+    "test_codes": [
+      "MOL-CT",
+      "MOL-NG"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26121-0081",
+    "customer_id": "SYN-CUST-009",
+    "matrix": "serum",
+    "container": "SST",
+    "status": "in_progress",
+    "priority": "routine",
+    "received_at": "2026-02-09T16:00:00Z",
+    "test_codes": [
+      "CHEM-CREA",
+      "SER-SYPH"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26122-0082",
+    "customer_id": "SYN-CUST-010",
+    "matrix": "plasma",
+    "container": "EDTA",
+    "status": "in_progress",
+    "priority": "routine",
+    "received_at": "2026-02-10T08:00:00Z",
+    "test_codes": [
+      "CHEM-BILI",
+      "SER-SYPH",
+      "TB-NIL"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26123-0083",
+    "customer_id": "SYN-CUST-011",
+    "matrix": "swab",
+    "container": "VTM",
+    "status": "in_progress",
+    "priority": "routine",
+    "received_at": "2026-02-11T09:00:00Z",
+    "test_codes": [
+      "MOL-FLU-A",
+      "MOL-NG",
+      "MOL-RSV"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26124-0084",
+    "customer_id": "SYN-CUST-012",
+    "matrix": "urine",
+    "container": "STERILE_CUP",
+    "status": "in_progress",
+    "priority": "routine",
+    "received_at": "2026-02-12T10:00:00Z",
+    "test_codes": [
+      "CHEM-NA",
+      "MOL-CT"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26125-0085",
+    "customer_id": "SYN-CUST-013",
+    "matrix": "serum",
+    "container": "SST",
+    "status": "in_progress",
+    "priority": "routine",
+    "received_at": "2026-02-13T11:00:00Z",
+    "test_codes": [
+      "SER-AB-HCV"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26126-0086",
+    "customer_id": "SYN-CUST-014",
+    "matrix": "plasma",
+    "container": "EDTA",
+    "status": "in_progress",
+    "priority": "routine",
+    "received_at": "2026-02-14T12:00:00Z",
+    "test_codes": [
+      "CHEM-AST",
+      "CHEM-BILI",
+      "CHEM-K"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26127-0087",
+    "customer_id": "SYN-CUST-015",
+    "matrix": "swab",
+    "container": "VTM",
+    "status": "in_progress",
+    "priority": "routine",
+    "received_at": "2026-02-15T13:00:00Z",
+    "test_codes": [
+      "MOL-FLU-A"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26128-0088",
+    "customer_id": "SYN-CUST-016",
+    "matrix": "urine",
+    "container": "STERILE_CUP",
+    "status": "in_progress",
+    "priority": "routine",
+    "received_at": "2026-02-16T14:00:00Z",
+    "test_codes": [
+      "CHEM-CREA",
+      "MOL-CT",
+      "MOL-NG"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26129-0089",
+    "customer_id": "SYN-CUST-017",
+    "matrix": "serum",
+    "container": "SST",
+    "status": "in_progress",
+    "priority": "routine",
+    "received_at": "2026-02-17T15:00:00Z",
+    "test_codes": [
+      "CHEM-ALB"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26130-0090",
+    "customer_id": "SYN-CUST-018",
+    "matrix": "plasma",
+    "container": "EDTA",
+    "status": "in_progress",
+    "priority": "routine",
+    "received_at": "2026-02-18T16:00:00Z",
+    "test_codes": [
+      "CHEM-K"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26131-0091",
+    "customer_id": "SYN-CUST-019",
+    "matrix": "swab",
+    "container": "VTM",
+    "status": "in_progress",
+    "priority": "routine",
+    "received_at": "2026-02-19T08:00:00Z",
+    "test_codes": [
+      "MOL-CT",
+      "MOL-FLU-A",
+      "MOL-FLU-B"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26132-0092",
+    "customer_id": "SYN-CUST-020",
+    "matrix": "urine",
+    "container": "STERILE_CUP",
+    "status": "in_progress",
+    "priority": "rush",
+    "received_at": "2026-02-20T09:00:00Z",
+    "test_codes": [
+      "CHEM-NA"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26133-0093",
+    "customer_id": "SYN-CUST-021",
+    "matrix": "serum",
+    "container": "SST",
+    "status": "received",
+    "priority": "routine",
+    "received_at": "2026-02-21T10:00:00Z",
+    "test_codes": [
+      "CHEM-NA",
+      "SER-AG-HIV"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26134-0094",
+    "customer_id": "SYN-CUST-022",
+    "matrix": "plasma",
+    "container": "EDTA",
+    "status": "received",
+    "priority": "routine",
+    "received_at": "2026-02-22T11:00:00Z",
+    "test_codes": [
+      "CHEM-NA"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26135-0095",
+    "customer_id": "SYN-CUST-023",
+    "matrix": "swab",
+    "container": "VTM",
+    "status": "received",
+    "priority": "routine",
+    "received_at": "2026-02-23T12:00:00Z",
+    "test_codes": [
+      "MOL-CT",
+      "MOL-RSV"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26136-0096",
+    "customer_id": "SYN-CUST-024",
+    "matrix": "urine",
+    "container": "STERILE_CUP",
+    "status": "pending_review",
+    "priority": "routine",
+    "received_at": "2026-02-24T13:00:00Z",
+    "test_codes": [
+      "CHEM-CREA",
+      "CHEM-NA",
+      "MOL-NG"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26137-0097",
+    "customer_id": "SYN-CUST-001",
+    "matrix": "serum",
+    "container": "SST",
+    "status": "pending_review",
+    "priority": "routine",
+    "received_at": "2026-02-01T14:00:00Z",
+    "test_codes": [
+      "CHEM-ALB",
+      "SER-AB-HCV"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26138-0098",
+    "customer_id": "SYN-CUST-002",
+    "matrix": "plasma",
+    "container": "EDTA",
+    "status": "completed",
+    "priority": "routine",
+    "received_at": "2026-02-02T15:00:00Z",
+    "test_codes": [
+      "CHEM-CREA",
+      "SER-AB-HCV",
+      "SER-SYPH"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26139-0099",
+    "customer_id": "SYN-CUST-003",
+    "matrix": "swab",
+    "container": "VTM",
+    "status": "completed",
+    "priority": "routine",
+    "received_at": "2026-02-03T16:00:00Z",
+    "test_codes": [
+      "MOL-FLU-B"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26140-0100",
+    "customer_id": "SYN-CUST-004",
+    "matrix": "urine",
+    "container": "STERILE_CUP",
+    "status": "completed",
+    "priority": "routine",
+    "received_at": "2026-02-04T08:00:00Z",
+    "test_codes": [
+      "CHEM-CREA",
+      "CHEM-NA",
+      "MOL-NG"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26141-0101",
+    "customer_id": "SYN-CUST-005",
+    "matrix": "serum",
+    "container": "SST",
+    "status": "in_progress",
+    "priority": "routine",
+    "received_at": "2026-02-05T09:00:00Z",
+    "test_codes": [
+      "CHEM-BILI",
+      "CHEM-K",
+      "SER-AG-HBV"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26142-0102",
+    "customer_id": "SYN-CUST-006",
+    "matrix": "plasma",
+    "container": "EDTA",
+    "status": "in_progress",
+    "priority": "routine",
+    "received_at": "2026-02-06T10:00:00Z",
+    "test_codes": [
+      "TB-MIT"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26143-0103",
+    "customer_id": "SYN-CUST-007",
+    "matrix": "swab",
+    "container": "VTM",
+    "status": "in_progress",
+    "priority": "routine",
+    "received_at": "2026-02-07T11:00:00Z",
+    "test_codes": [
+      "MOL-COV2",
+      "MOL-CT"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26144-0104",
+    "customer_id": "SYN-CUST-008",
+    "matrix": "urine",
+    "container": "STERILE_CUP",
+    "status": "in_progress",
+    "priority": "routine",
+    "received_at": "2026-02-08T12:00:00Z",
+    "test_codes": [
+      "CHEM-CREA",
+      "MOL-CT"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26145-0105",
+    "customer_id": "SYN-CUST-009",
+    "matrix": "serum",
+    "container": "SST",
+    "status": "in_progress",
+    "priority": "rush",
+    "received_at": "2026-02-09T13:00:00Z",
+    "test_codes": [
+      "SER-AB-HAV"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26146-0106",
+    "customer_id": "SYN-CUST-010",
+    "matrix": "plasma",
+    "container": "EDTA",
+    "status": "in_progress",
+    "priority": "routine",
+    "received_at": "2026-02-10T14:00:00Z",
+    "test_codes": [
+      "SER-SYPH",
+      "TB-IGRA-B"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26147-0107",
+    "customer_id": "SYN-CUST-011",
+    "matrix": "swab",
+    "container": "VTM",
+    "status": "in_progress",
+    "priority": "routine",
+    "received_at": "2026-02-11T15:00:00Z",
+    "test_codes": [
+      "MOL-FLU-A",
+      "MOL-NG"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26148-0108",
+    "customer_id": "SYN-CUST-012",
+    "matrix": "urine",
+    "container": "STERILE_CUP",
+    "status": "in_progress",
+    "priority": "routine",
+    "received_at": "2026-02-12T16:00:00Z",
+    "test_codes": [
+      "CHEM-GLU",
+      "MOL-CT",
+      "MOL-NG"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26149-0109",
+    "customer_id": "SYN-CUST-013",
+    "matrix": "serum",
+    "container": "SST",
+    "status": "in_progress",
+    "priority": "routine",
+    "received_at": "2026-02-13T08:00:00Z",
+    "test_codes": [
+      "CHEM-ALB",
+      "CHEM-K"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26150-0110",
+    "customer_id": "SYN-CUST-014",
+    "matrix": "plasma",
+    "container": "EDTA",
+    "status": "in_progress",
+    "priority": "routine",
+    "received_at": "2026-02-14T09:00:00Z",
+    "test_codes": [
+      "TB-IGRA-B"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26151-0111",
+    "customer_id": "SYN-CUST-015",
+    "matrix": "swab",
+    "container": "VTM",
+    "status": "in_progress",
+    "priority": "routine",
+    "received_at": "2026-02-15T10:00:00Z",
+    "test_codes": [
+      "MOL-CT",
+      "MOL-RSV"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26152-0112",
+    "customer_id": "SYN-CUST-016",
+    "matrix": "urine",
+    "container": "STERILE_CUP",
+    "status": "in_progress",
+    "priority": "routine",
+    "received_at": "2026-02-16T11:00:00Z",
+    "test_codes": [
+      "CHEM-CREA"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26153-0113",
+    "customer_id": "SYN-CUST-017",
+    "matrix": "serum",
+    "container": "SST",
+    "status": "received",
+    "priority": "routine",
+    "received_at": "2026-02-17T12:00:00Z",
+    "test_codes": [
+      "CHEM-ALB"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26154-0114",
+    "customer_id": "SYN-CUST-018",
+    "matrix": "plasma",
+    "container": "EDTA",
+    "status": "received",
+    "priority": "routine",
+    "received_at": "2026-02-18T13:00:00Z",
+    "test_codes": [
+      "CHEM-ALB",
+      "SER-AG-HBV",
+      "SER-AG-HIV"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26155-0115",
+    "customer_id": "SYN-CUST-019",
+    "matrix": "swab",
+    "container": "VTM",
+    "status": "received",
+    "priority": "routine",
+    "received_at": "2026-02-19T14:00:00Z",
+    "test_codes": [
+      "MOL-CT",
+      "MOL-FLU-B",
+      "MOL-NG"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26156-0116",
+    "customer_id": "SYN-CUST-020",
+    "matrix": "urine",
+    "container": "STERILE_CUP",
+    "status": "pending_review",
+    "priority": "routine",
+    "received_at": "2026-02-20T15:00:00Z",
+    "test_codes": [
+      "MOL-CT",
+      "MOL-NG"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26157-0117",
+    "customer_id": "SYN-CUST-021",
+    "matrix": "serum",
+    "container": "SST",
+    "status": "pending_review",
+    "priority": "routine",
+    "received_at": "2026-02-21T16:00:00Z",
+    "test_codes": [
+      "CHEM-ALB",
+      "SER-AB-HBV"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26158-0118",
+    "customer_id": "SYN-CUST-022",
+    "matrix": "plasma",
+    "container": "EDTA",
+    "status": "completed",
+    "priority": "rush",
+    "received_at": "2026-02-22T08:00:00Z",
+    "test_codes": [
+      "CHEM-ALT",
+      "CHEM-CREA",
+      "TB-MIT"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26159-0119",
+    "customer_id": "SYN-CUST-023",
+    "matrix": "swab",
+    "container": "VTM",
+    "status": "completed",
+    "priority": "routine",
+    "received_at": "2026-02-23T09:00:00Z",
+    "test_codes": [
+      "MOL-COV2",
+      "MOL-CT",
+      "MOL-NG"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26160-0120",
+    "customer_id": "SYN-CUST-024",
+    "matrix": "urine",
+    "container": "STERILE_CUP",
+    "status": "completed",
+    "priority": "routine",
+    "received_at": "2026-02-24T10:00:00Z",
+    "test_codes": [
+      "CHEM-CREA",
+      "CHEM-GLU"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26161-0121",
+    "customer_id": "SYN-CUST-001",
+    "matrix": "serum",
+    "container": "SST",
+    "status": "in_progress",
+    "priority": "routine",
+    "received_at": "2026-02-01T11:00:00Z",
+    "test_codes": [
+      "CHEM-GLU",
+      "SER-AB-HCV",
+      "SER-AG-HBV"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26162-0122",
+    "customer_id": "SYN-CUST-002",
+    "matrix": "plasma",
+    "container": "EDTA",
+    "status": "in_progress",
+    "priority": "routine",
+    "received_at": "2026-02-02T12:00:00Z",
+    "test_codes": [
+      "CHEM-BILI",
+      "CHEM-CREA",
+      "CHEM-K"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26163-0123",
+    "customer_id": "SYN-CUST-003",
+    "matrix": "swab",
+    "container": "VTM",
+    "status": "in_progress",
+    "priority": "routine",
+    "received_at": "2026-02-03T13:00:00Z",
+    "test_codes": [
+      "MOL-CT",
+      "MOL-NG"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26164-0124",
+    "customer_id": "SYN-CUST-004",
+    "matrix": "urine",
+    "container": "STERILE_CUP",
+    "status": "in_progress",
+    "priority": "routine",
+    "received_at": "2026-02-04T14:00:00Z",
+    "test_codes": [
+      "CHEM-K",
+      "MOL-NG"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26165-0125",
+    "customer_id": "SYN-CUST-005",
+    "matrix": "serum",
+    "container": "SST",
+    "status": "in_progress",
+    "priority": "routine",
+    "received_at": "2026-02-05T15:00:00Z",
+    "test_codes": [
+      "CHEM-K",
+      "SER-AB-HBV"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26166-0126",
+    "customer_id": "SYN-CUST-006",
+    "matrix": "plasma",
+    "container": "EDTA",
+    "status": "in_progress",
+    "priority": "routine",
+    "received_at": "2026-02-06T16:00:00Z",
+    "test_codes": [
+      "TB-IGRA-A"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26167-0127",
+    "customer_id": "SYN-CUST-007",
+    "matrix": "swab",
+    "container": "VTM",
+    "status": "in_progress",
+    "priority": "routine",
+    "received_at": "2026-02-07T08:00:00Z",
+    "test_codes": [
+      "MOL-RSV"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26168-0128",
+    "customer_id": "SYN-CUST-008",
+    "matrix": "urine",
+    "container": "STERILE_CUP",
+    "status": "in_progress",
+    "priority": "routine",
+    "received_at": "2026-02-08T09:00:00Z",
+    "test_codes": [
+      "CHEM-CREA",
+      "CHEM-GLU"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26169-0129",
+    "customer_id": "SYN-CUST-009",
+    "matrix": "serum",
+    "container": "SST",
+    "status": "in_progress",
+    "priority": "routine",
+    "received_at": "2026-02-09T10:00:00Z",
+    "test_codes": [
+      "CHEM-GLU",
+      "SER-AB-HBV",
+      "SER-AG-HIV"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26170-0130",
+    "customer_id": "SYN-CUST-010",
+    "matrix": "plasma",
+    "container": "EDTA",
+    "status": "in_progress",
+    "priority": "routine",
+    "received_at": "2026-02-10T11:00:00Z",
+    "test_codes": [
+      "CHEM-GLU",
+      "TB-MIT"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26171-0131",
+    "customer_id": "SYN-CUST-011",
+    "matrix": "swab",
+    "container": "VTM",
+    "status": "in_progress",
+    "priority": "rush",
+    "received_at": "2026-02-11T12:00:00Z",
+    "test_codes": [
+      "MOL-FLU-B"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26172-0132",
+    "customer_id": "SYN-CUST-012",
+    "matrix": "urine",
+    "container": "STERILE_CUP",
+    "status": "in_progress",
+    "priority": "routine",
+    "received_at": "2026-02-12T13:00:00Z",
+    "test_codes": [
+      "CHEM-CREA",
+      "MOL-CT",
+      "MOL-NG"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26173-0133",
+    "customer_id": "SYN-CUST-013",
+    "matrix": "serum",
+    "container": "SST",
+    "status": "received",
+    "priority": "routine",
+    "received_at": "2026-02-13T14:00:00Z",
+    "test_codes": [
+      "CHEM-ALT",
+      "CHEM-AST",
+      "SER-AB-HBV"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26174-0134",
+    "customer_id": "SYN-CUST-014",
+    "matrix": "plasma",
+    "container": "EDTA",
+    "status": "received",
+    "priority": "routine",
+    "received_at": "2026-02-14T15:00:00Z",
+    "test_codes": [
+      "CHEM-ALB"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26175-0135",
+    "customer_id": "SYN-CUST-015",
+    "matrix": "swab",
+    "container": "VTM",
+    "status": "received",
+    "priority": "routine",
+    "received_at": "2026-02-15T16:00:00Z",
+    "test_codes": [
+      "MOL-COV2",
+      "MOL-FLU-B",
+      "MOL-RSV"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26176-0136",
+    "customer_id": "SYN-CUST-016",
+    "matrix": "urine",
+    "container": "STERILE_CUP",
+    "status": "pending_review",
+    "priority": "routine",
+    "received_at": "2026-02-16T08:00:00Z",
+    "test_codes": [
+      "CHEM-GLU",
+      "CHEM-K",
+      "CHEM-NA"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26177-0137",
+    "customer_id": "SYN-CUST-017",
+    "matrix": "serum",
+    "container": "SST",
+    "status": "pending_review",
+    "priority": "routine",
+    "received_at": "2026-02-17T09:00:00Z",
+    "test_codes": [
+      "CHEM-ALB"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26178-0138",
+    "customer_id": "SYN-CUST-018",
+    "matrix": "plasma",
+    "container": "EDTA",
+    "status": "completed",
+    "priority": "routine",
+    "received_at": "2026-02-18T10:00:00Z",
+    "test_codes": [
+      "SER-AG-HBV"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26179-0139",
+    "customer_id": "SYN-CUST-019",
+    "matrix": "swab",
+    "container": "VTM",
+    "status": "completed",
+    "priority": "routine",
+    "received_at": "2026-02-19T11:00:00Z",
+    "test_codes": [
+      "MOL-COV2",
+      "MOL-NG",
+      "MOL-RSV"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26180-0140",
+    "customer_id": "SYN-CUST-020",
+    "matrix": "urine",
+    "container": "STERILE_CUP",
+    "status": "completed",
+    "priority": "routine",
+    "received_at": "2026-02-20T12:00:00Z",
+    "test_codes": [
+      "CHEM-NA"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26181-0141",
+    "customer_id": "SYN-CUST-021",
+    "matrix": "serum",
+    "container": "SST",
+    "status": "in_progress",
+    "priority": "routine",
+    "received_at": "2026-02-21T13:00:00Z",
+    "test_codes": [
+      "SER-AB-HCV"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26182-0142",
+    "customer_id": "SYN-CUST-022",
+    "matrix": "plasma",
+    "container": "EDTA",
+    "status": "in_progress",
+    "priority": "routine",
+    "received_at": "2026-02-22T14:00:00Z",
+    "test_codes": [
+      "CHEM-K",
+      "SER-AG-HBV"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26183-0143",
+    "customer_id": "SYN-CUST-023",
+    "matrix": "swab",
+    "container": "VTM",
+    "status": "in_progress",
+    "priority": "routine",
+    "received_at": "2026-02-23T15:00:00Z",
+    "test_codes": [
+      "MOL-NG"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26184-0144",
+    "customer_id": "SYN-CUST-024",
+    "matrix": "urine",
+    "container": "STERILE_CUP",
+    "status": "in_progress",
+    "priority": "rush",
+    "received_at": "2026-02-24T16:00:00Z",
+    "test_codes": [
+      "CHEM-GLU",
+      "CHEM-K",
+      "MOL-NG"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26185-0145",
+    "customer_id": "SYN-CUST-001",
+    "matrix": "serum",
+    "container": "SST",
+    "status": "in_progress",
+    "priority": "routine",
+    "received_at": "2026-02-01T08:00:00Z",
+    "test_codes": [
+      "SER-AB-HBV"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26186-0146",
+    "customer_id": "SYN-CUST-002",
+    "matrix": "plasma",
+    "container": "EDTA",
+    "status": "in_progress",
+    "priority": "routine",
+    "received_at": "2026-02-02T09:00:00Z",
+    "test_codes": [
+      "SER-AB-HCV",
+      "TB-IGRA-A"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26187-0147",
+    "customer_id": "SYN-CUST-003",
+    "matrix": "swab",
+    "container": "VTM",
+    "status": "in_progress",
+    "priority": "routine",
+    "received_at": "2026-02-03T10:00:00Z",
+    "test_codes": [
+      "MOL-CT",
+      "MOL-FLU-B"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26188-0148",
+    "customer_id": "SYN-CUST-004",
+    "matrix": "urine",
+    "container": "STERILE_CUP",
+    "status": "in_progress",
+    "priority": "routine",
+    "received_at": "2026-02-04T11:00:00Z",
+    "test_codes": [
+      "CHEM-CREA",
+      "MOL-CT",
+      "MOL-NG"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26189-0149",
+    "customer_id": "SYN-CUST-005",
+    "matrix": "serum",
+    "container": "SST",
+    "status": "in_progress",
+    "priority": "routine",
+    "received_at": "2026-02-05T12:00:00Z",
+    "test_codes": [
+      "SER-AB-HCV"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26190-0150",
+    "customer_id": "SYN-CUST-006",
+    "matrix": "plasma",
+    "container": "EDTA",
+    "status": "in_progress",
+    "priority": "routine",
+    "received_at": "2026-02-06T13:00:00Z",
+    "test_codes": [
+      "CHEM-BILI",
+      "CHEM-CREA",
+      "SER-SYPH"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26191-0151",
+    "customer_id": "SYN-CUST-007",
+    "matrix": "swab",
+    "container": "VTM",
+    "status": "in_progress",
+    "priority": "routine",
+    "received_at": "2026-02-07T14:00:00Z",
+    "test_codes": [
+      "MOL-CT"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26192-0152",
+    "customer_id": "SYN-CUST-008",
+    "matrix": "urine",
+    "container": "STERILE_CUP",
+    "status": "in_progress",
+    "priority": "routine",
+    "received_at": "2026-02-08T15:00:00Z",
+    "test_codes": [
+      "CHEM-NA",
+      "MOL-NG"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26193-0153",
+    "customer_id": "SYN-CUST-009",
+    "matrix": "serum",
+    "container": "SST",
+    "status": "received",
+    "priority": "routine",
+    "received_at": "2026-02-09T16:00:00Z",
+    "test_codes": [
+      "SER-AG-HBV"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26194-0154",
+    "customer_id": "SYN-CUST-010",
+    "matrix": "plasma",
+    "container": "EDTA",
+    "status": "received",
+    "priority": "routine",
+    "received_at": "2026-02-10T08:00:00Z",
+    "test_codes": [
+      "CHEM-AST",
+      "SER-AG-HIV",
+      "TB-IGRA-B"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26195-0155",
+    "customer_id": "SYN-CUST-011",
+    "matrix": "swab",
+    "container": "VTM",
+    "status": "received",
+    "priority": "routine",
+    "received_at": "2026-02-11T09:00:00Z",
+    "test_codes": [
+      "MOL-FLU-B",
+      "MOL-NG"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26196-0156",
+    "customer_id": "SYN-CUST-012",
+    "matrix": "urine",
+    "container": "STERILE_CUP",
+    "status": "pending_review",
+    "priority": "routine",
+    "received_at": "2026-02-12T10:00:00Z",
+    "test_codes": [
+      "CHEM-GLU",
+      "MOL-CT",
+      "MOL-NG"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26197-0157",
+    "customer_id": "SYN-CUST-013",
+    "matrix": "serum",
+    "container": "SST",
+    "status": "pending_review",
+    "priority": "rush",
+    "received_at": "2026-02-13T11:00:00Z",
+    "test_codes": [
+      "CHEM-ALT",
+      "CHEM-BILI"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26198-0158",
+    "customer_id": "SYN-CUST-014",
+    "matrix": "plasma",
+    "container": "EDTA",
+    "status": "completed",
+    "priority": "routine",
+    "received_at": "2026-02-14T12:00:00Z",
+    "test_codes": [
+      "CHEM-ALB",
+      "CHEM-AST",
+      "SER-SYPH"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26199-0159",
+    "customer_id": "SYN-CUST-015",
+    "matrix": "swab",
+    "container": "VTM",
+    "status": "completed",
+    "priority": "routine",
+    "received_at": "2026-02-15T13:00:00Z",
+    "test_codes": [
+      "MOL-CT",
+      "MOL-NG"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26200-0160",
+    "customer_id": "SYN-CUST-016",
+    "matrix": "urine",
+    "container": "STERILE_CUP",
+    "status": "completed",
+    "priority": "routine",
+    "received_at": "2026-02-16T14:00:00Z",
+    "test_codes": [
+      "CHEM-CREA",
+      "CHEM-GLU",
+      "CHEM-NA"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26201-0161",
+    "customer_id": "SYN-CUST-017",
+    "matrix": "serum",
+    "container": "SST",
+    "status": "in_progress",
+    "priority": "routine",
+    "received_at": "2026-02-17T15:00:00Z",
+    "test_codes": [
+      "CHEM-GLU",
+      "SER-AB-HBV"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26202-0162",
+    "customer_id": "SYN-CUST-018",
+    "matrix": "plasma",
+    "container": "EDTA",
+    "status": "in_progress",
+    "priority": "routine",
+    "received_at": "2026-02-18T16:00:00Z",
+    "test_codes": [
+      "CHEM-ALB",
+      "CHEM-AST"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26203-0163",
+    "customer_id": "SYN-CUST-019",
+    "matrix": "swab",
+    "container": "VTM",
+    "status": "in_progress",
+    "priority": "routine",
+    "received_at": "2026-02-19T08:00:00Z",
+    "test_codes": [
+      "MOL-COV2",
+      "MOL-RSV"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26204-0164",
+    "customer_id": "SYN-CUST-020",
+    "matrix": "urine",
+    "container": "STERILE_CUP",
+    "status": "in_progress",
+    "priority": "routine",
+    "received_at": "2026-02-20T09:00:00Z",
+    "test_codes": [
+      "CHEM-GLU"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26205-0165",
+    "customer_id": "SYN-CUST-021",
+    "matrix": "serum",
+    "container": "SST",
+    "status": "in_progress",
+    "priority": "routine",
+    "received_at": "2026-02-21T10:00:00Z",
+    "test_codes": [
+      "CHEM-BILI",
+      "SER-AB-HCV"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26206-0166",
+    "customer_id": "SYN-CUST-022",
+    "matrix": "plasma",
+    "container": "EDTA",
+    "status": "in_progress",
+    "priority": "routine",
+    "received_at": "2026-02-22T11:00:00Z",
+    "test_codes": [
+      "CHEM-AST",
+      "CHEM-NA"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26207-0167",
+    "customer_id": "SYN-CUST-023",
+    "matrix": "swab",
+    "container": "VTM",
+    "status": "in_progress",
+    "priority": "routine",
+    "received_at": "2026-02-23T12:00:00Z",
+    "test_codes": [
+      "MOL-CT",
+      "MOL-RSV"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26208-0168",
+    "customer_id": "SYN-CUST-024",
+    "matrix": "urine",
+    "container": "STERILE_CUP",
+    "status": "in_progress",
+    "priority": "routine",
+    "received_at": "2026-02-24T13:00:00Z",
+    "test_codes": [
+      "CHEM-CREA",
+      "MOL-CT",
+      "MOL-NG"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26209-0169",
+    "customer_id": "SYN-CUST-001",
+    "matrix": "serum",
+    "container": "SST",
+    "status": "in_progress",
+    "priority": "routine",
+    "received_at": "2026-02-01T14:00:00Z",
+    "test_codes": [
+      "CHEM-AST",
+      "SER-AB-HBV"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26210-0170",
+    "customer_id": "SYN-CUST-002",
+    "matrix": "plasma",
+    "container": "EDTA",
+    "status": "in_progress",
+    "priority": "rush",
+    "received_at": "2026-02-02T15:00:00Z",
+    "test_codes": [
+      "CHEM-BILI",
+      "CHEM-GLU",
+      "SER-SYPH"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26211-0171",
+    "customer_id": "SYN-CUST-003",
+    "matrix": "swab",
+    "container": "VTM",
+    "status": "in_progress",
+    "priority": "routine",
+    "received_at": "2026-02-03T16:00:00Z",
+    "test_codes": [
+      "MOL-FLU-A",
+      "MOL-FLU-B",
+      "MOL-NG"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26212-0172",
+    "customer_id": "SYN-CUST-004",
+    "matrix": "urine",
+    "container": "STERILE_CUP",
+    "status": "in_progress",
+    "priority": "routine",
+    "received_at": "2026-02-04T08:00:00Z",
+    "test_codes": [
+      "MOL-NG"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26213-0173",
+    "customer_id": "SYN-CUST-005",
+    "matrix": "serum",
+    "container": "SST",
+    "status": "received",
+    "priority": "routine",
+    "received_at": "2026-02-05T09:00:00Z",
+    "test_codes": [
+      "CHEM-CREA",
+      "SER-AG-HBV"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26214-0174",
+    "customer_id": "SYN-CUST-006",
+    "matrix": "plasma",
+    "container": "EDTA",
+    "status": "received",
+    "priority": "routine",
+    "received_at": "2026-02-06T10:00:00Z",
+    "test_codes": [
+      "CHEM-AST",
+      "CHEM-K"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26215-0175",
+    "customer_id": "SYN-CUST-007",
+    "matrix": "swab",
+    "container": "VTM",
+    "status": "received",
+    "priority": "routine",
+    "received_at": "2026-02-07T11:00:00Z",
+    "test_codes": [
+      "MOL-CT",
+      "MOL-RSV"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26216-0176",
+    "customer_id": "SYN-CUST-008",
+    "matrix": "urine",
+    "container": "STERILE_CUP",
+    "status": "pending_review",
+    "priority": "routine",
+    "received_at": "2026-02-08T12:00:00Z",
+    "test_codes": [
+      "CHEM-CREA",
+      "MOL-NG"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26217-0177",
+    "customer_id": "SYN-CUST-009",
+    "matrix": "serum",
+    "container": "SST",
+    "status": "pending_review",
+    "priority": "routine",
+    "received_at": "2026-02-09T13:00:00Z",
+    "test_codes": [
+      "CHEM-BILI",
+      "CHEM-CREA",
+      "SER-AG-HIV"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26218-0178",
+    "customer_id": "SYN-CUST-010",
+    "matrix": "plasma",
+    "container": "EDTA",
+    "status": "completed",
+    "priority": "routine",
+    "received_at": "2026-02-10T14:00:00Z",
+    "test_codes": [
+      "CHEM-ALT",
+      "CHEM-NA",
+      "SER-AB-HCV"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26219-0179",
+    "customer_id": "SYN-CUST-011",
+    "matrix": "swab",
+    "container": "VTM",
+    "status": "completed",
+    "priority": "routine",
+    "received_at": "2026-02-11T15:00:00Z",
+    "test_codes": [
+      "MOL-FLU-A",
+      "MOL-RSV"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26220-0180",
+    "customer_id": "SYN-CUST-012",
+    "matrix": "urine",
+    "container": "STERILE_CUP",
+    "status": "completed",
+    "priority": "routine",
+    "received_at": "2026-02-12T16:00:00Z",
+    "test_codes": [
+      "CHEM-GLU",
+      "CHEM-K",
+      "MOL-NG"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26041-0181",
+    "customer_id": "SYN-CUST-013",
+    "matrix": "serum",
+    "container": "SST",
+    "status": "in_progress",
+    "priority": "routine",
+    "received_at": "2026-02-13T08:00:00Z",
+    "test_codes": [
+      "CHEM-ALT",
+      "CHEM-BILI",
+      "SER-AB-HCV"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26042-0182",
+    "customer_id": "SYN-CUST-014",
+    "matrix": "plasma",
+    "container": "EDTA",
+    "status": "in_progress",
+    "priority": "routine",
+    "received_at": "2026-02-14T09:00:00Z",
+    "test_codes": [
+      "SER-SYPH"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26043-0183",
+    "customer_id": "SYN-CUST-015",
+    "matrix": "swab",
+    "container": "VTM",
+    "status": "in_progress",
+    "priority": "rush",
+    "received_at": "2026-02-15T10:00:00Z",
+    "test_codes": [
+      "MOL-CT",
+      "MOL-NG"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26044-0184",
+    "customer_id": "SYN-CUST-016",
+    "matrix": "urine",
+    "container": "STERILE_CUP",
+    "status": "in_progress",
+    "priority": "routine",
+    "received_at": "2026-02-16T11:00:00Z",
+    "test_codes": [
+      "CHEM-K",
+      "CHEM-NA"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26045-0185",
+    "customer_id": "SYN-CUST-017",
+    "matrix": "serum",
+    "container": "SST",
+    "status": "in_progress",
+    "priority": "routine",
+    "received_at": "2026-02-17T12:00:00Z",
+    "test_codes": [
+      "CHEM-GLU",
+      "SER-AB-HCV",
+      "SER-AG-HIV"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26046-0186",
+    "customer_id": "SYN-CUST-018",
+    "matrix": "plasma",
+    "container": "EDTA",
+    "status": "in_progress",
+    "priority": "routine",
+    "received_at": "2026-02-18T13:00:00Z",
+    "test_codes": [
+      "CHEM-GLU",
+      "CHEM-NA",
+      "TB-IGRA-B"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26047-0187",
+    "customer_id": "SYN-CUST-019",
+    "matrix": "swab",
+    "container": "VTM",
+    "status": "in_progress",
+    "priority": "routine",
+    "received_at": "2026-02-19T14:00:00Z",
+    "test_codes": [
+      "MOL-FLU-B"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26048-0188",
+    "customer_id": "SYN-CUST-020",
+    "matrix": "urine",
+    "container": "STERILE_CUP",
+    "status": "in_progress",
+    "priority": "routine",
+    "received_at": "2026-02-20T15:00:00Z",
+    "test_codes": [
+      "CHEM-CREA",
+      "MOL-CT"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26049-0189",
+    "customer_id": "SYN-CUST-021",
+    "matrix": "serum",
+    "container": "SST",
+    "status": "in_progress",
+    "priority": "routine",
+    "received_at": "2026-02-21T16:00:00Z",
+    "test_codes": [
+      "CHEM-ALT",
+      "SER-AB-HCV",
+      "SER-AG-HIV"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26050-0190",
+    "customer_id": "SYN-CUST-022",
+    "matrix": "plasma",
+    "container": "EDTA",
+    "status": "in_progress",
+    "priority": "routine",
+    "received_at": "2026-02-22T08:00:00Z",
+    "test_codes": [
+      "CHEM-NA",
+      "SER-SYPH",
+      "TB-MIT"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26051-0191",
+    "customer_id": "SYN-CUST-023",
+    "matrix": "swab",
+    "container": "VTM",
+    "status": "in_progress",
+    "priority": "routine",
+    "received_at": "2026-02-23T09:00:00Z",
+    "test_codes": [
+      "MOL-COV2",
+      "MOL-FLU-A",
+      "MOL-FLU-B"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26052-0192",
+    "customer_id": "SYN-CUST-024",
+    "matrix": "urine",
+    "container": "STERILE_CUP",
+    "status": "in_progress",
+    "priority": "routine",
+    "received_at": "2026-02-24T10:00:00Z",
+    "test_codes": [
+      "CHEM-CREA",
+      "CHEM-NA"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26053-0193",
+    "customer_id": "SYN-CUST-001",
+    "matrix": "serum",
+    "container": "SST",
+    "status": "received",
+    "priority": "routine",
+    "received_at": "2026-02-01T11:00:00Z",
+    "test_codes": [
+      "SER-AB-HCV"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26054-0194",
+    "customer_id": "SYN-CUST-002",
+    "matrix": "plasma",
+    "container": "EDTA",
+    "status": "received",
+    "priority": "routine",
+    "received_at": "2026-02-02T12:00:00Z",
+    "test_codes": [
+      "CHEM-ALB",
+      "TB-IGRA-A",
+      "TB-IGRA-B"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26055-0195",
+    "customer_id": "SYN-CUST-003",
+    "matrix": "swab",
+    "container": "VTM",
+    "status": "received",
+    "priority": "routine",
+    "received_at": "2026-02-03T13:00:00Z",
+    "test_codes": [
+      "MOL-COV2",
+      "MOL-NG"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26056-0196",
+    "customer_id": "SYN-CUST-004",
+    "matrix": "urine",
+    "container": "STERILE_CUP",
+    "status": "pending_review",
+    "priority": "rush",
+    "received_at": "2026-02-04T14:00:00Z",
+    "test_codes": [
+      "CHEM-CREA"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26057-0197",
+    "customer_id": "SYN-CUST-005",
+    "matrix": "serum",
+    "container": "SST",
+    "status": "pending_review",
+    "priority": "routine",
+    "received_at": "2026-02-05T15:00:00Z",
+    "test_codes": [
+      "CHEM-ALT",
+      "CHEM-NA"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26058-0198",
+    "customer_id": "SYN-CUST-006",
+    "matrix": "plasma",
+    "container": "EDTA",
+    "status": "completed",
+    "priority": "routine",
+    "received_at": "2026-02-06T16:00:00Z",
+    "test_codes": [
+      "SER-AB-HCV",
+      "SER-SYPH",
+      "TB-NIL"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26059-0199",
+    "customer_id": "SYN-CUST-007",
+    "matrix": "swab",
+    "container": "VTM",
+    "status": "completed",
+    "priority": "routine",
+    "received_at": "2026-02-07T08:00:00Z",
+    "test_codes": [
+      "MOL-CT",
+      "MOL-RSV"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-26060-0200",
+    "customer_id": "SYN-CUST-008",
+    "matrix": "urine",
+    "container": "STERILE_CUP",
+    "status": "completed",
+    "priority": "routine",
+    "received_at": "2026-02-08T09:00:00Z",
+    "test_codes": [
+      "CHEM-CREA",
+      "CHEM-NA",
+      "MOL-CT"
+    ],
+    "synthetic": true
+  }
+]

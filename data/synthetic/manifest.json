@@ -1,0 +1,10 @@
+{
+  "dataset": "LIMS BOX fabricated synthetic demo dataset",
+  "seed": 20260726,
+  "sample_count": 200,
+  "test_count": 30,
+  "result_count": 344,
+  "personnel_count": 12,
+  "hl7_message_count": 5,
+  "contains_real_data": false
+}
