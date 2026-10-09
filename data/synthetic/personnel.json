@@ -1,0 +1,188 @@
+[
+  {
+    "id": "SYN-STAFF-001",
+    "display_name": "Synthetic Staff 01",
+    "role": "General Supervisor",
+    "competencies": [
+      {
+        "area": "sample_receiving",
+        "assessed_on": "2026-01-15",
+        "outcome": "follow_up_required"
+      }
+    ],
+    "authorizations": [],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-STAFF-002",
+    "display_name": "Synthetic Staff 02",
+    "role": "Technical Consultant",
+    "competencies": [
+      {
+        "area": "result_review",
+        "assessed_on": "2026-02-15",
+        "outcome": "authorized"
+      }
+    ],
+    "authorizations": [
+      "SYN-AUTH-002"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-STAFF-003",
+    "display_name": "Synthetic Staff 03",
+    "role": "Testing Personnel",
+    "competencies": [
+      {
+        "area": "instrument_operation",
+        "assessed_on": "2026-03-15",
+        "outcome": "authorized"
+      }
+    ],
+    "authorizations": [
+      "SYN-AUTH-003"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-STAFF-004",
+    "display_name": "Synthetic Staff 04",
+    "role": "General Supervisor",
+    "competencies": [
+      {
+        "area": "sample_receiving",
+        "assessed_on": "2026-04-15",
+        "outcome": "authorized"
+      }
+    ],
+    "authorizations": [
+      "SYN-AUTH-004"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-STAFF-005",
+    "display_name": "Synthetic Staff 05",
+    "role": "Technical Consultant",
+    "competencies": [
+      {
+        "area": "result_review",
+        "assessed_on": "2026-05-15",
+        "outcome": "authorized"
+      }
+    ],
+    "authorizations": [
+      "SYN-AUTH-005"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-STAFF-006",
+    "display_name": "Synthetic Staff 06",
+    "role": "Testing Personnel",
+    "competencies": [
+      {
+        "area": "instrument_operation",
+        "assessed_on": "2026-06-15",
+        "outcome": "follow_up_required"
+      }
+    ],
+    "authorizations": [],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-STAFF-007",
+    "display_name": "Synthetic Staff 07",
+    "role": "General Supervisor",
+    "competencies": [
+      {
+        "area": "sample_receiving",
+        "assessed_on": "2026-01-15",
+        "outcome": "authorized"
+      }
+    ],
+    "authorizations": [
+      "SYN-AUTH-007"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-STAFF-008",
+    "display_name": "Synthetic Staff 08",
+    "role": "Technical Consultant",
+    "competencies": [
+      {
+        "area": "result_review",
+        "assessed_on": "2026-02-15",
+        "outcome": "authorized"
+      }
+    ],
+    "authorizations": [
+      "SYN-AUTH-008"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-STAFF-009",
+    "display_name": "Synthetic Staff 09",
+    "role": "Testing Personnel",
+    "competencies": [
+      {
+        "area": "instrument_operation",
+        "assessed_on": "2026-03-15",
+        "outcome": "authorized"
+      }
+    ],
+    "authorizations": [
+      "SYN-AUTH-009"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-STAFF-010",
+    "display_name": "Synthetic Staff 10",
+    "role": "General Supervisor",
+    "competencies": [
+      {
+        "area": "sample_receiving",
+        "assessed_on": "2026-04-15",
+        "outcome": "authorized"
+      }
+    ],
+    "authorizations": [
+      "SYN-AUTH-010"
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-STAFF-011",
+    "display_name": "Synthetic Staff 11",
+    "role": "Technical Consultant",
+    "competencies": [
+      {
+        "area": "result_review",
+        "assessed_on": "2026-05-15",
+        "outcome": "follow_up_required"
+      }
+    ],
+    "authorizations": [],
+    "synthetic": true
+  },
+  {
+    "id": "SYN-STAFF-012",
+    "display_name": "Synthetic Staff 12",
+    "role": "Testing Personnel",
+    "competencies": [
+      {
+        "area": "instrument_operation",
+        "assessed_on": "2026-06-15",
+        "outcome": "authorized"
+      }
+    ],
+    "authorizations": [
+      "SYN-AUTH-012"
+    ],
+    "synthetic": true
+  }
+]

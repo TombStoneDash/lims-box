@@ -1,0 +1,2 @@
+data/synthetic/*.json text eol=lf
+data/synthetic/hl7/**/*.hl7 text eol=lf
