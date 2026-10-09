@@ -184,6 +184,69 @@ function validateSteps(steps: EscalationSteps): void {
   }
 }
 
+/**
+ * Matches a literal ISO 8601 calendar/clock timestamp: YYYY-MM-DDTHH:mm[:ss[.sss]](Z|±HH:mm).
+ * Capturing groups: 1 year, 2 month, 3 day, 4 hour, 5 minute, 6 second, 7 fraction, 8 offset.
+ */
+const STRICT_ISO_TIMESTAMP_PATTERN =
+  /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2})(?:\.\d{1,9})?)?(Z|[+-]\d{2}:\d{2})$/;
+
+function isLeapYear(year: number): boolean {
+  return (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
+}
+
+function daysInMonth(year: number, month: number): number {
+  const DAYS_PER_MONTH = [31, isLeapYear(year) ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+  return DAYS_PER_MONTH[month - 1]!;
+}
+
+/**
+ * Validate the literal calendar and clock fields of a strict ISO 8601 timestamp match,
+ * rejecting combinations that `Date.parse` would otherwise silently roll over (e.g. the
+ * engine rolling "2026-02-30" into March 2nd, or "2026-04-31" into May 1st).
+ */
+function hasValidCalendarFields(match: RegExpExecArray): boolean {
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+  const hour = Number(match[4]);
+  const minute = Number(match[5]);
+  const second = match[6] === undefined ? 0 : Number(match[6]);
+  const offset = match[7]!;
+
+  if (month < 1 || month > 12) {
+    return false;
+  }
+  if (day < 1 || day > daysInMonth(year, month)) {
+    return false;
+  }
+  if (hour > 23 || minute > 59 || second > 59) {
+    return false;
+  }
+  if (offset !== 'Z') {
+    const offsetHour = Number(offset.slice(1, 3));
+    const offsetMinute = Number(offset.slice(4, 6));
+    if (offsetHour > 23 || offsetMinute > 59) {
+      return false;
+    }
+  }
+  return true;
+}
+
+/**
+ * Parse an ISO 8601 timestamp the same way `Date.parse` would, except that a string
+ * shaped like a strict literal ISO calendar/clock timestamp with an impossible
+ * month/day/time field (including non-leap February 29) is rejected as unparsable
+ * rather than silently rolled over into a neighboring date.
+ */
+function parseCalendarCheckedTimestamp(value: string): number {
+  const match = STRICT_ISO_TIMESTAMP_PATTERN.exec(value);
+  if (match && !hasValidCalendarFields(match)) {
+    return NaN;
+  }
+  return Date.parse(value);
+}
+
 function outcome(
   specimenId: string,
   initialPriority: SpecimenPriority,
@@ -215,7 +278,7 @@ type SortableResult = {
 export function escalateSpecimenPriorities(input: PriorityEscalationInput): PriorityEscalationOutcome {
   validateSteps(input.steps);
 
-  const currentTime = Date.parse(input.currentAt);
+  const currentTime = parseCalendarCheckedTimestamp(input.currentAt);
   if (!Number.isFinite(currentTime)) {
     throw new PriorityEscalationInputError('current-timestamp-invalid');
   }
@@ -233,7 +296,7 @@ export function escalateSpecimenPriorities(input: PriorityEscalationInput): Prio
     }
 
     const initialPriority = specimen.initialPriority;
-    const receivedTime = Date.parse(specimen.receivedAt);
+    const receivedTime = parseCalendarCheckedTimestamp(specimen.receivedAt);
 
     if (!Number.isFinite(receivedTime)) {
       return {
