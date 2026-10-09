@@ -1,0 +1,30 @@
+task_id: PL24-FIRST-CONTACT-ENABLE-20261008
+run_id: pl24-r2-20261009T030528Z
+host_id: not-exposed
+host_role: main-daisy
+repo: tombstonedash/lims-box
+branch_or_worktree: codex/pl24-first-contact-env-lims-actorlab-r2
+requested_model: not-exposed
+requested_reasoning_effort: not-exposed
+client_effective_model: not-exposed
+provider_returned_model_id: not-exposed
+model_evidence_source: not-exposed
+route_id: not-exposed
+started_at: 2026-10-09T03:02:37Z # first retained timestamp, from npm log
+ended_at: 2026-10-09T03:05:28Z
+terminal_state: BLOCKED
+verification:
+  - 'Read LIMS #523 and ActorLab #662 sender, schema, runbook, and flag gates.'
+  - 'LIMS and ActorLab SQL static additive checks: exit 0.'
+  - 'LIMS sender test command: exit 1; tsx not installed.'
+  - 'npm ci --ignore-scripts --no-audit --no-fund: exit 1; npm Exit handler never called.'
+  - 'Canonical Hermes copy: exit 1; Operation not permitted.'
+  - 'git diff --check: exit 0.'
+artifacts:
+  - docs/reviews/FIRST_CONTACT_ENABLE_LIMS_ACTORLAB_20261008.md
+  - docs/reviews/first-contact-lims-schema.sql
+  - docs/worker-results/PL24-FIRST-CONTACT-ENABLE-20261008-R2.yaml
+usage_delta: not-exposed
+blocker: 'Workspace sandbox denies writing the requested Hermes path; npm dependency installation failed, preventing local sender tests.'
+rollback: 'No runtime change made. Remove/revert local handoff files if needed.'
+next_safe_action: 'Runner/Main delivers the report and adjacent SQL to Hermes, then Main reviews and applies the documented migration and env steps.'
