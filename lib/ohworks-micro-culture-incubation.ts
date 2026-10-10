@@ -111,17 +111,24 @@ export type IsReadOverdueInput = {
   dueAt: string;
   /** ISO 8601 UTC timestamp representing the current moment. */
   now: string;
-  /** Hours of grace after dueAt before the read is considered overdue. */
+  /** Finite, non-negative hours of grace after dueAt before the read is considered overdue. */
   gracePeriodHours: number;
 };
 
 /**
  * True when `now` is strictly more than `gracePeriodHours` past `dueAt`.
  * Exactly at the grace-period boundary is not overdue.
+ * Throws RangeError for invalid grace hours or overflow converting them to milliseconds.
  */
 export function isReadOverdue(input: IsReadOverdueInput): boolean {
+  if (!Number.isFinite(input.gracePeriodHours) || input.gracePeriodHours < 0) {
+    throw new RangeError('gracePeriodHours must be a finite non-negative number');
+  }
   const dueAtMs = Date.parse(input.dueAt);
   const nowMs = Date.parse(input.now);
   const graceMs = input.gracePeriodHours * HOUR_MS;
+  if (!Number.isFinite(graceMs)) {
+    throw new RangeError('gracePeriodHours must convert to a finite number of milliseconds');
+  }
   return nowMs > dueAtMs + graceMs;
 }
