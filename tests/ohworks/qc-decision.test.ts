@@ -155,6 +155,42 @@ test('a null value fails closed to HOLD as non-numeric', () => {
   assert.equal(decisionFor(decisions, 'record-synthetic-1').status, 'HOLD');
 });
 
+test('hexadecimal, binary, and octal string literals fail closed to HOLD as non-numeric', () => {
+  for (const rawValue of ['0x0F', '0b1111', '0o17']) {
+    const records = baselineRecords();
+    records[0].rawValue = rawValue;
+    const decisions = evaluateQCDecisions(records, baselineContext());
+    const decision = decisionFor(decisions, 'record-synthetic-1');
+    assert.equal(decision.status, 'HOLD', `expected HOLD for rawValue ${rawValue}`);
+    assert.ok(
+      decision.reasons.some((r) => r.code === 'value-non-numeric'),
+      `expected value-non-numeric for rawValue ${rawValue}`,
+    );
+  }
+});
+
+test('plain decimal string variants are still accepted as numeric', () => {
+  for (const rawValue of ['15', ' 15.5 ', '+3', '-1.5', '1e1']) {
+    const records = baselineRecords();
+    records[0].rawValue = rawValue;
+    const decisions = evaluateQCDecisions(records, baselineContext());
+    const decision = decisionFor(decisions, 'record-synthetic-1');
+    assert.ok(
+      !decision.reasons.some((r) => r.code === 'value-non-numeric'),
+      `expected rawValue ${rawValue} to be accepted as numeric`,
+    );
+  }
+});
+
+test('an empty-string value stays non-numeric', () => {
+  const records = baselineRecords();
+  records[0].rawValue = '';
+  const decisions = evaluateQCDecisions(records, baselineContext());
+  const decision = decisionFor(decisions, 'record-synthetic-1');
+  assert.equal(decision.status, 'HOLD');
+  assert.ok(decision.reasons.some((r) => r.code === 'value-non-numeric'));
+});
+
 test('a value exactly at the lower reference bound is in range', () => {
   const records = baselineRecords();
   records[0].rawValue = 10;
