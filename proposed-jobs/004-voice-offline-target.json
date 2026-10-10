@@ -1,0 +1,29 @@
+{
+  "task_id": "LIMS-PLAN-R2-04",
+  "slug": "voice-offline-target",
+  "title": "Refuse offline commands that lack a durable sample target",
+  "kind": "verified-defect",
+  "source_file": "voice/listener.py",
+  "test_file": "tests/voice/test_offline_target_context.py",
+  "test_file_status": "planned new file in existing tests/voice lane",
+  "evidence": {
+    "location": "voice/listener.py:268",
+    "observed": "Run the listener with SYNTH-A current and SENAITE offline; it queues only ('record_result',('7','pH')). Set the session to SYNTH-B, then invoke its captured replay callback: the write targets SYNTH-B.",
+    "witness": "docs/planning/2026-10-10-r2/reproduce.py:test_04"
+  },
+  "user_impact": "A queued result for sample A can be written to sample B after the current sample changes.",
+  "implementation_scope": "Within this single-file job, refuse to enqueue implicit-current-sample commands while offline and give actionable spoken feedback. Fail closed when the replay callback receives legacy targetless record_result, start_test or mark_complete rows. Do not add a cross-file context envelope or restore global session state temporarily.",
+  "acceptance": [
+    "Offline record_result, start_test and mark_complete are not queued and explain that the operator must reconnect/reselect the sample.",
+    "Legacy targetless queued commands cannot mutate whichever sample happens to be current.",
+    "Explicit-target and read-only offline commands keep their supported behavior; online command behavior is preserved."
+  ],
+  "verification_command": "python3 -m unittest discover -s tests/voice -p 'test_*.py'",
+  "constraints": [
+    "Change only the named source file and test file for implementation.",
+    "All verification uses synthetic fixtures and mocks; no live SENAITE writes or email.",
+    "Do not run jobs sharing a source file as concurrent writers."
+  ],
+  "duplicate_check": "No selected source appears in any of 17 open PR file lists or 32 merged-since-2026-10-09 PR file lists in the saved GitHub snapshot.",
+  "depends_on": []
+}

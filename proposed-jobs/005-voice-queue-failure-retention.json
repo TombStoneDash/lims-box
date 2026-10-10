@@ -1,0 +1,30 @@
+{
+  "task_id": "LIMS-PLAN-R2-05",
+  "slug": "voice-queue-failure-retention",
+  "title": "Keep failed replay commands out of the success path",
+  "kind": "verified-defect",
+  "source_file": "voice/queue.py",
+  "test_file": "tests/voice/test_queue_failure_retention.py",
+  "test_file_status": "planned new file in existing tests/voice lane",
+  "evidence": {
+    "location": "voice/queue.py:145",
+    "observed": "Queue record_result with no active sample and drain using the real executor. It returns 'No current sample'; the row is deleted and the queue announces 'All queued commands have been processed.'.",
+    "witness": "docs/planning/2026-10-10-r2/reproduce.py:test_05"
+  },
+  "user_impact": "Offline commands can disappear without executing while the operator hears that all work was processed.",
+  "implementation_scope": "Do not treat every returned response string as proof of success. Conservatively distinguish the existing executor's successful responses from refusal/error/unconfirmed responses in this file. Preserve unresolved commands and report them as needing attention, including after retry exhaustion. Avoid automatic retry of ambiguous writes and do not introduce a multi-file return-type migration.",
+  "acceptance": [
+    "No-current-sample, not-found, explicit error and unconfirmed responses are never marked successful.",
+    "Unresolved work remains inspectable in SQLite across reopening and cannot be purged as completed.",
+    "No blanket all-processed success announcement with unresolved commands; verified successful commands still complete.",
+    "Unknown response strings fail closed; repeated drain cycles do not blindly resubmit uncertain writes."
+  ],
+  "verification_command": "python3 -m unittest discover -s tests/voice -p 'test_*.py'",
+  "constraints": [
+    "Change only the named source file and test file for implementation.",
+    "All verification uses synthetic fixtures and mocks; no live SENAITE writes or email.",
+    "Do not run jobs sharing a source file as concurrent writers."
+  ],
+  "duplicate_check": "No selected source appears in any of 17 open PR file lists or 32 merged-since-2026-10-09 PR file lists in the saved GitHub snapshot.",
+  "depends_on": []
+}

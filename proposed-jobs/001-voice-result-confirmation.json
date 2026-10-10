@@ -1,0 +1,29 @@
+{
+  "task_id": "LIMS-PLAN-R2-01",
+  "slug": "voice-result-confirmation",
+  "title": "Confirm result writes before announcing success",
+  "kind": "verified-defect",
+  "source_file": "voice/commands.py",
+  "test_file": "tests/voice/test_record_result_confirmation.py",
+  "test_file_status": "planned new file in existing tests/voice lane",
+  "evidence": {
+    "location": "voice/commands.py:178",
+    "observed": "With sample SYNTH-A active, record_result returning {success:false,error:'rejected'} still produces 'Result 7 recorded for pH on sample SYNTH-A.'.",
+    "witness": "docs/planning/2026-10-10-r2/reproduce.py:test_01"
+  },
+  "user_impact": "A technician hears that a result was saved even when the mocked server response explicitly says success=false.",
+  "implementation_scope": "Validate the returned acknowledgment before claiming persistence. Treat explicit rejection, missing/empty or malformed acknowledgment as unconfirmed. Do not automatically retry writes whose outcome is unknown.",
+  "acceptance": [
+    "A rejected or malformed acknowledgment never says recorded.",
+    "Confirmed persistence has truthful feedback; distinguish request acceptance from verified persistence.",
+    "Exactly one write attempt per command; preserve the active sample on uncertainty."
+  ],
+  "verification_command": "python3 -m unittest discover -s tests/voice -p 'test_*.py'",
+  "constraints": [
+    "Change only the named source file and test file for implementation.",
+    "All verification uses synthetic fixtures and mocks; no live SENAITE writes or email.",
+    "Do not run jobs sharing a source file as concurrent writers."
+  ],
+  "duplicate_check": "No selected source appears in any of 17 open PR file lists or 32 merged-since-2026-10-09 PR file lists in the saved GitHub snapshot.",
+  "depends_on": []
+}

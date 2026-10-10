@@ -1,0 +1,29 @@
+{
+  "task_id": "LIMS-PLAN-R2-03",
+  "slug": "voice-pending-pagination",
+  "title": "Count pending samples beyond the first 25",
+  "kind": "verified-defect",
+  "source_file": "senaite/client.py",
+  "test_file": "tests/voice/test_pending_samples_pagination.py",
+  "test_file_status": "planned new file in existing tests/voice lane",
+  "evidence": {
+    "location": "senaite/client.py:124",
+    "observed": "A mock server with 30 pending records honoring the requested limit returns 25; only one request is made and the voice command announces '25 pending samples'.",
+    "witness": "docs/planning/2026-10-10-r2/reproduce.py:test_03"
+  },
+  "user_impact": "The spoken pending workload understates the backlog whenever it exceeds the default page size.",
+  "implementation_scope": "Make get_pending_samples retrieve the full pending collection using the supported SENAITE pagination contract. Keep generic search defaults and exact-target lookup behavior intact. Reject incomplete or repeating pagination rather than returning a falsely complete list.",
+  "acceptance": [
+    "A 30-record paginated fixture returns all 30 distinct records.",
+    "Cover empty, one-page and multi-page results, repeated cursors/pages and a later-page error.",
+    "Assert the supported request pagination parameters in fixtures; do not assume increasing a fixed limit solves pagination."
+  ],
+  "verification_command": "python3 -m unittest discover -s tests/voice -p 'test_*.py'",
+  "constraints": [
+    "Change only the named source file and test file for implementation.",
+    "All verification uses synthetic fixtures and mocks; no live SENAITE writes or email.",
+    "Do not run jobs sharing a source file as concurrent writers."
+  ],
+  "duplicate_check": "No selected source appears in any of 17 open PR file lists or 32 merged-since-2026-10-09 PR file lists in the saved GitHub snapshot.",
+  "depends_on": []
+}

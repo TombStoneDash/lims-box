@@ -1,0 +1,31 @@
+{
+  "task_id": "LIMS-PLAN-R2-06",
+  "slug": "voice-queue-spoken-results",
+  "title": "Speak the result of queued read commands",
+  "kind": "verified-defect",
+  "source_file": "voice/queue.py",
+  "test_file": "tests/voice/test_queue_spoken_results.py",
+  "test_file_status": "planned new file in existing tests/voice lane",
+  "evidence": {
+    "location": "voice/queue.py:147",
+    "observed": "Queue show_pending with a mock pending sample SYNTH-A. The client is called, but the speech callback receives only reconnection/completion messages, never SYNTH-A.",
+    "witness": "docs/planning/2026-10-10-r2/reproduce.py:test_06"
+  },
+  "user_impact": "A gloved user who asks for pending samples while offline never hears the sample list when connectivity returns.",
+  "implementation_scope": "Deliver the successful queued command's response to the speech callback, separately from execution and completion bookkeeping. A speech failure must not re-execute a successful mutation or stop processing later commands.",
+  "acceptance": [
+    "A queued show_pending response is spoken once with its sample IDs and count.",
+    "Multiple queued reads each deliver their own response in queue order.",
+    "A speech callback failure cannot retry a completed server action and does not abandon subsequent queued work."
+  ],
+  "verification_command": "python3 -m unittest discover -s tests/voice -p 'test_*.py'",
+  "constraints": [
+    "Change only the named source file and test file for implementation.",
+    "All verification uses synthetic fixtures and mocks; no live SENAITE writes or email.",
+    "Do not run jobs sharing a source file as concurrent writers."
+  ],
+  "duplicate_check": "No selected source appears in any of 17 open PR file lists or 32 merged-since-2026-10-09 PR file lists in the saved GitHub snapshot.",
+  "depends_on": [
+    "LIMS-PLAN-R2-05"
+  ]
+}

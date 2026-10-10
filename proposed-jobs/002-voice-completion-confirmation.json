@@ -1,0 +1,31 @@
+{
+  "task_id": "LIMS-PLAN-R2-02",
+  "slug": "voice-completion-confirmation",
+  "title": "Preserve the active sample when submission is unconfirmed",
+  "kind": "verified-defect",
+  "source_file": "voice/commands.py",
+  "test_file": "tests/voice/test_mark_complete_confirmation.py",
+  "test_file_status": "planned new file in existing tests/voice lane",
+  "evidence": {
+    "location": "voice/commands.py:202",
+    "observed": "transition_sample returning {success:false,error:'rejected'} still produces 'marked complete and submitted for review' and clears the session.",
+    "witness": "docs/planning/2026-10-10-r2/reproduce.py:test_02"
+  },
+  "user_impact": "A technician hears that submission succeeded and loses their current sample even though the mocked submission was rejected.",
+  "implementation_scope": "Check submission evidence before confirming a workflow change or clearing the session. Use an unconfirmed response when evidence is absent. Do not infer completion merely from an HTTP request returning.",
+  "acceptance": [
+    "Rejected, empty and malformed responses preserve the sample ID and UID.",
+    "Successful feedback reflects the observed transition; only confirmed submission clears context.",
+    "Timeouts do not cause automatic duplicate submissions."
+  ],
+  "verification_command": "python3 -m unittest discover -s tests/voice -p 'test_*.py'",
+  "constraints": [
+    "Change only the named source file and test file for implementation.",
+    "All verification uses synthetic fixtures and mocks; no live SENAITE writes or email.",
+    "Do not run jobs sharing a source file as concurrent writers."
+  ],
+  "duplicate_check": "No selected source appears in any of 17 open PR file lists or 32 merged-since-2026-10-09 PR file lists in the saved GitHub snapshot.",
+  "depends_on": [
+    "LIMS-PLAN-R2-01"
+  ]
+}

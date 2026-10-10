@@ -1,0 +1,57 @@
+{
+  "task_id": "plan-hud-lims-box-20261010-r2",
+  "run_id": "plan-hud-lims-box-20261010-r2-20261010T212729Z",
+  "host_id": "MAIN-DAISY.local",
+  "host_role": "main-daisy",
+  "repo": "lims-box",
+  "branch_or_worktree": "codex/plan-hud-lims-box-20261010-r2",
+  "base_revision": "51c6ba887bc4d0af0786e646dbdfa98817cb9897",
+  "owner": "assigned planner under direct user authorization",
+  "objective": "Produce six verified user-visible jobs with exactly one source and one test target each; exclude open PRs and merges since 2026-10-09.",
+  "constraints": [
+    "No product code changes",
+    "No commit or push",
+    "Mock-only tests; no email or live SENAITE actions"
+  ],
+  "inputs": [
+    "Repository documentation, source and voice tests",
+    "GitHub oldest-first open issues and PR file lists"
+  ],
+  "definition_of_done": "Six bounded packets with file:line evidence, executable defect witnesses, relevant tests run, duplicate exclusions checked.",
+  "requested_model": "not-exposed",
+  "requested_reasoning_effort": "not-exposed",
+  "client_effective_model": "not-exposed",
+  "provider_returned_model_id": "not-exposed",
+  "model_evidence_source": "not-exposed",
+  "route_id": "not-exposed",
+  "started_at": "2026-10-10T21:27:29Z",
+  "timing_note": "Start is the first captured test-run timestamp; earlier inspection start not exposed.",
+  "ended_at": "2026-10-10T21:30:11Z",
+  "budget": "not-exposed",
+  "timeout": "not-exposed",
+  "retry_cap": "No test retries needed; GitHub connector used after CLI network failure.",
+  "terminal_state": "PASS",
+  "verification": [
+    "python3 -m unittest discover -s tests/voice -p 'test_*.py': exit 0, 106 tests passed",
+    "python3 docs/planning/2026-10-10-r2/reproduce.py: exit 0, 6 current-defect witnesses passed",
+    "JSON validation: six packets, six unique tests/voice targets, existing sources, zero source overlap with 17 open and 32 recent merged PRs",
+    "git diff --check: exit 0",
+    "git diff --name-only: empty; no tracked product/test edits"
+  ],
+  "artifacts": [
+    "proposed-jobs/001-voice-result-confirmation.json",
+    "proposed-jobs/002-voice-completion-confirmation.json",
+    "proposed-jobs/003-voice-pending-pagination.json",
+    "proposed-jobs/004-voice-offline-target.json",
+    "proposed-jobs/005-voice-queue-failure-retention.json",
+    "proposed-jobs/006-voice-queue-spoken-results.json",
+    "docs/planning/2026-10-10-r2/PLAN.md",
+    "docs/planning/2026-10-10-r2/reproduce.py",
+    "docs/planning/2026-10-10-r2/github-snapshot.json"
+  ],
+  "usage_delta": "not-exposed",
+  "blocker": "none",
+  "rollback": "Remove only newly added planner artifacts; no product changes to reverse.",
+  "next_safe_action": "Runner reviews and commits planner artifacts. Implement shared-source jobs sequentially as specified.",
+  "receipt_location": "Repository-local worker-results for runner collection; no external canonical destination supplied in this task."
+}
