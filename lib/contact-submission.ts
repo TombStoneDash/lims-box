@@ -27,17 +27,22 @@ export function normalizeContactSubmission(body: unknown): NormalizeContactSubmi
     return { ok: false, error: 'Name, valid email, and lab name are required' };
   }
 
+  const optional = (v: unknown): string | null => {
+    const s = v == null ? '' : String(v).trim();
+    return s || null;
+  };
+
   return {
     ok: true,
     record: {
       name: trimmedName,
       labName: trimmedLabName,
       email: normalizedEmail,
-      labSize: labSize ? String(labSize).trim() : null,
-      currentSystem: currentSystem ? String(currentSystem).trim() : null,
-      message: message ? String(message).trim() : null,
-      phone: phone ? String(phone).trim() : null,
-      instruments: instruments ? String(instruments).trim() : null,
+      labSize: optional(labSize),
+      currentSystem: optional(currentSystem),
+      message: optional(message),
+      phone: optional(phone),
+      instruments: optional(instruments),
     },
   };
 }
