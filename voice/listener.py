@@ -69,6 +69,15 @@ from voice.queue import CommandQueue
 from senaite.client import SenaiteClient
 
 
+# These handlers resolve their sample from the mutable voice session. The queue
+# stores only command arguments, so replay cannot recover the original target.
+_SESSION_TARGET_COMMANDS = frozenset({"record_result", "start_test", "mark_complete"})
+_OFFLINE_TARGET_FEEDBACK = (
+    "SENAITE is offline. This command was not queued. "
+    "Reconnect and reselect the sample, then repeat the command."
+)
+
+
 # ── Audio recording ─────────────────────────────────────────────────────────
 
 def record_until_silence(
@@ -199,6 +208,9 @@ def main():
     queue = CommandQueue(QUEUE_DB)
 
     def _execute_from_queue(cmd_name: str, args: tuple) -> str:
+        if cmd_name in _SESSION_TARGET_COMMANDS:
+            logger.warning("Discarding queued %s: original sample target is unavailable", cmd_name)
+            return "Queued command discarded because its original sample target is unavailable."
         return execute_command(cmd_name, args, client)
 
     queue.start_drain_loop(
@@ -265,6 +277,9 @@ def main():
                 response = execute_command(cmd_name, args, client)
                 speak(response)
             else:
+                if cmd_name in _SESSION_TARGET_COMMANDS:
+                    speak(_OFFLINE_TARGET_FEEDBACK)
+                    continue
                 queue.enqueue(cmd_name, args)
                 pending = queue.count()
                 speak(
