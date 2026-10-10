@@ -9,7 +9,7 @@ import json
 import logging
 from collections.abc import Mapping
 from typing import Optional
-from urllib.parse import urlencode
+from urllib.parse import parse_qs, urlencode, urljoin, urlsplit
 from urllib.request import Request, urlopen
 from urllib.error import URLError, HTTPError
 from base64 import b64encode
@@ -122,8 +122,68 @@ class SenaiteClient:
         })
 
     def get_pending_samples(self) -> list:
-        """Get all samples awaiting analysis (status: sample_received)."""
-        return self.search_samples(review_state="sample_received")
+        """Get the complete pending collection or raise if batching is inconsistent.
+
+        SENAITE JSONAPI batches expose a total ``count`` and a ``next`` URL
+        containing ``b_start``. Keep the pending filter on every request and
+        never send credentials to a URL supplied by the response.
+        """
+        params = {
+            "review_state": "sample_received",
+            "sort_on": "created",
+            "sort_order": "descending",
+            "limit": 25,
+            "b_start": 0,
+        }
+        collection_url = f"{self.api_url}/AnalysisRequest"
+        collection = urlsplit(collection_url)
+        items = []
+        seen_uids = set()
+        total = None
+        while True:
+            result = self.get(f"AnalysisRequest?{urlencode(params)}")
+            if not isinstance(result, Mapping):
+                raise ValueError("Invalid pending samples page")
+            count = result.get("count")
+            batch = result.get("items")
+            if (type(count) is not int or count < 0
+                    or not isinstance(batch, list) or "next" not in result):
+                raise ValueError("Missing or invalid pending samples pagination")
+            if total is None:
+                total = count
+            if count != total:
+                raise ValueError("Pending samples count changed during pagination")
+            for sample in batch:
+                uid = sample.get("uid") if isinstance(sample, Mapping) else None
+                if not isinstance(uid, str) or not uid.strip():
+                    raise ValueError("Pending sample has an invalid UID")
+                if uid in seen_uids:
+                    raise ValueError("Repeated pending sample in pagination")
+                seen_uids.add(uid)
+            items.extend(batch)
+            if len(items) > total:
+                raise ValueError("Pending samples exceed pagination count")
+
+            next_url = result["next"]
+            if next_url is None:
+                if len(items) != total:
+                    raise ValueError("Incomplete pending samples pagination")
+                return items
+            if not batch or len(items) == total:
+                raise ValueError("Pending samples pagination made no progress")
+            if not isinstance(next_url, str) or not next_url.strip():
+                raise ValueError("Invalid pending samples next link")
+            link = urlsplit(urljoin(collection_url, next_url))
+            if (link.scheme != collection.scheme or link.netloc != collection.netloc
+                    or link.path != collection.path or link.fragment):
+                raise ValueError("Invalid pending samples next link target")
+            offsets = parse_qs(link.query).get("b_start", [])
+            if len(offsets) != 1 or not offsets[0].isascii() or not offsets[0].isdigit():
+                raise ValueError("Invalid pending samples pagination offset")
+            offset = int(offsets[0])
+            if offset != len(items) or offset <= params["b_start"]:
+                raise ValueError("Repeated or incomplete pending samples pagination offset")
+            params["b_start"] = offset
 
     def record_result(self, sample_id: str, test_name: str, value: str) -> dict:
         """Record an analytical result for a specific test on a sample.
