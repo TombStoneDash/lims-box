@@ -143,7 +143,18 @@ export class ReagentLotError extends Error {
 }
 
 function isUtcTimestamp(value: string): boolean {
-  return value.endsWith('Z') && Number.isFinite(Date.parse(value));
+  const parts = /^(\d{4}|[+-]\d{6})-(\d{2})-(\d{2})T\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?Z$/.exec(value);
+  if (!parts) return false;
+
+  const time = Date.parse(value);
+  if (!Number.isFinite(time)) return false;
+
+  // Date.parse normalizes some nonexistent dates (for example, February 30).
+  // Compare calendar components without requiring a fixed fractional precision.
+  const parsed = new Date(time);
+  return parsed.getUTCFullYear() === Number(parts[1])
+    && parsed.getUTCMonth() + 1 === Number(parts[2])
+    && parsed.getUTCDate() === Number(parts[3]);
 }
 
 /**
