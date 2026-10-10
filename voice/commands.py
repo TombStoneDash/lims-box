@@ -198,16 +198,33 @@ def _handle_mark_complete(args: tuple, client: SenaiteClient) -> str:
     if not session.current_sample_id:
         return "No current sample. Say 'log sample' first to set the active sample."
 
+    sample_id = session.current_sample_id
+    unconfirmed = (
+        f"Submission of sample {sample_id} was not confirmed. "
+        "Current sample unchanged."
+    )
     try:
-        client.transition_sample(session.current_sample_id, "submit")
-        completed_id = session.current_sample_id
-        session.clear()
-        return f"Sample {completed_id} marked complete and submitted for review."
-    except ValueError as e:
-        return str(e)
-    except Exception as e:
-        logger.error(f"Failed to mark complete: {e}")
-        return f"Could not mark sample complete: {e}"
+        result = client.transition_sample(sample_id, "submit")
+    except Exception:
+        # The request may have reached SENAITE; never retry it automatically.
+        logger.warning("Submission was not confirmed for sample %s", sample_id, exc_info=True)
+        return unconfirmed
+
+    if (
+        not isinstance(result, dict)
+        or result.get("success") is not True
+        or result.get("error")
+    ):
+        return unconfirmed
+
+    state = result.get("review_state")
+    if state is not None and state not in ("to_be_verified", "verified", "published"):
+        return unconfirmed
+
+    session.clear()
+    if state:
+        return f"Sample {sample_id} submitted for review. Observed state: {state}."
+    return f"Submission of sample {sample_id} confirmed by SENAITE."
 
 
 def _handle_print_label(args: tuple, client: SenaiteClient) -> str:
