@@ -1,0 +1,34 @@
+task_id: PL24-FIRST-CONTACT-ENABLE-20261008
+run_id: pl24-lenovo-20261008T231800Z
+host_id: DESKTOP-1TV907A
+host_role: lenovo
+repo: tombstonedash/lims-box
+branch_or_worktree: codex-lenovo/pl24-first-contact-env-lims-actorlab
+requested_model: not-exposed
+requested_reasoning_effort: not-exposed
+client_effective_model: not-exposed
+provider_returned_model_id: not-exposed
+model_evidence_source: not-exposed
+route_id: not-exposed
+started_at: 2026-10-08T23:21:53.328Z # first retained timestamp: local dependency setup
+ended_at: 2026-10-08T23:28:27.939Z
+terminal_state: BLOCKED
+verification:
+  - "Assigned branch and clean initial HEAD verified: 74da3f97fc5c27ea523a87a8f1d2894e175ed880."
+  - "Read LIMS #523 merge f8fb7ac658cdb762769a07094620042113c1274d and current SQL callers; no first-contact migration exists."
+  - "Read ActorLab #662 merge f34aa765595eade7e0b2490f29119f5348d10c31 over SSH; old dirty checkout preserved."
+  - "npm ci --ignore-scripts --no-audit --no-fund --cache .cache/npm: exit 0."
+  - "node node_modules/prisma/build/index.js generate: exit 0; local code generation only."
+  - "node --import tsx --test tests/first-contact.test.ts tests/first-contact-send.test.ts tests/first-contact-lims.test.ts tests/first-contact-maintenance.test.ts tests/first-contact-maintenance-run.test.ts tests/first-contact-unsubscribe.test.ts: exit 0; 40 passed."
+  - "node .cache/actorlab/node_modules/jest/bin/jest.js --config .cache/actorlab/jest.config.cjs --runInBand --no-cache: exit 0; 19 passed in 2 suites, immutable #662 source fixture with mocked Prisma."
+  - "An initial LIMS test attempt during dependency setup failed on missing Next/Prisma modules; full rerun after setup passed."
+  - "SQL additivity checked by source inspection only; no migration or live database check executed."
+  - "git diff --exit-code: exit 0; tracked source and dependency files unchanged."
+artifacts:
+  - docs/reviews/FIRST_CONTACT_ENABLE_LIMS_ACTORLAB_20261008.md
+  - docs/reviews/first-contact-lims-schema.sql
+  - docs/worker-results/PL24-FIRST-CONTACT-ENABLE-20261008.yaml
+usage_delta: not-exposed
+blocker: "Canonical Hermes destination is outside this job's repository-only write scope. LIMS #523 has no merged migration; proposed derived DDL requires Main review before application."
+rollback: "No runtime change made. Runner may remove/revert handoff files. Future activation rollback is flag=false plus controlled redeploy, preserving receipt tables, HMAC key and unsubscribe service."
+next_safe_action: "Runner delivers report and adjacent SQL to /Users/ops/Hermes/outbox/reviews and routes this receipt to canonical worker-results. Main reviews LIMS DDL and follows the documented application and verification steps."
