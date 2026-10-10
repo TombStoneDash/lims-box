@@ -294,8 +294,52 @@ function sameEventContent(a: CorrectiveActionEventInput, b: CorrectiveActionEven
   );
 }
 
-function isUtcTimestamp(value: string): boolean {
-  return value.endsWith('Z') && Number.isFinite(Date.parse(value));
+const UTC_TIMESTAMP_PATTERN =
+  /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.\d+)?(Z|[+-]\d{2}:\d{2})?$/;
+
+const DAYS_IN_MONTH: readonly number[] = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+
+function isLeapYear(year: number): boolean {
+  return (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
+}
+
+function daysInMonth(year: number, month: number): number {
+  return month === 2 && isLeapYear(year) ? 29 : DAYS_IN_MONTH[month - 1];
+}
+
+type TimestampCalendarCheck = 'invalid' | 'valid-non-utc' | 'valid-utc';
+
+/**
+ * Validate the literal calendar and clock fields in a caller-supplied
+ * timestamp against the Gregorian calendar, independent of what `Date.parse`
+ * does with them. `Date.parse` silently rolls impossible dates like
+ * "2026-02-30" or "2026-04-31" over into the following month instead of
+ * rejecting them, so it cannot be relied on to catch those on its own.
+ */
+function checkTimestampCalendar(value: string): TimestampCalendarCheck {
+  const match = UTC_TIMESTAMP_PATTERN.exec(value);
+  if (!match) {
+    return 'invalid';
+  }
+  const [, yearRaw, monthRaw, dayRaw, hourRaw, minuteRaw, secondRaw, zone] = match;
+  const year = Number(yearRaw);
+  const month = Number(monthRaw);
+  const day = Number(dayRaw);
+  const hour = Number(hourRaw);
+  const minute = Number(minuteRaw);
+  const second = Number(secondRaw);
+
+  if (month < 1 || month > 12) {
+    return 'invalid';
+  }
+  if (day < 1 || day > daysInMonth(year, month)) {
+    return 'invalid';
+  }
+  if (hour > 23 || minute > 59 || second > 59) {
+    return 'invalid';
+  }
+
+  return zone === 'Z' ? 'valid-utc' : 'valid-non-utc';
 }
 
 /** The most recently recorded root cause in this record's history, if `propose_action` has ever succeeded. */
@@ -374,10 +418,11 @@ export function applyCorrectiveActionEvent(
   if (rawEvent.recordId !== context.recordId) {
     return block('record-id-mismatch');
   }
-  if (!Number.isFinite(Date.parse(rawEvent.occurredAt))) {
+  const calendarCheck = checkTimestampCalendar(rawEvent.occurredAt);
+  if (calendarCheck === 'invalid' || !Number.isFinite(Date.parse(rawEvent.occurredAt))) {
     return block('timestamp-invalid');
   }
-  if (!isUtcTimestamp(rawEvent.occurredAt)) {
+  if (calendarCheck === 'valid-non-utc') {
     return block('timestamp-not-utc');
   }
 
