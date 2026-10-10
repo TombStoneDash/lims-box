@@ -27,6 +27,13 @@ for (const [label, value] of [
   ['missing domain dot', 'user@example'],
   ['empty string', ''],
   ['whitespace-only', ' \t\n '],
+  ['consecutive dots in domain', 'a@b..com'],
+  ['trailing dot on domain', 'a@b.com.'],
+  ['leading hyphen domain label', 'a@-b.com'],
+  ['markup characters in domain', 'a@b.c<x>'],
+  ['quoted local part', '"a"@b.com'],
+  ['65-char local part', `${'a'.repeat(65)}@example.com`],
+  ['255-char address', `${'a'.repeat(243)}@example.com`],
 ] as const) {
   test(`a malformed email (${label}) returns null`, () => {
     assert.equal(normalizeEmail(value), null);
@@ -38,7 +45,13 @@ for (const email of [
   'user@mail.example.com',
   'user+tag@mail.example.com',
 ]) {
-  test(`the permissive regex accepts ${email}`, () => {
+  test(`a well-formed email accepts ${email}`, () => {
+    assert.equal(normalizeEmail(email), email);
+  });
+}
+
+for (const email of ['josé@x.com', 'user@münchen.de']) {
+  test(`unicode letters in the local part and domain are accepted (${email})`, () => {
     assert.equal(normalizeEmail(email), email);
   });
 }
