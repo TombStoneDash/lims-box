@@ -53,6 +53,10 @@ export type PoctLockoutState = {
  *   - `lastQcResult: 'pass'` within `qcFrequencyHours` of `now` -> unlocked.
  *   - `lastQcResult: 'pass'` beyond `qcFrequencyHours` of `now` -> locked,
  *     `qcOverdue: true` (a passed QC does not stay valid forever).
+ *   - Invalid QC timing -- unparseable `now`/`lastQcAt`, `lastQcAt` after
+ *     `now`, or a non-finite or non-positive `qcFrequencyHours` -> locked
+ *     (fail-closed), `qcOverdue: false` (timing could not be evaluated, so
+ *     it is not reported as overdue).
  *
  * `priorLockoutActive` is accepted for context but does not change the
  * decision: this function is stateless per call and derives the current
@@ -78,6 +82,21 @@ export function evaluateLockoutState(input: PoctLockoutInput): PoctLockoutState 
 
   const nowMs = Date.parse(input.now);
   const lastQcAtMs = Date.parse(input.lastQcAt);
+
+  if (
+    Number.isNaN(nowMs) ||
+    Number.isNaN(lastQcAtMs) ||
+    lastQcAtMs > nowMs ||
+    !Number.isFinite(input.qcFrequencyHours) ||
+    input.qcFrequencyHours <= 0
+  ) {
+    return {
+      locked: true,
+      reason: `Device ${input.deviceId} is locked out: QC timing is invalid.`,
+      qcOverdue: false,
+    };
+  }
+
   const elapsedHours = (nowMs - lastQcAtMs) / (1000 * 60 * 60);
 
   if (elapsedHours <= input.qcFrequencyHours) {
