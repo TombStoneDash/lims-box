@@ -126,7 +126,7 @@ export function validateEarlyAccessApplication(
     return { ok: false, error: 'dataUseAccepted must be true' };
   }
 
-  const isWaterLane = source.includes(';utm_campaign=water_lane');
+  const isWaterLane = source.split(';').includes('utm_campaign=water_lane');
   const track: EarlyAccessTrack =
     labType === 'Environmental / Water Testing' || isWaterLane
       ? 'environmental'
