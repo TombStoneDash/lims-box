@@ -75,6 +75,10 @@ async function confirmNewSignup(
   }
 }
 
+// Trims before falling back so whitespace-only values (e.g. source: '   ')
+// don't get stored as '' and miscounted by lib/admin/conversionReport.ts.
+const text = (value: unknown): string => (value == null ? '' : String(value).trim());
+
 export function createWaitlistPostHandler(dependencies: WaitlistDependencies) {
   return async function handleWaitlistPost(request: NextRequest) {
     // Taken before this request writes anything (first-contact dry run).
@@ -90,15 +94,13 @@ export function createWaitlistPostHandler(dependencies: WaitlistDependencies) {
 
       const record: WaitlistRecord = {
         track: 'clinical',
-        name: (name && String(name).trim())
-          || (labName && String(labName).trim())
-          || normalizedEmail.split('@')[0],
+        name: text(name) || text(labName) || normalizedEmail.split('@')[0],
         email: normalizedEmail,
-        labName: (labName && String(labName).trim()) || (organization ? String(organization).trim() : 'Waitlist'),
+        labName: text(labName) || text(organization) || 'Waitlist',
         labSize: 'unknown',
         accreditations: JSON.stringify([]),
         painPoint: null,
-        source: source ? String(source).trim() : 'lims.bot',
+        source: text(source) || 'lims.bot',
         fieldBenchSplit: null,
       };
 
