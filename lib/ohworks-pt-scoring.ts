@@ -25,7 +25,11 @@
  * declared acceptable range of zero width, or degenerate robust statistics
  * (zero spread) all throw PtScoringError rather than guessing at a score.
  * Structurally invalid declared consensus, results, or limits throw the
- * same way.
+ * same way. An assigned value, derived standard deviation, or participant
+ * z-score that fails to resolve to a finite number (for example because a
+ * declared acceptable range or reported value is large enough to overflow
+ * standard double-precision arithmetic) also throws PtScoringError rather
+ * than silently producing an infinite or zero statistic.
  */
 
 /** Standard PT acceptance limit: |z| at or below this value is satisfactory. */
@@ -145,7 +149,8 @@ export type PtScoringErrorCode =
   | 'consensus-range-invalid'
   | 'consensus-range-zero-width'
   | 'consensus-missing-insufficient-participants'
-  | 'robust-statistics-zero-spread';
+  | 'robust-statistics-zero-spread'
+  | 'derived-statistics-invalid';
 
 const ERROR_MESSAGES: Record<PtScoringErrorCode, string> = {
   'limits-malformed': 'The declared event limits are not structurally valid.',
@@ -160,6 +165,8 @@ const ERROR_MESSAGES: Record<PtScoringErrorCode, string> = {
   'consensus-missing-insufficient-participants':
     'No consensus was declared and there are too few numeric results to compute robust statistics.',
   'robust-statistics-zero-spread': 'No consensus was declared and the robust statistics computed from the results have zero spread.',
+  'derived-statistics-invalid':
+    'The derived assigned value, standard deviation, or a participant z-score did not resolve to a finite number.',
 };
 
 /** Deterministic, human-readable text for a fail-closed error code. */
@@ -268,10 +275,11 @@ function median(values: readonly number[]): number {
  * participant identifier, a non-finite reported value, a structurally
  * invalid declared consensus, an acceptable range whose low bound exceeds
  * its high bound or has zero width, a `null` consensus with fewer numeric
- * results than `limits.minParticipantsForRobustStatistics`, or robust
- * statistics with zero spread all throw PtScoringError instead of
- * guessing at a score. Structurally invalid declared limits throw the
- * same way.
+ * results than `limits.minParticipantsForRobustStatistics`, robust
+ * statistics with zero spread, or any derived assigned value, standard
+ * deviation, or z-score that is not a finite number all throw
+ * PtScoringError instead of guessing at a score. Structurally invalid
+ * declared limits throw the same way.
  */
 export function evaluatePtEvent(
   results: ReadonlyArray<PtParticipantResult>,
@@ -323,6 +331,9 @@ export function evaluatePtEvent(
     if (standardDeviation === 0) {
       throw new PtScoringError('robust-statistics-zero-spread');
     }
+    if (!Number.isFinite(assignedValue) || !Number.isFinite(standardDeviation)) {
+      throw new PtScoringError('derived-statistics-invalid');
+    }
     consensusSource = 'robust-statistics';
   } else {
     if (!isValidDeclaredConsensus(consensus)) {
@@ -337,11 +348,17 @@ export function evaluatePtEvent(
     }
     assignedValue = consensus.assignedValue;
     standardDeviation = (high - low) / (2 * PT_QUESTIONABLE_Z_LIMIT);
+    if (!Number.isFinite(standardDeviation) || standardDeviation <= 0) {
+      throw new PtScoringError('derived-statistics-invalid');
+    }
     consensusSource = 'declared';
   }
 
   const participantScores: PtParticipantScore[] = numericResults.map((entry) => {
     const zScore = (entry.reportedValue - assignedValue) / standardDeviation;
+    if (!Number.isFinite(zScore)) {
+      throw new PtScoringError('derived-statistics-invalid');
+    }
     const classification = classifyPtZScore(zScore);
     return Object.freeze({
       participantId: entry.participantId,
