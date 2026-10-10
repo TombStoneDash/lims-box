@@ -23,7 +23,9 @@
  * value, a missing old or new unit, or an old/new unit that does not match
  * the declared comparison unit all throw LotComparisonError rather than
  * guessing at a decision. Structurally invalid declared limits throw the
- * same way.
+ * same way. A declared percentage criterion (per-pair or aggregate) that
+ * cannot be evaluated because its baseline value is zero also throws,
+ * rather than silently skipping that criterion.
  */
 
 export type LotComparisonDecision = 'accept' | 'reject';
@@ -85,7 +87,11 @@ export type LotComparisonPairDifference = {
   specimenId: string;
   /** newValue - oldValue, signed. */
   difference: number;
-  /** Signed percent difference relative to |oldValue|; null when oldValue is 0. */
+  /**
+   * Signed percent difference relative to |oldValue|; null when oldValue is
+   * 0 and no per-pair percent criterion was declared. If a per-pair percent
+   * criterion is declared and oldValue is 0, evaluation throws instead.
+   */
   percentDifference: number | null;
   /** Whether this pair exceeds the declared allowable difference on either axis. */
   isOutlier: boolean;
@@ -97,7 +103,12 @@ export type LotComparisonResult = {
   pairCount: number;
   /** Mean of (newValue - oldValue) across all pairs, signed. */
   meanDifference: number;
-  /** Percent bias of meanDifference relative to the mean old-lot value; null when that mean is 0. */
+  /**
+   * Percent bias of meanDifference relative to the mean old-lot value; null
+   * when that mean is 0 and no aggregate percent-bias criterion was
+   * declared. If `maxPercentBias` is declared and the mean old-lot value is
+   * 0, evaluation throws instead.
+   */
   percentBias: number | null;
   /** Count of pairs whose difference exceeded the declared allowable difference. */
   outlierCount: number;
@@ -116,7 +127,8 @@ export type LotComparisonErrorCode =
   | 'old-unit-missing'
   | 'new-unit-missing'
   | 'old-unit-mismatched'
-  | 'new-unit-mismatched';
+  | 'new-unit-mismatched'
+  | 'percent-criterion-unavailable';
 
 const ERROR_MESSAGES: Record<LotComparisonErrorCode, string> = {
   'limits-malformed': 'The declared comparison limits are not structurally valid.',
@@ -130,6 +142,8 @@ const ERROR_MESSAGES: Record<LotComparisonErrorCode, string> = {
   'new-unit-missing': 'A declared pair has no new-lot unit.',
   'old-unit-mismatched': 'A declared pair old-lot unit does not match the declared comparison unit.',
   'new-unit-mismatched': 'A declared pair new-lot unit does not match the declared comparison unit.',
+  'percent-criterion-unavailable':
+    'A declared percentage criterion could not be evaluated because its required baseline value was zero.',
 };
 
 /** Deterministic, human-readable text for a fail-closed error code. */
@@ -234,7 +248,11 @@ function hasRequiredPairShape(
  * identifier, a pair missing its identity fields, a non-finite old or new
  * value, a missing old or new unit, or an old/new unit that does not match
  * `limits.unit` all throw LotComparisonError instead of guessing at a
- * decision. Structurally invalid declared limits throw the same way.
+ * decision. Structurally invalid declared limits throw the same way. If
+ * `limits.allowableDifference.percent` or `limits.maxPercentBias` is
+ * declared but the corresponding baseline value is zero, the percentage
+ * criterion cannot be evaluated and this also throws LotComparisonError
+ * rather than silently accepting.
  *
  * When multiple declared limits are exceeded at once, the governing
  * criterion is chosen by a fixed priority: mean difference, then percent
@@ -298,6 +316,10 @@ export function evaluateLotComparison(
     const difference = newValue - oldValue;
     const percentDifference = oldValue !== 0 ? (difference / Math.abs(oldValue)) * 100 : null;
 
+    if (limits.allowableDifference.percent !== null && percentDifference === null) {
+      throw new LotComparisonError('percent-criterion-unavailable');
+    }
+
     const exceedsAbsolute =
       limits.allowableDifference.absolute !== null && Math.abs(difference) > limits.allowableDifference.absolute;
     const exceedsPercent =
@@ -321,6 +343,10 @@ export function evaluateLotComparison(
   const meanDifference = sumDifference / pairCount;
   const meanOldValue = sumOldValue / pairCount;
   const percentBias = meanOldValue !== 0 ? (meanDifference / Math.abs(meanOldValue)) * 100 : null;
+
+  if (limits.maxPercentBias !== null && percentBias === null) {
+    throw new LotComparisonError('percent-criterion-unavailable');
+  }
 
   const meanDifferenceExceeded =
     limits.maxMeanDifference !== null && Math.abs(meanDifference) > limits.maxMeanDifference;
