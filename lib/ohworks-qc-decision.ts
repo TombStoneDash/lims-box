@@ -198,13 +198,18 @@ function hasRequiredIdentity(
   );
 }
 
+const STRICT_DECIMAL_PATTERN = /^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?$/;
+
 function toFiniteNumber(rawValue: unknown): number | undefined {
   if (typeof rawValue === 'number') {
     return Number.isFinite(rawValue) ? rawValue : undefined;
   }
-  if (typeof rawValue === 'string' && rawValue.trim().length > 0) {
-    const parsed = Number(rawValue);
-    return Number.isFinite(parsed) ? parsed : undefined;
+  if (typeof rawValue === 'string') {
+    const trimmed = rawValue.trim();
+    if (trimmed.length > 0 && STRICT_DECIMAL_PATTERN.test(trimmed)) {
+      const parsed = Number(trimmed);
+      return Number.isFinite(parsed) ? parsed : undefined;
+    }
   }
   return undefined;
 }
