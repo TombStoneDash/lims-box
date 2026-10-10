@@ -12,6 +12,7 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test:bot": "node --import tsx --test tests/bot/engine.test.ts tests/bot/bot-page-wording.test.tsx tests/bot/telemetry.test.ts tests/bot/demo-engine.test.ts tests/bot/demo-assistant-route.test.tsx tests/bot/corpus-batch2-topics.test.ts tests/bot/suggestions.test.ts",
+    "test:bot-eval": "node --import tsx --test tests/bot-eval/*.test.ts",
     "test:bot-corpus": "node --import tsx --test tests/bot/corpus.test.ts tests/bot/corpus-batch2-topics.test.ts tests/bot/source-registry.test.ts tests/bot/output-claims-filter.test.ts tests/bot-founder-corpus.test.ts",
     "test:notify": "node --import tsx --test tests/notify/fallback.test.ts",
     "test:blog": "node --import tsx --test tests/blog.test.ts",
