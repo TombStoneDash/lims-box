@@ -18,8 +18,9 @@ export interface UnsubscribeStore {
   markUnsubscribed(id: string, unsubscribedAt: string): Promise<void>;
 }
 
-function normalizeList(value: unknown): UnsubscribeList {
-  return value === 'all' ? 'all' : 'newsletter';
+export function normalizeList(value: unknown): UnsubscribeList {
+  if (value === undefined || value === null) return 'newsletter';
+  return String(value).trim().toLowerCase() === 'all' ? 'all' : 'newsletter';
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
