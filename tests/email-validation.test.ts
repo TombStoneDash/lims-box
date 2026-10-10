@@ -27,11 +27,29 @@ for (const [label, value] of [
   ['missing domain dot', 'user@example'],
   ['empty string', ''],
   ['whitespace-only', ' \t\n '],
+  ['consecutive dots in domain', 'a@b..com'],
+  ['trailing dot in domain', 'a@b.com.'],
+  ['leading hyphen in domain label', 'a@-b.com'],
+  ['invalid characters in domain label', 'a@b.c<x>'],
+  ['quoted local part', '"a"@b.com'],
 ] as const) {
   test(`a malformed email (${label}) returns null`, () => {
     assert.equal(normalizeEmail(value), null);
   });
 }
+
+test('a local part longer than 64 characters returns null', () => {
+  const longLocal = `${'a'.repeat(65)}@example.com`;
+  assert.equal(normalizeEmail(longLocal), null);
+});
+
+test('an address longer than 254 characters returns null', () => {
+  const longDomain = `${'a'.repeat(63)}.${'b'.repeat(63)}.${'c'.repeat(63)}.com`;
+  const longLocal = 'a'.repeat(59);
+  const longAddress = `${longLocal}@${longDomain}`;
+  assert.equal(longAddress.length, 255);
+  assert.equal(normalizeEmail(longAddress), null);
+});
 
 for (const email of [
   'user+tag@example.com',
