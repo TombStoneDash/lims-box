@@ -174,11 +174,30 @@ def _handle_record_result(args: tuple, client: SenaiteClient) -> str:
     if not session.current_sample_id:
         return "No current sample. Say 'log sample' first."
 
+    unconfirmed = (
+        f"Result write for {test_name} on sample {session.current_sample_id} "
+        "was not confirmed. Current sample unchanged. Check the result before retrying."
+    )
     try:
-        client.record_result(session.current_sample_id, test_name, value)
-        return f"Result {value} recorded for {test_name} on sample {session.current_sample_id}."
-    except ValueError as e:
-        return str(e)
+        acknowledgment = client.record_result(session.current_sample_id, test_name, value)
+    except Exception:
+        # A lost or invalid response does not establish whether the write happened.
+        # Never retry an uncertain write automatically.
+        return unconfirmed
+
+    if (
+        not isinstance(acknowledgment, dict)
+        or acknowledgment.get("success") is not True
+        or acknowledgment.get("error")
+        or acknowledgment.get("errors")
+    ):
+        return unconfirmed
+
+    # This client returns the POST acknowledgment, not a persistence read-back.
+    return (
+        f"Result write request accepted for {value} for {test_name} "
+        f"on sample {session.current_sample_id}. Persistence has not been verified."
+    )
 
 
 def _handle_show_pending(args: tuple, client: SenaiteClient) -> str:
