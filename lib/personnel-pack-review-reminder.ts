@@ -14,6 +14,10 @@ export function evaluateReviewReminder(input: {
     return { shouldRemind: false, daysUntilDue: null, reason: "no review scheduled" };
   }
 
+  if (!Number.isFinite(nextReviewDue.getTime()) || !Number.isFinite(now.getTime())) {
+    return { shouldRemind: false, daysUntilDue: null, reason: "invalid review date" };
+  }
+
   const daysUntilDue = Math.floor((nextReviewDue.getTime() - now.getTime()) / MS_PER_DAY);
   if (daysUntilDue > reminderWindowDays) {
     return { shouldRemind: false, daysUntilDue, reason: "too early" };
