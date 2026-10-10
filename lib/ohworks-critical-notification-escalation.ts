@@ -48,6 +48,14 @@ export type PlanNextEscalationContactInput = {
 
 export type EscalationAction = 'contact_now' | 'wait' | 'escalation_chain_exhausted';
 
+/**
+ * Thrown when a caller-supplied timestamp (`now` or an attempt's
+ * `attemptedAt`) does not parse to a finite time. Deliberately generic: it
+ * must never echo the unparseable value or any contact detail back to the
+ * caller.
+ */
+const UNUSABLE_TIMESTAMP_MESSAGE = 'planNextEscalationContact: unusable timestamp input';
+
 export type EscalationPlan = {
   action: EscalationAction;
   targetChainIndex: number | null;
@@ -81,6 +89,9 @@ export function planNextEscalationContact(input: PlanNextEscalationContactInput)
   }
 
   const nowTime = Date.parse(now);
+  if (!Number.isFinite(nowTime)) {
+    throw new RangeError(UNUSABLE_TIMESTAMP_MESSAGE);
+  }
 
   let targetIndex: number | null = null;
   for (let index = 0; index < escalationChain.length; index += 1) {
@@ -109,6 +120,9 @@ export function planNextEscalationContact(input: PlanNextEscalationContactInput)
   let mostRecentAttemptTime: number | null = null;
   for (const attempt of attemptsForTarget) {
     const attemptTime = Date.parse(attempt.attemptedAt);
+    if (!Number.isFinite(attemptTime)) {
+      throw new RangeError(UNUSABLE_TIMESTAMP_MESSAGE);
+    }
     if (mostRecentAttemptTime === null || attemptTime > mostRecentAttemptTime) {
       mostRecentAttemptTime = attemptTime;
     }
