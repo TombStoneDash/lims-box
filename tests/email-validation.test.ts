@@ -38,7 +38,21 @@ for (const email of [
   'user@mail.example.com',
   'user+tag@mail.example.com',
 ]) {
-  test(`the permissive regex accepts ${email}`, () => {
+  test(`a well-formed email is accepted: ${email}`, () => {
     assert.equal(normalizeEmail(email), email);
+  });
+}
+
+for (const [label, value] of [
+  ['consecutive dots in domain', 'a@b..com'],
+  ['trailing dot after domain', 'a@b.com.'],
+  ['domain label starting with hyphen', 'a@-b.com'],
+  ['disallowed character in domain label', 'a@b.c<x>'],
+  ['quoted local part', '"a"@b.com'],
+  ['65-character local part', `${'a'.repeat(65)}@b.com`],
+  ['255-character address', `${'a'.repeat(249)}@b.com`],
+] as const) {
+  test(`a malformed email (${label}) returns null`, () => {
+    assert.equal(normalizeEmail(value), null);
   });
 }
