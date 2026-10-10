@@ -64,7 +64,7 @@ class CommandQueue:
         with self._lock:
             rows = self.conn.execute(
                 "SELECT id, cmd_name, args FROM pending_commands "
-                "WHERE attempts < ? ORDER BY created_at ASC LIMIT ?",
+                "WHERE attempts < ? ORDER BY created_at ASC, id ASC LIMIT ?",
                 (MAX_RETRY_ATTEMPTS, limit),
             ).fetchall()
         return [(row[0], row[1], tuple(json.loads(row[2]))) for row in rows]
@@ -113,7 +113,7 @@ class CommandQueue:
         Args:
             execute_fn: Function(cmd_name, args) -> response string
             ping_fn: Function() -> bool indicating SENAITE connectivity
-            speak_fn: Optional function to speak status updates
+            speak_fn: Optional function to speak status updates and command results
         """
         if self._drain_thread and self._drain_thread.is_alive():
             return  # already running
@@ -121,6 +121,13 @@ class CommandQueue:
         self._stop_event.clear()
 
         def _loop():
+            def _speak(message: str) -> None:
+                if speak_fn:
+                    try:
+                        speak_fn(message)
+                    except Exception:
+                        logger.exception("Queue drain speech failed")
+
             while not self._stop_event.is_set():
                 self._stop_event.wait(RETRY_INTERVAL)
                 if self._stop_event.is_set():
@@ -135,8 +142,7 @@ class CommandQueue:
                     continue
 
                 logger.info(f"SENAITE back online — draining {pending_count} queued commands")
-                if speak_fn:
-                    speak_fn(f"SENAITE is back online. Processing {pending_count} queued commands.")
+                _speak(f"SENAITE is back online. Processing {pending_count} queued commands.")
 
                 for cmd_id, cmd_name, args in self.get_pending(limit=50):
                     if self._stop_event.is_set():
@@ -148,14 +154,16 @@ class CommandQueue:
                     except Exception as e:
                         self.mark_failed(cmd_id, str(e))
                         logger.warning(f"Queue drain failed: {cmd_name} (id={cmd_id}): {e}")
+                    else:
+                        _speak(response)
 
                 self.purge_exhausted()
 
                 remaining = self.count()
-                if remaining == 0 and speak_fn:
-                    speak_fn("All queued commands have been processed.")
-                elif remaining > 0 and speak_fn:
-                    speak_fn(f"{remaining} commands still pending.")
+                if remaining == 0:
+                    _speak("All queued commands have been processed.")
+                else:
+                    _speak(f"{remaining} commands still pending.")
 
         self._drain_thread = threading.Thread(target=_loop, name="queue-drain", daemon=True)
         self._drain_thread.start()
