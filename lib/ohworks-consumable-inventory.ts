@@ -294,7 +294,7 @@ function computeExpiryFlags(
   });
 
   const flagsByLotId = new Map<string, ConsumableLotExpiryFlag>();
-  let cumulativeBeforeLot = 0;
+  let cumulativeConsumed = 0;
 
   for (const lot of fefoOrder) {
     if (lot.daysUntilExpiry === null) {
@@ -305,14 +305,13 @@ function computeExpiryFlags(
         expiredQuantity: 0,
         willExpireUnused: false,
       });
-      cumulativeBeforeLot += lot.quantityOnHand;
       continue;
     }
 
     const quantityConsumableByExpiry = averageDailyUsage * lot.daysUntilExpiry;
     const consumedFromThisLot = Math.min(
       lot.quantityOnHand,
-      Math.max(0, quantityConsumableByExpiry - cumulativeBeforeLot),
+      Math.max(0, quantityConsumableByExpiry - cumulativeConsumed),
     );
     const expiredQuantity = lot.quantityOnHand - consumedFromThisLot;
 
@@ -324,7 +323,8 @@ function computeExpiryFlags(
       willExpireUnused: expiredQuantity > 0,
     });
 
-    cumulativeBeforeLot += lot.quantityOnHand;
+    // Discarded stock does not satisfy demand available to later lots.
+    cumulativeConsumed += consumedFromThisLot;
   }
 
   return flagsByLotId;
