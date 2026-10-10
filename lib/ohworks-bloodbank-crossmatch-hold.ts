@@ -61,13 +61,13 @@ export type CrossmatchHoldDecision = {
  *      non-empty -> hold_antibody_workup, requiresExtendedCrossmatch true.
  *   4. Otherwise -> clear_to_crossmatch, requiresExtendedCrossmatch false.
  *
- * requestedUnitCount is validated but never changes the status: a value
- * less than 1 throws instead of silently proceeding with a nonsensical
- * order.
+ * requestedUnitCount is validated but never changes the status: anything
+ * other than a whole number of at least 1 throws instead of silently
+ * proceeding with a nonsensical order.
  */
 export function evaluateCrossmatchHold(input: CrossmatchHoldInput): CrossmatchHoldDecision {
-  if (input.requestedUnitCount < 1) {
-    throw new Error(`requestedUnitCount must be at least 1, received ${input.requestedUnitCount}`);
+  if (!Number.isInteger(input.requestedUnitCount) || input.requestedUnitCount < 1) {
+    throw new Error(`requestedUnitCount must be a whole number of at least 1, received ${input.requestedUnitCount}`);
   }
 
   if (!Number.isFinite(input.sampleAgeHours) || input.sampleAgeHours < 0) {
