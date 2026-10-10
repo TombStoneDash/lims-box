@@ -160,8 +160,48 @@ function isNonEmptyString(value: unknown): value is string {
   return typeof value === 'string' && value.length > 0;
 }
 
+const UTC_TIMESTAMP_PATTERN = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.\d{1,9})?Z$/;
+const DAYS_IN_MONTH = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+
+function isLeapYear(year: number): boolean {
+  return (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
+}
+
+/**
+ * Strictly validates that `value` is a real UTC calendar timestamp: it must
+ * match the canonical `YYYY-MM-DDTHH:MM:SS[.fraction]Z` shape, and every
+ * field must denote a date and time that actually exists (no February 30,
+ * no April 31, no February 29 in a non-leap year, no hour/minute/second out
+ * of range). This rejects the out-of-range dates that `Date.parse` would
+ * otherwise silently roll over into the following month.
+ */
 function isUtcTimestamp(value: string): boolean {
-  return value.endsWith('Z') && Number.isFinite(Date.parse(value));
+  const match = UTC_TIMESTAMP_PATTERN.exec(value);
+  if (!match) {
+    return false;
+  }
+
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+  const hour = Number(match[4]);
+  const minute = Number(match[5]);
+  const second = Number(match[6]);
+
+  if (month < 1 || month > 12) {
+    return false;
+  }
+
+  const daysInMonth = month === 2 && isLeapYear(year) ? 29 : DAYS_IN_MONTH[month - 1];
+  if (day < 1 || day > daysInMonth) {
+    return false;
+  }
+
+  if (hour > 23 || minute > 59 || second > 59) {
+    return false;
+  }
+
+  return Number.isFinite(Date.parse(value));
 }
 
 /**
