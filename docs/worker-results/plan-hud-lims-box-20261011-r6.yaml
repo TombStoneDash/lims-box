@@ -1,0 +1,44 @@
+task_id: plan-hud-lims-box-20261011-r6
+run_id: plan-hud-lims-box-20261011-r6-20261011T160648Z
+host_id: MAIN-DAISY.local
+host_role: main-daisy
+repo: lims-box
+branch_or_worktree: codex/plan-hud-lims-box-20261011-r6
+base_revision: c35a90592802db6c569662d9fec5d32734193cfa
+owner: user-assigned planner under existing runner claim, PID 4875
+objective: Produce six verified user-visible jobs with one existing source and one existing lane test file each.
+constraints: Docs-only planner; no product or existing test edits, commits, pushes, external messages, or production writes.
+inputs: Repository docs, source, tests, canonical task state, GitHub issues and PR snapshots.
+definition_of_done: Six reproduced findings, issue-first and PR exclusion review, relevant tests executed, reviewable planning artifacts.
+requested_model: not-exposed
+requested_reasoning_effort: not-exposed
+client_effective_model: not-exposed
+provider_returned_model_id: not-exposed
+model_evidence_source: not-exposed
+route_id: acct-25f765e1
+started_at: '2026-10-11T16:06:48Z'
+timing_note: Start is the existing runner claim timestamp.
+ended_at: '2026-10-11T16:17:25Z'
+budget: not-exposed
+timeout: not-exposed
+retry_cap: One reproduction retry with native Node after external temporary loader removal.
+terminal_state: PASS
+verification:
+  - Assigned worktree and branch confirmed; initial git status clean.
+  - Three open issues read oldest first; 20 open PR file lists checked; complete merged-since-2026-10-09 search returned 81 PRs.
+  - Six selected source files absent from open PR file lists and unchanged in local history since 2026-10-09.
+  - Six designated existing test files run using Node v22.22.2 and local tsx loader; exit 0, 196 passed, zero failed or skipped.
+  - Six synthetic reproductions confirmed current defects; exit 0 with tsx, then exit 0 with native Node type stripping.
+  - Subsequent reuse of temporary external tsx loader failed because that checkout was removed; no test-result claim is based on that failed invocation.
+  - Canonical running claim and relevant dispatch history reconciled; existing blocked reference-range task identified for recovery rather than duplicate dispatch.
+  - git diff --check; exit 0.
+  - Artifact audit confirms exactly six source/test pairs exist, no selected file overlaps the open PR snapshot, and only planning docs plus this receipt were added.
+artifacts:
+  - docs/planning/lims-box-20261011-r6.md
+  - docs/planning/lims-box-20261011-r6-github.json
+  - docs/planning/lims-box-20261011-r6-reproductions.md
+usage_delta: not-exposed
+blocker: none for planning; implementation remains future work
+rollback: Remove this planner's four added documentation/receipt files; no product behavior or production state changed.
+next_safe_action: Runner commits the planning artifacts, imports the staged receipt, and reconciles current ownership before implementation claims.
+receipt_location_note: Canonical DAISY_WORKER_RESULTS is /Users/ops/Hermes/inbox/dispatch/30_WORKER_RESULTS, outside writable roots. Receipt staged here for runner import; no canonical write claimed.
