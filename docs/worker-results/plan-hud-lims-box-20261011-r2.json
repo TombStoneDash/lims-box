@@ -1,0 +1,39 @@
+{
+  "task_id": "plan-hud-lims-box-20261011-r2",
+  "run_id": "plan-hud-lims-box-20261011-r2-040520",
+  "host_id": "mac-mini-local",
+  "host_role": "main-daisy",
+  "repo": "TombStoneDash/lims-box",
+  "branch_or_worktree": "codex/plan-hud-lims-box-20261011-r2",
+  "requested_model": "not-exposed",
+  "requested_reasoning_effort": "not-exposed",
+  "client_effective_model": "not-exposed",
+  "provider_returned_model_id": "not-exposed",
+  "model_evidence_source": "not-exposed",
+  "route_id": "acct-25f765e1",
+  "route_evidence": "Canonical running queue _claim.account_route; not evidence of effective provider model",
+  "started_at": "2026-10-11T04:05:20Z",
+  "started_at_evidence": "Canonical queue claim timestamp; exact first model token time not exposed",
+  "ended_at": "2026-10-11T04:17:20Z",
+  "terminal_state": "PASS",
+  "verification": [
+    "Assigned branch and clean initial worktree, host overlay, canonical running queue, lock/claimed listings, feeder state, Linear search, prior plan and GitHub PR state reconciled; process inspection denied by sandbox, so live PID ownership not asserted",
+    "Reviewed 3 open issues oldest first, 9 open PRs, 46 merges since 2026-10-09 and all 55 changed-file patch sets; overlapping merged voice-file patches do not address selected defects",
+    "Python unittest selection: 17 passed; print feedback: 5 passed; exits 0",
+    "Node existing admin read-only, server boundary and demo-access tests: 13 passed, exit 0",
+    "Six synthetic defect reproductions: three mocked voice outcomes and three source-plus-policy admin checks, exits 0",
+    "Plan validator: exactly six jobs, exactly one existing source and one existing test file per job; all paths exist, exit 0",
+    "git diff --check: exit 0; tracked product/test files and index unchanged; no commit or push"
+  ],
+  "artifacts": [
+    "docs/plans/lims-box-six-jobs-20261011-r2.md",
+    "docs/plans/lims-box-six-jobs-20261011-r2-github.json",
+    "docs/plans/lims-box-six-jobs-20261011-r2-proof.md"
+  ],
+  "usage_delta": "not-exposed",
+  "blocker": "None for read-only planning. Canonical receipt delivery is outside sandbox writable roots; repository-local receipt staged for runner collection.",
+  "rollback": "Remove the four documentation artifacts from this run; no product change to revert.",
+  "next_safe_action": "Runner collects receipt and commits planning artifacts. Before implementation, claim bounded lanes and refresh duplicate checks; serialize jobs 1/2 and jobs 4/5.",
+  "canonical_receipt_destination": "/Users/ops/Hermes/inbox/dispatch/30_WORKER_RESULTS",
+  "receipt_delivery": "Staged under repository docs/worker-results; canonical destination was not written."
+}
