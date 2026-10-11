@@ -250,6 +250,9 @@ export function formatReportedResult(request: ReportRequest): ReportOutcome {
   if (format.decimalPlaces < 0) {
     throw new ReportingFormatError('negative-decimal-places');
   }
+  if (format.decimalPlaces > 100) {
+    throw new ReportingFormatError('formats-malformed');
+  }
 
   let censoring: ReportCensoring = null;
   let numberText: string;
