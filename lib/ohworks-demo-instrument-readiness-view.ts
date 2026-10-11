@@ -110,7 +110,7 @@ export function buildInstrumentReadinessView(fixture: PilotInstrumentReadinessFi
     traceabilityRows,
     blockingFindings,
     readyToRun: blockingFindings === 0,
-    statusText: blockingFindings === 0 ? 'Ready to run — fabricated checks only' : `Not ready to run — ${blockingFindings} blocking findings`,
+    statusText: blockingFindings === 0 ? 'Ready to run — fabricated checks only' : `Not ready to run — ${blockingFindings} blocking finding${blockingFindings === 1 ? '' : 's'}`,
   };
 }
 
