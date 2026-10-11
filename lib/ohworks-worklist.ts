@@ -14,9 +14,9 @@
  * `routine`) and, within the same priority, ascending accession-sequence
  * order, so the result never depends on the order specimens were listed in.
  *
- * An unrecognized priority, a non-finite accession sequence, a duplicate
- * specimen identifier, a QC interval that is not a positive integer, an
- * empty QC sample identifier, or a maximum run length that cannot even hold
+ * An unrecognized priority, a non-finite accession sequence, an invalid or
+ * duplicate specimen identifier, a QC interval that is not a positive integer,
+ * an empty QC sample identifier, or a maximum run length that cannot even hold
  * one bracketed specimen all fail closed by throwing WorklistSequencingError
  * rather than guessing at a plan.
  */
@@ -32,7 +32,7 @@ const PRIORITY_RANK: Record<WorklistPriority, number> = {
 
 /** Fabricated specimen awaiting worklist sequencing. Never a real patient or accession record. */
 export type WorklistSpecimen = {
-  /** Synthetic specimen identifier. Must be unique within a single planning call. */
+  /** Synthetic specimen identifier. Must be non-blank and unique within a single planning call. */
   specimenId: string;
   /** Raw priority string; may be unrecognized. */
   priority: string;
@@ -100,6 +100,7 @@ export type WorklistSequencingErrorCode =
   | 'qc-sample-id-invalid'
   | 'max-run-length-invalid'
   | 'max-run-length-too-small'
+  | 'invalid-specimen-id'
   | 'specimen-id-duplicate'
   | 'specimen-priority-unknown'
   | 'specimen-accession-sequence-invalid';
@@ -109,6 +110,7 @@ const ERROR_MESSAGES: Record<WorklistSequencingErrorCode, string> = {
   'qc-sample-id-invalid': 'The QC bracketing rule must declare a non-empty qcSampleId.',
   'max-run-length-invalid': 'The maximum run length must be a finite positive integer.',
   'max-run-length-too-small': 'The maximum run length cannot hold even one bracketed patient specimen.',
+  'invalid-specimen-id': 'A specimen identifier must be a non-empty string containing non-whitespace characters.',
   'specimen-id-duplicate': 'More than one specimen was submitted with the same specimen identifier.',
   'specimen-priority-unknown': 'A specimen priority is not a recognized bounded value.',
   'specimen-accession-sequence-invalid': 'A specimen accession sequence must be a finite number.',
@@ -155,6 +157,9 @@ function validateMaxRunLength(maxRunLength: number, hasSpecimens: boolean): void
 function validateSpecimens(specimens: ReadonlyArray<WorklistSpecimen>): void {
   const seenSpecimenIds = new Set<string>();
   for (const specimen of specimens) {
+    if (typeof specimen.specimenId !== 'string' || specimen.specimenId.trim().length === 0) {
+      throw new WorklistSequencingError('invalid-specimen-id');
+    }
     if (seenSpecimenIds.has(specimen.specimenId)) {
       throw new WorklistSequencingError('specimen-id-duplicate');
     }
@@ -198,8 +203,8 @@ function qcEntry(qcSampleId: string, runIndex: number, bracketKind: 'start' | 'i
  * exceeded.
  *
  * Fail-closed: an unrecognized specimen priority, a non-finite accession
- * sequence, a duplicate specimen identifier, a QC interval that is not a
- * positive integer, an empty QC sample identifier, or a maximum run length
+ * sequence, an invalid or duplicate specimen identifier, a QC interval that
+ * is not a positive integer, an empty QC sample identifier, or a maximum run length
  * that cannot hold even one bracketed specimen all throw
  * WorklistSequencingError instead of guessing at a plan.
  */
