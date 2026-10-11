@@ -238,16 +238,23 @@ def _handle_print_label(args: tuple, client: SenaiteClient) -> str:
     if not sample.get("api_url") or not sample.get("uid"):
         return f"Label printing unavailable for sample {sample_id}: required sample metadata is missing."
 
-    # A successful API call confirms request acceptance, not physical printing.
+    # Only an explicit API acknowledgement confirms request acceptance, not printing.
     try:
-        client.post(
+        result = client.post(
             f"AnalysisRequest/{sample['uid']}/sticker",
             {"template": "Code_128_1x48mm.pt"},
         )
-        return f"Label print request accepted for sample {sample_id}."
     except Exception as e:
         logger.warning(f"Label print API call failed: {e}")
         return f"Label print request failed for sample {sample_id}."
+
+    if isinstance(result, dict):
+        if result.get("error") or result.get("success") is False:
+            return f"Label print request rejected for sample {sample_id}."
+        if result.get("success") is True:
+            return f"Label print request accepted for sample {sample_id}."
+
+    return f"Label print request was not confirmed for sample {sample_id}."
 
 
 # ── Helpers ──────────────────────────────────────────────────────────────────
