@@ -241,7 +241,27 @@ function sameEventContent(a: AccessionEventInput, b: AccessionEventInput): boole
 }
 
 function isUtcTimestamp(value: string): boolean {
-  return value.endsWith('Z') && Number.isFinite(Date.parse(value));
+  const match = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.\d+)?Z$/.exec(value);
+  if (!match) {
+    return false;
+  }
+
+  const [, yearText, monthText, dayText, hourText, minuteText, secondText] = match;
+  const year = Number(yearText);
+  const month = Number(monthText);
+  const day = Number(dayText);
+  const hour = Number(hourText);
+  const minute = Number(minuteText);
+  const second = Number(secondText);
+  const leapYear = year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
+  const daysInMonth = [31, leapYear ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+
+  return (
+    month >= 1 && month <= 12 &&
+    day >= 1 && day <= daysInMonth[month - 1] &&
+    hour <= 23 && minute <= 59 && second <= 59 &&
+    Number.isFinite(Date.parse(value))
+  );
 }
 
 /**
@@ -294,7 +314,7 @@ export function applyAccessionEvent(
     return block('timestamp-invalid');
   }
   if (!isUtcTimestamp(rawEvent.occurredAt)) {
-    return block('timestamp-not-utc');
+    return block(rawEvent.occurredAt.endsWith('Z') ? 'timestamp-invalid' : 'timestamp-not-utc');
   }
 
   const duplicate = history.find((entry) => entry.eventId === rawEvent.eventId);
