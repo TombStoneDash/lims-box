@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { adminMutationsEnabled } from "@/lib/admin-capabilities";
 import { formatDate, formatTimestampDate } from "../../_components/StatusBadge";
-import { createDocumentVersion } from "../../pp-actions";
 
 export const dynamic = "force-dynamic";
 
@@ -18,6 +18,7 @@ export default async function DocumentDetailPage({ params }: { params: Promise<{
   if (!doc) return notFound();
 
   const currentVersion = doc.versions.find((v) => v.isCurrent);
+  const mutationsEnabled = adminMutationsEnabled();
 
   return (
     <div className="space-y-8">
@@ -58,88 +59,24 @@ export default async function DocumentDetailPage({ params }: { params: Promise<{
         </div>
       ) : (
         <div className="rounded-md border border-amber-200 bg-amber-50 p-4 text-sm text-amber-700">
-          No versions yet. Add the first version below.
+          No versions on record for this document.
         </div>
       )}
 
-      {/* New version form */}
-      <section>
-        <h2 className="text-lg font-semibold mb-3">Add new version</h2>
-        <form action={createDocumentVersion} className="space-y-4 max-w-xl">
-          <input type="hidden" name="documentId" value={doc.id} />
-
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">
-                Version number <span className="text-red-500">*</span>
-              </label>
-              <input
-                name="versionNumber"
-                type="text"
-                required
-                placeholder="e.g. 2.0"
-                pattern="^\d+\.\d+$"
-                className="w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-400"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">
-                Effective date <span className="text-red-500">*</span>
-              </label>
-              <input
-                name="effectiveDate"
-                type="date"
-                required
-                className="w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-400"
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">
-              Revision summary <span className="text-red-500">*</span>
-            </label>
-            <textarea
-              name="revisionSummary"
-              required
-              rows={2}
-              placeholder="What changed in this version…"
-              className="w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-400"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">
-              Approved by (lab director name — typed attestation) <span className="text-red-500">*</span>
-            </label>
-            <input
-              name="approvedBy"
-              type="text"
-              required
-              placeholder="Dr. Jane Smith"
-              className="w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-400"
-            />
-            <p className="text-xs text-slate-500 mt-1">Type the approving director&apos;s full name. Serves as the version approval record.</p>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Document URL (optional)</label>
-            <input
-              name="documentContentUrl"
-              type="url"
-              placeholder="https://…"
-              className="w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-400"
-            />
-          </div>
-
-          <button
-            type="submit"
-            className="rounded-md bg-slate-900 text-white px-4 py-2 text-sm font-medium hover:bg-slate-800"
+      {!mutationsEnabled ? (
+        <div className="rounded-md border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900 space-y-3">
+          <p>
+            Adding or approving document versions is disabled on this read-only view. Use the
+            synthetic operator sandbox to rehearse these actions without changing shared records.
+          </p>
+          <Link
+            href="/demo/operator"
+            className="inline-flex items-center rounded-md bg-slate-900 text-white px-4 py-2 text-sm font-medium hover:bg-slate-800"
           >
-            Save version
-          </button>
-        </form>
-      </section>
+            Open operator sandbox
+          </Link>
+        </div>
+      ) : null}
 
       {/* Version history */}
       <section>
