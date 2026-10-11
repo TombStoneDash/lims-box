@@ -322,7 +322,7 @@ function assertValidToleranceTable(value: unknown): Record<string, AnalyteTolera
     throw new InterferenceInputError('tolerance-table-not-object');
   }
 
-  const result: Record<string, AnalyteToleranceRules> = {};
+  const result: Record<string, AnalyteToleranceRules> = Object.create(null);
   for (const [analyteCode, rules] of Object.entries(value)) {
     if (!isNonBlankString(analyteCode)) {
       throw new InterferenceInputError('tolerance-table-entry-invalid');
@@ -349,10 +349,10 @@ function decideAnalyte(
   indices: SpecimenIndices,
   toleranceTable: Record<string, AnalyteToleranceRules>,
 ): AnalyteInterferenceDecision {
-  const rules = toleranceTable[analyteCode];
-  if (rules === undefined) {
+  if (!Object.prototype.hasOwnProperty.call(toleranceTable, analyteCode)) {
     throw new InterferenceInputError('unknown-analyte');
   }
+  const rules = toleranceTable[analyteCode];
 
   const indexOutcomes: AnalyteInterferenceIndexOutcome[] = [];
   for (const kind of INDEX_KIND_ORDER) {
