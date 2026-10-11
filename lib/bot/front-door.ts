@@ -31,7 +31,13 @@ export function readBotPrompt(search: string): string | null {
   const raw = new URLSearchParams(search).get(BOT_PROMPT_PARAM);
   if (!raw) return null;
   const prompt = raw.replace(/[\u0000-\u001f\u007f]+/g, ' ').replace(/\s+/g, ' ').trim();
-  return prompt ? prompt.slice(0, MAX_PROMPT_LENGTH) : null;
+  if (!prompt) return null;
+  let capped = prompt.slice(0, MAX_PROMPT_LENGTH);
+  const lastUnit = capped.charCodeAt(capped.length - 1);
+  if (lastUnit >= 0xd800 && lastUnit <= 0xdbff) {
+    capped = capped.slice(0, -1);
+  }
+  return capped;
 }
 
 export function botHref(prompt: string): string {
