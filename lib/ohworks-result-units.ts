@@ -226,14 +226,14 @@ export function convertResultToCanonicalUnit(input: ResultUnitConversionInput): 
 
   const parsed = parseExactDecimal(valueText);
 
-  const canonicalUnit = (ANALYTE_CANONICAL_UNITS as Record<string, UnitId | undefined>)[analyte];
-  if (canonicalUnit === undefined) {
+  if (!Object.prototype.hasOwnProperty.call(ANALYTE_CANONICAL_UNITS, analyte)) {
     throw new ResultUnitConversionError('analyte-canonical-unit-undeclared');
   }
-  const fromDefinition = (UNIT_TABLE as Record<string, UnitDefinition | undefined>)[fromUnit];
-  if (fromDefinition === undefined) {
+  const canonicalUnit = (ANALYTE_CANONICAL_UNITS as Record<string, UnitId>)[analyte];
+  if (!Object.prototype.hasOwnProperty.call(UNIT_TABLE, fromUnit)) {
     throw new ResultUnitConversionError('from-unit-unknown');
   }
+  const fromDefinition = (UNIT_TABLE as Record<string, UnitDefinition>)[fromUnit];
   const canonicalDefinition = UNIT_TABLE[canonicalUnit];
   if (fromDefinition.family !== canonicalDefinition.family) {
     throw new ResultUnitConversionError('cross-family-conversion');
