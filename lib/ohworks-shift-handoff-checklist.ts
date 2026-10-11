@@ -10,14 +10,14 @@
  *
  * Severity rules:
  *
- *   - A pending critical value with `notifiedAt: null` is always `blocking`:
+ *   - A pending critical value without a valid notification timestamp is `blocking`:
  *     a critical result must be acknowledged before handoff, never silently
  *     passed along.
  *   - An open worklist item with `stat` or `critical` priority that has
  *     been open for at least STALE_STAT_MINUTES is `blocking`; the same
  *     priorities under that age are `info`. `routine` items are always
  *     `attention` regardless of age, and are never promoted to `blocking`
- *     purely by staleness.
+ *     purely by staleness. Invalid enteredAt or now timestamps are blocking.
  *   - `qcOutOfRangeCount > 0` is `attention`, unless it meets or exceeds
  *     QC_BLOCKING_THRESHOLD, in which case it is `blocking`.
  *   - Any down instrument is `attention`.
@@ -93,23 +93,39 @@ const SEVERITY_RANK: Record<HandoffItemSeverity, number> = {
   info: 2,
 };
 
-function ageMinutes(enteredAt: string, now: string): number {
-  return (Date.parse(now) - Date.parse(enteredAt)) / 60000;
+/** Validate zoned ISO timestamps before Date.parse can normalize impossible dates. */
+function timestampMillis(value: string | null): number | null {
+  if (typeof value !== 'string') return null;
+  const parts = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.\d+)?(?:Z|[+-](\d{2}):(\d{2}))$/.exec(value);
+  if (!parts) return null;
+  const [, year, month, day, hour, minute, second, offsetHour, offsetMinute] = parts;
+  const y = Number(year);
+  const m = Number(month);
+  const leapYear = y % 4 === 0 && (y % 100 !== 0 || y % 400 === 0);
+  const daysInMonth = [31, leapYear ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+  if (
+    m < 1 || m > 12 || Number(day) < 1 || Number(day) > daysInMonth[m - 1] ||
+    Number(hour) > 23 || Number(minute) > 59 || Number(second) > 59 ||
+    (offsetHour !== undefined && (Number(offsetHour) > 23 || Number(offsetMinute) > 59))
+  ) return null;
+  const millis = Date.parse(value);
+  return Number.isFinite(millis) ? millis : null;
 }
 
-function worklistItemSeverity(item: OpenWorklistItem, now: string): HandoffItemSeverity {
-  if (item.priority === 'routine') {
-    return 'attention';
-  }
-  return ageMinutes(item.enteredAt, now) >= STALE_STAT_MINUTES ? 'blocking' : 'info';
-}
-
-function buildWorklistItems(input: ShiftHandoffChecklistInput): HandoffItem[] {
+function buildWorklistItems(input: ShiftHandoffChecklistInput, now: number | null): HandoffItem[] {
   return input.openWorklistItems.map((item) => {
-    const severity = worklistItemSeverity(item, input.now);
+    const enteredAt = timestampMillis(item.enteredAt);
+    const invalidTime = enteredAt === null || now === null;
+    const severity: HandoffItemSeverity = invalidTime
+      ? 'blocking'
+      : item.priority === 'routine'
+        ? 'attention'
+        : (now - enteredAt) / 60000 >= STALE_STAT_MINUTES ? 'blocking' : 'info';
     return {
       category: 'open_worklist',
-      description: `${item.priority} ${item.testCode} for specimen ${item.specimenId} is ${item.status} (entered ${item.enteredAt}).`,
+      description: invalidTime
+        ? `${item.priority} ${item.testCode} for specimen ${item.specimenId} is ${item.status}; age cannot be determined because ${enteredAt === null ? 'enteredAt is invalid' : 'now is invalid'}.`
+        : `${item.priority} ${item.testCode} for specimen ${item.specimenId} is ${item.status} (entered ${item.enteredAt}).`,
       severity,
     } satisfies HandoffItem;
   });
@@ -117,12 +133,12 @@ function buildWorklistItems(input: ShiftHandoffChecklistInput): HandoffItem[] {
 
 function buildCriticalValueItems(input: ShiftHandoffChecklistInput): HandoffItem[] {
   return input.pendingCriticalValues.map((entry) => {
-    const acknowledged = entry.notifiedAt !== null;
+    const acknowledged = timestampMillis(entry.notifiedAt) !== null;
     return {
       category: 'critical_value',
       description: acknowledged
         ? `Critical value for ${entry.analyte} on specimen ${entry.specimenId} was notified at ${entry.notifiedAt}.`
-        : `Critical value for ${entry.analyte} on specimen ${entry.specimenId} has not been notified.`,
+        : `Critical value for ${entry.analyte} on specimen ${entry.specimenId} has no valid notification timestamp; notification is unverified.`,
       severity: acknowledged ? 'info' : 'blocking',
     } satisfies HandoffItem;
   });
@@ -169,8 +185,14 @@ function compareItems(a: HandoffItem, b: HandoffItem): number {
  * info, and by category name within each severity group.
  */
 export function buildShiftHandoffChecklist(input: ShiftHandoffChecklistInput): ShiftHandoffChecklist {
+  const now = timestampMillis(input.now);
   const items: HandoffItem[] = [
-    ...buildWorklistItems(input),
+    ...(now === null ? [{
+      category: 'open_worklist' as const,
+      description: 'Checklist now timestamp is invalid; handoff readiness cannot be verified.',
+      severity: 'blocking' as const,
+    }] : []),
+    ...buildWorklistItems(input, now),
     ...buildCriticalValueItems(input),
     ...buildQCItem(input),
     ...buildInstrumentItems(input),
