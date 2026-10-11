@@ -1,0 +1,62 @@
+
+> lims-box@1.0.0 test:ohworks
+> node --import tsx --test tests/ohworks/pilot-contract.test.ts tests/ohworks/result-review-state.test.ts
+
+node:internal/modules/package_json_reader:301
+  throw new ERR_MODULE_NOT_FOUND(packageName, fileURLToPath(base), null);
+        ^
+
+Error [ERR_MODULE_NOT_FOUND]: Cannot find package 'tsx' imported from C:\TombstoneDash\codex-lane\worktrees\hud-review-lims-box-665\.review-665\head\
+    at Object.getPackageJSONURL (node:internal/modules/package_json_reader:301:9)
+    at packageResolve (node:internal/modules/esm/resolve:768:81)
+    at moduleResolve (node:internal/modules/esm/resolve:859:18)
+    at defaultResolve (node:internal/modules/esm/resolve:991:11)
+    at #cachedDefaultResolve (node:internal/modules/esm/loader:719:20)
+    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:736:38)
+    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:765:52)
+    at #resolve (node:internal/modules/esm/loader:701:17)
+    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:621:35)
+    at onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:650:32) {
+  code: 'ERR_MODULE_NOT_FOUND'
+}
+
+Node.js v24.14.1
+✖ tests\ohworks\pilot-contract.test.ts (319.3287ms)
+node:internal/modules/package_json_reader:301
+  throw new ERR_MODULE_NOT_FOUND(packageName, fileURLToPath(base), null);
+        ^
+
+Error [ERR_MODULE_NOT_FOUND]: Cannot find package 'tsx' imported from C:\TombstoneDash\codex-lane\worktrees\hud-review-lims-box-665\.review-665\head\
+    at Object.getPackageJSONURL (node:internal/modules/package_json_reader:301:9)
+    at packageResolve (node:internal/modules/esm/resolve:768:81)
+    at moduleResolve (node:internal/modules/esm/resolve:859:18)
+    at defaultResolve (node:internal/modules/esm/resolve:991:11)
+    at #cachedDefaultResolve (node:internal/modules/esm/loader:719:20)
+    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:736:38)
+    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:765:52)
+    at #resolve (node:internal/modules/esm/loader:701:17)
+    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:621:35)
+    at onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:650:32) {
+  code: 'ERR_MODULE_NOT_FOUND'
+}
+
+Node.js v24.14.1
+✖ tests\ohworks\result-review-state.test.ts (319.3504ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 0
+ℹ fail 2
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 377.6912
+
+✖ failing tests:
+
+test at tests\ohworks\pilot-contract.test.ts:1:1
+✖ tests\ohworks\pilot-contract.test.ts (319.3287ms)
+  'test failed'
+
+test at tests\ohworks\result-review-state.test.ts:1:1
+✖ tests\ohworks\result-review-state.test.ts (319.3504ms)
+  'test failed'

@@ -1,0 +1,72 @@
+(node:322720) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/TombstoneDash/codex-lane/worktrees/hud-review-lims-box-665/.review-665/head/tests/ohworks/analyst-authorization-malformed-offset.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to C:\TombstoneDash\codex-lane\worktrees\hud-review-lims-box-665\.review-665\head\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ rejects malformed candidate offset +00:60 (2.5473ms)
+✔ does not count competency with malformed assessedAt offset +00:60 (0.4127ms)
+✔ does not count competency with malformed expiresAt offset +00:60 (0.1607ms)
+✔ treats malformed suspension startsAt offset +00:60 as active (0.433ms)
+✔ treats malformed suspension endsAt offset +00:60 as active (0.1632ms)
+✔ rejects malformed candidate offset +00:99 (0.1309ms)
+✔ does not count competency with malformed assessedAt offset +00:99 (0.2081ms)
+✔ does not count competency with malformed expiresAt offset +00:99 (0.165ms)
+✔ treats malformed suspension startsAt offset +00:99 as active (0.208ms)
+✔ treats malformed suspension endsAt offset +00:99 as active (0.2878ms)
+✔ rejects malformed candidate offset +24:00 (0.1495ms)
+✔ does not count competency with malformed assessedAt offset +24:00 (0.1495ms)
+✔ does not count competency with malformed expiresAt offset +24:00 (0.1388ms)
+✔ treats malformed suspension startsAt offset +24:00 as active (0.139ms)
+✔ treats malformed suspension endsAt offset +24:00 as active (0.1135ms)
+✔ rejects malformed candidate offset +99:00 (0.0834ms)
+✔ does not count competency with malformed assessedAt offset +99:00 (0.0835ms)
+✔ does not count competency with malformed expiresAt offset +99:00 (0.1021ms)
+✔ treats malformed suspension startsAt offset +99:00 as active (0.095ms)
+✔ treats malformed suspension endsAt offset +99:00 as active (0.1495ms)
+✔ Z and equivalent valid numeric candidate offsets authorize identically (0.1996ms)
+✔ Z and equivalent valid numeric competency offsets authorize identically (0.1115ms)
+✔ Z and equivalent valid numeric suspension offsets refuse identically (0.1415ms)
+(node:322624) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/TombstoneDash/codex-lane/worktrees/hud-review-lims-box-665/.review-665/head/tests/ohworks/analyst-authorization.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to C:\TombstoneDash\codex-lane\worktrees\hud-review-lims-box-665\.review-665\head\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ authorizes a routine result with current competency and no suspension (3.0138ms)
+✔ authorizes a critical result with a distinct second reviewer (0.287ms)
+✔ refuses when the evaluation timestamp cannot be parsed (0.2094ms)
+✔ refuses for a method with no competency entry on file (0.1842ms)
+✔ refuses when the only competency entry for the method has expired (0.2271ms)
+✔ refuses when the only competency entry for the method is not yet effective (0.2229ms)
+✔ authorizes when one of several competency entries for the method is current (0.2594ms)
+✔ refuses when a suspension window with no end is active as of the timestamp (0.8168ms)
+✔ refuses when a bounded suspension window covers the timestamp (0.2918ms)
+✔ authorizes when a bounded suspension window has already ended (0.4722ms)
+✔ authorizes when a suspension window has not started yet (0.265ms)
+✔ refuses fail-closed when a suspension start timestamp cannot be parsed (0.1977ms)
+✔ refuses fail-closed when a suspension end timestamp cannot be parsed (0.1927ms)
+✔ refuses a critical result with no second reviewer supplied (0.1365ms)
+✔ refuses a critical result whose second reviewer is the releasing analyst (0.171ms)
+✔ checks rules in the documented priority order when several are broken (0.1798ms)
+✔ decision summary excludes analyst id, role, and reviewer id (0.2448ms)
+✔ throws AnalystAuthorizationInputError for an unknown role (0.9001ms)
+✔ throws AnalystAuthorizationInputError when competencies is not an array (0.4536ms)
+✔ throws AnalystAuthorizationInputError for a competency entry missing a field (0.6094ms)
+✔ throws AnalystAuthorizationInputError for a malformed suspension (0.575ms)
+✔ throws AnalystAuthorizationInputError for a non-object analyst (0.2872ms)
+✔ throws AnalystAuthorizationInputError for an unknown result flag (0.3944ms)
+✔ throws AnalystAuthorizationInputError for a candidate missing a required field (0.291ms)
+✔ throws AnalystAuthorizationInputError for a non-object candidate (0.3595ms)
+✔ explainAuthorizationRule covers every rule code (0.303ms)
+✔ refuses a critical result whose second reviewer id is whitespace-only (0.496ms)
+✔ refuses fail-closed when the evaluation timestamp has no explicit UTC offset (0.2158ms)
+✔ refuses fail-closed when the evaluation timestamp is a calendar date that does not exist (0.1426ms)
+✔ refuses fail-closed when a competency assessedAt has no explicit UTC offset (0.2675ms)
+✔ produces the identical decision for the same instant written with different explicit offsets (0.192ms)
+✔ refuses fail-closed when a future-dated suspension window ends before it starts (0.133ms)
+✔ suspension window inconsistency is judged identically regardless of explicit offset used (0.1581ms)
+ℹ tests 56
+ℹ suites 0
+ℹ pass 56
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 438.444

@@ -1,0 +1,176 @@
+(node:321848) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/TombstoneDash/codex-lane/worktrees/hud-review-lims-box-665/.review-665/head/tests/ohworks/analyst-authorization-malformed-offset.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to C:\TombstoneDash\codex-lane\worktrees\hud-review-lims-box-665\.review-665\head\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ rejects malformed candidate offset +00:60 (2.8957ms)
+✔ does not count competency with malformed assessedAt offset +00:60 (0.6919ms)
+✔ does not count competency with malformed expiresAt offset +00:60 (0.2856ms)
+✔ treats malformed suspension startsAt offset +00:60 as active (0.584ms)
+✔ treats malformed suspension endsAt offset +00:60 as active (0.4209ms)
+✔ rejects malformed candidate offset +00:99 (0.4401ms)
+✔ does not count competency with malformed assessedAt offset +00:99 (0.2305ms)
+✔ does not count competency with malformed expiresAt offset +00:99 (0.1547ms)
+✔ treats malformed suspension startsAt offset +00:99 as active (0.1974ms)
+✔ treats malformed suspension endsAt offset +00:99 as active (0.2984ms)
+✔ rejects malformed candidate offset +24:00 (0.1757ms)
+✔ does not count competency with malformed assessedAt offset +24:00 (0.1104ms)
+✔ does not count competency with malformed expiresAt offset +24:00 (0.0946ms)
+✔ treats malformed suspension startsAt offset +24:00 as active (0.1342ms)
+✔ treats malformed suspension endsAt offset +24:00 as active (0.1236ms)
+✔ rejects malformed candidate offset +99:00 (0.1106ms)
+✔ does not count competency with malformed assessedAt offset +99:00 (0.0925ms)
+✔ does not count competency with malformed expiresAt offset +99:00 (0.113ms)
+✔ treats malformed suspension startsAt offset +99:00 as active (0.1115ms)
+✔ treats malformed suspension endsAt offset +99:00 as active (0.2047ms)
+✔ Z and equivalent valid numeric candidate offsets authorize identically (0.2303ms)
+✔ Z and equivalent valid numeric competency offsets authorize identically (0.2108ms)
+✔ Z and equivalent valid numeric suspension offsets refuse identically (0.2623ms)
+(node:321372) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/TombstoneDash/codex-lane/worktrees/hud-review-lims-box-665/.review-665/head/tests/ohworks/analyst-authorization.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to C:\TombstoneDash\codex-lane\worktrees\hud-review-lims-box-665\.review-665\head\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ authorizes a routine result with current competency and no suspension (3.3052ms)
+✔ authorizes a critical result with a distinct second reviewer (0.3373ms)
+✔ refuses when the evaluation timestamp cannot be parsed (0.2483ms)
+✔ refuses for a method with no competency entry on file (0.2327ms)
+✔ refuses when the only competency entry for the method has expired (0.3039ms)
+✔ refuses when the only competency entry for the method is not yet effective (0.241ms)
+✔ authorizes when one of several competency entries for the method is current (0.2602ms)
+✔ refuses when a suspension window with no end is active as of the timestamp (0.2852ms)
+✔ refuses when a bounded suspension window covers the timestamp (0.2762ms)
+✔ authorizes when a bounded suspension window has already ended (0.3451ms)
+✔ authorizes when a suspension window has not started yet (0.2499ms)
+✔ refuses fail-closed when a suspension start timestamp cannot be parsed (0.1901ms)
+✔ refuses fail-closed when a suspension end timestamp cannot be parsed (0.1751ms)
+✔ refuses a critical result with no second reviewer supplied (0.1391ms)
+✔ refuses a critical result whose second reviewer is the releasing analyst (0.147ms)
+✔ checks rules in the documented priority order when several are broken (0.1612ms)
+✔ decision summary excludes analyst id, role, and reviewer id (0.2609ms)
+✔ throws AnalystAuthorizationInputError for an unknown role (0.6993ms)
+✔ throws AnalystAuthorizationInputError when competencies is not an array (0.4484ms)
+✔ throws AnalystAuthorizationInputError for a competency entry missing a field (0.287ms)
+✔ throws AnalystAuthorizationInputError for a malformed suspension (0.2783ms)
+✔ throws AnalystAuthorizationInputError for a non-object analyst (0.3144ms)
+✔ throws AnalystAuthorizationInputError for an unknown result flag (0.2207ms)
+✔ throws AnalystAuthorizationInputError for a candidate missing a required field (0.1883ms)
+✔ throws AnalystAuthorizationInputError for a non-object candidate (0.1857ms)
+✔ explainAuthorizationRule covers every rule code (0.3835ms)
+✔ refuses a critical result whose second reviewer id is whitespace-only (0.1871ms)
+✔ refuses fail-closed when the evaluation timestamp has no explicit UTC offset (0.1315ms)
+✔ refuses fail-closed when the evaluation timestamp is a calendar date that does not exist (0.1259ms)
+✔ refuses fail-closed when a competency assessedAt has no explicit UTC offset (7.491ms)
+✔ produces the identical decision for the same instant written with different explicit offsets (0.3008ms)
+✔ refuses fail-closed when a future-dated suspension window ends before it starts (0.1729ms)
+✔ suspension window inconsistency is judged identically regardless of explicit offset used (1.5143ms)
+(node:319124) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/TombstoneDash/codex-lane/worktrees/hud-review-lims-box-665/.review-665/head/tests/ohworks/demo-release-authorization-view.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to C:\TombstoneDash\codex-lane\worktrees\hud-review-lims-box-665\.review-665\head\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ all seven fabricated release scenarios match the real authorization rules (5.9365ms)
+✔ four fabricated devices match real lockout and supervisor override decisions (0.8405ms)
+✔ all fixture and displayed identifiers are clearly synthetic (0.833ms)
+✔ builder is deterministic, uses fresh fixtures and has no ambient inputs (3.3208ms)
+✔ personnel panel is role-filtered, read-only and immediately before discovery (21.2125ms)
+node:internal/modules/esm/assert:88
+        throw new ERR_IMPORT_ATTRIBUTE_MISSING(url, 'type', validType);
+              ^
+
+TypeError [ERR_IMPORT_ATTRIBUTE_MISSING]: Module "file:///C:/TombstoneDash/codex-lane/worktrees/hud-review-lims-box-665/.review-665/head/scripts/founder-bundle/admission.json" needs an import attribute of "type: json"
+    at validateAttributes (node:internal/modules/esm/assert:88:15)
+    at defaultLoadSync (node:internal/modules/esm/load:164:3)
+    at #loadAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:796:12)
+    at #loadSync (node:internal/modules/esm/loader:816:49)
+    at ModuleLoader.load (node:internal/modules/esm/loader:781:26)
+    at ModuleLoader.loadAndTranslate (node:internal/modules/esm/loader:526:31)
+    at #getOrCreateModuleJobAfterResolve (node:internal/modules/esm/loader:577:36)
+    at afterResolve (node:internal/modules/esm/loader:625:52)
+    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:631:12)
+    at ModuleJob.syncLink (node:internal/modules/esm/module_job:160:33) {
+  code: 'ERR_IMPORT_ATTRIBUTE_MISSING'
+}
+
+Node.js v24.14.1
+✖ tests\ohworks\pilot-contract.test.ts (378.26ms)
+(node:306116) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/TombstoneDash/codex-lane/worktrees/hud-review-lims-box-665/.review-665/head/tests/ohworks/result-review-state.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to C:\TombstoneDash\codex-lane\worktrees\hud-review-lims-box-665\.review-665\head\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ draft -> ready_for_review -> approved is a valid path (4.7267ms)
+✔ draft -> ready_for_review -> rejected -> draft is a valid rework path (0.34ms)
+✔ approved -> corrected is a valid path when a reason and note are supplied (0.9985ms)
+✔ a workflow with zero events stays at draft, unblocked (1.206ms)
+✔ correcting an approved result preserves the approval event untouched in history (0.9542ms)
+✔ a correction event without a note fails closed as a missing correction reason (0.3025ms)
+✔ a correction event with only whitespace in the note fails closed as a missing correction reason (0.1932ms)
+✔ a correction attempted directly from ready_for_review (never approved) fails closed as skipped (0.1747ms)
+✔ a submitter cannot approve a result (0.1992ms)
+✔ a reviewer cannot submit a draft for review (0.2689ms)
+✔ a submitter cannot record a correction (0.19ms)
+✔ an unknown actor role fails closed (0.1458ms)
+✔ approving directly from draft (skipping submission) fails closed (0.151ms)
+✔ a corrected result is terminal and rejects further events (0.1206ms)
+✔ once blocked, later events in the batch are never evaluated (0.1581ms)
+✔ an exact replay of a prior event id fails closed (0.1724ms)
+✔ a conflicting duplicate event id (different content) fails closed (0.1312ms)
+✔ an event timestamped before the prior event fails closed (0.1371ms)
+✔ an event with the exact same timestamp as the prior event fails closed as backwards (0.1138ms)
+✔ an unparsable timestamp fails closed (0.1134ms)
+✔ a non-UTC (offset, non-"Z") timestamp fails closed (0.107ms)
+✔ an impossible date in ordinary ISO form (Feb 30, non-leap year, with milliseconds) fails closed as invalid (0.0995ms)
+✔ an impossible date in one-digit month-day form fails closed as invalid (0.1345ms)
+✔ an impossible date in space-separated form fails closed as invalid (0.1215ms)
+✔ an impossible date-only timestamp fails closed as invalid (0.0961ms)
+✔ an impossible date in signed extended-year form fails closed as invalid (0.0938ms)
+✔ a negative signed extended-year timestamp with an impossible date fails closed as invalid (0.1327ms)
+✔ Feb 29 in a non-leap year fails closed as invalid (0.1096ms)
+✔ Feb 29 on a century boundary that is not a leap year (1900) fails closed as invalid (0.1104ms)
+✔ a day beyond the length of a 30-day month (April 31) fails closed as invalid (0.0983ms)
+✔ an ordinary ISO timestamp with milliseconds on a valid date is accepted (0.1356ms)
+✔ an ordinary ISO timestamp without milliseconds on a valid date is accepted (0.1221ms)
+✔ a leap day in year 2000 (century boundary divisible by 400) is accepted (0.134ms)
+✔ a leap day in year zero is accepted (0.0906ms)
+✔ a one-digit month-day, space-separated timestamp on a valid date is accepted (0.0903ms)
+✔ a date-only timestamp on a valid date is accepted (0.132ms)
+✔ a signed extended-year timestamp on a valid date is accepted (0.1113ms)
+✔ an ISO next-day midnight (24:00:00Z) timestamp is accepted (0.0976ms)
+✔ an RFC-style UTC timestamp on a valid date is accepted (0.4235ms)
+✔ an impossible-date event blocks the workflow and prevents any state advancement (0.1794ms)
+✔ an impossible-date event later in a batch halts the workflow at that step without applying it (0.1654ms)
+✔ rejecting an impossible-date event does not mutate the caller-supplied event object (0.304ms)
+✔ all accepted timestamp families reject impossible dates while preserving paired valid controls (0.9403ms)
+✔ a note containing an email address fails closed (0.1839ms)
+✔ a note containing a phone number fails closed (0.1369ms)
+✔ a note mentioning "patient name" fails closed even without a value (0.105ms)
+✔ an operational note with no PII is accepted (0.1096ms)
+✔ no note at all is accepted for non-correction events (0.1642ms)
+✔ an event from a different tenant fails closed (0.3274ms)
+✔ an event for a different result fails closed (0.2615ms)
+✔ an unknown reason code fails closed (0.223ms)
+✔ a reason code that is known but not allowed for the given kind fails closed (1.9497ms)
+✔ an unsupported event kind fails closed (0.1139ms)
+✔ accepted events are frozen and cannot be mutated (0.1314ms)
+✔ runResultReviewWorkflow returns a frozen history array and frozen steps array (0.1244ms)
+✔ runResultReviewWorkflow does not mutate its input events array or objects (0.1366ms)
+✔ runResultReviewWorkflow is deterministic across repeated calls with equivalent input (0.4884ms)
+✔ a non-array events input throws a sanitized typed error (0.8897ms)
+✔ a malformed context throws a sanitized typed error (0.199ms)
+✔ an event missing a required field throws a sanitized typed error (0.1676ms)
+✔ a non-object raw event throws a sanitized typed error (0.1223ms)
+✔ a typed input error message never echoes any submitted data (0.5951ms)
+✔ every block code has a non-empty, privacy-safe explanation (0.6294ms)
+✔ explanations are stable across repeated calls for the same code (0.2476ms)
+✔ no result-review states use compliance or accreditation language (0.1479ms)
+ℹ tests 127
+ℹ suites 0
+ℹ pass 126
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 955.3889
+
+✖ failing tests:
+
+test at tests\ohworks\pilot-contract.test.ts:1:1
+✖ tests\ohworks\pilot-contract.test.ts (378.26ms)
+  'test failed'
