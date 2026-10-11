@@ -175,7 +175,16 @@ def _handle_record_result(args: tuple, client: SenaiteClient) -> str:
         return "No current sample. Say 'log sample' first."
 
     try:
-        client.record_result(session.current_sample_id, test_name, value)
+        result = client.record_result(session.current_sample_id, test_name, value)
+        if (
+            not isinstance(result, dict)
+            or result.get("success") is not True
+            or result.get("error")
+        ):
+            return (
+                f"Recording result {value} for {test_name} on sample "
+                f"{session.current_sample_id} was not confirmed."
+            )
         return f"Result {value} recorded for {test_name} on sample {session.current_sample_id}."
     except ValueError as e:
         return str(e)
