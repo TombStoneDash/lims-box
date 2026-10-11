@@ -70,7 +70,8 @@ export default function UnsubscribeClient({ email, list }: Props) {
       <form
         onSubmit={(event) => {
           event.preventDefault();
-          handleUnsubscribe();
+          if (!event.currentTarget.checkValidity()) return;
+          return handleUnsubscribe();
         }}
       >
         {email ? (
@@ -88,6 +89,8 @@ export default function UnsubscribeClient({ email, list }: Props) {
             <input
               id="unsubscribe-email"
               type="email"
+              name="email"
+              required
               autoComplete="email"
               maxLength={320}
               value={enteredEmail}
