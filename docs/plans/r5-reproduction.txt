@@ -1,0 +1,7 @@
+1 impossible accession date accepted: RECEIVED
+2 exact decimal volume rejected: {"status":"INVALID","accessionId":"synthetic","failure":{"code":"over-consumption","eventIndex":1}}
+3 infinite peer SD accepted: {"zScore":0,"sdi":0,"classification":"acceptable","flaggedForReview":false}
+4 audit CSV later instant first: e1,e0
+5 disjoint limit called crossing: {"value":1e-10,"unit":"synthetic-unit","lowerBound":1e-10,"upperBound":1e-10} {"value":5e-10,"unit":"synthetic-unit","crossesInterval":true}
+6 fivefold intercept limit violation passed: 5.000000000000045e-10 pass
+Verified all six current defects.

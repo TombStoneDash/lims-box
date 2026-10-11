@@ -1,0 +1,39 @@
+{
+  "task_id": "plan-hud-lims-box-20261011-r5",
+  "run_id": "plan-hud-lims-box-20261011-r5-1325",
+  "host_id": "DESKTOP-1TV907A",
+  "host_role": "lenovo",
+  "repo": "lims-box",
+  "branch_or_worktree": "codex-lenovo/plan-hud-lims-box-20261011-r5",
+  "requested_model": "not-exposed",
+  "requested_reasoning_effort": "not-exposed",
+  "client_effective_model": "not-exposed",
+  "provider_returned_model_id": "not-exposed",
+  "model_evidence_source": "not-exposed",
+  "route_id": "not-exposed",
+  "started_at": "2026-10-11T13:20:42.2478086Z",
+  "ended_at": "2026-10-11T13:27:07.8587927Z",
+  "terminal_state": "PASS",
+  "verification": [
+    "Six executable defect reproductions: exit 0",
+    "Six existing test files: 187 passed, 0 failed, 0 skipped; exit 0",
+    "Final GitHub overlap check: 13 open PRs, 68 recently merged PRs, zero selected path overlaps",
+    "Open planner PRs 604 and 621 reviewed for semantic duplicates",
+    "git diff --exit-code: exit 0, no tracked source/test changes"
+  ],
+  "artifacts": [
+    "docs/plans/lims-box-six-jobs-20261011-r5.md",
+    "docs/plans/r5-reproduce.ts",
+    "docs/plans/r5-reproduction.txt",
+    "docs/plans/r5-tests.txt",
+    "docs/plans/r5-issues.json",
+    "docs/plans/r5-open-prs.json",
+    "docs/plans/r5-merged-prs.json",
+    "docs/plans/r5-pr-604-plan.md",
+    "docs/plans/r5-pr-621-plan.md"
+  ],
+  "usage_delta": "not-exposed",
+  "blocker": "none for repository-only planning; implementation lease and external controller state not claimed",
+  "rollback": "Remove only this task planning evidence and receipt; no product changes",
+  "next_safe_action": "Runner reviews and commits planning artifacts; obtain implementation ownership before dispatch"
+}
