@@ -253,6 +253,25 @@ function compareReasons(a: QCDecisionReason, b: QCDecisionReason): number {
   return a.code < b.code ? -1 : a.code > b.code ? 1 : 0;
 }
 
+/**
+ * Parse an ISO 8601 timestamp, rejecting calendar dates that do not exist
+ * (e.g. February 30). Date.parse alone normalizes such impossible dates by
+ * rolling them over into the following month instead of rejecting them.
+ */
+function parseCalendarInstant(value: string): number {
+  const date = /^([+-]\d{6}|\d{4})-(\d{2})-(\d{2})(?=[Tt\s]|$)/.exec(value);
+  if (!date) return Date.parse(value);
+
+  const year = Number(date[1]);
+  const month = Number(date[2]);
+  const day = Number(date[3]);
+  const leapYear = year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
+  const daysInMonth = [31, leapYear ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+  if (month < 1 || month > 12 || day < 1 || day > daysInMonth[month - 1]) return NaN;
+
+  return Date.parse(value);
+}
+
 function evaluateSingleRecord(
   record: QCSyntheticResultRecord,
   context: QCDecisionContext,
@@ -270,7 +289,7 @@ function evaluateSingleRecord(
     flag('tenant-mismatch');
   }
 
-  const capturedTime = Date.parse(record.capturedAt);
+  const capturedTime = parseCalendarInstant(record.capturedAt);
   if (!Number.isFinite(capturedTime)) {
     flag('timestamp-invalid');
   } else {
@@ -368,7 +387,7 @@ export function evaluateQCDecisions(
     throw new QCDecisionInputError('records-not-array');
   }
 
-  const parsedReferenceTime = Date.parse(context.referenceTime);
+  const parsedReferenceTime = parseCalendarInstant(context.referenceTime);
   if (
     !Number.isFinite(parsedReferenceTime) ||
     !Number.isFinite(context.maxResultAgeMs) ||
