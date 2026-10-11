@@ -46,8 +46,9 @@ export type PeerGroupComparisonResult = {
 /**
  * Compare a single lab's QC result against its peer group's statistics.
  *
- * When `peerGroupN` is below `minPeerGroupN`, or `peerGroupStdDev` is zero,
- * there is not enough trustworthy peer data to compute a meaningful z-score,
+ * When the numeric inputs or derived z-score are invalid, the peer group is
+ * too small, or its standard deviation is not positive, there is not enough
+ * trustworthy data to compute a meaningful z-score,
  * so the classification is `insufficient_peer_data` and the result is never
  * flagged for review on that basis alone -- there is nothing yet to review.
  *
@@ -57,16 +58,31 @@ export type PeerGroupComparisonResult = {
  *   - |zScore| > 3: unacceptable (flagged for review)
  */
 export function evaluatePeerGroupComparison(input: PeerGroupComparisonInput): PeerGroupComparisonResult {
-  if (input.peerGroupN < input.minPeerGroupN || input.peerGroupStdDev === 0) {
-    return {
-      zScore: 0,
-      sdi: 0,
-      classification: 'insufficient_peer_data',
-      flaggedForReview: false,
-    };
+  const insufficientPeerData: PeerGroupComparisonResult = {
+    zScore: 0,
+    sdi: 0,
+    classification: 'insufficient_peer_data',
+    flaggedForReview: false,
+  };
+
+  if (
+    !Number.isFinite(input.labResult) ||
+    !Number.isFinite(input.peerGroupMean) ||
+    !Number.isFinite(input.peerGroupStdDev) ||
+    input.peerGroupStdDev <= 0 ||
+    !Number.isInteger(input.peerGroupN) ||
+    input.peerGroupN < 0 ||
+    !Number.isInteger(input.minPeerGroupN) ||
+    input.minPeerGroupN < 0 ||
+    input.peerGroupN < input.minPeerGroupN
+  ) {
+    return insufficientPeerData;
   }
 
   const zScore = (input.labResult - input.peerGroupMean) / input.peerGroupStdDev;
+  if (!Number.isFinite(zScore)) {
+    return insufficientPeerData;
+  }
   const absZ = Math.abs(zScore);
 
   let classification: PeerGroupComparisonClassification;
