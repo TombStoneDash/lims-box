@@ -141,12 +141,14 @@ export class MeasurementUncertaintyInputError extends Error {
   }
 }
 
-/**
- * Absolute tolerance applied only at the decision-limit boundary, to absorb
- * IEEE-754 double-precision rounding noise in derived interval bounds
- * rather than any scientific or measurement tolerance.
- */
-const BOUNDARY_EPSILON = 1e-9;
+/** Allow only a few floating-point roundoff units when comparing a limit to a bound. */
+function isAtBoundaryWithinRoundoff(value: number, bound: number): boolean {
+  const magnitude = Math.max(Math.abs(value), Math.abs(bound));
+  if (magnitude === 0) {
+    return value === bound;
+  }
+  return Math.abs(value - bound) <= 4 * Number.EPSILON * magnitude;
+}
 
 function isNonEmptyString(value: unknown): value is string {
   return typeof value === 'string' && value.length > 0;
@@ -330,7 +332,8 @@ export function evaluateMeasurementUncertainty(
     value: decisionLimit.value,
     unit: decisionLimit.unit,
     crossesInterval:
-      decisionLimit.value >= lowerBound - BOUNDARY_EPSILON && decisionLimit.value <= upperBound + BOUNDARY_EPSILON,
+      (decisionLimit.value >= lowerBound || isAtBoundaryWithinRoundoff(decisionLimit.value, lowerBound)) &&
+      (decisionLimit.value <= upperBound || isAtBoundaryWithinRoundoff(decisionLimit.value, upperBound)),
   };
 
   return toResult('uncertainty-evaluated', statistics, patientInterval, decisionLimitCrossing);
