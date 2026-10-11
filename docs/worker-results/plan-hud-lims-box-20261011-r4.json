@@ -1,0 +1,42 @@
+{
+  "task_id": "plan-hud-lims-box-20261011-r4",
+  "run_id": "plan-hud-lims-box-20261011-r4-111124",
+  "host_id": "DESKTOP-1TV907A",
+  "host_role": "lenovo",
+  "repo": "TombStoneDash/lims-box",
+  "branch_or_worktree": "codex-lenovo/plan-hud-lims-box-20261011-r4",
+  "base_revision": "b997191bfd250459be058737e8915f8f00280722",
+  "requested_model": "not-exposed",
+  "requested_reasoning_effort": "not-exposed",
+  "client_effective_model": "not-exposed",
+  "provider_returned_model_id": "not-exposed",
+  "model_evidence_source": "not-exposed",
+  "route_id": "not-exposed",
+  "started_at": "2026-10-11T11:11:24.750Z",
+  "started_at_evidence": "Earliest persisted install log timestamp; actual turn start not exposed",
+  "ended_at": "2026-10-11T11:16:43.830Z",
+  "terminal_state": "PASS",
+  "verification": [
+    "Initial clean worktree, host, assigned branch and origin verified; origin main equals pinned base",
+    "Reviewed 3 open issues oldest first, 9 open PRs, and 60 merged PRs since 2026-10-09; all query counts below 500",
+    "Read open planner PRs 604 and 621 at patch level; excluded their proposed jobs",
+    "Compared all ten selected source/test paths to all saved PR file lists: zero overlaps",
+    "npm ci --ignore-scripts --cache .npm-cache --no-audit --no-fund: exit 0; 459 packages; temporary cache removed",
+    "Nine relevant existing test files: 197 passed, 0 failed, 0 skipped; exit 0",
+    "node --import tsx docs/plans/lims-box-r4-reproduce.mjs: six defect assertions reproduced; exit 0",
+    "git diff --check: exit 0; git diff --name-only empty; product and existing tests unchanged"
+  ],
+  "artifacts": [
+    "docs/plans/lims-box-six-jobs-20261011-r4.md",
+    "docs/plans/lims-box-r4-issues.json",
+    "docs/plans/lims-box-r4-open-prs.json",
+    "docs/plans/lims-box-r4-merged-prs.json",
+    "docs/plans/lims-box-r4-reproduce.mjs",
+    "docs/plans/lims-box-r4-tests.txt"
+  ],
+  "usage_delta": "not-exposed",
+  "blocker": "none for planning; findings are synthetic module-level reproductions, not live incidents",
+  "rollback": "Remove this run's planning artifacts and receipt; no product changes to revert",
+  "next_safe_action": "Runner reviews and commits planner artifacts; acquire implementation ownership and refresh PR coverage before execution; serialize jobs 3 and 4",
+  "receipt_location_note": "Repository-local worker-results handoff follows existing repository convention; host canonical external directory not exposed and outside-repository writes are prohibited by the user"
+}
