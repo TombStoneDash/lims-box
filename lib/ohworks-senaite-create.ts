@@ -147,6 +147,23 @@ function compareReasons(a: SampleCreateReason, b: SampleCreateReason): number {
   return a.code < b.code ? -1 : a.code > b.code ? 1 : 0;
 }
 
+function parseCalendarTimestamp(value: string): number {
+  if (typeof value !== 'string') return NaN;
+  const fields = /^(\d{4}|[+-]\d{6})-(\d{2})-(\d{2})(?=T|$)/i.exec(value);
+  if (!fields) return NaN;
+
+  // Check the written calendar date before Date.parse can normalize it.
+  // UTC round-tripping would incorrectly reject offsets crossing midnight.
+  const year = Number(fields[1]);
+  const month = Number(fields[2]);
+  const day = Number(fields[3]);
+  const leapYear = year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
+  const daysInMonth = [31, leapYear ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+  if (month < 1 || month > 12 || day < 1 || day > daysInMonth[month - 1]) return NaN;
+
+  return Date.parse(value);
+}
+
 function validateRequest(request: OHWorksSampleCreateRequest, context: SampleCreateContext): SampleCreateReason[] {
   const reasons: SampleCreateReason[] = [];
   const flag = (code: SampleCreateReasonCode) => reasons.push({ code });
@@ -159,13 +176,13 @@ function validateRequest(request: OHWorksSampleCreateRequest, context: SampleCre
     flag('matrix-unsupported');
   }
 
-  const sampledTime = Date.parse(request.dateSampled);
+  const sampledTime = parseCalendarTimestamp(request.dateSampled);
   const sampledValid = Number.isFinite(sampledTime);
   if (!sampledValid) {
     flag('date-sampled-invalid');
   }
 
-  const receivedTime = Date.parse(request.dateReceived);
+  const receivedTime = parseCalendarTimestamp(request.dateReceived);
   const receivedValid = Number.isFinite(receivedTime);
   if (!receivedValid) {
     flag('date-received-invalid');
