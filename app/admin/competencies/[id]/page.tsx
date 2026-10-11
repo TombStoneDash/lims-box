@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { StatusBadge, formatDate, formatTimestampDate } from "../../_components/StatusBadge";
 import { createReviewEvent } from "../../pp-actions";
 import { REVIEW_TYPES, REVIEW_OUTCOMES, REVIEW_TYPE_LABELS, REVIEW_OUTCOME_LABELS } from "@/lib/personnel-pack-utils";
+import { adminMutationsEnabled } from "@/lib/admin-capabilities";
 
 export const dynamic = "force-dynamic";
 
@@ -36,6 +37,7 @@ export default async function CompetencyDetailPage({ params }: { params: Promise
   if (!competency) return notFound();
 
   const latestReview = competency.reviewEvents[0];
+  const mutationsEnabled = adminMutationsEnabled();
 
   return (
     <div className="space-y-8">
@@ -74,110 +76,117 @@ export default async function CompetencyDetailPage({ params }: { params: Promise
         </div>
       )}
 
-      {/* Log review form */}
+      {/* Review actions */}
       <section>
-        <h2 className="text-lg font-semibold mb-3">Log review event</h2>
+        <h2 className="text-lg font-semibold mb-3">{mutationsEnabled ? "Log review event" : "Review events"}</h2>
         <p className="text-xs text-slate-500 mb-3">ISO 15189 §6.2.2 — competency assessment audit trail</p>
-        <form action={createReviewEvent} className="space-y-4 max-w-xl">
-          <input type="hidden" name="competencyId" value={competency.id} />
+        {mutationsEnabled ? (
+          <form action={createReviewEvent} className="space-y-4 max-w-xl">
+            <input type="hidden" name="competencyId" value={competency.id} />
 
-          <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">
+                  Reviewer name <span className="text-red-500">*</span>
+                </label>
+                <input
+                  name="reviewerName"
+                  type="text"
+                  required
+                  placeholder="Dr. Jane Smith"
+                  className="w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-400"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">
+                  Reviewer role <span className="text-red-500">*</span>
+                </label>
+                <input
+                  name="reviewerRole"
+                  type="text"
+                  required
+                  placeholder="Lab Director"
+                  className="w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-400"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">
+                  Review type <span className="text-red-500">*</span>
+                </label>
+                <select
+                  name="reviewType"
+                  required
+                  className="w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-400"
+                >
+                  <option value="">Select…</option>
+                  {REVIEW_TYPES.map((t) => (
+                    <option key={t} value={t}>{REVIEW_TYPE_LABELS[t]}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">
+                  Outcome <span className="text-red-500">*</span>
+                </label>
+                <select
+                  name="reviewOutcome"
+                  required
+                  className="w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-400"
+                >
+                  <option value="">Select…</option>
+                  {REVIEW_OUTCOMES.map((o) => (
+                    <option key={o} value={o}>{REVIEW_OUTCOME_LABELS[o]}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">
-                Reviewer name <span className="text-red-500">*</span>
+                Next review due (leave blank to auto-calculate)
               </label>
               <input
-                name="reviewerName"
-                type="text"
-                required
-                placeholder="Dr. Jane Smith"
+                name="nextReviewDue"
+                type="date"
+                className="w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-400"
+              />
+              <p className="text-xs text-slate-500 mt-1">Auto-calculated from review type if left blank (initial/6-mo → +6mo, annual → +12mo, corrective → +3mo).</p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Notes (optional)</label>
+              <textarea
+                name="notes"
+                rows={2}
                 className="w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-400"
               />
             </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">
-                Reviewer role <span className="text-red-500">*</span>
-              </label>
-              <input
-                name="reviewerRole"
-                type="text"
-                required
-                placeholder="Lab Director"
-                className="w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-400"
-              />
-            </div>
-          </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">
-                Review type <span className="text-red-500">*</span>
-              </label>
-              <select
-                name="reviewType"
-                required
-                className="w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-400"
-              >
-                <option value="">Select…</option>
-                {REVIEW_TYPES.map((t) => (
-                  <option key={t} value={t}>{REVIEW_TYPE_LABELS[t]}</option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">
-                Outcome <span className="text-red-500">*</span>
-              </label>
-              <select
-                name="reviewOutcome"
-                required
-                className="w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-400"
-              >
-                <option value="">Select…</option>
-                {REVIEW_OUTCOMES.map((o) => (
-                  <option key={o} value={o}>{REVIEW_OUTCOME_LABELS[o]}</option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">
-              Next review due (leave blank to auto-calculate)
-            </label>
-            <input
-              name="nextReviewDue"
-              type="date"
-              className="w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-400"
-            />
-            <p className="text-xs text-slate-500 mt-1">Auto-calculated from review type if left blank (initial/6-mo → +6mo, annual → +12mo, corrective → +3mo).</p>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Notes (optional)</label>
-            <textarea
-              name="notes"
-              rows={2}
-              className="w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-400"
-            />
-          </div>
-
-          <div className="flex gap-3">
             <button
               type="submit"
               className="rounded-md bg-slate-900 text-white px-4 py-2 text-sm font-medium hover:bg-slate-800"
             >
               Log review
             </button>
-            <a
-              href={`/api/competencies/${competency.id}/reviews/export`}
-              className="rounded-md border border-slate-300 px-3 py-1.5 text-sm hover:bg-slate-50"
-              download
-            >
-              Export PDF
-            </a>
-          </div>
-        </form>
+          </form>
+        ) : (
+          <p className="text-sm text-slate-600 mb-4">
+            Review logging is disabled in this read-only view. Rehearse in the{" "}
+            <Link href="/demo/operator" className="text-slate-900 underline hover:text-slate-700">
+              synthetic operator sandbox
+            </Link>.
+          </p>
+        )}
+        <a
+          href={`/api/competencies/${competency.id}/reviews/export`}
+          className="inline-flex rounded-md border border-slate-300 px-3 py-1.5 text-sm hover:bg-slate-50"
+          download
+        >
+          Export PDF
+        </a>
       </section>
 
       {/* Review history table */}
