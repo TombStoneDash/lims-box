@@ -197,7 +197,12 @@ function isStructurallyValidRequest(raw: unknown): raw is AliquotRequest {
   if (!isPlainObject(raw)) {
     return false;
   }
-  return isNonEmptyString(raw.label) && isFiniteNumber(raw.volume) && typeof raw.purpose === 'string';
+  return (
+    isNonEmptyString(raw.label) &&
+    raw.label === raw.label.trim() &&
+    isFiniteNumber(raw.volume) &&
+    typeof raw.purpose === 'string'
+  );
 }
 
 /** Deterministically derive a child accession id from a parent accession id and an aliquot label. */
