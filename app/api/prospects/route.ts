@@ -50,8 +50,14 @@ export async function POST(req: NextRequest) {
 
   let fieldBenchSplit: number | null = null;
   if (track === "environmental" && payload.fieldBenchSplit !== undefined && payload.fieldBenchSplit !== "") {
-    const n = Number(payload.fieldBenchSplit);
-    if (!isNaN(n)) fieldBenchSplit = Math.max(0, Math.min(100, Math.round(n)));
+    const raw = payload.fieldBenchSplit;
+    const n =
+      typeof raw === "number"
+        ? raw
+        : typeof raw === "string" && /^[+-]?(?:\d+(?:\.\d*)?|\.\d+)$/.test(raw.trim())
+          ? Number(raw)
+          : NaN;
+    if (Number.isFinite(n)) fieldBenchSplit = Math.max(0, Math.min(100, Math.round(n)));
   }
 
   const prospect = await prisma.prospect.create({
