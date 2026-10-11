@@ -295,7 +295,7 @@ export function evaluateCalibratorLotTraceability(
     visited.add(current);
     chain.push(current);
 
-    const raw = registryMap[current];
+    const raw = Object.hasOwn(registryMap, current) ? registryMap[current] : undefined;
     if (raw === undefined) {
       return toResult(lotId, runAt, current === lotId ? 'unknown-lot' : 'missing-parent', chain, null, null);
     }
