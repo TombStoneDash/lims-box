@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { apiError } from "@/lib/personnel-pack-utils";
+import { CURRENT_AUTHORIZATION_WHERE } from "@/lib/current-authorization";
 
 export const dynamic = "force-dynamic";
 
@@ -10,7 +11,7 @@ export async function GET() {
     where: { active: true },
     orderBy: { name: "asc" },
     include: {
-      _count: { select: { authorizations: { where: { isActive: true } } } },
+      _count: { select: { authorizations: { where: CURRENT_AUTHORIZATION_WHERE } } },
     },
   });
   return NextResponse.json({ data: procedures });
