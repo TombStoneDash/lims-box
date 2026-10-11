@@ -1,0 +1,2152 @@
+TAP version 13
+# Subtest: a verification well inside the interval with no events is CURRENT
+ok 1 - a verification well inside the interval with no events is CURRENT
+  ---
+  duration_ms: 1.699166
+  type: 'test'
+  ...
+# Subtest: a verification evaluated at the exact moment it was performed is CURRENT
+ok 2 - a verification evaluated at the exact moment it was performed is CURRENT
+  ---
+  duration_ms: 0.0975
+  type: 'test'
+  ...
+# Subtest: a verification inside the default 7-day due-soon window is DUE_SOON
+ok 3 - a verification inside the default 7-day due-soon window is DUE_SOON
+  ---
+  duration_ms: 0.10975
+  type: 'test'
+  ...
+# Subtest: a verification exactly dueSoonWarningDays before expiry is DUE_SOON
+ok 4 - a verification exactly dueSoonWarningDays before expiry is DUE_SOON
+  ---
+  duration_ms: 0.042541
+  type: 'test'
+  ...
+# Subtest: a verification one instant more than dueSoonWarningDays before expiry is CURRENT
+ok 5 - a verification one instant more than dueSoonWarningDays before expiry is CURRENT
+  ---
+  duration_ms: 0.110583
+  type: 'test'
+  ...
+# Subtest: a verification evaluated at the exact expiry instant is OVERDUE
+ok 6 - a verification evaluated at the exact expiry instant is OVERDUE
+  ---
+  duration_ms: 0.039125
+  type: 'test'
+  ...
+# Subtest: a verification evaluated well past expiry is OVERDUE
+ok 7 - a verification evaluated well past expiry is OVERDUE
+  ---
+  duration_ms: 0.073292
+  type: 'test'
+  ...
+# Subtest: a custom dueSoonWarningDays of 0 disables the due-soon flag
+ok 8 - a custom dueSoonWarningDays of 0 disables the due-soon flag
+  ---
+  duration_ms: 0.039125
+  type: 'test'
+  ...
+# Subtest: a custom, wider dueSoonWarningDays flags earlier evaluations
+ok 9 - a custom, wider dueSoonWarningDays flags earlier evaluations
+  ---
+  duration_ms: 0.210541
+  type: 'test'
+  ...
+# Subtest: a reagent lot change since last verification is REQUIRED_BY_EVENT even though the calendar is current
+ok 10 - a reagent lot change since last verification is REQUIRED_BY_EVENT even though the calendar is current
+  ---
+  duration_ms: 0.255209
+  type: 'test'
+  ...
+# Subtest: major maintenance since last verification is REQUIRED_BY_EVENT even though the calendar would say due soon
+ok 11 - major maintenance since last verification is REQUIRED_BY_EVENT even though the calendar would say due soon
+  ---
+  duration_ms: 0.045625
+  type: 'test'
+  ...
+# Subtest: a QC shift since last verification is REQUIRED_BY_EVENT even though the calendar interval already expired
+ok 12 - a QC shift since last verification is REQUIRED_BY_EVENT even though the calendar interval already expired
+  ---
+  duration_ms: 0.032333
+  type: 'test'
+  ...
+# Subtest: a manufacturer requirement event is REQUIRED_BY_EVENT
+ok 13 - a manufacturer requirement event is REQUIRED_BY_EVENT
+  ---
+  duration_ms: 0.030959
+  type: 'test'
+  ...
+# Subtest: with multiple events, the earliest occurredAt governs the due instant and kind
+ok 14 - with multiple events, the earliest occurredAt governs the due instant and kind
+  ---
+  duration_ms: 0.044792
+  type: 'test'
+  ...
+# Subtest: with a tied earliest occurredAt across events, kind priority order breaks the tie
+ok 15 - with a tied earliest occurredAt across events, kind priority order breaks the tie
+  ---
+  duration_ms: 0.036833
+  type: 'test'
+  ...
+# Subtest: an empty trigger events array falls back to the calendar decision
+ok 16 - an empty trigger events array falls back to the calendar decision
+  ---
+  duration_ms: 0.031916
+  type: 'test'
+  ...
+# Subtest: a zero maximum interval is OVERDUE as invalid
+ok 17 - a zero maximum interval is OVERDUE as invalid
+  ---
+  duration_ms: 0.027333
+  type: 'test'
+  ...
+# Subtest: a negative maximum interval is OVERDUE as invalid
+ok 18 - a negative maximum interval is OVERDUE as invalid
+  ---
+  duration_ms: 0.022292
+  type: 'test'
+  ...
+# Subtest: a non-finite maximum interval is OVERDUE as invalid
+ok 19 - a non-finite maximum interval is OVERDUE as invalid
+  ---
+  duration_ms: 0.028084
+  type: 'test'
+  ...
+# Subtest: a NaN maximum interval is OVERDUE as invalid
+ok 20 - a NaN maximum interval is OVERDUE as invalid
+  ---
+  duration_ms: 0.059416
+  type: 'test'
+  ...
+# Subtest: a null last-verified-at is OVERDUE as missing
+ok 21 - a null last-verified-at is OVERDUE as missing
+  ---
+  duration_ms: 0.026708
+  type: 'test'
+  ...
+# Subtest: an unparsable last-verified-at is OVERDUE as invalid
+ok 22 - an unparsable last-verified-at is OVERDUE as invalid
+  ---
+  duration_ms: 0.023541
+  type: 'test'
+  ...
+# Subtest: a non-UTC (offset, non-"Z") last-verified-at is OVERDUE as invalid
+ok 23 - a non-UTC (offset, non-"Z") last-verified-at is OVERDUE as invalid
+  ---
+  duration_ms: 0.021834
+  type: 'test'
+  ...
+# Subtest: an unparsable evaluation timestamp is OVERDUE as invalid
+ok 24 - an unparsable evaluation timestamp is OVERDUE as invalid
+  ---
+  duration_ms: 0.02425
+  type: 'test'
+  ...
+# Subtest: a non-UTC (offset, non-"Z") evaluation timestamp is OVERDUE as invalid
+ok 25 - a non-UTC (offset, non-"Z") evaluation timestamp is OVERDUE as invalid
+  ---
+  duration_ms: 0.021875
+  type: 'test'
+  ...
+# Subtest: a non-finite-valued evaluation timestamp is OVERDUE as invalid
+ok 26 - a non-finite-valued evaluation timestamp is OVERDUE as invalid
+  ---
+  duration_ms: 0.026708
+  type: 'test'
+  ...
+# Subtest: a last-verified-at after the evaluation timestamp is OVERDUE as future-dated
+ok 27 - a last-verified-at after the evaluation timestamp is OVERDUE as future-dated
+  ---
+  duration_ms: 0.024
+  type: 'test'
+  ...
+# Subtest: max-interval-invalid is checked before a trigger event would otherwise apply
+ok 28 - max-interval-invalid is checked before a trigger event would otherwise apply
+  ---
+  duration_ms: 0.026791
+  type: 'test'
+  ...
+# Subtest: an unrecognized trigger event kind is OVERDUE as invalid
+ok 29 - an unrecognized trigger event kind is OVERDUE as invalid
+  ---
+  duration_ms: 0.02675
+  type: 'test'
+  ...
+# Subtest: an unparsable trigger event timestamp is OVERDUE as invalid
+ok 30 - an unparsable trigger event timestamp is OVERDUE as invalid
+  ---
+  duration_ms: 0.024875
+  type: 'test'
+  ...
+# Subtest: a non-UTC trigger event timestamp is OVERDUE as invalid
+ok 31 - a non-UTC trigger event timestamp is OVERDUE as invalid
+  ---
+  duration_ms: 0.02475
+  type: 'test'
+  ...
+# Subtest: a trigger event before the last verification is OVERDUE as invalid
+ok 32 - a trigger event before the last verification is OVERDUE as invalid
+  ---
+  duration_ms: 0.026583
+  type: 'test'
+  ...
+# Subtest: one bad trigger event among several invalidates the whole evaluation
+ok 33 - one bad trigger event among several invalidates the whole evaluation
+  ---
+  duration_ms: 0.024791
+  type: 'test'
+  ...
+# Subtest: a null input throws a sanitized typed error
+ok 34 - a null input throws a sanitized typed error
+  ---
+  duration_ms: 0.170792
+  type: 'test'
+  ...
+# Subtest: an array input throws a sanitized typed error
+ok 35 - an array input throws a sanitized typed error
+  ---
+  duration_ms: 0.035708
+  type: 'test'
+  ...
+# Subtest: an empty-string instrument id throws a sanitized typed error
+ok 36 - an empty-string instrument id throws a sanitized typed error
+  ---
+  duration_ms: 0.03975
+  type: 'test'
+  ...
+# Subtest: an empty-string analyte id throws a sanitized typed error
+ok 37 - an empty-string analyte id throws a sanitized typed error
+  ---
+  duration_ms: 0.033041
+  type: 'test'
+  ...
+# Subtest: a non-string, non-null last-verified-at throws a sanitized typed error
+ok 38 - a non-string, non-null last-verified-at throws a sanitized typed error
+  ---
+  duration_ms: 0.031042
+  type: 'test'
+  ...
+# Subtest: a non-number maximum interval throws a sanitized typed error
+ok 39 - a non-number maximum interval throws a sanitized typed error
+  ---
+  duration_ms: 0.031459
+  type: 'test'
+  ...
+# Subtest: a non-array trigger events field throws a sanitized typed error
+ok 40 - a non-array trigger events field throws a sanitized typed error
+  ---
+  duration_ms: 0.038625
+  type: 'test'
+  ...
+# Subtest: a trigger event missing a required field throws a sanitized typed error
+ok 41 - a trigger event missing a required field throws a sanitized typed error
+  ---
+  duration_ms: 0.042583
+  type: 'test'
+  ...
+# Subtest: a non-string evaluation timestamp throws a sanitized typed error
+ok 42 - a non-string evaluation timestamp throws a sanitized typed error
+  ---
+  duration_ms: 0.034958
+  type: 'test'
+  ...
+# Subtest: an empty-string evaluation timestamp throws a sanitized typed error
+ok 43 - an empty-string evaluation timestamp throws a sanitized typed error
+  ---
+  duration_ms: 0.099375
+  type: 'test'
+  ...
+# Subtest: a negative dueSoonWarningDays option throws a sanitized typed error
+ok 44 - a negative dueSoonWarningDays option throws a sanitized typed error
+  ---
+  duration_ms: 0.045084
+  type: 'test'
+  ...
+# Subtest: a typed input error message never echoes any submitted data
+ok 45 - a typed input error message never echoes any submitted data
+  ---
+  duration_ms: 0.123
+  type: 'test'
+  ...
+# Subtest: the result is deterministic across repeated calls with equivalent input
+ok 46 - the result is deterministic across repeated calls with equivalent input
+  ---
+  duration_ms: 0.540375
+  type: 'test'
+  ...
+# Subtest: the result object is frozen
+ok 47 - the result object is frozen
+  ---
+  duration_ms: 0.082208
+  type: 'test'
+  ...
+# Subtest: evaluateCalibrationVerificationSchedule does not mutate its input
+ok 48 - evaluateCalibrationVerificationSchedule does not mutate its input
+  ---
+  duration_ms: 0.125125
+  type: 'test'
+  ...
+# Subtest: every reason code has a non-empty, privacy-safe explanation
+ok 49 - every reason code has a non-empty, privacy-safe explanation
+  ---
+  duration_ms: 0.22175
+  type: 'test'
+  ...
+# Subtest: explanations are stable across repeated calls for the same code
+ok 50 - explanations are stable across repeated calls for the same code
+  ---
+  duration_ms: 0.13075
+  type: 'test'
+  ...
+# Subtest: the reason field on a result matches explainCalibrationVerificationReason for its reasonCode
+ok 51 - the reason field on a result matches explainCalibrationVerificationReason for its reasonCode
+  ---
+  duration_ms: 0.111291
+  type: 'test'
+  ...
+# Subtest: an impossible first-result calendar date (Feb 30) fails closed to discordant with no repeat
+ok 52 - an impossible first-result calendar date (Feb 30) fails closed to discordant with no repeat
+  ---
+  duration_ms: 0.57025
+  type: 'test'
+  ...
+# Subtest: an otherwise-agreeing repeat with an impossible calendar date fails closed to discordant
+ok 53 - an otherwise-agreeing repeat with an impossible calendar date fails closed to discordant
+  ---
+  duration_ms: 0.166875
+  type: 'test'
+  ...
+# Subtest: February 29th in a non-leap year fails closed to discordant
+ok 54 - February 29th in a non-leap year fails closed to discordant
+  ---
+  duration_ms: 0.117959
+  type: 'test'
+  ...
+# Subtest: a valid leap-day timestamp (Feb 29 in a leap year) is accepted and confirms
+ok 55 - a valid leap-day timestamp (Feb 29 in a leap year) is accepted and confirms
+  ---
+  duration_ms: 0.045667
+  type: 'test'
+  ...
+# Subtest: a valid explicit-offset repeat timestamp is accepted and confirms
+ok 56 - a valid explicit-offset repeat timestamp is accepted and confirms
+  ---
+  duration_ms: 0.056417
+  type: 'test'
+  ...
+# Subtest: an agreeing repeat within tolerance confirms and reports the first value
+ok 57 - an agreeing repeat within tolerance confirms and reports the first value
+  ---
+  duration_ms: 15.635709
+  type: 'test'
+  ...
+# Subtest: evaluation is pure: it does not mutate input records
+ok 58 - evaluation is pure: it does not mutate input records
+  ---
+  duration_ms: 0.230166
+  type: 'test'
+  ...
+# Subtest: evaluation is deterministic across repeated calls
+ok 59 - evaluation is deterministic across repeated calls
+  ---
+  duration_ms: 1.049
+  type: 'test'
+  ...
+# Subtest: a status other than the three defined values is never produced
+ok 60 - a status other than the three defined values is never produced
+  ---
+  duration_ms: 0.274916
+  type: 'test'
+  ...
+# Subtest: a policy that does not require a repeat confirms immediately with no repeats
+ok 61 - a policy that does not require a repeat confirms immediately with no repeats
+  ---
+  duration_ms: 0.119333
+  type: 'test'
+  ...
+# Subtest: a required repeat with none supplied yet is pending, unreportable, and blocks notification
+ok 62 - a required repeat with none supplied yet is pending, unreportable, and blocks notification
+  ---
+  duration_ms: 0.087
+  type: 'test'
+  ...
+# Subtest: a disagreeing repeat with attempts remaining is pending and blocks notification
+ok 63 - a disagreeing repeat with attempts remaining is pending and blocks notification
+  ---
+  duration_ms: 3.758625
+  type: 'test'
+  ...
+# Subtest: a second agreeing repeat after a disagreeing first repeat confirms
+ok 64 - a second agreeing repeat after a disagreeing first repeat confirms
+  ---
+  duration_ms: 0.259209
+  type: 'test'
+  ...
+# Subtest: disagreement exhausting the maximum repeats is discordant, unreportable, and allows notification
+ok 65 - disagreement exhausting the maximum repeats is discordant, unreportable, and allows notification
+  ---
+  duration_ms: 0.221875
+  type: 'test'
+  ...
+# Subtest: a repeat exactly at the absolute tolerance boundary agrees
+ok 66 - a repeat exactly at the absolute tolerance boundary agrees
+  ---
+  duration_ms: 5.749208
+  type: 'test'
+  ...
+# Subtest: a repeat just past the absolute tolerance still agrees via percent tolerance
+ok 67 - a repeat just past the absolute tolerance still agrees via percent tolerance
+  ---
+  duration_ms: 0.852584
+  type: 'test'
+  ...
+# Subtest: a repeat over both declared tolerances disagrees
+ok 68 - a repeat over both declared tolerances disagrees
+  ---
+  duration_ms: 0.157458
+  type: 'test'
+  ...
+# Subtest: a zero first value yields a null percent delta and only absolute tolerance applies
+ok 69 - a zero first value yields a null percent delta and only absolute tolerance applies
+  ---
+  duration_ms: 0.133625
+  type: 'test'
+  ...
+# Subtest: only the first agreeing repeat is evaluated; later repeats in the list are not needed
+ok 70 - only the first agreeing repeat is evaluated; later repeats in the list are not needed
+  ---
+  duration_ms: 0.291916
+  type: 'test'
+  ...
+# Subtest: a mismatched repeat subject fails closed to discordant
+ok 71 - a mismatched repeat subject fails closed to discordant
+  ---
+  duration_ms: 10.003167
+  type: 'test'
+  ...
+# Subtest: a mismatched repeat analyte fails closed to discordant
+ok 72 - a mismatched repeat analyte fails closed to discordant
+  ---
+  duration_ms: 0.14075
+  type: 'test'
+  ...
+# Subtest: an unparsable repeat timestamp fails closed to discordant
+ok 73 - an unparsable repeat timestamp fails closed to discordant
+  ---
+  duration_ms: 0.12975
+  type: 'test'
+  ...
+# Subtest: a repeat not after the first result fails closed to discordant
+ok 74 - a repeat not after the first result fails closed to discordant
+  ---
+  duration_ms: 0.1035
+  type: 'test'
+  ...
+# Subtest: a second repeat not after the first repeat fails closed to discordant
+ok 75 - a second repeat not after the first repeat fails closed to discordant
+  ---
+  duration_ms: 2.753667
+  type: 'test'
+  ...
+# Subtest: a nonnumeric repeat value fails closed to discordant
+ok 76 - a nonnumeric repeat value fails closed to discordant
+  ---
+  duration_ms: 3.499584
+  type: 'test'
+  ...
+# Subtest: a numeric-looking string repeat value is accepted as numeric
+ok 77 - a numeric-looking string repeat value is accepted as numeric
+  ---
+  duration_ms: 0.11775
+  type: 'test'
+  ...
+# Subtest: a missing repeat unit fails closed to discordant
+ok 78 - a missing repeat unit fails closed to discordant
+  ---
+  duration_ms: 0.174291
+  type: 'test'
+  ...
+# Subtest: a repeat unit mismatched against the declared policy unit fails closed to discordant
+ok 79 - a repeat unit mismatched against the declared policy unit fails closed to discordant
+  ---
+  duration_ms: 0.107041
+  type: 'test'
+  ...
+# Subtest: unit comparison ignores outer whitespace and case
+ok 80 - unit comparison ignores outer whitespace and case
+  ---
+  duration_ms: 0.106375
+  type: 'test'
+  ...
+# Subtest: an unparsable first result timestamp fails closed to discordant with zero repeats evaluated
+ok 81 - an unparsable first result timestamp fails closed to discordant with zero repeats evaluated
+  ---
+  duration_ms: 0.210958
+  type: 'test'
+  ...
+# Subtest: a nonnumeric first result value fails closed to discordant
+ok 82 - a nonnumeric first result value fails closed to discordant
+  ---
+  duration_ms: 0.049667
+  type: 'test'
+  ...
+# Subtest: a missing first result unit fails closed to discordant
+ok 83 - a missing first result unit fails closed to discordant
+  ---
+  duration_ms: 0.046167
+  type: 'test'
+  ...
+# Subtest: a first result unit mismatched against the declared policy unit fails closed to discordant
+ok 84 - a first result unit mismatched against the declared policy unit fails closed to discordant
+  ---
+  duration_ms: 0.031625
+  type: 'test'
+  ...
+# Subtest: an unknown analyte throws a sanitized typed error
+ok 85 - an unknown analyte throws a sanitized typed error
+  ---
+  duration_ms: 0.317333
+  type: 'test'
+  ...
+# Subtest: missing first result identity fields throw a sanitized typed error
+ok 86 - missing first result identity fields throw a sanitized typed error
+  ---
+  duration_ms: 0.138917
+  type: 'test'
+  ...
+# Subtest: missing repeat identity fields throw a sanitized typed error
+ok 87 - missing repeat identity fields throw a sanitized typed error
+  ---
+  duration_ms: 0.065583
+  type: 'test'
+  ...
+# Subtest: a non-array repeats input throws a sanitized typed error
+ok 88 - a non-array repeats input throws a sanitized typed error
+  ---
+  duration_ms: 0.101625
+  type: 'test'
+  ...
+# Subtest: more repeats than the declared maximum throws a sanitized typed error
+ok 89 - more repeats than the declared maximum throws a sanitized typed error
+  ---
+  duration_ms: 0.066041
+  type: 'test'
+  ...
+# Subtest: a policy with no declared unit throws a sanitized typed error
+ok 90 - a policy with no declared unit throws a sanitized typed error
+  ---
+  duration_ms: 0.048042
+  type: 'test'
+  ...
+# Subtest: a policy with a non-positive maximum repeats throws a sanitized typed error
+ok 91 - a policy with a non-positive maximum repeats throws a sanitized typed error
+  ---
+  duration_ms: 0.075959
+  type: 'test'
+  ...
+# Subtest: a policy with a non-integer maximum repeats throws a sanitized typed error
+ok 92 - a policy with a non-integer maximum repeats throws a sanitized typed error
+  ---
+  duration_ms: 0.042959
+  type: 'test'
+  ...
+# Subtest: a policy with a negative tolerance throws a sanitized typed error
+ok 93 - a policy with a negative tolerance throws a sanitized typed error
+  ---
+  duration_ms: 0.323375
+  type: 'test'
+  ...
+# Subtest: a repeat-required policy with no declared tolerance throws a sanitized typed error
+ok 94 - a repeat-required policy with no declared tolerance throws a sanitized typed error
+  ---
+  duration_ms: 0.083917
+  type: 'test'
+  ...
+# Subtest: a repeat-not-required policy with no declared tolerance does not throw
+ok 95 - a repeat-not-required policy with no declared tolerance does not throw
+  ---
+  duration_ms: 0.061875
+  type: 'test'
+  ...
+# Subtest: a typed input error message never echoes any submitted data
+ok 96 - a typed input error message never echoes any submitted data
+  ---
+  duration_ms: 0.142125
+  type: 'test'
+  ...
+# Subtest: every reason code has a non-empty, privacy-safe explanation
+ok 97 - every reason code has a non-empty, privacy-safe explanation
+  ---
+  duration_ms: 0.455458
+  type: 'test'
+  ...
+# Subtest: explanations are stable across repeated calls for the same code
+ok 98 - explanations are stable across repeated calls for the same code
+  ---
+  duration_ms: 0.092167
+  type: 'test'
+  ...
+# Subtest: no status ever uses approval, compliance, accreditation, or release language
+ok 99 - no status ever uses approval, compliance, accreditation, or release language
+  ---
+  duration_ms: 0.043042
+  type: 'test'
+  ...
+# Subtest: the returned outcome is frozen
+ok 100 - the returned outcome is frozen
+  ---
+  duration_ms: 0.039833
+  type: 'test'
+  ...
+# Subtest: notification is never allowed while status is pending
+ok 101 - notification is never allowed while status is pending
+  ---
+  duration_ms: 0.030125
+  type: 'test'
+  ...
+# Subtest: all four repeat scenarios render the real evaluation of their exported fixtures
+ok 102 - all four repeat scenarios render the real evaluation of their exported fixtures
+  ---
+  duration_ms: 64.336667
+  type: 'test'
+  ...
+# Subtest: four notification logs retain real statuses, timing, range, roles and hash prefixes
+ok 103 - four notification logs retain real statuses, timing, range, roles and hash prefixes
+  ---
+  duration_ms: 18.575208
+  type: 'test'
+  ...
+# Subtest: four escalation scenarios use the same fabricated four-role chain and fixed clock
+ok 104 - four escalation scenarios use the same fabricated four-role chain and fixed clock
+  ---
+  duration_ms: 7.56575
+  type: 'test'
+  ...
+# Subtest: headline counts derive from outcomes and calls are deterministic without mutating fixtures
+ok 105 - headline counts derive from outcomes and calls are deterministic without mutating fixtures
+  ---
+  duration_ms: 1.762875
+  type: 'test'
+  ...
+# Subtest: view and fixtures contain only fabricated identifiers and no contact destinations
+ok 106 - view and fixtures contain only fabricated identifiers and no contact destinations
+  ---
+  duration_ms: 4.730542
+  type: 'test'
+  ...
+# Subtest: view-model source contains no ambient clock, environment or fetching
+ok 107 - view-model source contains no ambient clock, environment or fetching
+  ---
+  duration_ms: 0.37275
+  type: 'test'
+  ...
+# Subtest: fabricated rows contain every required decision from the real evaluators and explanations
+ok 108 - fabricated rows contain every required decision from the real evaluators and explanations
+  ---
+  duration_ms: 19.289583
+  type: 'test'
+  ...
+# Subtest: all-good fixture is ready, and due-soon alone remains advisory
+ok 109 - all-good fixture is ready, and due-soon alone remains advisory
+  ---
+  duration_ms: 0.326959
+  type: 'test'
+  ...
+# Subtest: each blocking condition independently prevents readiness, including an unknown flag mixed with a known flag
+ok 110 - each blocking condition independently prevents readiness, including an unknown flag mixed with a known flag
+  ---
+  duration_ms: 0.52925
+  type: 'test'
+  ...
+# Subtest: every fabricated identifier is SYNTHETIC-prefixed and view text contains no vendor names
+ok 111 - every fabricated identifier is SYNTHETIC-prefixed and view text contains no vendor names
+  ---
+  duration_ms: 0.313583
+  type: 'test'
+  ...
+# Subtest: output is deterministic, does not mutate fixture, and has no clock, environment or fetching access
+ok 112 - output is deterministic, does not mutate fixture, and has no clock, environment or fetching access
+  ---
+  duration_ms: 0.559334
+  type: 'test'
+  ...
+# Subtest: page renders readiness, analytical checks, then supplier questions in order
+ok 113 - page renders readiness, analytical checks, then supplier questions in order
+  ---
+  duration_ms: 2.042916
+  type: 'test'
+  ...
+# Subtest: five fabricated formatting scenarios come from the real formatter, including the typed unresolved error
+ok 114 - five fabricated formatting scenarios come from the real formatter, including the typed unresolved error
+  ---
+  duration_ms: 2.379042
+  type: 'test'
+  ...
+# Subtest: four fabricated distribution scenarios reproduce routing, unrouted classes and fail-closed outcomes
+ok 115 - four fabricated distribution scenarios reproduce routing, unrouted classes and fail-closed outcomes
+  ---
+  duration_ms: 0.496834
+  type: 'test'
+  ...
+# Subtest: three fabricated amendment chains reproduce accepted links and invalid reasons
+ok 116 - three fabricated amendment chains reproduce accepted links and invalid reasons
+  ---
+  duration_ms: 0.451333
+  type: 'test'
+  ...
+# Subtest: headline counts, identifiers and all output remain synthetic, contact-free and deterministic
+ok 117 - headline counts, identifiers and all output remain synthetic, contact-free and deterministic
+  ---
+  duration_ms: 2.908667
+  type: 'test'
+  ...
+# Subtest: builder has no ambient dependencies and page only renders its results
+ok 118 - builder has no ambient dependencies and page only renders its results
+  ---
+  duration_ms: 1.35325
+  type: 'test'
+  ...
+# Subtest: five send-out scenarios match the real evaluator on exported fixtures
+ok 119 - five send-out scenarios match the real evaluator on exported fixtures
+  ---
+  duration_ms: 7.487791
+  type: 'test'
+  ...
+# Subtest: six cancellation scenarios match the real decision function, including a thrown unresolved role
+ok 120 - six cancellation scenarios match the real decision function, including a thrown unresolved role
+  ---
+  duration_ms: 2.19025
+  type: 'test'
+  ...
+# Subtest: coded comments render in priority order and three refused requests surface typed errors, not crashes
+ok 121 - coded comments render in priority order and three refused requests surface typed errors, not crashes
+  ---
+  duration_ms: 2.751417
+  type: 'test'
+  ...
+# Subtest: headline counts, explanations and synthetic identifiers cover every fixture and row
+ok 122 - headline counts, explanations and synthetic identifiers cover every fixture and row
+  ---
+  duration_ms: 1.306041
+  type: 'test'
+  ...
+# Subtest: builder is deterministic, isolated from fixture mutation, and reads no ambient inputs
+ok 123 - builder is deterministic, isolated from fixture mutation, and reads no ambient inputs
+  ---
+  duration_ms: 17.486541
+  type: 'test'
+  ...
+# Subtest: panel is a read-only server component that renders the builder with required disclosure language
+ok 124 - panel is a read-only server component that renders the builder with required disclosure language
+  ---
+  duration_ms: 12.744333
+  type: 'test'
+  ...
+# Subtest: reports page imports and renders SendoutCancellationCommentsPanel exactly once
+ok 125 - reports page imports and renders SendoutCancellationCommentsPanel exactly once
+  ---
+  duration_ms: 0.515833
+  type: 'test'
+  ...
+# Subtest: a single mapped flag translates to its canonical flag and action
+ok 126 - a single mapped flag translates to its canonical flag and action
+  ---
+  duration_ms: 0.713833
+  type: 'test'
+  ...
+# Subtest: an empty raw flag list maps cleanly with no canonical flags and no required action
+ok 127 - an empty raw flag list maps cleanly with no canonical flags and no required action
+  ---
+  duration_ms: 0.328375
+  type: 'test'
+  ...
+# Subtest: multiple mapped flags produce one entry per distinct canonical flag in first-seen order
+ok 128 - multiple mapped flags produce one entry per distinct canonical flag in first-seen order
+  ---
+  duration_ms: 0.055083
+  type: 'test'
+  ...
+# Subtest: the same instrument-specific flag code maps consistently across two independent calls
+ok 129 - the same instrument-specific flag code maps consistently across two independent calls
+  ---
+  duration_ms: 0.080666
+  type: 'test'
+  ...
+# Subtest: the same raw flag code can map to a different canonical flag under a different instrument model
+ok 130 - the same raw flag code can map to a different canonical flag under a different instrument model
+  ---
+  duration_ms: 0.123708
+  type: 'test'
+  ...
+# Subtest: conflicting flags resolve to the highest declared severity and its action
+ok 131 - conflicting flags resolve to the highest declared severity and its action
+  ---
+  duration_ms: 0.045166
+  type: 'test'
+  ...
+# Subtest: severity resolution is independent of raw flag order
+ok 132 - severity resolution is independent of raw flag order
+  ---
+  duration_ms: 0.084791
+  type: 'test'
+  ...
+# Subtest: a lower-severity flag never overrides an already-resolved higher severity
+ok 133 - a lower-severity flag never overrides an already-resolved higher severity
+  ---
+  duration_ms: 0.030333
+  type: 'test'
+  ...
+# Subtest: a tie in resolved severity breaks toward the more visible action: report over review
+ok 134 - a tie in resolved severity breaks toward the more visible action: report over review
+  ---
+  duration_ms: 0.158916
+  type: 'test'
+  ...
+# Subtest: a tie in resolved severity breaks toward review over suppress when report is not present
+ok 135 - a tie in resolved severity breaks toward review over suppress when report is not present
+  ---
+  duration_ms: 0.225667
+  type: 'test'
+  ...
+# Subtest: duplicate raw flag codes collapse to a single canonical flag entry
+ok 136 - duplicate raw flag codes collapse to a single canonical flag entry
+  ---
+  duration_ms: 0.034792
+  type: 'test'
+  ...
+# Subtest: an instrument model absent from the table is blocked as unknown
+ok 137 - an instrument model absent from the table is blocked as unknown
+  ---
+  duration_ms: 0.032541
+  type: 'test'
+  ...
+# Subtest: an empty table blocks every lookup as unknown
+ok 138 - an empty table blocks every lookup as unknown
+  ---
+  duration_ms: 0.081458
+  type: 'test'
+  ...
+# Subtest: a raw flag code not declared for the instrument model is blocked
+ok 139 - a raw flag code not declared for the instrument model is blocked
+  ---
+  duration_ms: 0.029
+  type: 'test'
+  ...
+# Subtest: a raw flag code declared for a different instrument model is still blocked as unmapped
+ok 140 - a raw flag code declared for a different instrument model is still blocked as unmapped
+  ---
+  duration_ms: 0.025375
+  type: 'test'
+  ...
+# Subtest: one unmapped flag blocks the whole translation even when earlier flags were mappable
+ok 141 - one unmapped flag blocks the whole translation even when earlier flags were mappable
+  ---
+  duration_ms: 0.027333
+  type: 'test'
+  ...
+# Subtest: a null table throws a sanitized typed error
+ok 142 - a null table throws a sanitized typed error
+  ---
+  duration_ms: 0.170916
+  type: 'test'
+  ...
+# Subtest: an array table throws a sanitized typed error
+ok 143 - an array table throws a sanitized typed error
+  ---
+  duration_ms: 0.03775
+  type: 'test'
+  ...
+# Subtest: an empty-string instrument model throws a sanitized typed error
+ok 144 - an empty-string instrument model throws a sanitized typed error
+  ---
+  duration_ms: 0.035875
+  type: 'test'
+  ...
+# Subtest: a non-string instrument model throws a sanitized typed error
+ok 145 - a non-string instrument model throws a sanitized typed error
+  ---
+  duration_ms: 0.033709
+  type: 'test'
+  ...
+# Subtest: a non-array raw flag list throws a sanitized typed error
+ok 146 - a non-array raw flag list throws a sanitized typed error
+  ---
+  duration_ms: 0.04
+  type: 'test'
+  ...
+# Subtest: a raw flag list containing an empty string throws a sanitized typed error
+ok 147 - a raw flag list containing an empty string throws a sanitized typed error
+  ---
+  duration_ms: 0.033917
+  type: 'test'
+  ...
+# Subtest: a raw flag list containing a non-string element throws a sanitized typed error
+ok 148 - a raw flag list containing a non-string element throws a sanitized typed error
+  ---
+  duration_ms: 0.032375
+  type: 'test'
+  ...
+# Subtest: a non-object model mapping entry throws a sanitized typed error
+ok 149 - a non-object model mapping entry throws a sanitized typed error
+  ---
+  duration_ms: 0.037334
+  type: 'test'
+  ...
+# Subtest: an array model mapping entry throws a sanitized typed error
+ok 150 - an array model mapping entry throws a sanitized typed error
+  ---
+  duration_ms: 0.121958
+  type: 'test'
+  ...
+# Subtest: a flag definition missing a required field throws a sanitized typed error
+ok 151 - a flag definition missing a required field throws a sanitized typed error
+  ---
+  duration_ms: 0.045291
+  type: 'test'
+  ...
+# Subtest: a flag definition with an unrecognized severity throws a sanitized typed error
+ok 152 - a flag definition with an unrecognized severity throws a sanitized typed error
+  ---
+  duration_ms: 0.047625
+  type: 'test'
+  ...
+# Subtest: a flag definition with an unrecognized action throws a sanitized typed error
+ok 153 - a flag definition with an unrecognized action throws a sanitized typed error
+  ---
+  duration_ms: 0.03775
+  type: 'test'
+  ...
+# Subtest: a typed input error message never echoes any submitted data
+ok 154 - a typed input error message never echoes any submitted data
+  ---
+  duration_ms: 0.175167
+  type: 'test'
+  ...
+# Subtest: the result is deterministic across repeated calls with equivalent input
+ok 155 - the result is deterministic across repeated calls with equivalent input
+  ---
+  duration_ms: 0.1125
+  type: 'test'
+  ...
+# Subtest: the result object is frozen
+ok 156 - the result object is frozen
+  ---
+  duration_ms: 0.02975
+  type: 'test'
+  ...
+# Subtest: the canonicalFlags array is frozen
+ok 157 - the canonicalFlags array is frozen
+  ---
+  duration_ms: 0.022875
+  type: 'test'
+  ...
+# Subtest: mapInstrumentFlags does not mutate its table input
+ok 158 - mapInstrumentFlags does not mutate its table input
+  ---
+  duration_ms: 0.027541
+  type: 'test'
+  ...
+# Subtest: mapInstrumentFlags does not mutate its raw flag codes input
+ok 159 - mapInstrumentFlags does not mutate its raw flag codes input
+  ---
+  duration_ms: 0.023583
+  type: 'test'
+  ...
+# Subtest: every reason code has a non-empty, privacy-safe explanation
+ok 160 - every reason code has a non-empty, privacy-safe explanation
+  ---
+  duration_ms: 0.239584
+  type: 'test'
+  ...
+# Subtest: explanations are stable across repeated calls for the same code
+ok 161 - explanations are stable across repeated calls for the same code
+  ---
+  duration_ms: 0.160084
+  type: 'test'
+  ...
+# Subtest: the reason field on a result matches explainFlagMappingReason for its reasonCode
+ok 162 - the reason field on a result matches explainFlagMappingReason for its reasonCode
+  ---
+  duration_ms: 0.036166
+  type: 'test'
+  ...
+# Subtest: a value inside the declared reference range is within_range with the matching flag
+ok 163 - a value inside the declared reference range is within_range with the matching flag
+  ---
+  duration_ms: 1.026959
+  type: 'test'
+  ...
+# Subtest: a value exactly at the reference range upper bound is within_range
+ok 164 - a value exactly at the reference range upper bound is within_range
+  ---
+  duration_ms: 0.111875
+  type: 'test'
+  ...
+# Subtest: a value exactly at the limit of detection is within_range, not below_detection
+ok 165 - a value exactly at the limit of detection is within_range, not below_detection
+  ---
+  duration_ms: 0.045917
+  type: 'test'
+  ...
+# Subtest: a value exactly at the limit of detection and exactly at the reference range lower bound is within_range
+ok 166 - a value exactly at the limit of detection and exactly at the reference range lower bound is within_range
+  ---
+  duration_ms: 0.038167
+  type: 'test'
+  ...
+# Subtest: a value exactly at the reference range lower bound is within_range
+ok 167 - a value exactly at the reference range lower bound is within_range
+  ---
+  duration_ms: 1.1745
+  type: 'test'
+  ...
+# Subtest: a value exactly at the upper limit of quantitation is within_range, not above_quantitation
+ok 168 - a value exactly at the upper limit of quantitation is within_range, not above_quantitation
+  ---
+  duration_ms: 0.061792
+  type: 'test'
+  ...
+# Subtest: a value below the limit of detection is below_detection
+ok 169 - a value below the limit of detection is below_detection
+  ---
+  duration_ms: 0.047417
+  type: 'test'
+  ...
+# Subtest: a value below both the limit of detection and the reference range lower bound is below_detection, not below_range
+ok 170 - a value below both the limit of detection and the reference range lower bound is below_detection, not below_range
+  ---
+  duration_ms: 0.033791
+  type: 'test'
+  ...
+# Subtest: a value above the reference range upper bound but within quantitation is above_range
+ok 171 - a value above the reference range upper bound but within quantitation is above_range
+  ---
+  duration_ms: 0.15875
+  type: 'test'
+  ...
+# Subtest: a value above the upper limit of quantitation is above_quantitation, taking priority over above_range
+ok 172 - a value above the upper limit of quantitation is above_quantitation, taking priority over above_range
+  ---
+  duration_ms: 0.239208
+  type: 'test'
+  ...
+# Subtest: a value below the declared reference range lower bound but above detection is below_range
+ok 173 - a value below the declared reference range lower bound but above detection is below_range
+  ---
+  duration_ms: 0.04225
+  type: 'test'
+  ...
+# Subtest: a less-than censored value at the limit of detection is below_detection
+ok 174 - a less-than censored value at the limit of detection is below_detection
+  ---
+  duration_ms: 0.035208
+  type: 'test'
+  ...
+# Subtest: a less-than censored value with surrounding whitespace is handled the same way
+ok 175 - a less-than censored value with surrounding whitespace is handled the same way
+  ---
+  duration_ms: 0.025417
+  type: 'test'
+  ...
+# Subtest: a greater-than censored value at the upper limit of quantitation is above_quantitation
+ok 176 - a greater-than censored value at the upper limit of quantitation is above_quantitation
+  ---
+  duration_ms: 0.030667
+  type: 'test'
+  ...
+# Subtest: a less-than censored value whose threshold does not match the limit of detection is invalid
+ok 177 - a less-than censored value whose threshold does not match the limit of detection is invalid
+  ---
+  duration_ms: 0.069958
+  type: 'test'
+  ...
+# Subtest: a greater-than censored value whose threshold does not match the upper limit of quantitation is invalid
+ok 178 - a greater-than censored value whose threshold does not match the upper limit of quantitation is invalid
+  ---
+  duration_ms: 0.034708
+  type: 'test'
+  ...
+# Subtest: a plain numeric string result is parsed as a direct numeric value
+ok 179 - a plain numeric string result is parsed as a direct numeric value
+  ---
+  duration_ms: 0.023125
+  type: 'test'
+  ...
+# Subtest: a non-finite numeric result fails closed to invalid
+ok 180 - a non-finite numeric result fails closed to invalid
+  ---
+  duration_ms: 0.0485
+  type: 'test'
+  ...
+# Subtest: an Infinity numeric result fails closed to invalid
+ok 181 - an Infinity numeric result fails closed to invalid
+  ---
+  duration_ms: 0.031583
+  type: 'test'
+  ...
+# Subtest: an unparsable string result fails closed to invalid
+ok 182 - an unparsable string result fails closed to invalid
+  ---
+  duration_ms: 0.027125
+  type: 'test'
+  ...
+# Subtest: an empty string result fails closed to invalid
+ok 183 - an empty string result fails closed to invalid
+  ---
+  duration_ms: 0.026709
+  type: 'test'
+  ...
+# Subtest: a less-than marker with no numeric operand fails closed to invalid, not zero
+ok 184 - a less-than marker with no numeric operand fails closed to invalid, not zero
+  ---
+  duration_ms: 0.026916
+  type: 'test'
+  ...
+# Subtest: a greater-than marker with no numeric operand fails closed to invalid, not zero
+ok 185 - a greater-than marker with no numeric operand fails closed to invalid, not zero
+  ---
+  duration_ms: 0.068459
+  type: 'test'
+  ...
+# Subtest: a less-than marker with a whitespace-only operand fails closed to invalid, not zero
+ok 186 - a less-than marker with a whitespace-only operand fails closed to invalid, not zero
+  ---
+  duration_ms: 0.028083
+  type: 'test'
+  ...
+# Subtest: a greater-than marker with a whitespace-only operand fails closed to invalid, not zero
+ok 187 - a greater-than marker with a whitespace-only operand fails closed to invalid, not zero
+  ---
+  duration_ms: 0.031125
+  type: 'test'
+  ...
+# Subtest: a less-than censored genuine zero at the limit of detection is preserved as below_detection
+ok 188 - a less-than censored genuine zero at the limit of detection is preserved as below_detection
+  ---
+  duration_ms: 0.026375
+  type: 'test'
+  ...
+# Subtest: a less-than censored value with a valid finite decimal operand matching the limit of detection is below_detection
+ok 189 - a less-than censored value with a valid finite decimal operand matching the limit of detection is below_detection
+  ---
+  duration_ms: 0.061375
+  type: 'test'
+  ...
+# Subtest: a unit mismatch between the result and the declared reference range fails closed to invalid
+ok 190 - a unit mismatch between the result and the declared reference range fails closed to invalid
+  ---
+  duration_ms: 0.028
+  type: 'test'
+  ...
+# Subtest: outer-whitespace and case differences in matching units are tolerated, not flagged mismatched
+ok 191 - outer-whitespace and case differences in matching units are tolerated, not flagged mismatched
+  ---
+  duration_ms: 0.024083
+  type: 'test'
+  ...
+# Subtest: a missing result unit fails closed to invalid as a unit mismatch
+ok 192 - a missing result unit fails closed to invalid as a unit mismatch
+  ---
+  duration_ms: 0.026667
+  type: 'test'
+  ...
+# Subtest: a non-string reference range unit fails closed to invalid as a unit mismatch
+ok 193 - a non-string reference range unit fails closed to invalid as a unit mismatch
+  ---
+  duration_ms: 0.028958
+  type: 'test'
+  ...
+# Subtest: a non-finite limit of detection fails closed to invalid
+ok 194 - a non-finite limit of detection fails closed to invalid
+  ---
+  duration_ms: 0.02475
+  type: 'test'
+  ...
+# Subtest: a non-finite upper limit of quantitation fails closed to invalid
+ok 195 - a non-finite upper limit of quantitation fails closed to invalid
+  ---
+  duration_ms: 0.027459
+  type: 'test'
+  ...
+# Subtest: an inverted detection/quantitation range (LOD above ULOQ) fails closed to invalid
+ok 196 - an inverted detection/quantitation range (LOD above ULOQ) fails closed to invalid
+  ---
+  duration_ms: 0.184834
+  type: 'test'
+  ...
+# Subtest: a limit of detection exactly equal to the upper limit of quantitation is not inverted
+ok 197 - a limit of detection exactly equal to the upper limit of quantitation is not inverted
+  ---
+  duration_ms: 0.032416
+  type: 'test'
+  ...
+# Subtest: an inverted declared reference range fails closed to invalid
+ok 198 - an inverted declared reference range fails closed to invalid
+  ---
+  duration_ms: 0.026708
+  type: 'test'
+  ...
+# Subtest: a reference range with an equal lower and upper bound is not inverted
+ok 199 - a reference range with an equal lower and upper bound is not inverted
+  ---
+  duration_ms: 0.02975
+  type: 'test'
+  ...
+# Subtest: a non-finite reference range bound fails closed to invalid
+ok 200 - a non-finite reference range bound fails closed to invalid
+  ---
+  duration_ms: 0.029125
+  type: 'test'
+  ...
+# Subtest: multiple independent defects are all reported, deterministically sorted
+ok 201 - multiple independent defects are all reported, deterministically sorted
+  ---
+  duration_ms: 0.08475
+  type: 'test'
+  ...
+# Subtest: evaluation is pure: it does not mutate the input
+ok 202 - evaluation is pure: it does not mutate the input
+  ---
+  duration_ms: 0.028625
+  type: 'test'
+  ...
+# Subtest: evaluation is deterministic across repeated calls with the same input
+ok 203 - evaluation is deterministic across repeated calls with the same input
+  ---
+  duration_ms: 0.030959
+  type: 'test'
+  ...
+# Subtest: every classification is one of the six defined outcomes
+ok 204 - every classification is one of the six defined outcomes
+  ---
+  duration_ms: 0.044917
+  type: 'test'
+  ...
+# Subtest: a declared decimal places over 100 throws ReportingFormatError with code formats-malformed
+ok 205 - a declared decimal places over 100 throws ReportingFormatError with code formats-malformed
+  ---
+  duration_ms: 1.254458
+  type: 'test'
+  ...
+# Subtest: a declared decimal places of 1000 throws ReportingFormatError with code formats-malformed
+ok 206 - a declared decimal places of 1000 throws ReportingFormatError with code formats-malformed
+  ---
+  duration_ms: 0.10075
+  type: 'test'
+  ...
+# Subtest: a declared decimal places of 2 rounds and reports normally
+ok 207 - a declared decimal places of 2 rounds and reports normally
+  ---
+  duration_ms: 0.081292
+  type: 'test'
+  ...
+# Subtest: a declared decimal places of 100 is still accepted and reports at full precision
+ok 208 - a declared decimal places of 100 is still accepted and reports at full precision
+  ---
+  duration_ms: 0.065125
+  type: 'test'
+  ...
+# Subtest: an in-range result is rounded to the declared decimal places and unit appended
+ok 209 - an in-range result is rounded to the declared decimal places and unit appended
+  ---
+  duration_ms: 0.585375
+  type: 'test'
+  ...
+# Subtest: an in-range result rounds using the declared decimal places
+ok 210 - an in-range result rounds using the declared decimal places
+  ---
+  duration_ms: 0.058583
+  type: 'test'
+  ...
+# Subtest: a result exactly at the below-detection limit is in range, not censored
+ok 211 - a result exactly at the below-detection limit is in range, not censored
+  ---
+  duration_ms: 0.075417
+  type: 'test'
+  ...
+# Subtest: a result exactly at the above-quantitation limit is in range, not censored
+ok 212 - a result exactly at the above-quantitation limit is in range, not censored
+  ---
+  duration_ms: 0.036416
+  type: 'test'
+  ...
+# Subtest: a result strictly below the detection limit is censored low, reporting the limit itself
+ok 213 - a result strictly below the detection limit is censored low, reporting the limit itself
+  ---
+  duration_ms: 0.046333
+  type: 'test'
+  ...
+# Subtest: a result strictly above the quantitation limit is censored high, reporting the limit itself
+ok 214 - a result strictly above the quantitation limit is censored high, reporting the limit itself
+  ---
+  duration_ms: 0.033083
+  type: 'test'
+  ...
+# Subtest: a censored limit is never rounded to the declared decimal places, even when it has more precision
+ok 215 - a censored limit is never rounded to the declared decimal places, even when it has more precision
+  ---
+  duration_ms: 0.037875
+  type: 'test'
+  ...
+# Subtest: a censored above-quantitation limit is never rounded to the declared decimal places
+ok 216 - a censored above-quantitation limit is never rounded to the declared decimal places
+  ---
+  duration_ms: 0.037042
+  type: 'test'
+  ...
+# Subtest: a rounded-to-zero negative value is never reported as negative zero
+ok 217 - a rounded-to-zero negative value is never reported as negative zero
+  ---
+  duration_ms: 0.159542
+  type: 'test'
+  ...
+# Subtest: a declared qualitative threshold produces the matching label for an in-range result
+ok 218 - a declared qualitative threshold produces the matching label for an in-range result
+  ---
+  duration_ms: 0.239584
+  type: 'test'
+  ...
+# Subtest: a qualitative threshold band boundary is inclusive on the lower bound and exclusive on the upper bound
+ok 219 - a qualitative threshold band boundary is inclusive on the lower bound and exclusive on the upper bound
+  ---
+  duration_ms: 0.047291
+  type: 'test'
+  ...
+# Subtest: the topmost qualitative band with a null maxValue has no upper bound
+ok 220 - the topmost qualitative band with a null maxValue has no upper bound
+  ---
+  duration_ms: 0.031209
+  type: 'test'
+  ...
+# Subtest: a result matching no declared qualitative band yields no label
+ok 221 - a result matching no declared qualitative band yields no label
+  ---
+  duration_ms: 0.027333
+  type: 'test'
+  ...
+# Subtest: a format with no declared qualitative thresholds yields no label
+ok 222 - a format with no declared qualitative thresholds yields no label
+  ---
+  duration_ms: 0.02475
+  type: 'test'
+  ...
+# Subtest: the qualitative label is matched against the raw value even for a censored result
+ok 223 - the qualitative label is matched against the raw value even for a censored result
+  ---
+  duration_ms: 0.028708
+  type: 'test'
+  ...
+# Subtest: formatting is pure: it does not mutate the request
+ok 224 - formatting is pure: it does not mutate the request
+  ---
+  duration_ms: 0.032
+  type: 'test'
+  ...
+# Subtest: formatting is deterministic across repeated calls
+ok 225 - formatting is deterministic across repeated calls
+  ---
+  duration_ms: 0.2615
+  type: 'test'
+  ...
+# Subtest: the outcome object is frozen
+ok 226 - the outcome object is frozen
+  ---
+  duration_ms: 0.0435
+  type: 'test'
+  ...
+# Subtest: an analyte with no declared reporting format fails closed
+ok 227 - an analyte with no declared reporting format fails closed
+  ---
+  duration_ms: 0.150125
+  type: 'test'
+  ...
+# Subtest: NaN fails closed as a non-finite result
+ok 228 - NaN fails closed as a non-finite result
+  ---
+  duration_ms: 0.077667
+  type: 'test'
+  ...
+# Subtest: positive infinity fails closed as a non-finite result
+ok 229 - positive infinity fails closed as a non-finite result
+  ---
+  duration_ms: 0.038083
+  type: 'test'
+  ...
+# Subtest: negative infinity fails closed as a non-finite result
+ok 230 - negative infinity fails closed as a non-finite result
+  ---
+  duration_ms: 0.036292
+  type: 'test'
+  ...
+# Subtest: a declared format with negative decimal places fails closed
+ok 231 - a declared format with negative decimal places fails closed
+  ---
+  duration_ms: 0.042209
+  type: 'test'
+  ...
+# Subtest: a zero decimal-place format is not treated as negative
+ok 232 - a zero decimal-place format is not treated as negative
+  ---
+  duration_ms: 0.027208
+  type: 'test'
+  ...
+# Subtest: an unaffected format with negative decimal places for a different analyte does not block this result
+ok 233 - an unaffected format with negative decimal places for a different analyte does not block this result
+  ---
+  duration_ms: 0.02575
+  type: 'test'
+  ...
+# Subtest: a non-object request throws ReportingFormatError
+ok 234 - a non-object request throws ReportingFormatError
+  ---
+  duration_ms: 0.03425
+  type: 'test'
+  ...
+# Subtest: a missing analyte code throws ReportingFormatError
+ok 235 - a missing analyte code throws ReportingFormatError
+  ---
+  duration_ms: 0.036833
+  type: 'test'
+  ...
+# Subtest: a non-numeric value throws ReportingFormatError instead of coercing
+ok 236 - a non-numeric value throws ReportingFormatError instead of coercing
+  ---
+  duration_ms: 0.03775
+  type: 'test'
+  ...
+# Subtest: formats that are not an array throws ReportingFormatError
+ok 237 - formats that are not an array throws ReportingFormatError
+  ---
+  duration_ms: 0.08875
+  type: 'test'
+  ...
+# Subtest: a format entry missing a required field throws ReportingFormatError
+ok 238 - a format entry missing a required field throws ReportingFormatError
+  ---
+  duration_ms: 0.042167
+  type: 'test'
+  ...
+# Subtest: a format with a non-integer decimal-places value throws ReportingFormatError
+ok 239 - a format with a non-integer decimal-places value throws ReportingFormatError
+  ---
+  duration_ms: 0.044458
+  type: 'test'
+  ...
+# Subtest: a qualitative threshold with an inverted range throws ReportingFormatError
+ok 240 - a qualitative threshold with an inverted range throws ReportingFormatError
+  ---
+  duration_ms: 0.0705
+  type: 'test'
+  ...
+# Subtest: a qualitative threshold missing a label throws ReportingFormatError
+ok 241 - a qualitative threshold missing a label throws ReportingFormatError
+  ---
+  duration_ms: 0.123083
+  type: 'test'
+  ...
+# Subtest: every error code has a non-empty explanation
+ok 242 - every error code has a non-empty explanation
+  ---
+  duration_ms: 0.071833
+  type: 'test'
+  ...
+# Subtest: fabricated lab day chains all eight real rules with reconciled totals
+ok 243 - fabricated lab day chains all eight real rules with reconciled totals
+  ---
+  duration_ms: 4.844542
+  type: 'test'
+  ...
+# Subtest: definition rejection stops the pipeline and unknown units never escape
+ok 244 - definition rejection stops the pipeline and unknown units never escape
+  ---
+  duration_ms: 0.493791
+  type: 'test'
+  ...
+# Subtest: missing and warning QC hold; warning is not mapped to in-control
+ok 245 - missing and warning QC hold; warning is not mapped to in-control
+  ---
+  duration_ms: 2.980459
+  type: 'test'
+  ...
+# Subtest: shared specimen consumes cumulatively; rejected consumption is not posted
+ok 246 - shared specimen consumes cumulatively; rejected consumption is not posted
+  ---
+  duration_ms: 0.536166
+  type: 'test'
+  ...
+# Subtest: library is in-process and has no clock, environment, network or JSON imports
+ok 247 - library is in-process and has no clock, environment, network or JSON imports
+  ---
+  duration_ms: 1.221792
+  type: 'test'
+  ...
+# Subtest: expired stability holds but all later extended stages still run in order
+ok 248 - expired stability holds but all later extended stages still run in order
+  ---
+  duration_ms: 11.399708
+  type: 'test'
+  ...
+# Subtest: critical repeat uses converted units and retains the critical hold pending or confirmed
+ok 249 - critical repeat uses converted units and retains the critical hold pending or confirmed
+  ---
+  duration_ms: 0.862292
+  type: 'test'
+  ...
+# Subtest: critical repeat is skipped for noncritical values or missing analyte policies
+ok 250 - critical repeat is skipped for noncritical values or missing analyte policies
+  ---
+  duration_ms: 0.744208
+  type: 'test'
+  ...
+# Subtest: reflex cycles and excessive declared depth block and hold an otherwise clean result
+ok 251 - reflex cycles and excessive declared depth block and hold an otherwise clean result
+  ---
+  duration_ms: 0.589541
+  type: 'test'
+  ...
+# Subtest: reporting censors converted values and holds missing formats before turnaround
+ok 252 - reporting censors converted values and holds missing formats before turnaround
+  ---
+  duration_ms: 0.522875
+  type: 'test'
+  ...
+# Subtest: typed stability and repeat policy errors hold with trace explanations
+ok 253 - typed stability and repeat policy errors hold with trace explanations
+  ---
+  duration_ms: 0.187542
+  type: 'test'
+  ...
+# Subtest: extended totals reconcile and extended runs are deterministic without input mutation
+ok 254 - extended totals reconcile and extended runs are deterministic without input mutation
+  ---
+  duration_ms: 0.98125
+  type: 'test'
+  ...
+# Subtest: original fixture has no extended keys and only the original eight step names
+ok 255 - original fixture has no extended keys and only the original eight step names
+  ---
+  duration_ms: 0.516667
+  type: 'test'
+  ...
+# Subtest: a client requesting cancellation at the ordered stage is allowed with a credit note due and no amended report
+ok 256 - a client requesting cancellation at the ordered stage is allowed with a credit note due and no amended report
+  ---
+  duration_ms: 0.580584
+  type: 'test'
+  ...
+# Subtest: evaluation is pure: it does not mutate the input request
+ok 257 - evaluation is pure: it does not mutate the input request
+  ---
+  duration_ms: 0.05775
+  type: 'test'
+  ...
+# Subtest: evaluation is deterministic across repeated calls
+ok 258 - evaluation is deterministic across repeated calls
+  ---
+  duration_ms: 0.303709
+  type: 'test'
+  ...
+# Subtest: an outcome other than the two defined values is never produced
+ok 259 - an outcome other than the two defined values is never produced
+  ---
+  duration_ms: 0.052625
+  type: 'test'
+  ...
+# Subtest: a governing rule other than the four defined values is never produced
+ok 260 - a governing rule other than the four defined values is never produced
+  ---
+  duration_ms: 0.038875
+  type: 'test'
+  ...
+# Subtest: a lab_director is allowed to cancel at any stage for any declared reason
+ok 261 - a lab_director is allowed to cancel at any stage for any declared reason
+  ---
+  duration_ms: 0.169375
+  type: 'test'
+  ...
+# Subtest: a lab_director cancelling a reported order for a lab-side reason still owes a credit note
+ok 262 - a lab_director cancelling a reported order for a lab-side reason still owes a credit note
+  ---
+  duration_ms: 0.033375
+  type: 'test'
+  ...
+# Subtest: a client requesting a reason outside their declared authority is refused
+ok 263 - a client requesting a reason outside their declared authority is refused
+  ---
+  duration_ms: 0.035375
+  type: 'test'
+  ...
+# Subtest: a front_desk requester is refused for a specimen_compromised reason, which is outside their authority
+ok 264 - a front_desk requester is refused for a specimen_compromised reason, which is outside their authority
+  ---
+  duration_ms: 0.117083
+  type: 'test'
+  ...
+# Subtest: a billing_admin requester is allowed for billing_hold at the ordered stage
+ok 265 - a billing_admin requester is allowed for billing_hold at the ordered stage
+  ---
+  duration_ms: 0.22325
+  type: 'test'
+  ...
+# Subtest: a billing_admin requester is refused for client_requested, which is outside their authority
+ok 266 - a billing_admin requester is refused for client_requested, which is outside their authority
+  ---
+  duration_ms: 0.037708
+  type: 'test'
+  ...
+# Subtest: a lab_supervisor requester is allowed for lab_processing_error at the in_analysis stage
+ok 267 - a lab_supervisor requester is allowed for lab_processing_error at the in_analysis stage
+  ---
+  duration_ms: 0.028458
+  type: 'test'
+  ...
+# Subtest: a lab_supervisor requester is refused for billing_hold, which is outside their authority
+ok 268 - a lab_supervisor requester is refused for billing_hold, which is outside their authority
+  ---
+  duration_ms: 0.188416
+  type: 'test'
+  ...
+# Subtest: a front_desk requester is allowed at the exact ordered stage boundary
+ok 269 - a front_desk requester is allowed at the exact ordered stage boundary
+  ---
+  duration_ms: 0.053167
+  type: 'test'
+  ...
+# Subtest: a front_desk requester is refused one stage past their limit
+ok 270 - a front_desk requester is refused one stage past their limit
+  ---
+  duration_ms: 0.038209
+  type: 'test'
+  ...
+# Subtest: a client requester is allowed at the exact collected stage boundary
+ok 271 - a client requester is allowed at the exact collected stage boundary
+  ---
+  duration_ms: 0.028458
+  type: 'test'
+  ...
+# Subtest: a client requester is refused one stage past their limit
+ok 272 - a client requester is refused one stage past their limit
+  ---
+  duration_ms: 0.026125
+  type: 'test'
+  ...
+# Subtest: a lab_supervisor requester is allowed at the exact in_analysis stage boundary
+ok 273 - a lab_supervisor requester is allowed at the exact in_analysis stage boundary
+  ---
+  duration_ms: 0.026167
+  type: 'test'
+  ...
+# Subtest: a lab_supervisor requester is refused one stage past their limit
+ok 274 - a lab_supervisor requester is refused one stage past their limit
+  ---
+  duration_ms: 0.023042
+  type: 'test'
+  ...
+# Subtest: a billing_admin requester is refused one stage past their limit
+ok 275 - a billing_admin requester is refused one stage past their limit
+  ---
+  duration_ms: 0.025083
+  type: 'test'
+  ...
+# Subtest: an allowed cancellation before the reported stage never requires an amended report
+ok 276 - an allowed cancellation before the reported stage never requires an amended report
+  ---
+  duration_ms: 0.036833
+  type: 'test'
+  ...
+# Subtest: an allowed cancellation at the reported stage always requires an amended report
+ok 277 - an allowed cancellation at the reported stage always requires an amended report
+  ---
+  duration_ms: 0.024875
+  type: 'test'
+  ...
+# Subtest: a director-approved client_requested cancellation at the reported stage owes no credit note
+ok 278 - a director-approved client_requested cancellation at the reported stage owes no credit note
+  ---
+  duration_ms: 0.023542
+  type: 'test'
+  ...
+# Subtest: a director-approved billing_hold cancellation at the reported stage still owes a credit note
+ok 279 - a director-approved billing_hold cancellation at the reported stage still owes a credit note
+  ---
+  duration_ms: 0.021834
+  type: 'test'
+  ...
+# Subtest: a client_requested cancellation before the reported stage always owes a credit note
+ok 280 - a client_requested cancellation before the reported stage always owes a credit note
+  ---
+  duration_ms: 0.0215
+  type: 'test'
+  ...
+# Subtest: a refused cancellation never owes a credit note or requires an amended report
+ok 281 - a refused cancellation never owes a credit note or requires an amended report
+  ---
+  duration_ms: 0.035791
+  type: 'test'
+  ...
+# Subtest: a non-object request throws a sanitized typed error
+ok 282 - a non-object request throws a sanitized typed error
+  ---
+  duration_ms: 0.211458
+  type: 'test'
+  ...
+# Subtest: a null request throws a sanitized typed error
+ok 283 - a null request throws a sanitized typed error
+  ---
+  duration_ms: 0.03575
+  type: 'test'
+  ...
+# Subtest: an array request throws a sanitized typed error
+ok 284 - an array request throws a sanitized typed error
+  ---
+  duration_ms: 0.028458
+  type: 'test'
+  ...
+# Subtest: a request missing an order reference token throws a sanitized typed error
+ok 285 - a request missing an order reference token throws a sanitized typed error
+  ---
+  duration_ms: 0.037833
+  type: 'test'
+  ...
+# Subtest: a request with an empty-string order reference token throws a sanitized typed error
+ok 286 - a request with an empty-string order reference token throws a sanitized typed error
+  ---
+  duration_ms: 0.026625
+  type: 'test'
+  ...
+# Subtest: an unknown stage throws a sanitized typed error
+ok 287 - an unknown stage throws a sanitized typed error
+  ---
+  duration_ms: 0.026125
+  type: 'test'
+  ...
+# Subtest: a missing stage throws a sanitized typed error
+ok 288 - a missing stage throws a sanitized typed error
+  ---
+  duration_ms: 0.067083
+  type: 'test'
+  ...
+# Subtest: an unknown reason code throws a sanitized typed error
+ok 289 - an unknown reason code throws a sanitized typed error
+  ---
+  duration_ms: 0.045875
+  type: 'test'
+  ...
+# Subtest: an unknown requester role throws a sanitized typed error
+ok 290 - an unknown requester role throws a sanitized typed error
+  ---
+  duration_ms: 0.4305
+  type: 'test'
+  ...
+# Subtest: a request input error message never echoes submitted request data
+ok 291 - a request input error message never echoes submitted request data
+  ---
+  duration_ms: 0.112916
+  type: 'test'
+  ...
+# Subtest: every governing rule has a non-empty, privacy-safe explanation
+ok 292 - every governing rule has a non-empty, privacy-safe explanation
+  ---
+  duration_ms: 0.064917
+  type: 'test'
+  ...
+# Subtest: governing rule explanations are stable across repeated calls
+ok 293 - governing rule explanations are stable across repeated calls
+  ---
+  duration_ms: 0.031709
+  type: 'test'
+  ...
+# Subtest: lastVerifiedAt rejects 2026-02-30T00:00:00Z with its exact fail-closed result
+ok 294 - lastVerifiedAt rejects 2026-02-30T00:00:00Z with its exact fail-closed result
+  ---
+  duration_ms: 1.199666
+  type: 'test'
+  ...
+# Subtest: lastVerifiedAt rejects 2026-02-30T00:00:00.123Z with its exact fail-closed result
+ok 295 - lastVerifiedAt rejects 2026-02-30T00:00:00.123Z with its exact fail-closed result
+  ---
+  duration_ms: 0.109583
+  type: 'test'
+  ...
+# Subtest: lastVerifiedAt rejects 2026-02-29T00:00:00Z with its exact fail-closed result
+ok 296 - lastVerifiedAt rejects 2026-02-29T00:00:00Z with its exact fail-closed result
+  ---
+  duration_ms: 0.15025
+  type: 'test'
+  ...
+# Subtest: lastVerifiedAt rejects 2100-02-29T00:00:00Z with its exact fail-closed result
+ok 297 - lastVerifiedAt rejects 2100-02-29T00:00:00Z with its exact fail-closed result
+  ---
+  duration_ms: 0.082625
+  type: 'test'
+  ...
+# Subtest: lastVerifiedAt rejects 2026-04-31T00:00:00Z with its exact fail-closed result
+ok 298 - lastVerifiedAt rejects 2026-04-31T00:00:00Z with its exact fail-closed result
+  ---
+  duration_ms: 0.04125
+  type: 'test'
+  ...
+# Subtest: lastVerifiedAt rejects 2026-00-01T00:00:00Z with its exact fail-closed result
+ok 299 - lastVerifiedAt rejects 2026-00-01T00:00:00Z with its exact fail-closed result
+  ---
+  duration_ms: 0.0315
+  type: 'test'
+  ...
+# Subtest: lastVerifiedAt rejects 2026-13-01T00:00:00Z with its exact fail-closed result
+ok 300 - lastVerifiedAt rejects 2026-13-01T00:00:00Z with its exact fail-closed result
+  ---
+  duration_ms: 0.032667
+  type: 'test'
+  ...
+# Subtest: lastVerifiedAt rejects 2026-01-00T00:00:00Z with its exact fail-closed result
+ok 301 - lastVerifiedAt rejects 2026-01-00T00:00:00Z with its exact fail-closed result
+  ---
+  duration_ms: 0.029083
+  type: 'test'
+  ...
+# Subtest: lastVerifiedAt rejects 2026-01-32T00:00:00Z with its exact fail-closed result
+ok 302 - lastVerifiedAt rejects 2026-01-32T00:00:00Z with its exact fail-closed result
+  ---
+  duration_ms: 0.202209
+  type: 'test'
+  ...
+# Subtest: lastVerifiedAt rejects 2026-01-02T24:00:00Z with its exact fail-closed result
+ok 303 - lastVerifiedAt rejects 2026-01-02T24:00:00Z with its exact fail-closed result
+  ---
+  duration_ms: 2.035208
+  type: 'test'
+  ...
+# Subtest: lastVerifiedAt rejects 2026-01-02T25:00:00Z with its exact fail-closed result
+ok 304 - lastVerifiedAt rejects 2026-01-02T25:00:00Z with its exact fail-closed result
+  ---
+  duration_ms: 0.129375
+  type: 'test'
+  ...
+# Subtest: lastVerifiedAt rejects 2026-01-02T00:60:00Z with its exact fail-closed result
+ok 305 - lastVerifiedAt rejects 2026-01-02T00:60:00Z with its exact fail-closed result
+  ---
+  duration_ms: 0.060833
+  type: 'test'
+  ...
+# Subtest: lastVerifiedAt rejects 2026-01-02T00:00:60Z with its exact fail-closed result
+ok 306 - lastVerifiedAt rejects 2026-01-02T00:00:60Z with its exact fail-closed result
+  ---
+  duration_ms: 0.067208
+  type: 'test'
+  ...
+# Subtest: lastVerifiedAt rejects 2026-01-02Z with its exact fail-closed result
+ok 307 - lastVerifiedAt rejects 2026-01-02Z with its exact fail-closed result
+  ---
+  duration_ms: 0.043
+  type: 'test'
+  ...
+# Subtest: lastVerifiedAt rejects 2026-01-02 00:00:00Z with its exact fail-closed result
+ok 308 - lastVerifiedAt rejects 2026-01-02 00:00:00Z with its exact fail-closed result
+  ---
+  duration_ms: 0.028584
+  type: 'test'
+  ...
+# Subtest: lastVerifiedAt rejects 2026-01-02T00:00:00.Z with its exact fail-closed result
+ok 309 - lastVerifiedAt rejects 2026-01-02T00:00:00.Z with its exact fail-closed result
+  ---
+  duration_ms: 0.024333
+  type: 'test'
+  ...
+# Subtest: asOf rejects 2026-02-30T00:00:00Z with its exact fail-closed result
+ok 310 - asOf rejects 2026-02-30T00:00:00Z with its exact fail-closed result
+  ---
+  duration_ms: 0.033417
+  type: 'test'
+  ...
+# Subtest: asOf rejects 2026-02-30T00:00:00.123Z with its exact fail-closed result
+ok 311 - asOf rejects 2026-02-30T00:00:00.123Z with its exact fail-closed result
+  ---
+  duration_ms: 0.025417
+  type: 'test'
+  ...
+# Subtest: asOf rejects 2026-02-29T00:00:00Z with its exact fail-closed result
+ok 312 - asOf rejects 2026-02-29T00:00:00Z with its exact fail-closed result
+  ---
+  duration_ms: 0.021917
+  type: 'test'
+  ...
+# Subtest: asOf rejects 2100-02-29T00:00:00Z with its exact fail-closed result
+ok 313 - asOf rejects 2100-02-29T00:00:00Z with its exact fail-closed result
+  ---
+  duration_ms: 0.064209
+  type: 'test'
+  ...
+# Subtest: asOf rejects 2026-04-31T00:00:00Z with its exact fail-closed result
+ok 314 - asOf rejects 2026-04-31T00:00:00Z with its exact fail-closed result
+  ---
+  duration_ms: 0.094792
+  type: 'test'
+  ...
+# Subtest: asOf rejects 2026-00-01T00:00:00Z with its exact fail-closed result
+ok 315 - asOf rejects 2026-00-01T00:00:00Z with its exact fail-closed result
+  ---
+  duration_ms: 0.033541
+  type: 'test'
+  ...
+# Subtest: asOf rejects 2026-13-01T00:00:00Z with its exact fail-closed result
+ok 316 - asOf rejects 2026-13-01T00:00:00Z with its exact fail-closed result
+  ---
+  duration_ms: 0.020417
+  type: 'test'
+  ...
+# Subtest: asOf rejects 2026-01-00T00:00:00Z with its exact fail-closed result
+ok 317 - asOf rejects 2026-01-00T00:00:00Z with its exact fail-closed result
+  ---
+  duration_ms: 0.019166
+  type: 'test'
+  ...
+# Subtest: asOf rejects 2026-01-32T00:00:00Z with its exact fail-closed result
+ok 318 - asOf rejects 2026-01-32T00:00:00Z with its exact fail-closed result
+  ---
+  duration_ms: 0.0225
+  type: 'test'
+  ...
+# Subtest: asOf rejects 2026-01-02T24:00:00Z with its exact fail-closed result
+ok 319 - asOf rejects 2026-01-02T24:00:00Z with its exact fail-closed result
+  ---
+  duration_ms: 0.019083
+  type: 'test'
+  ...
+# Subtest: asOf rejects 2026-01-02T25:00:00Z with its exact fail-closed result
+ok 320 - asOf rejects 2026-01-02T25:00:00Z with its exact fail-closed result
+  ---
+  duration_ms: 0.019875
+  type: 'test'
+  ...
+# Subtest: asOf rejects 2026-01-02T00:60:00Z with its exact fail-closed result
+ok 321 - asOf rejects 2026-01-02T00:60:00Z with its exact fail-closed result
+  ---
+  duration_ms: 0.0185
+  type: 'test'
+  ...
+# Subtest: asOf rejects 2026-01-02T00:00:60Z with its exact fail-closed result
+ok 322 - asOf rejects 2026-01-02T00:00:60Z with its exact fail-closed result
+  ---
+  duration_ms: 0.061375
+  type: 'test'
+  ...
+# Subtest: asOf rejects 2026-01-02Z with its exact fail-closed result
+ok 323 - asOf rejects 2026-01-02Z with its exact fail-closed result
+  ---
+  duration_ms: 0.019167
+  type: 'test'
+  ...
+# Subtest: asOf rejects 2026-01-02 00:00:00Z with its exact fail-closed result
+ok 324 - asOf rejects 2026-01-02 00:00:00Z with its exact fail-closed result
+  ---
+  duration_ms: 0.018291
+  type: 'test'
+  ...
+# Subtest: asOf rejects 2026-01-02T00:00:00.Z with its exact fail-closed result
+ok 325 - asOf rejects 2026-01-02T00:00:00.Z with its exact fail-closed result
+  ---
+  duration_ms: 0.01875
+  type: 'test'
+  ...
+# Subtest: occurredAt rejects 2026-02-30T00:00:00Z with its exact fail-closed result
+ok 326 - occurredAt rejects 2026-02-30T00:00:00Z with its exact fail-closed result
+  ---
+  duration_ms: 1.099458
+  type: 'test'
+  ...
+# Subtest: occurredAt rejects 2026-02-30T00:00:00.123Z with its exact fail-closed result
+ok 327 - occurredAt rejects 2026-02-30T00:00:00.123Z with its exact fail-closed result
+  ---
+  duration_ms: 0.05225
+  type: 'test'
+  ...
+# Subtest: occurredAt rejects 2026-02-29T00:00:00Z with its exact fail-closed result
+ok 328 - occurredAt rejects 2026-02-29T00:00:00Z with its exact fail-closed result
+  ---
+  duration_ms: 0.029625
+  type: 'test'
+  ...
+# Subtest: occurredAt rejects 2100-02-29T00:00:00Z with its exact fail-closed result
+ok 329 - occurredAt rejects 2100-02-29T00:00:00Z with its exact fail-closed result
+  ---
+  duration_ms: 0.025834
+  type: 'test'
+  ...
+# Subtest: occurredAt rejects 2026-04-31T00:00:00Z with its exact fail-closed result
+ok 330 - occurredAt rejects 2026-04-31T00:00:00Z with its exact fail-closed result
+  ---
+  duration_ms: 0.022709
+  type: 'test'
+  ...
+# Subtest: occurredAt rejects 2026-00-01T00:00:00Z with its exact fail-closed result
+ok 331 - occurredAt rejects 2026-00-01T00:00:00Z with its exact fail-closed result
+  ---
+  duration_ms: 0.124667
+  type: 'test'
+  ...
+# Subtest: occurredAt rejects 2026-13-01T00:00:00Z with its exact fail-closed result
+ok 332 - occurredAt rejects 2026-13-01T00:00:00Z with its exact fail-closed result
+  ---
+  duration_ms: 0.031
+  type: 'test'
+  ...
+# Subtest: occurredAt rejects 2026-01-00T00:00:00Z with its exact fail-closed result
+ok 333 - occurredAt rejects 2026-01-00T00:00:00Z with its exact fail-closed result
+  ---
+  duration_ms: 0.024333
+  type: 'test'
+  ...
+# Subtest: occurredAt rejects 2026-01-32T00:00:00Z with its exact fail-closed result
+ok 334 - occurredAt rejects 2026-01-32T00:00:00Z with its exact fail-closed result
+  ---
+  duration_ms: 0.02475
+  type: 'test'
+  ...
+# Subtest: occurredAt rejects 2026-01-02T24:00:00Z with its exact fail-closed result
+ok 335 - occurredAt rejects 2026-01-02T24:00:00Z with its exact fail-closed result
+  ---
+  duration_ms: 0.038209
+  type: 'test'
+  ...
+# Subtest: occurredAt rejects 2026-01-02T25:00:00Z with its exact fail-closed result
+ok 336 - occurredAt rejects 2026-01-02T25:00:00Z with its exact fail-closed result
+  ---
+  duration_ms: 0.0215
+  type: 'test'
+  ...
+# Subtest: occurredAt rejects 2026-01-02T00:60:00Z with its exact fail-closed result
+ok 337 - occurredAt rejects 2026-01-02T00:60:00Z with its exact fail-closed result
+  ---
+  duration_ms: 0.026416
+  type: 'test'
+  ...
+# Subtest: occurredAt rejects 2026-01-02T00:00:60Z with its exact fail-closed result
+ok 338 - occurredAt rejects 2026-01-02T00:00:60Z with its exact fail-closed result
+  ---
+  duration_ms: 0.020084
+  type: 'test'
+  ...
+# Subtest: occurredAt rejects 2026-01-02Z with its exact fail-closed result
+ok 339 - occurredAt rejects 2026-01-02Z with its exact fail-closed result
+  ---
+  duration_ms: 0.020667
+  type: 'test'
+  ...
+# Subtest: occurredAt rejects 2026-01-02 00:00:00Z with its exact fail-closed result
+ok 340 - occurredAt rejects 2026-01-02 00:00:00Z with its exact fail-closed result
+  ---
+  duration_ms: 0.021709
+  type: 'test'
+  ...
+# Subtest: occurredAt rejects 2026-01-02T00:00:00.Z with its exact fail-closed result
+ok 341 - occurredAt rejects 2026-01-02T00:00:00.Z with its exact fail-closed result
+  ---
+  duration_ms: 0.020166
+  type: 'test'
+  ...
+# Subtest: valid leap day 2024-02-29T23:59:59Z is accepted as lastVerifiedAt and asOf
+ok 342 - valid leap day 2024-02-29T23:59:59Z is accepted as lastVerifiedAt and asOf
+  ---
+  duration_ms: 0.924375
+  type: 'test'
+  ...
+# Subtest: valid leap day 2024-02-29T23:59:59Z is accepted as a trigger event
+ok 343 - valid leap day 2024-02-29T23:59:59Z is accepted as a trigger event
+  ---
+  duration_ms: 0.155042
+  type: 'test'
+  ...
+# Subtest: valid leap day 2024-02-29T23:59:59.1Z is accepted as lastVerifiedAt and asOf
+ok 344 - valid leap day 2024-02-29T23:59:59.1Z is accepted as lastVerifiedAt and asOf
+  ---
+  duration_ms: 0.061
+  type: 'test'
+  ...
+# Subtest: valid leap day 2024-02-29T23:59:59.1Z is accepted as a trigger event
+ok 345 - valid leap day 2024-02-29T23:59:59.1Z is accepted as a trigger event
+  ---
+  duration_ms: 0.053792
+  type: 'test'
+  ...
+# Subtest: valid leap day 2024-02-29T23:59:59.123Z is accepted as lastVerifiedAt and asOf
+ok 346 - valid leap day 2024-02-29T23:59:59.123Z is accepted as lastVerifiedAt and asOf
+  ---
+  duration_ms: 0.619417
+  type: 'test'
+  ...
+# Subtest: valid leap day 2024-02-29T23:59:59.123Z is accepted as a trigger event
+ok 347 - valid leap day 2024-02-29T23:59:59.123Z is accepted as a trigger event
+  ---
+  duration_ms: 0.090917
+  type: 'test'
+  ...
+# Subtest: valid leap day 2024-02-29T23:59:59.123456Z is accepted as lastVerifiedAt and asOf
+ok 348 - valid leap day 2024-02-29T23:59:59.123456Z is accepted as lastVerifiedAt and asOf
+  ---
+  duration_ms: 0.065167
+  type: 'test'
+  ...
+# Subtest: valid leap day 2024-02-29T23:59:59.123456Z is accepted as a trigger event
+ok 349 - valid leap day 2024-02-29T23:59:59.123456Z is accepted as a trigger event
+  ---
+  duration_ms: 0.060209
+  type: 'test'
+  ...
+# Subtest: valid leap day 2000-02-29T23:59:59Z is accepted as lastVerifiedAt and asOf
+ok 350 - valid leap day 2000-02-29T23:59:59Z is accepted as lastVerifiedAt and asOf
+  ---
+  duration_ms: 0.052
+  type: 'test'
+  ...
+# Subtest: valid leap day 2000-02-29T23:59:59Z is accepted as a trigger event
+ok 351 - valid leap day 2000-02-29T23:59:59Z is accepted as a trigger event
+  ---
+  duration_ms: 0.051333
+  type: 'test'
+  ...
+# Subtest: valid leap day 2000-02-29T23:59:59.1Z is accepted as lastVerifiedAt and asOf
+ok 352 - valid leap day 2000-02-29T23:59:59.1Z is accepted as lastVerifiedAt and asOf
+  ---
+  duration_ms: 0.048458
+  type: 'test'
+  ...
+# Subtest: valid leap day 2000-02-29T23:59:59.1Z is accepted as a trigger event
+ok 353 - valid leap day 2000-02-29T23:59:59.1Z is accepted as a trigger event
+  ---
+  duration_ms: 0.051375
+  type: 'test'
+  ...
+# Subtest: valid leap day 2000-02-29T23:59:59.123Z is accepted as lastVerifiedAt and asOf
+ok 354 - valid leap day 2000-02-29T23:59:59.123Z is accepted as lastVerifiedAt and asOf
+  ---
+  duration_ms: 0.050417
+  type: 'test'
+  ...
+# Subtest: valid leap day 2000-02-29T23:59:59.123Z is accepted as a trigger event
+ok 355 - valid leap day 2000-02-29T23:59:59.123Z is accepted as a trigger event
+  ---
+  duration_ms: 0.135083
+  type: 'test'
+  ...
+# Subtest: valid leap day 2000-02-29T23:59:59.123456Z is accepted as lastVerifiedAt and asOf
+ok 356 - valid leap day 2000-02-29T23:59:59.123456Z is accepted as lastVerifiedAt and asOf
+  ---
+  duration_ms: 0.069208
+  type: 'test'
+  ...
+# Subtest: valid leap day 2000-02-29T23:59:59.123456Z is accepted as a trigger event
+ok 357 - valid leap day 2000-02-29T23:59:59.123456Z is accepted as a trigger event
+  ---
+  duration_ms: 0.044417
+  type: 'test'
+  ...
+1..357
+# tests 357
+# suites 0
+# pass 357
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1926.369041
