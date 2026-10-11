@@ -250,6 +250,9 @@ function parseExplicitZoneInstant(value: string): number | undefined {
   const offsetSign = zone[0] === '-' ? -1 : 1;
   const offsetHours = Number(zone.slice(1, 3));
   const offsetMinutes = Number(zone.slice(4, 6));
+  if (offsetHours > 23 || offsetMinutes > 59) {
+    return undefined;
+  }
   return naiveMs - offsetSign * (offsetHours * 60 + offsetMinutes) * 60_000;
 }
 
