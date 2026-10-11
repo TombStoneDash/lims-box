@@ -27,9 +27,9 @@
  * When more than one comment applies to the same result, this module does
  * not decide which one "wins" -- it renders every requested comment and
  * returns them in a single deterministic order: ascending declared
- * priority, then ascending code. That ordering depends only on the declared
- * table and the set of requested codes, never on request order or wall-clock
- * time, so the same inputs always produce the same sequence.
+ * priority, then ascending code, then ascending rendered text. That ordering
+ * depends only on the declared table and rendered comments, never on request
+ * order or wall-clock time, so the same inputs always produce the same sequence.
  */
 
 export type CommentCodeDefinition = {
@@ -236,9 +236,12 @@ export function renderResultComment(table: CommentTable, request: ResultCommentR
 
   const resolved = new Map<string, string>();
   for (const placeholder of definition.placeholders) {
-    const value = request.values[placeholder];
-    if (value === undefined) {
+    if (!Object.prototype.hasOwnProperty.call(request.values, placeholder)) {
       throw new CommentRenderError('missing-placeholder-value');
+    }
+    const value = request.values[placeholder];
+    if (typeof value !== 'string') {
+      throw new CommentRenderError('request-malformed');
     }
     const trimmed = value.trim();
     if (trimmed.length === 0) {
@@ -265,13 +268,16 @@ function compareRendered(a: RenderedResultComment, b: RenderedResultComment): nu
   if (a.code !== b.code) {
     return a.code < b.code ? -1 : 1;
   }
+  if (a.text !== b.text) {
+    return a.text < b.text ? -1 : 1;
+  }
   return 0;
 }
 
 /**
  * Render every requested comment code and return them in a single
- * deterministic order: ascending declared priority, then ascending code.
- * The order depends only on the declared table and the requested codes,
+ * deterministic order: ascending declared priority, then ascending code,
+ * then ascending rendered text. The order depends only on the rendered comments,
  * never on the order requests were submitted in. Any single request that
  * fails to render (unknown code, missing placeholder, etc.) fails the whole
  * call rather than silently dropping that comment.
