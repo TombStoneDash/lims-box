@@ -20,10 +20,10 @@
  *                                limit
  *   rejected                   - the outlier count exceeds the declared
  *                                "more subjects" limit, or the input itself
- *                                cannot be trusted (too few subjects, an
- *                                inverted interval, a unit mismatch, a
- *                                malformed rule, or a subject not declared
- *                                healthy)
+ *                                cannot be trusted (too few subjects, a
+ *                                duplicate subject id, an inverted interval,
+ *                                a unit mismatch, a malformed rule, or a
+ *                                subject not declared healthy)
  *
  * Every failure mode defaults to `rejected` rather than guessing in the
  * interval's favor.
@@ -65,6 +65,7 @@ export type ReferenceIntervalReasonCode =
   | 'interval-inverted'
   | 'insufficient-subjects'
   | 'subject-malformed'
+  | 'subject-duplicate'
   | 'subject-not-declared-healthy'
   | 'unit-mismatch'
   | 'outliers-within-verified-limit'
@@ -101,6 +102,7 @@ const REASON_DECISIONS: Record<ReferenceIntervalReasonCode, ReferenceIntervalDec
   'interval-inverted': 'rejected',
   'insufficient-subjects': 'rejected',
   'subject-malformed': 'rejected',
+  'subject-duplicate': 'rejected',
   'subject-not-declared-healthy': 'rejected',
   'unit-mismatch': 'rejected',
   'outliers-within-verified-limit': 'verified',
@@ -115,6 +117,7 @@ const REASON_MESSAGES: Record<ReferenceIntervalReasonCode, string> = {
   'interval-inverted': 'The proposed reference interval lower bound is greater than its upper bound.',
   'insufficient-subjects': `Fewer than the declared minimum (never fewer than ${MINIMUM_SUBJECT_COUNT}) reference subject results were supplied.`,
   'subject-malformed': 'A subject result entry is missing a required field or has the wrong shape.',
+  'subject-duplicate': 'A subject result entry has the same subject id (ignoring surrounding whitespace) as another entry.',
   'subject-not-declared-healthy': 'A subject result is not declared from a healthy reference subject.',
   'unit-mismatch': "A subject result's unit does not match the proposed reference interval's unit.",
   'outliers-within-verified-limit': 'The outlier count is within the declared verified limit.',
@@ -201,10 +204,11 @@ function rejected(reasonCode: ReferenceIntervalReasonCode, totalSubjects = 0): R
  * Checks run in a fixed order and the first failure wins: the rule's shape,
  * the interval's unit, the interval's bounds, interval inversion, subject
  * count against the declared (never-below-twenty) minimum, each subject's
- * shape, each subject's declared-healthy flag, then each subject's unit
- * against the interval's unit. Only once every check passes are outliers
- * counted and the declared acceptance rule applied to decide verified,
- * verify_with_more_subjects, or rejected.
+ * shape, each subject's id for duplicates (compared after trimming
+ * surrounding whitespace), each subject's declared-healthy flag, then each
+ * subject's unit against the interval's unit. Only once every check passes
+ * are outliers counted and the declared acceptance rule applied to decide
+ * verified, verify_with_more_subjects, or rejected.
  */
 export function evaluateReferenceIntervalVerification(
   interval: ReferenceIntervalBounds,
@@ -240,6 +244,15 @@ export function evaluateReferenceIntervalVerification(
   }
 
   const validatedSubjects = subjects as ReferenceIntervalSubjectResult[];
+
+  const seenSubjectIds = new Set<string>();
+  for (const subject of validatedSubjects) {
+    const trimmedSubjectId = subject.subjectId.trim();
+    if (seenSubjectIds.has(trimmedSubjectId)) {
+      return rejected('subject-duplicate', subjects.length);
+    }
+    seenSubjectIds.add(trimmedSubjectId);
+  }
 
   for (const subject of validatedSubjects) {
     if (subject.healthyDeclared !== true) {
