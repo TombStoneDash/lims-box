@@ -58,7 +58,8 @@ function buildRows() {
   });
   const escalationRows = DEMO_FIXTURES.escalations.map(({ situation, input }) => {
     const outcome = planNextEscalationContact(input);
-    return { situation, ...outcome, targetRole: outcome.targetContact?.role ?? null, waitMinutes: Number(outcome.waitMinutes.toFixed(1)) };
+    return { situation, ...outcome, targetContact: outcome.targetContact ? { ...outcome.targetContact } : null,
+      targetRole: outcome.targetContact?.role ?? null, waitMinutes: Number(outcome.waitMinutes.toFixed(1)) };
   });
   return { repeatRows, logRows, escalationRows };
 }
