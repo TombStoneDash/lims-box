@@ -216,10 +216,10 @@ test('a later-expiring lot absorbs usage only after earlier-expiring lots are ac
   // 1/day * 5 days = 5 consumable by lot-near's expiry; 10 on hand => 5 left over.
   const near = result.lotFlags.find((flag) => flag.lotId === 'lot-near')!;
   assert.equal(near.expiredQuantity, 5);
-  // By lot-far's expiry (day 6): 1/day * 6 days = 6 consumable total, minus 10 already
-  // allocated to lot-near => none left for lot-far, so all 10 of lot-far expire.
+  // By lot-far's expiry (day 6): 1/day * 6 days = 6 consumable total, minus 5 consumed
+  // from lot-near => 1 consumed from lot-far, so 9 of lot-far expire.
   const far = result.lotFlags.find((flag) => flag.lotId === 'lot-far')!;
-  assert.equal(far.expiredQuantity, 10);
+  assert.equal(far.expiredQuantity, 9);
   assert.equal(far.willExpireUnused, true);
 });
 
