@@ -133,6 +133,22 @@ function parseUtcInstant(value: unknown): number | undefined {
   if (typeof value !== 'string' || !UTC_INSTANT_PATTERN.test(value)) {
     return undefined;
   }
+  const year = Number(value.slice(0, 4));
+  const month = Number(value.slice(5, 7));
+  const day = Number(value.slice(8, 10));
+  const hour = Number(value.slice(11, 13));
+  const minute = Number(value.slice(14, 16));
+  const second = Number(value.slice(17, 19));
+  const leapYear = year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
+  const daysInMonth = [31, leapYear ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+  if (
+    year < 1 ||
+    month < 1 || month > 12 ||
+    day < 1 || day > daysInMonth[month - 1] ||
+    hour > 23 || minute > 59 || second > 59
+  ) {
+    return undefined;
+  }
   const epochMs = Date.parse(value);
   return Number.isFinite(epochMs) ? epochMs : undefined;
 }
@@ -157,7 +173,9 @@ function isStructurallyValidVersion(raw: unknown): raw is TestDefinitionVersion 
     return false;
   }
   const bounds = interval as Record<string, unknown>;
-  return isFiniteNumber(bounds.lowerBound) && isFiniteNumber(bounds.upperBound);
+  return isFiniteNumber(bounds.lowerBound) &&
+    isFiniteNumber(bounds.upperBound) &&
+    bounds.lowerBound <= bounds.upperBound;
 }
 
 type ParsedRange = { fromMs: number; toMs: number };
