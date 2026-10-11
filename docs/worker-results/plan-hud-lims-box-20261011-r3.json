@@ -1,0 +1,47 @@
+{
+  "task_id": "plan-hud-lims-box-20261011-r3",
+  "run_id": "plan-hud-lims-box-20261011-r3-df5126df-c1eb-44f6-aaa3-8affb06c7d9a",
+  "host_id": "DESKTOP-1TV907A",
+  "host_role": "lenovo",
+  "repo": "TombStoneDash/lims-box",
+  "branch_or_worktree": "codex-lenovo/plan-hud-lims-box-20261011-r3",
+  "owner": "user-assigned isolated read-only planning lane",
+  "base_revision": "73d7f774172968d6eef9b06e84e01178b2a573be",
+  "objective": "Verify six nonduplicated user-noticeable repair jobs without product edits",
+  "requested_model": "not-exposed",
+  "requested_reasoning_effort": "not-exposed",
+  "client_effective_model": "not-exposed",
+  "provider_returned_model_id": "not-exposed",
+  "model_evidence_source": "not-exposed",
+  "route_id": "not-exposed",
+  "started_at": "2026-10-11T07:07:00Z",
+  "started_at_precision": "approximate; first exact tool timestamp not recorded",
+  "ended_at": "2026-10-11T07:15:37.2191015Z",
+  "terminal_state": "PASS",
+  "verification": [
+    "npm ci --ignore-scripts --cache .npm-cache --no-audit --no-fund: exit 0, 459 packages; cache subsequently moved under ignored node_modules within worktree",
+    "Six existing lane/consumer test files: exit 0, 146 pass, 0 fail, 0 skipped; exact command in plan and output retained",
+    "node --import tsx docs/plans/lims-box-r3-reproduce.mjs: exit 0, all six defects reproduced",
+    "3 open issues reviewed oldest first; 8 open PRs and 55 merged since 2026-10-09 inspected; zero selected path overlaps; open planner PR 604 proposals excluded",
+    "All selected source/test paths exist; git diff --exit-code and git diff --check: exit 0; tracked files unchanged"
+  ],
+  "artifacts": [
+    "docs/plans/lims-box-six-jobs-20261011-r3.md",
+    "docs/plans/lims-box-r3-reproduce.mjs",
+    "docs/plans/lims-box-r3-tests.txt",
+    "docs/plans/lims-box-r3-issues.json",
+    "docs/plans/lims-box-r3-open-prs.json",
+    "docs/plans/lims-box-r3-merged-prs.json"
+  ],
+  "usage_delta": "not-exposed",
+  "blocker": "none for planning; implementation ownership remains unassigned",
+  "rollback": "Remove only planner artifacts if discarded; product files were not changed",
+  "next_safe_action": "Runner reviews and commits planning artifacts; implementations recheck PR coverage and obtain ownership; serialize jobs 1/2 and 4/5",
+  "constraints": [
+    "No product or existing test edits",
+    "No commit or push",
+    "No external writes, email, or production actions",
+    "No writes outside assigned repository"
+  ],
+  "canonical_receipt_location": "Repository-local docs/worker-results used per existing layout; no external host-configured results path was accessed under repository-only scope"
+}
