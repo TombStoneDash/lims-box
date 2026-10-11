@@ -44,12 +44,39 @@ function escapeCsvCell(value: string): string {
     : hardened;
 }
 
+function compareText(left: string, right: string): number {
+  return left < right ? -1 : left > right ? 1 : 0;
+}
+
+function auditInstant(value: string): number {
+  // The existing minute format has no zone; interpret it as UTC consistently.
+  const normalized = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/u.test(value)
+    ? `${value.replace(' ', 'T')}:00Z`
+    : value;
+  return Date.parse(normalized);
+}
+
 function compareAuditEvents(left: AuditFixture, right: AuditFixture): number {
-  if (left.at !== right.at) {
-    return left.at < right.at ? -1 : 1;
+  const leftInstant = auditInstant(left.at);
+  const rightInstant = auditInstant(right.at);
+  const leftValid = Number.isFinite(leftInstant);
+  const rightValid = Number.isFinite(rightInstant);
+
+  // Valid instants come first. Invalid values follow in raw timestamp order.
+  if (leftValid !== rightValid) return leftValid ? -1 : 1;
+  if (leftValid && leftInstant !== rightInstant) return leftInstant < rightInstant ? -1 : 1;
+  if (!leftValid) {
+    const timestampOrder = compareText(left.at, right.at);
+    if (timestampOrder) return timestampOrder;
   }
-  if (left.id !== right.id) {
-    return left.id < right.id ? -1 : 1;
+
+  const idOrder = compareText(left.id, right.id);
+  if (idOrder) return idOrder;
+
+  // Complete the order for duplicate IDs without changing the exported text.
+  for (const field of ['at', 'actorId', 'action', 'object', 'note'] as const) {
+    const fieldOrder = compareText(left[field], right[field]);
+    if (fieldOrder) return fieldOrder;
   }
   return 0;
 }
