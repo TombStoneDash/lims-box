@@ -1,0 +1,59 @@
+(node:317584) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/TombstoneDash/codex-lane/worktrees/hud-review-lims-box-650/.review-650/head/tests/ohworks/linearity.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to C:\TombstoneDash\codex-lane\worktrees\hud-review-lims-box-650\.review-650\head\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ a perfectly linear, in-limits fit passes with slope 1, intercept 0, correlation 1 (2.5574ms)
+✔ slope exactly at the declared max boundary passes (inclusive), recovery exactly at max also passes (2.7285ms)
+✔ slope exactly at the declared min boundary passes (inclusive), recovery exactly at min also passes (0.4382ms)
+✔ a slope above the declared max fails as slope-out-of-range (0.3239ms)
+✔ a slope below the declared min fails as slope-out-of-range (0.3333ms)
+✔ slope-out-of-range is reported even when intercept is also out of range (0.2543ms)
+✔ intercept exactly at the declared max boundary passes (inclusive) (0.6038ms)
+✔ an intercept above the declared max fails as intercept-out-of-range (0.3073ms)
+✔ intercept-out-of-range is reported even when correlation is also below minimum (0.2917ms)
+✔ a correlation at or above the declared minimum passes (0.3511ms)
+✔ a correlation below the declared minimum fails as correlation-below-minimum (0.2133ms)
+✔ correlation-below-minimum is reported even when a level recovery is also out of range (0.1457ms)
+✔ every level recovery exactly at the declared max boundary passes (inclusive) (0.1501ms)
+✔ a single level recovery above the declared max fails as recovery-out-of-range, naming that level (0.1617ms)
+✔ a level recovery below the declared min fails as recovery-out-of-range (0.136ms)
+✔ fewer than five levels is blocked as insufficient-levels (0.9236ms)
+✔ zero levels is blocked as insufficient-levels (0.1499ms)
+✔ a NaN observed value is blocked as non-finite-value (0.1646ms)
+✔ an Infinity expected value is blocked as non-finite-value (0.1426ms)
+✔ a zero expected value that produces a non-finite recovery is blocked as non-finite-value (0.1563ms)
+✔ two levels sharing a level id are blocked as duplicate-level (0.1411ms)
+✔ two levels sharing an expected value are blocked as duplicate-level (0.1256ms)
+✔ a non-array levels input throws a sanitized typed error (0.7208ms)
+✔ an object (non-array) levels input throws a sanitized typed error (0.218ms)
+✔ a level entry missing a required field throws a sanitized typed error (0.2944ms)
+✔ a level entry with a non-number expected value throws a sanitized typed error (0.303ms)
+✔ a level entry with an empty-string level id throws a sanitized typed error (0.2895ms)
+✔ a null acceptance-limits input throws a sanitized typed error (1.3142ms)
+✔ acceptance limits missing a required field throw a sanitized typed error (0.2099ms)
+✔ acceptance limits with an inverted slope range throw a sanitized typed error (0.2649ms)
+✔ acceptance limits with an inverted recovery range throw a sanitized typed error (0.2461ms)
+✔ a typed input error message never echoes any submitted data (0.4448ms)
+✔ the result is deterministic across repeated calls with equivalent input (0.4481ms)
+✔ the result object is frozen (0.1593ms)
+✔ the levelRecoveries array and its entries are frozen (0.1457ms)
+✔ evaluateLinearityVerification does not mutate its levels or limits input (0.1494ms)
+✔ every reason code has a non-empty, privacy-safe explanation (0.3106ms)
+✔ explanations are stable across repeated calls for the same code (0.0944ms)
+✔ the reason field on a result matches explainLinearityReason for its reasonCode (0.1147ms)
+✔ six method validation gate scenarios match the real evaluator on exported fixtures (3.6441ms)
+✔ three linearity sets match the real evaluator on exported fixtures (0.917ms)
+✔ three method comparison sets match the real evaluator on exported fixtures, including a caught MethodComparisonError (1.0625ms)
+✔ the builder never throws out of any error row and headline counts are correct (2.8684ms)
+✔ every explanation string is non-empty and every fabricated identifier is prefixed (1.7068ms)
+✔ builder is deterministic and isolated from fixture and row mutation, without ambient inputs (1.2192ms)
+✔ the panel is a read-only server component that imports the builder, mentions fabricated, and avoids forbidden compliance claims (0.5986ms)
+✔ the QC page imports and renders MethodPerformancePanel exactly once (0.5901ms)
+ℹ tests 47
+ℹ suites 0
+ℹ pass 47
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 83.2931

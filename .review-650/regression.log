@@ -1,0 +1,12 @@
+(node:315624) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/TombstoneDash/codex-lane/worktrees/hud-review-lims-box-650/.review-650/head/lib/ohworks-linearity.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to C:\TombstoneDash\codex-lane\worktrees\hud-review-lims-box-650\.review-650\head\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:315624) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/TombstoneDash/codex-lane/worktrees/hud-review-lims-box-650/.review-650/base/lib/ohworks-linearity.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to C:\TombstoneDash\codex-lane\worktrees\hud-review-lims-box-650\.review-650\base\package.json.
+{"offset":5e-10,"head":"fail","base":"pass","intercept":4.999999999999999e-10}
+{"offset":-5e-10,"head":"fail","base":"pass","intercept":-4.999999999999999e-10}
+{"offset":1e-10,"head":"pass","base":"pass","intercept":1.0000000000000007e-10}
+{"offset":-1e-10,"head":"pass","base":"pass","intercept":-9.999999999999965e-11}
+{"offset":0,"head":"pass","base":"pass","intercept":0}
