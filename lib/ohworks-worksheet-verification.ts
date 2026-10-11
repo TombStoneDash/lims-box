@@ -265,7 +265,15 @@ function sameEventContent(a: WorksheetEventInput, b: WorksheetEventInput): boole
 }
 
 function isUtcTimestamp(value: string): boolean {
-  return value.endsWith('Z') && Number.isFinite(Date.parse(value));
+  const fields = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.\d+)?Z$/.exec(value);
+  if (!fields) return false;
+
+  const [, year, month, day, hour, minute, second] = fields.map(Number);
+  const leapYear = year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
+  const daysInMonth = [31, leapYear ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+  // Date.parse normalizes impossible dates and 24:00; validate the literal fields.
+  return month >= 1 && month <= 12 && day >= 1 && day <= daysInMonth[month - 1]
+    && hour <= 23 && minute <= 59 && second <= 59;
 }
 
 /** The actor id that recorded this worksheet's (unique, non-recurring) `prepare` event, if any. */
@@ -351,8 +359,11 @@ export function applyWorksheetVerificationEvent(
   if (!Number.isFinite(Date.parse(rawEvent.occurredAt))) {
     return block('timestamp-invalid');
   }
-  if (!isUtcTimestamp(rawEvent.occurredAt)) {
+  if (!rawEvent.occurredAt.endsWith('Z')) {
     return block('timestamp-not-utc');
+  }
+  if (!isUtcTimestamp(rawEvent.occurredAt)) {
+    return block('timestamp-invalid');
   }
 
   const duplicate = history.find((entry) => entry.eventId === rawEvent.eventId);
