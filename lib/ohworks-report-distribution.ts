@@ -204,7 +204,7 @@ function validateMatrix(raw: unknown): DistributionRule[] {
     if (!isPlainObject(entry)) {
       fail('rule-malformed');
     }
-    if (!isNonEmptyString(entry.recipientRole)) {
+    if (!isNonEmptyString(entry.recipientRole) || entry.recipientRole.trim().length === 0) {
       fail('rule-malformed');
     }
     if (!isNonEmptyString(entry.channelType)) {
