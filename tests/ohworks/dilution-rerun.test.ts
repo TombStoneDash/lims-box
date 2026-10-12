@@ -47,6 +47,7 @@ const ALL_REASON_CODES: DilutionRerunReasonCode[] = [
   'unknown-analyte',
   'measuring-range-unit-mismatch',
   'invalid-ladder',
+  'applied-dilution-exceeds-maximum',
   'within-range',
   'below-range',
   'max-reruns-exceeded',
@@ -55,6 +56,38 @@ const ALL_REASON_CODES: DilutionRerunReasonCode[] = [
 ];
 
 const FORBIDDEN_WORDS = [/approved/i, /compliant/i, /accredited/i, /releasable/i];
+
+for (const rawReading of [-5, 50, 150]) {
+  test(`an applied factor above the maximum blocks reading ${rawReading} without reportable values`, () => {
+    const request = baselineRequest();
+    request.result.rawReading = rawReading;
+    request.result.appliedDilutionFactor = 100;
+    const result = evaluateDilutionRerun(request);
+    assert.deepEqual(result, {
+      decision: 'block',
+      reasonCode: 'applied-dilution-exceeds-maximum',
+      reason: 'The already-applied dilution factor exceeds the declared maximum dilution factor.',
+      correctedResult: null,
+      nextDilutionFactor: null,
+      greaterThanLimit: null,
+    });
+    assert.deepEqual(evaluateDilutionRerun(clone(request)), result);
+  });
+}
+
+for (const rawReading of [-5, 50]) {
+  test(`an applied factor equal to the maximum still reports reading ${rawReading}`, () => {
+    const request = baselineRequest();
+    request.result.rawReading = rawReading;
+    request.result.appliedDilutionFactor = request.maxDilutionFactor;
+    const result = evaluateDilutionRerun(request);
+    assert.equal(result.decision, 'report_as_is');
+    assert.equal(result.reasonCode, rawReading < 0 ? 'below-range' : 'within-range');
+    assert.equal(result.correctedResult, rawReading * 20);
+    assert.equal(result.nextDilutionFactor, null);
+    assert.equal(result.greaterThanLimit, null);
+  });
+}
 
 test('a reading within the measuring range reports as-is with the corrected result', () => {
   const result = evaluateDilutionRerun(baselineRequest());
