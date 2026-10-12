@@ -64,6 +64,8 @@ export type CrossmatchHoldDecision = {
  * requestedUnitCount is validated but never changes the status: anything
  * other than a whole number of at least 1 throws instead of silently
  * proceeding with a nonsensical order.
+ * antibodyScreenResult must be exactly pending, positive, or negative;
+ * malformed results throw before any disposition is returned.
  */
 export function evaluateCrossmatchHold(input: CrossmatchHoldInput): CrossmatchHoldDecision {
   if (!Number.isInteger(input.requestedUnitCount) || input.requestedUnitCount < 1) {
@@ -76,6 +78,14 @@ export function evaluateCrossmatchHold(input: CrossmatchHoldInput): CrossmatchHo
 
   if (!Number.isFinite(input.maxSampleAgeHoursForType) || input.maxSampleAgeHoursForType <= 0) {
     throw new Error('maxSampleAgeHoursForType must be a finite positive number');
+  }
+
+  if (
+    input.antibodyScreenResult !== 'pending' &&
+    input.antibodyScreenResult !== 'positive' &&
+    input.antibodyScreenResult !== 'negative'
+  ) {
+    throw new Error('antibodyScreenResult must be pending, positive, or negative');
   }
 
   if (input.sampleAgeHours > input.maxSampleAgeHoursForType) {
