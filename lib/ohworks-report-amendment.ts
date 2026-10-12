@@ -28,6 +28,8 @@
  *                                   bounded reason code list
  *   5. an unauthorized author    — the author role is not on the bounded
  *                                   list of roles with amend authority
+ *   6. an out-of-order timestamp — the instant is not strictly later than
+ *                                   the previous accepted amendment
  *
  * Structurally unusable input (not an array, an amendment missing a
  * required field, or an invalid reference token) throws a typed error
@@ -96,7 +98,8 @@ export type AmendmentChainReasonCode =
   | 'version-skipped'
   | 'version-retracted'
   | 'reason-code-unknown'
-  | 'author-role-unauthorized';
+  | 'author-role-unauthorized'
+  | 'timestamp-out-of-order';
 
 const REASON_MESSAGES: Record<AmendmentChainReasonCode, string> = {
   'version-reused': 'The declared version number already appears earlier in this amendment chain.',
@@ -104,6 +107,7 @@ const REASON_MESSAGES: Record<AmendmentChainReasonCode, string> = {
   'version-retracted': 'The declared superseded version is not the current effective version.',
   'reason-code-unknown': 'The reason code is not on the declared, bounded reason code list.',
   'author-role-unauthorized': 'The author role is not on the bounded list of roles with amend authority.',
+  'timestamp-out-of-order': 'The amendment timestamp is not strictly later than the previous accepted amendment.',
 };
 
 /** Deterministic, privacy-safe human-readable text for a reason code, suitable for UI display. */
@@ -117,6 +121,7 @@ const REASON_NEXT_ACTIONS: Record<AmendmentChainReasonCode, string> = {
   'version-retracted': 'Resupply a superseded version equal to the current effective version.',
   'reason-code-unknown': 'Resupply a reason code from the declared reason code list.',
   'author-role-unauthorized': 'Resubmit this amendment from a role with amend authority.',
+  'timestamp-out-of-order': 'Resupply a timestamp representing an instant strictly later than the previous accepted amendment.',
 };
 
 /** Deterministic, privacy-safe next corrective action for a reason code, suitable for UI display alongside the explanation. */
@@ -243,6 +248,7 @@ export function applyReportAmendments(reportReferenceToken: unknown, rawAmendmen
 
   const usedVersionNumbers = new Set<number>([BASELINE_VERSION]);
   let currentEffectiveVersion = BASELINE_VERSION;
+  let previousAcceptedEpoch: number | undefined;
   const supersedeChain: ReportVersionRecord[] = [];
 
   for (let index = 0; index < amendments.length; index += 1) {
@@ -271,8 +277,14 @@ export function applyReportAmendments(reportReferenceToken: unknown, rawAmendmen
       return invalid('author-role-unauthorized');
     }
 
+    const amendmentEpoch = Date.parse(amendment.timestamp);
+    if (previousAcceptedEpoch !== undefined && amendmentEpoch <= previousAcceptedEpoch) {
+      return invalid('timestamp-out-of-order');
+    }
+
     usedVersionNumbers.add(amendment.versionNumber);
     currentEffectiveVersion = amendment.versionNumber;
+    previousAcceptedEpoch = amendmentEpoch;
     supersedeChain.push({
       versionNumber: amendment.versionNumber,
       supersedesVersion: amendment.supersedesVersion,
