@@ -71,6 +71,16 @@ test('a fully completed, correctly ordered, current chain is qualified', () => {
   assert.equal(result.reasonCode, 'fully-qualified');
 });
 
+test('an opaque instrument id with spaces qualifies without normalization', () => {
+  const instrumentId = '  instrument synthetic 001  ';
+  const entry = record({ instrumentId });
+  const result = evaluateEquipmentQualificationGate(registryOf(entry), instrumentId, '2026-01-10T00:00:00.000Z');
+  assert.equal(result.decision, 'qualified');
+  assert.equal(result.reasonCode, 'fully-qualified');
+  assert.equal(result.instrumentId, instrumentId);
+  assert.equal(entry.instrumentId, instrumentId);
+});
+
 test('a run at the exact instant performance qualification completed is qualified', () => {
   const entry = record();
   const result = evaluateEquipmentQualificationGate(registryOf(entry), entry.instrumentId, entry.performance!.completedAt);
@@ -417,6 +427,35 @@ test('an empty-string instrument id throws a sanitized typed error', () => {
       return true;
     },
   );
+});
+
+test('a whitespace-only requested instrument id throws a sanitized typed error', () => {
+  for (const instrumentId of ['   ', '\t\r\n']) {
+    const entry = record({ instrumentId });
+    assert.throws(
+      () => evaluateEquipmentQualificationGate(registryOf(entry), instrumentId, '2026-01-10T00:00:00.000Z'),
+      (error: unknown) => {
+        assert.ok(error instanceof QualificationInputError);
+        assert.equal(error.code, 'instrument-id-malformed');
+        return true;
+      },
+    );
+  }
+});
+
+test('a whitespace-only registry record instrumentId throws a sanitized typed error', () => {
+  const requestedId = 'instrument-synthetic-001';
+  for (const instrumentId of ['   ', '\t\r\n']) {
+    const entry = record({ instrumentId });
+    assert.throws(
+      () => evaluateEquipmentQualificationGate({ [requestedId]: entry }, requestedId, '2026-01-10T00:00:00.000Z'),
+      (error: unknown) => {
+        assert.ok(error instanceof QualificationInputError);
+        assert.equal(error.code, 'instrument-record-malformed');
+        return true;
+      },
+    );
+  }
 });
 
 test('a non-string run timestamp throws a sanitized typed error', () => {
