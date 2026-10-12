@@ -264,8 +264,10 @@ function toFiniteNumber(rawValue: unknown): number | undefined {
   if (typeof rawValue === 'number') {
     return Number.isFinite(rawValue) ? rawValue : undefined;
   }
-  if (typeof rawValue === 'string' && rawValue.trim().length > 0) {
-    const parsed = Number(rawValue);
+  if (typeof rawValue === 'string') {
+    const trimmed = rawValue.trim();
+    if (!/^[+-]?(?:\d+\.?\d*|\.\d+)(?:[eE][+-]?\d+)?$/.test(trimmed)) return undefined;
+    const parsed = Number(trimmed);
     return Number.isFinite(parsed) ? parsed : undefined;
   }
   return undefined;

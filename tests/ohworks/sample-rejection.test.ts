@@ -177,6 +177,29 @@ test('a numeric-looking string volume is accepted as numeric', () => {
   assert.equal(decisionFor(decisions, 'sample-synthetic-1').status, 'ACCEPT');
 });
 
+for (const field of ['volume', 'temperature'] as const) {
+  for (const value of ['0x1f4', '0x4', '0b11', '0o7', 'Infinity', 'NaN', '', '  ', '1e309']) {
+    test(`${field} ${JSON.stringify(value)} rejects as invalid`, () => {
+      const samples = baselineSamples();
+      samples[0][field] = value;
+      const decision = decisionFor(evaluateSampleAcceptance(baselinePolicy(), samples), 'sample-synthetic-1');
+      assert.equal(decision.status, 'REJECT');
+      assert.deepEqual(decision.reasons, [{ code: `${field}-invalid` }]);
+    });
+  }
+
+  for (const value of ['500', ' 500 ', '5e2', '+4', '.5']) {
+    test(`${field} decimal string ${JSON.stringify(value)} preserves its range decision`, () => {
+      const samples = baselineSamples();
+      samples[0][field] = value;
+      const decision = decisionFor(evaluateSampleAcceptance(baselinePolicy(), samples), 'sample-synthetic-1');
+      const inRange = field === 'volume' ? Number(value) >= 250 : Number(value) <= 6;
+      assert.equal(decision.status, inRange ? 'ACCEPT' : 'REJECT');
+      assert.deepEqual(decision.reasons, inRange ? [] : [{ code: `${field}-out-of-range` }]);
+    });
+  }
+}
+
 test('a nonnumeric volume rejects', () => {
   const samples = baselineSamples();
   samples[0].volume = 'a-lot';
