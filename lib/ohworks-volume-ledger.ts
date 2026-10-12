@@ -289,11 +289,26 @@ export function applyVolumeLedgerEvents(rawInput: unknown): VolumeLedgerSummary 
       if (!KNOWN_EVENT_KINDS.has(event.kind)) {
         return invalid('kind-unknown', index);
       }
-      if (event.amount > remainingVolume + specimen.deadVolume) {
+      const allowedVolume = remainingVolume + specimen.deadVolume;
+      // Cover arithmetic roundoff at this scale without a fixed absolute floor.
+      const roundoffAllowance = 2 * Number.EPSILON * Math.max(
+        Math.abs(event.amount),
+        Math.abs(remainingVolume),
+        Math.abs(specimen.deadVolume),
+        Math.abs(allowedVolume),
+      );
+      if (event.amount > allowedVolume && event.amount - allowedVolume > roundoffAllowance) {
         return invalid('over-consumption', index);
       }
 
+      const previousVolume = remainingVolume;
       remainingVolume -= event.amount;
+      // Only normalize a balance indistinguishable from zero; a draw into
+      // the declared dead volume remains negative.
+      const balanceRoundoff = 2 * Number.EPSILON * Math.max(Math.abs(previousVolume), Math.abs(event.amount));
+      if (Math.abs(remainingVolume) <= balanceRoundoff) {
+        remainingVolume = 0;
+      }
       seenEventIds.add(event.eventId);
       consumptionIndexById.set(event.eventId, appliedEvents.length);
       lastEvent = { eventId: event.eventId, timestamp: event.timestamp };

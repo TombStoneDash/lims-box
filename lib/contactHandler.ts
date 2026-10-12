@@ -77,11 +77,15 @@ export function createContactPostHandler(dependencies: ContactDependencies) {
       }
 
       // The contact form sends no email to the person today, only Hudson's notice.
-      await dependencies.firstContactDryRun?.({
-        email: submission.email,
-        requestStartedAt,
-        coveredByTransactional: false,
-      });
+      try {
+        await dependencies.firstContactDryRun?.({
+          email: submission.email,
+          requestStartedAt,
+          coveredByTransactional: false,
+        });
+      } catch {
+        // The dry run must never affect the signup.
+      }
 
       return NextResponse.json({ success: true });
     } catch (err) {

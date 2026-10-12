@@ -50,6 +50,48 @@ test('reports missing_required_fields when receivingStaffId is missing', () => {
   assert.match(result.issues[0], /receivingStaffId/);
 });
 
+for (const value of ['false', 'true', 1, 0, null, {}, undefined]) {
+  const label = JSON.stringify(value) ?? 'undefined';
+
+  test(`malformed orderReceivedVerbally ${label} is rejected`, () => {
+    const result = evaluateVerbalOrderReadback({
+      ...baselineInput(),
+      orderReceivedVerbally: value as unknown as boolean,
+    });
+    assert.equal(result.compliant, false);
+    assert.equal(result.status, 'missing_required_fields');
+    assert.equal(result.issues.length, 1);
+    assert.match(result.issues[0], /orderReceivedVerbally/);
+  });
+
+  for (const field of ['readBackPerformed', 'readBackConfirmedByOriginator'] as const) {
+    test(`${field} ${label} preserves the boolean false refusal`, () => {
+      const expected = evaluateVerbalOrderReadback({ ...baselineInput(), [field]: false });
+      const result = evaluateVerbalOrderReadback({
+        ...baselineInput(),
+        [field]: value as unknown as boolean,
+      });
+      assert.deepEqual(result, expected);
+      assert.equal(result.compliant, false);
+      assert.equal(result.status, field === 'readBackPerformed' ? 'missing_readback' : 'readback_not_confirmed');
+    });
+  }
+
+  test(`explicit non-verbal order ignores malformed unused fields ${label}`, () => {
+    const result = evaluateVerbalOrderReadback({
+      orderReceivedVerbally: false,
+      readBackPerformed: value,
+      readBackConfirmedByOriginator: value,
+      receivingStaffId: value,
+      originatorName: value,
+      originatorRole: value,
+      orderText: value,
+      timestampReceived: value,
+    } as unknown as VerbalOrderReadbackInput);
+    assert.deepEqual(result, { compliant: true, status: 'not_applicable', issues: [] });
+  });
+}
+
 test('reports missing_required_fields when originatorName is missing', () => {
   const input = baselineInput();
   input.originatorName = null;

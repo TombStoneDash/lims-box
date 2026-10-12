@@ -160,7 +160,8 @@ function toFiniteNumber(value: number | string): number | undefined {
     return Number.isFinite(value) ? value : undefined;
   }
   const trimmed = value.trim();
-  if (trimmed.length === 0) {
+  // Only decimal/scientific notation is numeric; radix-prefixed values are qualitative text.
+  if (!/^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?$/.test(trimmed)) {
     return undefined;
   }
   const parsed = Number(trimmed);

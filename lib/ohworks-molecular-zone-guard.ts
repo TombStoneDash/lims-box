@@ -80,7 +80,14 @@ export function validateZoneTransition(input: ZoneTransitionInput): ZoneTransiti
   let highestIndexReached = -1;
   for (const visitedZone of priorZonesVisitedThisShift) {
     const visitedIndex = ZONE_INDEX.get(visitedZone);
-    if (visitedIndex !== undefined && visitedIndex > highestIndexReached) {
+    if (visitedIndex === undefined) {
+      return {
+        allowed: false,
+        violationType: 'invalid_zone',
+        reason: `Technologist ${technologistId} has a prior visited zone "${visitedZone}" this shift, which is not a recognized molecular/PCR zone.`,
+      };
+    }
+    if (visitedIndex > highestIndexReached) {
       highestIndexReached = visitedIndex;
     }
   }

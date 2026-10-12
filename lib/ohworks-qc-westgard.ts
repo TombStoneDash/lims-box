@@ -238,11 +238,20 @@ type ParsedPoint = {
 
 type Side = 'above' | 'below' | null;
 
+/**
+ * Tolerance for floating-point drift at an exact SD boundary (e.g. a value
+ * constructed as mean + 3*sd that rounds to an sdi of 3.000000000000007
+ * instead of exactly 3). Only applied to positive thresholds so the 10_x
+ * rule's zero threshold (any side of the mean) stays exact.
+ */
+const SDI_BOUNDARY_EPSILON = 1e-9;
+
 function sideBeyond(sdi: number, threshold: number): Side {
-  if (sdi > threshold) {
+  const limit = threshold > 0 ? threshold + SDI_BOUNDARY_EPSILON : threshold;
+  if (sdi > limit) {
     return 'above';
   }
-  if (sdi < -threshold) {
+  if (sdi < -limit) {
     return 'below';
   }
   return null;
@@ -482,7 +491,7 @@ export function evaluateQCWestgardMultirule(input: QCWestgardEvaluationInput): Q
               pairedLevelId: a.levelId,
             });
           }
-          if (Math.abs(a.sdi - b.sdi) > 4) {
+          if (Math.abs(a.sdi - b.sdi) > 4 + SDI_BOUNDARY_EPSILON) {
             r4sFired = true;
             violatedRules.push({
               rule: 'R_4s',

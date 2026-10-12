@@ -127,19 +127,17 @@ function isFiniteNumber(value: unknown): value is number {
   return typeof value === 'number' && Number.isFinite(value);
 }
 
-/**
- * Absolute tolerance applied only at acceptance-limit boundaries, to absorb
- * IEEE-754 double-precision rounding noise (e.g. 1.1 * 100 evaluating to
- * 110.00000000000001) rather than any scientific or measurement tolerance.
- */
-const BOUNDARY_EPSILON = 1e-9;
+/** Allow a few double-precision rounding steps at the magnitude being compared. */
+function boundaryTolerance(value: number, limit: number): number {
+  return 64 * Number.EPSILON * Math.max(Math.abs(value), Math.abs(limit));
+}
 
 function isAtLeastLimit(value: number, min: number): boolean {
-  return value >= min - BOUNDARY_EPSILON;
+  return value >= min || min - value <= boundaryTolerance(value, min);
 }
 
 function isAtMostLimit(value: number, max: number): boolean {
-  return value <= max + BOUNDARY_EPSILON;
+  return value <= max || value - max <= boundaryTolerance(value, max);
 }
 
 function isWithinLimitRange(value: number, min: number, max: number): boolean {

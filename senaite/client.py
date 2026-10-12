@@ -106,6 +106,12 @@ class SenaiteClient:
         uid = sample.get("uid") if isinstance(sample, Mapping) else None
         if not isinstance(uid, str) or not uid.strip():
             raise ValueError(f"Sample {sample_id} has an invalid UID")
+        identity_field = "getId" if "getId" in sample else "id"
+        if identity_field in sample and sample[identity_field] != sample_id:
+            raise ValueError(
+                f"Sample lookup for {sample_id!r} returned mismatching "
+                f"{identity_field}: {sample[identity_field]!r}"
+            )
         return sample
 
     def create_sample(

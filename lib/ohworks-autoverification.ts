@@ -201,12 +201,18 @@ function isNonEmptyString(value: unknown): value is string {
   return typeof value === 'string' && value.length > 0;
 }
 
+const DECIMAL_TEXT = /^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?$/;
+
 function toFiniteNumber(value: unknown): number | undefined {
   if (typeof value === 'number') {
     return Number.isFinite(value) ? value : undefined;
   }
-  if (typeof value === 'string' && value.trim().length > 0) {
-    const parsed = Number(value);
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    if (trimmed.length === 0 || !DECIMAL_TEXT.test(trimmed)) {
+      return undefined;
+    }
+    const parsed = Number(trimmed);
     return Number.isFinite(parsed) ? parsed : undefined;
   }
   return undefined;

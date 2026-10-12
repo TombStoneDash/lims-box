@@ -210,7 +210,7 @@ export function runSyntheticLabDay(input: SyntheticLabDayInput): SyntheticLabDay
       const plan = planReflexTests({ ...input.extended.reflex, results: [{ analyte: result.analyteCode, value: converted.value }] });
       if (plan.status === 'ok') {
         report.reflexAdditions = plan.additions.map(addition => addition.analyte);
-        trace('reflex-plan', 'ok', [], `Fabricated reflex plan adds ${plan.additions.length} analytes.`);
+        trace('reflex-plan', 'ok', [], `Fabricated reflex plan adds ${plan.additions.length} analyte${plan.additions.length === 1 ? '' : 's'}.`);
       } else {
         const codes = plan.rejections.map(rejection => rejection.code);
         trace('reflex-plan', 'blocked', codes, `Reflex planning blocked: ${codes.join(', ')}.`);

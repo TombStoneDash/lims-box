@@ -85,7 +85,7 @@ export type ReportAmendment = {
   reasonCode: string;
   /** Raw author role string; may be unrecognized or lack amend authority. */
   authorRole: string;
-  /** Caller-supplied timestamp for this amendment, e.g. an ISO 8601 string. */
+  /** Caller-supplied ISO 8601 timestamp for this amendment. */
   timestamp: string;
 };
 
@@ -184,6 +184,24 @@ function isPositiveInteger(value: unknown): value is number {
   return typeof value === 'number' && Number.isInteger(value) && value > 0;
 }
 
+function isIso8601Timestamp(value: unknown): value is string {
+  if (typeof value !== 'string') {
+    return false;
+  }
+
+  const match = /^(\d{4})-(\d{2})-(\d{2})T(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z|[+-](?:[01]\d|2[0-3]):[0-5]\d)$/.exec(value);
+  if (!match) {
+    return false;
+  }
+
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+  const leapYear = year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
+  const daysInMonth = [31, leapYear ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+  return month >= 1 && month <= 12 && day >= 1 && day <= daysInMonth[month - 1];
+}
+
 function isStructurallyValidAmendment(raw: unknown): raw is ReportAmendment {
   if (!isPlainObject(raw)) {
     return false;
@@ -193,7 +211,7 @@ function isStructurallyValidAmendment(raw: unknown): raw is ReportAmendment {
     isPositiveInteger(raw.supersedesVersion) &&
     isNonEmptyString(raw.reasonCode) &&
     isNonEmptyString(raw.authorRole) &&
-    isNonEmptyString(raw.timestamp)
+    isIso8601Timestamp(raw.timestamp)
   );
 }
 

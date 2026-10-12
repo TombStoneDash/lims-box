@@ -304,7 +304,8 @@ export function evaluateCarryoverRisk(run: CarryoverRun): CarryoverAssessment[] 
       );
     } else {
       const contribution = pending.value * rule.carryoverFactor;
-      if (contribution > rule.repeatThreshold) {
+      const tolerance = 1e-12 * Math.max(Math.abs(contribution), Math.abs(rule.repeatThreshold));
+      if (contribution - rule.repeatThreshold > tolerance) {
         outcome = assessment(result.resultId, 'must_repeat', 'contribution-exceeds-threshold', contribution, pending.position);
       } else {
         outcome = assessment(result.resultId, 'at_risk', 'contribution-within-threshold', contribution, pending.position);

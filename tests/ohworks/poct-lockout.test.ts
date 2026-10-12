@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 
 import { evaluateLockoutState, requiresSupervisorOverrideToUnlock } from '../../lib/ohworks-poct-lockout';
+import type { PoctLockoutInput } from '../../lib/ohworks-poct-lockout';
 
 /**
  * All fabricated: synthetic device identifiers and timestamps. None of this
@@ -66,6 +67,43 @@ test('a null lastQcAt locks the device with a no-QC-on-record reason even if a r
   });
   assert.equal(result.locked, true);
   assert.equal(result.reason, `Device ${DEVICE_ID} is locked out: no QC on record.`);
+});
+
+for (const [label, outcome] of [
+  ['error', 'error'],
+  ['empty string', ''],
+  ['undefined', undefined],
+  ['null', null],
+  ['number', 1],
+] as const) {
+  test(`an invalid QC outcome (${label}) stays locked despite recent QC`, () => {
+    const result = evaluateLockoutState({
+      deviceId: DEVICE_ID,
+      lastQcResult: outcome as PoctLockoutInput['lastQcResult'],
+      lastQcAt: '2026-09-19T08:00:00.000Z',
+      now: NOW,
+      qcFrequencyHours: 24,
+      priorLockoutActive: true,
+    });
+    assert.equal(result.locked, true);
+    assert.equal(result.qcOverdue, false);
+    assert.match(result.reason, /invalid QC outcome|QC outcome is invalid/i);
+    assert.doesNotMatch(result.reason, /passed/i);
+  });
+}
+
+test('a missing QC outcome stays locked despite recent QC', () => {
+  const input = {
+    deviceId: DEVICE_ID,
+    lastQcAt: '2026-09-19T08:00:00.000Z',
+    now: NOW,
+    qcFrequencyHours: 24,
+    priorLockoutActive: true,
+  } as PoctLockoutInput;
+  const result = evaluateLockoutState(input);
+  assert.equal(result.locked, true);
+  assert.equal(result.qcOverdue, false);
+  assert.match(result.reason, /invalid/i);
 });
 
 test('a passing QC result within frequency unlocks the device', () => {

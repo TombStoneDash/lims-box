@@ -96,6 +96,8 @@ function toFiniteNumber(raw: unknown): number | undefined {
   return Number.isFinite(raw) ? raw : undefined;
 }
 
+const DECIMAL_RESULT = /^[+-]?(?:\d+\.?\d*|\.\d+)(?:[eE][+-]?\d+)?$/;
+
 function parseResult(result: number | string): ParsedResult {
   if (typeof result === 'number') {
     return { qualifier: 'none', value: toFiniteNumber(result) };
@@ -107,18 +109,18 @@ function parseResult(result: number | string): ParsedResult {
   const trimmed = result.trim();
   if (trimmed.startsWith('<')) {
     const operand = trimmed.slice(1).trim();
-    const parsed = operand.length > 0 ? Number(operand) : NaN;
+    const parsed = DECIMAL_RESULT.test(operand) ? Number(operand) : NaN;
     return { qualifier: 'less-than', value: Number.isFinite(parsed) ? parsed : undefined };
   }
   if (trimmed.startsWith('>')) {
     const operand = trimmed.slice(1).trim();
-    const parsed = operand.length > 0 ? Number(operand) : NaN;
+    const parsed = DECIMAL_RESULT.test(operand) ? Number(operand) : NaN;
     return { qualifier: 'greater-than', value: Number.isFinite(parsed) ? parsed : undefined };
   }
   if (trimmed.length === 0) {
     return { qualifier: 'none', value: undefined };
   }
-  const parsed = Number(trimmed);
+  const parsed = DECIMAL_RESULT.test(trimmed) ? Number(trimmed) : NaN;
   return { qualifier: 'none', value: Number.isFinite(parsed) ? parsed : undefined };
 }
 

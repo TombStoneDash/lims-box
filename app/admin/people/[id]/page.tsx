@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { adminMutationsEnabled } from "@/lib/admin-capabilities";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { competencyDisplayStatus } from "@/lib/competency-display-status";
@@ -22,16 +23,17 @@ export default async function PersonDetailPage({ params }: { params: Promise<{ i
   if (!person) return notFound();
 
   const now = new Date();
+  const mutationsEnabled = adminMutationsEnabled();
 
   // Procedures available for new authorization (exclude already-active ones)
   const activeProcedureIds = person.authorizations
     .filter((a) => a.isActive)
     .map((a) => a.procedureId);
 
-  const allProcedures = await prisma.procedure.findMany({
+  const allProcedures = mutationsEnabled ? await prisma.procedure.findMany({
     where: { active: true },
     orderBy: { name: "asc" },
-  });
+  }) : [];
 
   const activeAuths = person.authorizations.filter((a) => a.isActive);
   const revokedAuths = person.authorizations.filter((a) => !a.isActive);
@@ -49,25 +51,43 @@ export default async function PersonDetailPage({ params }: { params: Promise<{ i
           </p>
         </div>
         <div className="flex gap-2">
-          <Link
-            href={`/admin/people/${person.id}/edit`}
-            className="rounded-md border border-slate-300 px-3 py-1.5 text-sm hover:bg-slate-50"
-          >
-            Edit
-          </Link>
+          {mutationsEnabled && (
+            <Link
+              href={`/admin/people/${person.id}/edit`}
+              className="rounded-md border border-slate-300 px-3 py-1.5 text-sm hover:bg-slate-50"
+            >
+              Edit
+            </Link>
+          )}
           <Link href="/admin/people" className="rounded-md px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-50">
             Back
           </Link>
         </div>
       </div>
 
+      {!mutationsEnabled && (
+        <div className="rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 space-y-2">
+          <p>
+            This person record is read-only. Editing, logging entries, and granting or revoking
+            authorizations are disabled. Record details, authorization history, and exports
+            remain available.
+          </p>
+          <Link href="/demo/operator" className="underline">
+            Open synthetic operator sandbox
+          </Link>
+          <p>The sandbox uses synthetic data for browser-local rehearsal without shared database writes.</p>
+        </div>
+      )}
+
       {/* Competency matrix */}
       <section>
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-lg font-semibold">Competency matrix</h2>
-          <Link href={`/admin/competencies/new?personId=${person.id}`} className="text-sm text-slate-900 underline">
-            + Log competency
-          </Link>
+          {mutationsEnabled && (
+            <Link href={`/admin/competencies/new?personId=${person.id}`} className="text-sm text-slate-900 underline">
+              + Log competency
+            </Link>
+          )}
         </div>
         <div className="overflow-x-auto rounded-md border border-slate-200">
           <table className="min-w-full text-sm">
@@ -116,9 +136,11 @@ export default async function PersonDetailPage({ params }: { params: Promise<{ i
       <section>
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-lg font-semibold">Training log</h2>
-          <Link href={`/admin/trainings/new?personId=${person.id}`} className="text-sm text-slate-900 underline">
-            + Log training
-          </Link>
+          {mutationsEnabled && (
+            <Link href={`/admin/trainings/new?personId=${person.id}`} className="text-sm text-slate-900 underline">
+              + Log training
+            </Link>
+          )}
         </div>
         <div className="overflow-x-auto rounded-md border border-slate-200">
           <table className="min-w-full text-sm">
@@ -156,9 +178,11 @@ export default async function PersonDetailPage({ params }: { params: Promise<{ i
       <section>
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-lg font-semibold">Director sign-offs</h2>
-          <Link href={`/admin/signoffs/new?personId=${person.id}`} className="text-sm text-slate-900 underline">
-            + Add sign-off
-          </Link>
+          {mutationsEnabled && (
+            <Link href={`/admin/signoffs/new?personId=${person.id}`} className="text-sm text-slate-900 underline">
+              + Add sign-off
+            </Link>
+          )}
         </div>
         <div className="overflow-x-auto rounded-md border border-slate-200">
           <table className="min-w-full text-sm">
@@ -229,18 +253,20 @@ export default async function PersonDetailPage({ params }: { params: Promise<{ i
                     <td className="px-4 py-2 text-slate-600">{auth.authorizedBy}</td>
                     <td className="px-4 py-2 text-slate-600">{auth.scope ?? "—"}</td>
                     <td className="px-4 py-2">
-                      <form action={revokeAuthorization}>
-                        <input type="hidden" name="authId" value={auth.id} />
-                        <input type="hidden" name="personId" value={person.id} />
-                        <input type="hidden" name="revokedBy" value="Lab Director" />
-                        <input type="hidden" name="revocationReason" value="" />
-                        <button
-                          type="submit"
-                          className="text-xs text-red-600 underline hover:text-red-800"
-                        >
-                          Revoke
-                        </button>
-                      </form>
+                      {mutationsEnabled && (
+                        <form action={revokeAuthorization}>
+                          <input type="hidden" name="authId" value={auth.id} />
+                          <input type="hidden" name="personId" value={person.id} />
+                          <input type="hidden" name="revokedBy" value="Lab Director" />
+                          <input type="hidden" name="revocationReason" value="" />
+                          <button
+                            type="submit"
+                            className="text-xs text-red-600 underline hover:text-red-800"
+                          >
+                            Revoke
+                          </button>
+                        </form>
+                      )}
                     </td>
                   </tr>
                 ))
@@ -250,7 +276,7 @@ export default async function PersonDetailPage({ params }: { params: Promise<{ i
         </div>
 
         {/* Grant authorization form */}
-        {allProcedures.length > 0 && (
+        {mutationsEnabled && allProcedures.length > 0 && (
           <details className="border border-slate-200 rounded-md">
             <summary className="px-4 py-2 text-sm cursor-pointer hover:bg-slate-50 font-medium">
               + Grant authorization

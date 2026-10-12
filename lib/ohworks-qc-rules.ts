@@ -174,11 +174,30 @@ type ParsedPoint = {
 
 type Side = 'above' | 'below' | null;
 
+/**
+ * Whether `distance` is beyond `threshold` by more than a relative float
+ * epsilon, so a value that lands exactly on a limit (subject to ordinary
+ * floating-point drift from the (value - mean) / sd division) is not
+ * mistaken for a value past it.
+ */
+function isBeyond(distance: number, threshold: number): boolean {
+  return distance - threshold > 1e-9 * Math.max(1, Math.abs(threshold));
+}
+
 function sideBeyond(z: number, threshold: number): Side {
-  if (z > threshold) {
+  if (threshold === 0) {
+    if (z > 0) {
+      return 'above';
+    }
+    if (z < 0) {
+      return 'below';
+    }
+    return null;
+  }
+  if (isBeyond(z, threshold)) {
     return 'above';
   }
-  if (z < -threshold) {
+  if (isBeyond(-z, threshold)) {
     return 'below';
   }
   return null;
@@ -302,7 +321,7 @@ export function evaluateQCRules(input: QCRuleEvaluationInput): QCRuleEvaluationO
   const firings: QCRuleFiring[] = [];
 
   for (const point of parsedPoints) {
-    if (Math.abs(point.z) > 3) {
+    if (isBeyond(Math.abs(point.z), 3)) {
       firings.push({ rule: '1_3s', severity: RULE_SEVERITY['1_3s'], position: point.position, levelId: point.levelId });
     }
   }
@@ -326,7 +345,7 @@ export function evaluateQCRules(input: QCRuleEvaluationInput): QCRuleEvaluationO
   for (const points of pointsByRun.values()) {
     for (let i = 0; i < points.length; i += 1) {
       for (let j = i + 1; j < points.length; j += 1) {
-        if (Math.abs(points[i].z - points[j].z) > 4) {
+        if (isBeyond(Math.abs(points[i].z - points[j].z), 4)) {
           firings.push({
             rule: 'R_4s',
             severity: RULE_SEVERITY['R_4s'],

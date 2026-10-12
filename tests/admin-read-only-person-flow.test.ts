@@ -43,6 +43,36 @@ test("people list page does not render an Add person action while mutations are 
   assert.match(peopleListSource, /\/demo\/operator/);
 });
 
+describe("document detail read-only flow", () => {
+  const documentDetailSource = readFileSync(
+    path.join(repoRoot, "app/admin/documents/[id]/page.tsx"),
+    "utf8",
+  );
+
+  test("does not offer a version or approval POST form while mutations are disabled", () => {
+    assert.equal(adminMutationsEnabled(), false);
+    assert.match(documentDetailSource, CALL_EXPRESSION);
+    assert.doesNotMatch(documentDetailSource, /createDocumentVersion|<form\b|Save version/);
+    assert.match(documentDetailSource, /!mutationsEnabled\s*\?/);
+    assert.match(documentDetailSource, /href="\/demo\/operator"/);
+  });
+
+  test("empty state does not invite adding a version", () => {
+    assert.match(documentDetailSource, /No versions on record for this document\./);
+    assert.doesNotMatch(documentDetailSource, /add (?:the first |a )?version below/i);
+  });
+
+  test("keeps current document links and version history visible", () => {
+    assert.match(documentDetailSource, /currentVersion\s*\?/);
+    assert.match(documentDetailSource, /Current version:/);
+    assert.match(documentDetailSource, /href=\{currentVersion\.documentContentUrl\}/);
+    assert.match(documentDetailSource, /View document/);
+    assert.match(documentDetailSource, /Version history/);
+    assert.match(documentDetailSource, /doc\.versions\.map\(/);
+    assert.match(documentDetailSource, /href="\/admin\/documents"/);
+  });
+});
+
 describe("competency detail read-only view", () => {
   const competencySource = readFileSync(
     path.join(repoRoot, "app/admin/competencies/[id]/page.tsx"),
