@@ -154,6 +154,38 @@ test('computes corrected report rate against total results reported', () => {
   });
 });
 
+test('duplicate identical report rows leave the corrected report rate unchanged', () => {
+  const input = baselineInput();
+  input.resultsReported = [
+    { resultId: 'result-synth-1', priority: 'stat', turnaroundMinutes: 45 },
+    { resultId: 'result-synth-1', priority: 'stat', turnaroundMinutes: 45 },
+  ];
+  input.correctedReports = [{ resultId: 'result-synth-1' }];
+  const report = computeQualityIndicators(input);
+  assert.deepEqual(report.correctedReportRate, {
+    numerator: 1,
+    denominator: 1,
+    ratePercent: 100,
+    targetPercent: 2,
+  });
+});
+
+test('one correction across two distinct reports gives a 50 percent corrected report rate', () => {
+  const input = baselineInput();
+  input.resultsReported = [
+    { resultId: 'result-synth-1', priority: 'stat', turnaroundMinutes: 45 },
+    { resultId: 'result-synth-2', priority: 'stat', turnaroundMinutes: 90 },
+  ];
+  input.correctedReports = [{ resultId: 'result-synth-2' }];
+  const report = computeQualityIndicators(input);
+  assert.deepEqual(report.correctedReportRate, {
+    numerator: 1,
+    denominator: 2,
+    ratePercent: 50,
+    targetPercent: 2,
+  });
+});
+
 test('corrected report rate is null, never zero, when no results were reported', () => {
   const input = baselineInput();
   input.resultsReported = [];
@@ -167,7 +199,12 @@ test('a report corrected more than once counts once toward the corrected report 
   const input = baselineInput();
   input.correctedReports = [{ resultId: 'result-synth-2' }, { resultId: 'result-synth-2' }];
   const report = computeQualityIndicators(input);
-  assert.equal(report.correctedReportRate.numerator, 1);
+  assert.deepEqual(report.correctedReportRate, {
+    numerator: 1,
+    denominator: 4,
+    ratePercent: 25,
+    targetPercent: 2,
+  });
 });
 
 test('computes critical value acknowledgement compliance, excluding unacknowledged values from the numerator', () => {
