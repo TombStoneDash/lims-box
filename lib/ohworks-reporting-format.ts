@@ -174,6 +174,9 @@ function isStructurallyValidFormat(raw: unknown): raw is ReportingFormat {
   if (!isFiniteNumber(candidate.aboveQuantitationLimit)) {
     return false;
   }
+  if (candidate.belowDetectionLimit > candidate.aboveQuantitationLimit) {
+    return false;
+  }
   if (candidate.qualitativeThresholds !== null) {
     if (!Array.isArray(candidate.qualitativeThresholds) || !candidate.qualitativeThresholds.every(isStructurallyValidThreshold)) {
       return false;
