@@ -101,13 +101,18 @@ export const COMMERCIAL_CLAIM_RULES: readonly CommercialClaimRule[] = [
 
 /**
  * Deterministic normalization contract shared by every matcher in this
- * module: Unicode NFKC, lowercase, punctuation/hyphens replaced with
- * spaces, whitespace collapsed.
+ * module: Unicode NFKC, lowercase, soft hyphen treated as a hyphen, other
+ * Unicode format characters (\p{Cf}, e.g. zero-width space/joiner/non-joiner,
+ * word joiner, BOM) stripped, punctuation/hyphens replaced with spaces,
+ * whitespace collapsed. Format characters are invisible on screen but would
+ * otherwise split or evade a forbidden phrase that reads as intact text.
  */
 export function normalizeClaimText(input: string): string {
   return input
     .normalize('NFKC')
     .toLowerCase()
+    .replace(/­/g, ' ')
+    .replace(/\p{Cf}/gu, '')
     .replace(/[\p{P}]/gu, ' ')
     .replace(/\s+/g, ' ')
     .trim();
