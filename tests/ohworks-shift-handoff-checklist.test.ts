@@ -66,6 +66,61 @@ test('a pending critical value that has been notified is info, not blocking', ()
   assert.equal(result.blockingIssueCount, 0);
 });
 
+test('a critical notification after the checklist time stays blocking', () => {
+  const input = baselineInput();
+  input.pendingCriticalValues = [
+    { specimenId: 'specimen-synthetic-future', analyte: 'potassium', value: 7.2, notifiedAt: '2026-01-02T12:00:00.000Z' },
+  ];
+  const result = buildShiftHandoffChecklist(input);
+  assert.deepEqual(result.items, [{
+    category: 'critical_value',
+    description: 'Critical value for potassium on specimen specimen-synthetic-future has a notification time after the checklist time; notification is unverified.',
+    severity: 'blocking',
+  }]);
+  assert.equal(result.readyForHandoff, false);
+  assert.equal(result.blockingIssueCount, 1);
+});
+
+for (const notifiedAt of [NOW, '2026-01-01T13:00:00.000+01:00']) {
+  test(`a critical notification exactly at now is info (${notifiedAt})`, () => {
+    const input = baselineInput();
+    input.pendingCriticalValues = [
+      { specimenId: 'specimen-synthetic-equal', analyte: 'potassium', value: 7.2, notifiedAt },
+    ];
+    const result = buildShiftHandoffChecklist(input);
+    assert.equal(result.items.length, 1);
+    assert.equal(result.items[0].severity, 'info');
+    assert.equal(result.readyForHandoff, true);
+    assert.equal(result.blockingIssueCount, 0);
+  });
+}
+
+test('invalid now retains the existing blocker and cannot acknowledge a valid notification', () => {
+  const input = baselineInput();
+  input.now = 'invalid';
+  const emptyResult = buildShiftHandoffChecklist(input);
+  const nowBlocker = {
+    category: 'open_worklist',
+    description: 'Checklist now timestamp is invalid; handoff readiness cannot be verified.',
+    severity: 'blocking',
+  };
+  assert.deepEqual(emptyResult.items, [nowBlocker]);
+  assert.equal(emptyResult.blockingIssueCount, 1);
+  assert.equal(emptyResult.readyForHandoff, false);
+
+  input.pendingCriticalValues = [
+    { specimenId: 'specimen-synthetic-invalid-now', analyte: 'potassium', value: 7.2, notifiedAt: NOW },
+  ];
+  const result = buildShiftHandoffChecklist(input);
+  assert.deepEqual(result.items, [{
+    category: 'critical_value',
+    description: 'Critical value for potassium on specimen specimen-synthetic-invalid-now cannot be verified because the checklist time is invalid.',
+    severity: 'blocking',
+  }, nowBlocker]);
+  assert.equal(result.blockingIssueCount, 2);
+  assert.equal(result.readyForHandoff, false);
+});
+
 test('a stale stat open worklist item at exactly STALE_STAT_MINUTES is blocking', () => {
   const input = baselineInput();
   input.openWorklistItems = [
