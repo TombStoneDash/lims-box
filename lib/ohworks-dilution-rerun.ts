@@ -30,7 +30,8 @@
  *                           analyte has no declared measuring range (or the
  *                           declared range's unit does not match the
  *                           result's unit), the declared ladder is invalid
- *                           for this analyte, a rerun would be required
+ *                           for this analyte, the applied dilution exceeds
+ *                           the declared maximum, a rerun would be required
  *                           but the declared maximum rerun count has already
  *                           been reached, or the derived reportable product
  *                           (a corrected result or greater-than limit) is
@@ -51,6 +52,7 @@ export type DilutionRerunReasonCode =
   | 'unknown-analyte'
   | 'measuring-range-unit-mismatch'
   | 'invalid-ladder'
+  | 'applied-dilution-exceeds-maximum'
   | 'within-range'
   | 'below-range'
   | 'max-reruns-exceeded'
@@ -96,7 +98,7 @@ export type DilutionRerunRequest = {
   /** Declared measuring ranges for every known analyte. */
   measuringRanges: ReadonlyArray<MeasuringRange>;
   ladder: DilutionLadder;
-  /** Declared ceiling on dilution factor; no rerun may use a factor above this. */
+  /** Declared ceiling on both the already-applied and next rerun dilution factors. */
   maxDilutionFactor: number;
   rerunTracking: RerunTracking;
 };
@@ -118,6 +120,7 @@ const REASON_DECISIONS: Record<DilutionRerunReasonCode, DilutionRerunDecision> =
   'unknown-analyte': 'block',
   'measuring-range-unit-mismatch': 'block',
   'invalid-ladder': 'block',
+  'applied-dilution-exceeds-maximum': 'block',
   'within-range': 'report_as_is',
   'below-range': 'report_as_is',
   'max-reruns-exceeded': 'block',
@@ -130,6 +133,7 @@ const REASON_MESSAGES: Record<DilutionRerunReasonCode, string> = {
   'unknown-analyte': 'No measuring range is declared for this analyte.',
   'measuring-range-unit-mismatch': 'The declared measuring range for this analyte uses a different unit than the result.',
   'invalid-ladder': 'The declared dilution ladder is not valid for this analyte.',
+  'applied-dilution-exceeds-maximum': 'The already-applied dilution factor exceeds the declared maximum dilution factor.',
   'within-range': 'The raw reading is within the analyte\'s measuring range at the currently applied dilution.',
   'below-range': 'The raw reading is below the analyte\'s measuring range; further dilution cannot raise it into range.',
   'max-reruns-exceeded': 'A rerun at a higher dilution is required, but the declared maximum rerun count has already been reached.',
@@ -273,7 +277,8 @@ function outcome(
  * Fail-closed: an analyte with no declared measuring range, a declared range
  * whose unit does not match the result's unit, a dilution ladder that is not
  * declared for this analyte or is not a strictly increasing sequence of
- * factors greater than 1, or a required rerun that would exceed the declared
+ * factors greater than 1, an applied dilution above the declared maximum,
+ * or a required rerun that would exceed the declared
  * maximum rerun count all resolve to `block`. A reading within or below the
  * measuring range resolves to `report_as_is` with the corrected
  * (dilution-adjusted) result. A reading above the range resolves to
@@ -314,6 +319,10 @@ export function evaluateDilutionRerun(request: DilutionRerunRequest): DilutionRe
 
   if (!isDomainValidLadder(request.ladder, result.analyteCode)) {
     return outcome('invalid-ladder', null, null, null);
+  }
+
+  if (result.appliedDilutionFactor > request.maxDilutionFactor) {
+    return outcome('applied-dilution-exceeds-maximum', null, null, null);
   }
 
   if (result.rawReading < range.lowerLimit) {
