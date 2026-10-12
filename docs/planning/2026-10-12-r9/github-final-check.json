@@ -1,0 +1,153 @@
+{
+  "checkedAt": "2026-10-12T04:46:25.546Z",
+  "open": [
+    {
+      "number": 693,
+      "title": "feat: complete fleet task 884-LIMS-BOX-LIMS-REVIEWS-UPCOMING-PARAMS-SECOND-20261012-R9",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/693"
+    },
+    {
+      "number": 692,
+      "title": "fix(ohworks): reject inverted detection and quantitation limits in report formatting",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/692"
+    },
+    {
+      "number": 689,
+      "title": "fix(ohworks): refuse radix-prefixed proficiency-test submissions",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/689"
+    },
+    {
+      "number": 688,
+      "title": "fix(ohworks): reject method comparisons with non-finite derived statistics",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/688"
+    },
+    {
+      "number": 687,
+      "title": "fix(ohworks): keep report > review > suppress priority when aliases share a canonical flag",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/687"
+    },
+    {
+      "number": 686,
+      "title": "feat: complete fleet task 869-LIMS-BOX-LIMS-BATCH-ASSIGNMENT-BLANK-IDS-SECOND-20261012-R6",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/686"
+    },
+    {
+      "number": 684,
+      "title": "review: exact-head review of lims-box#682",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/684"
+    },
+    {
+      "number": 683,
+      "title": "fix(ohworks): block results already diluted beyond the declared maximum",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/683"
+    },
+    {
+      "number": 681,
+      "title": "plan: six work items for lims-box",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/681"
+    },
+    {
+      "number": 669,
+      "title": "review: exact-head review of lims-box#665",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/669"
+    },
+    {
+      "number": 661,
+      "title": "fix(ohworks): reject worklist specimens with blank identifiers",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/661"
+    },
+    {
+      "number": 659,
+      "title": "review: exact-head review of lims-box#650",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/659"
+    },
+    {
+      "number": 651,
+      "title": "fix(ohworks): treat prototype-named order codes as unknown panels",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/651"
+    },
+    {
+      "number": 615,
+      "title": "fix: hide competency review form when admin writes are disabled",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/615"
+    },
+    {
+      "number": 607,
+      "title": "fix: land lims-box#574 on current main with green CI (supersedes #574)",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/607"
+    },
+    {
+      "number": 574,
+      "title": "feat: complete fleet task LOT-PERCENT-EVIDENCE-SECOND-20261010-R1",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/574"
+    },
+    {
+      "number": 563,
+      "title": "ops: enable the first-contact email for LIMS (schema + env flag), receipt",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/563"
+    },
+    {
+      "number": 558,
+      "title": "Stop expired consumables inflating later-lot waste",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/558"
+    },
+    {
+      "number": 534,
+      "title": "feat: LIMS first-contact sender v4 (re-land of #522, conflicts resolved, flag OFF)",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/534"
+    }
+  ],
+  "mergedOctober12": [
+    {
+      "number": 691,
+      "title": "fix(ohworks): reject radix-prefixed reference-range results",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/691"
+    },
+    {
+      "number": 690,
+      "title": "feat: complete fleet task 871-LIMS-BOX-LIMS-SITEMAP-INVALID-POST-DATES-SECOND-20261012-R6",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/690"
+    },
+    {
+      "number": 685,
+      "title": "feat: complete fleet task 868-LIMS-BOX-LIMS-STABILITY-ZONELESS-TIMESTAMPS-SECOND-20261012-R6",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/685"
+    },
+    {
+      "number": 682,
+      "title": "feat: complete fleet task 867-LIMS-BOX-LIMS-COMPETENCY-REVIEW-BODY-TYPES-SECOND-20261012-R6",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/682"
+    },
+    {
+      "number": 680,
+      "title": "feat: complete fleet task 850-LIMS-BOX-LIMS-CUSTODY-MERGE-FRACTION-TRUNCATE-SECOND-20261011-R5",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/680"
+    },
+    {
+      "number": 678,
+      "title": "feat: complete fleet task 847-LIMS-BOX-LIMS-CALIBRATOR-TRACEABILITY-OWN-LOT-KEYS-SECOND-20261011-R5",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/678"
+    },
+    {
+      "number": 677,
+      "title": "fix(ohworks): reject radix-prefixed critical-repeat result text",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/677"
+    },
+    {
+      "number": 676,
+      "title": "fix(ohworks): reject cancellation requests with a whitespace-only order reference",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/676"
+    },
+    {
+      "number": 675,
+      "title": "feat: complete fleet task 845-LIMS-BOX-LIMS-QC-RULES-EXACT-SD-LIMIT-SECOND-20261011-R5",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/675"
+    },
+    {
+      "number": 656,
+      "title": "fix(ohworks): scale uncertainty crossing tolerance to numeric magnitude",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/656"
+    }
+  ],
+  "result": "19 open PRs; no newly opened PR since initial 20-PR file review. October 12 merge list unchanged. No selected job newly covered."
+}

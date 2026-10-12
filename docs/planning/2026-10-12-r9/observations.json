@@ -1,0 +1,90 @@
+{
+  "witnessesPassed": 6,
+  "observations": [
+    {
+      "job": 1,
+      "schedule": {
+        "reads": [
+          {
+            "label": "Day 1",
+            "dueAt": "2026-03-03T08:00:00.000Z"
+          },
+          {
+            "label": "Day 2",
+            "dueAt": "2026-03-04T08:00:00.000Z"
+          }
+        ],
+        "finalNegativeAt": "2026-03-04T08:00:00.000Z"
+      },
+      "invalidDueIsOverdue": false
+    },
+    {
+      "job": 2,
+      "input": {
+        "abo": "O",
+        "rhD": "positive",
+        "antibodyScreenResult": "indeterminate",
+        "priorAntibodyIdentified": [],
+        "requestedUnitCount": 1,
+        "sampleAgeHours": 1,
+        "maxSampleAgeHoursForType": 72
+      },
+      "result": {
+        "status": "clear_to_crossmatch",
+        "requiresExtendedCrossmatch": false,
+        "reason": "ABO/Rh are on file, the antibody screen is negative, the sample is within the facility policy age limit, and there is no antibody history, so an electronic crossmatch is eligible."
+      }
+    },
+    {
+      "job": 3,
+      "input": {
+        "deviceId": "SYNTH-DEVICE",
+        "lastQcResult": "error",
+        "lastQcAt": "2026-01-01T08:00:00Z",
+        "now": "2026-01-01T09:00:00Z",
+        "qcFrequencyHours": 24,
+        "priorLockoutActive": true
+      },
+      "result": {
+        "locked": false,
+        "reason": "Device SYNTH-DEVICE is unlocked: its last QC run passed and is within the required 24-hour frequency.",
+        "qcOverdue": false
+      }
+    },
+    {
+      "job": 4,
+      "original": {
+        "numerator": 1,
+        "denominator": 1,
+        "ratePercent": 100,
+        "targetPercent": 60
+      },
+      "duplicate": {
+        "numerator": 1,
+        "denominator": 2,
+        "ratePercent": 50,
+        "targetPercent": 60
+      }
+    },
+    {
+      "job": 5,
+      "ownKeys": [],
+      "serialized": "{}",
+      "lostIndicator": {
+        "numerator": 1,
+        "denominator": 1,
+        "ratePercent": 100,
+        "targetPercent": 5
+      }
+    },
+    {
+      "job": 6,
+      "confirmation": "false",
+      "result": {
+        "compliant": true,
+        "status": "compliant",
+        "issues": []
+      }
+    }
+  ]
+}

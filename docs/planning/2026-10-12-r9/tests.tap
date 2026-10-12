@@ -1,0 +1,964 @@
+TAP version 13
+# Subtest: a non-verbal order is not_applicable and compliant regardless of other fields
+ok 1 - a non-verbal order is not_applicable and compliant regardless of other fields
+  ---
+  duration_ms: 2.987583
+  type: 'test'
+  ...
+# Subtest: reports missing_required_fields when receivingStaffId is missing
+ok 2 - reports missing_required_fields when receivingStaffId is missing
+  ---
+  duration_ms: 0.269083
+  type: 'test'
+  ...
+# Subtest: reports missing_required_fields when originatorName is missing
+ok 3 - reports missing_required_fields when originatorName is missing
+  ---
+  duration_ms: 0.309584
+  type: 'test'
+  ...
+# Subtest: reports missing_required_fields when orderText is empty
+ok 4 - reports missing_required_fields when orderText is empty
+  ---
+  duration_ms: 0.115666
+  type: 'test'
+  ...
+# Subtest: reports missing_required_fields when orderText is only whitespace
+ok 5 - reports missing_required_fields when orderText is only whitespace
+  ---
+  duration_ms: 0.286
+  type: 'test'
+  ...
+# Subtest: reports one issue per missing required field when several are missing at once
+ok 6 - reports one issue per missing required field when several are missing at once
+  ---
+  duration_ms: 0.131833
+  type: 'test'
+  ...
+# Subtest: reports missing_readback when no read-back was performed
+ok 7 - reports missing_readback when no read-back was performed
+  ---
+  duration_ms: 0.2745
+  type: 'test'
+  ...
+# Subtest: reports readback_not_confirmed when a read-back was performed but not confirmed
+ok 8 - reports readback_not_confirmed when a read-back was performed but not confirmed
+  ---
+  duration_ms: 0.178917
+  type: 'test'
+  ...
+# Subtest: reports compliant when the order is verbal, all fields present, and read-back confirmed
+ok 9 - reports compliant when the order is verbal, all fields present, and read-back confirmed
+  ---
+  duration_ms: 117.54
+  type: 'test'
+  ...
+# Subtest: an unspecified originatorRole never blocks compliance but adds a non-blocking issue
+ok 10 - an unspecified originatorRole never blocks compliance but adds a non-blocking issue
+  ---
+  duration_ms: 4.80775
+  type: 'test'
+  ...
+# Subtest: an unspecified originatorRole is appended as a non-blocking issue alongside a blocking missing_readback status
+ok 11 - an unspecified originatorRole is appended as a non-blocking issue alongside a blocking missing_readback status
+  ---
+  duration_ms: 10.615791
+  type: 'test'
+  ...
+# Subtest: every non-unspecified originatorRole never adds a role-recommendation issue on an otherwise compliant order
+ok 12 - every non-unspecified originatorRole never adds a role-recommendation issue on an otherwise compliant order
+  ---
+  duration_ms: 0.882875
+  type: 'test'
+  ...
+# Subtest: clear_to_crossmatch: negative screen, no antibody history, sample within age limit
+ok 13 - clear_to_crossmatch: negative screen, no antibody history, sample within age limit
+  ---
+  duration_ms: 1.745208
+  type: 'test'
+  ...
+# Subtest: hold_sample_expired takes precedence over a negative screen
+ok 14 - hold_sample_expired takes precedence over a negative screen
+  ---
+  duration_ms: 0.179584
+  type: 'test'
+  ...
+# Subtest: hold_sample_expired takes precedence over a pending screen
+ok 15 - hold_sample_expired takes precedence over a pending screen
+  ---
+  duration_ms: 0.2105
+  type: 'test'
+  ...
+# Subtest: hold_sample_expired takes precedence over a positive screen and antibody history
+ok 16 - hold_sample_expired takes precedence over a positive screen and antibody history
+  ---
+  duration_ms: 0.180416
+  type: 'test'
+  ...
+# Subtest: hold_pending_screen when the antibody screen has not resulted, sample not expired
+ok 17 - hold_pending_screen when the antibody screen has not resulted, sample not expired
+  ---
+  duration_ms: 0.1805
+  type: 'test'
+  ...
+# Subtest: hold_antibody_workup on a current positive screen, requiresExtendedCrossmatch true
+ok 18 - hold_antibody_workup on a current positive screen, requiresExtendedCrossmatch true
+  ---
+  duration_ms: 0.227584
+  type: 'test'
+  ...
+# Subtest: hold_antibody_workup on antibody history alone, even with a negative current screen
+ok 19 - hold_antibody_workup on antibody history alone, even with a negative current screen
+  ---
+  duration_ms: 0.100042
+  type: 'test'
+  ...
+# Subtest: requiresExtendedCrossmatch is false for clear_to_crossmatch and true for hold_antibody_workup
+ok 20 - requiresExtendedCrossmatch is false for clear_to_crossmatch and true for hold_antibody_workup
+  ---
+  duration_ms: 0.250167
+  type: 'test'
+  ...
+# Subtest: sample age boundary: exactly at the limit is not expired
+ok 21 - sample age boundary: exactly at the limit is not expired
+  ---
+  duration_ms: 25.516833
+  type: 'test'
+  ...
+# Subtest: sample age boundary: just under the limit is not expired
+ok 22 - sample age boundary: just under the limit is not expired
+  ---
+  duration_ms: 2.508
+  type: 'test'
+  ...
+# Subtest: sample age boundary: just over the limit is expired
+ok 23 - sample age boundary: just over the limit is expired
+  ---
+  duration_ms: 0.143083
+  type: 'test'
+  ...
+# Subtest: throws a descriptive error when requestedUnitCount is 0
+ok 24 - throws a descriptive error when requestedUnitCount is 0
+  ---
+  duration_ms: 0.565708
+  type: 'test'
+  ...
+# Subtest: throws a descriptive error when requestedUnitCount is negative
+ok 25 - throws a descriptive error when requestedUnitCount is negative
+  ---
+  duration_ms: 0.152541
+  type: 'test'
+  ...
+# Subtest: sampleAgeHours rejects NaN with a fixed field-specific error
+ok 26 - sampleAgeHours rejects NaN with a fixed field-specific error
+  ---
+  duration_ms: 145.932541
+  type: 'test'
+  ...
+# Subtest: sampleAgeHours rejects Infinity with a fixed field-specific error
+ok 27 - sampleAgeHours rejects Infinity with a fixed field-specific error
+  ---
+  duration_ms: 0.214375
+  type: 'test'
+  ...
+# Subtest: sampleAgeHours rejects -Infinity with a fixed field-specific error
+ok 28 - sampleAgeHours rejects -Infinity with a fixed field-specific error
+  ---
+  duration_ms: 0.210916
+  type: 'test'
+  ...
+# Subtest: sampleAgeHours rejects -1 with a fixed field-specific error
+ok 29 - sampleAgeHours rejects -1 with a fixed field-specific error
+  ---
+  duration_ms: 0.068042
+  type: 'test'
+  ...
+# Subtest: sampleAgeHours rejects -0.1 with a fixed field-specific error
+ok 30 - sampleAgeHours rejects -0.1 with a fixed field-specific error
+  ---
+  duration_ms: 0.1615
+  type: 'test'
+  ...
+# Subtest: sampleAgeHours rejects undefined with a fixed field-specific error
+ok 31 - sampleAgeHours rejects undefined with a fixed field-specific error
+  ---
+  duration_ms: 0.070083
+  type: 'test'
+  ...
+# Subtest: sampleAgeHours rejects null with a fixed field-specific error
+ok 32 - sampleAgeHours rejects null with a fixed field-specific error
+  ---
+  duration_ms: 0.0605
+  type: 'test'
+  ...
+# Subtest: sampleAgeHours rejects 10 with a fixed field-specific error
+ok 33 - sampleAgeHours rejects 10 with a fixed field-specific error
+  ---
+  duration_ms: 3.837375
+  type: 'test'
+  ...
+# Subtest: maxSampleAgeHoursForType rejects NaN with a fixed field-specific error
+ok 34 - maxSampleAgeHoursForType rejects NaN with a fixed field-specific error
+  ---
+  duration_ms: 59.111
+  type: 'test'
+  ...
+# Subtest: maxSampleAgeHoursForType rejects Infinity with a fixed field-specific error
+ok 35 - maxSampleAgeHoursForType rejects Infinity with a fixed field-specific error
+  ---
+  duration_ms: 68.032667
+  type: 'test'
+  ...
+# Subtest: maxSampleAgeHoursForType rejects -Infinity with a fixed field-specific error
+ok 36 - maxSampleAgeHoursForType rejects -Infinity with a fixed field-specific error
+  ---
+  duration_ms: 3.832333
+  type: 'test'
+  ...
+# Subtest: maxSampleAgeHoursForType rejects 0 with a fixed field-specific error
+ok 37 - maxSampleAgeHoursForType rejects 0 with a fixed field-specific error
+  ---
+  duration_ms: 2.148125
+  type: 'test'
+  ...
+# Subtest: maxSampleAgeHoursForType rejects -1 with a fixed field-specific error
+ok 38 - maxSampleAgeHoursForType rejects -1 with a fixed field-specific error
+  ---
+  duration_ms: 0.186583
+  type: 'test'
+  ...
+# Subtest: maxSampleAgeHoursForType rejects -0.1 with a fixed field-specific error
+ok 39 - maxSampleAgeHoursForType rejects -0.1 with a fixed field-specific error
+  ---
+  duration_ms: 0.346417
+  type: 'test'
+  ...
+# Subtest: maxSampleAgeHoursForType rejects undefined with a fixed field-specific error
+ok 40 - maxSampleAgeHoursForType rejects undefined with a fixed field-specific error
+  ---
+  duration_ms: 0.119
+  type: 'test'
+  ...
+# Subtest: maxSampleAgeHoursForType rejects null with a fixed field-specific error
+ok 41 - maxSampleAgeHoursForType rejects null with a fixed field-specific error
+  ---
+  duration_ms: 0.366125
+  type: 'test'
+  ...
+# Subtest: maxSampleAgeHoursForType rejects 72 with a fixed field-specific error
+ok 42 - maxSampleAgeHoursForType rejects 72 with a fixed field-specific error
+  ---
+  duration_ms: 0.036125
+  type: 'test'
+  ...
+# Subtest: age validation runs before expired, pending, or antibody workup dispositions
+ok 43 - age validation runs before expired, pending, or antibody workup dispositions
+  ---
+  duration_ms: 0.349625
+  type: 'test'
+  ...
+# Subtest: zero sample age and exact-limit sample age remain eligible
+ok 44 - zero sample age and exact-limit sample age remain eligible
+  ---
+  duration_ms: 0.430709
+  type: 'test'
+  ...
+# Subtest: positive fractional limits preserve the strict greater-than expiry boundary
+ok 45 - positive fractional limits preserve the strict greater-than expiry boundary
+  ---
+  duration_ms: 2.467625
+  type: 'test'
+  ...
+# Subtest: pending screens still take precedence over antibody history for valid ages
+ok 46 - pending screens still take precedence over antibody history for valid ages
+  ---
+  duration_ms: 0.433625
+  type: 'test'
+  ...
+# Subtest: throws a descriptive error when requestedUnitCount is NaN
+ok 47 - throws a descriptive error when requestedUnitCount is NaN
+  ---
+  duration_ms: 4.531917
+  type: 'test'
+  ...
+# Subtest: throws a descriptive error when requestedUnitCount is Infinity
+ok 48 - throws a descriptive error when requestedUnitCount is Infinity
+  ---
+  duration_ms: 5.229541
+  type: 'test'
+  ...
+# Subtest: throws a descriptive error when requestedUnitCount is -Infinity
+ok 49 - throws a descriptive error when requestedUnitCount is -Infinity
+  ---
+  duration_ms: 0.40375
+  type: 'test'
+  ...
+# Subtest: throws a descriptive error when requestedUnitCount is 1.5
+ok 50 - throws a descriptive error when requestedUnitCount is 1.5
+  ---
+  duration_ms: 0.667042
+  type: 'test'
+  ...
+# Subtest: throws a descriptive error when requestedUnitCount is 0.5
+ok 51 - throws a descriptive error when requestedUnitCount is 0.5
+  ---
+  duration_ms: 0.174208
+  type: 'test'
+  ...
+# Subtest: throws a descriptive error when requestedUnitCount is undefined
+ok 52 - throws a descriptive error when requestedUnitCount is undefined
+  ---
+  duration_ms: 0.044125
+  type: 'test'
+  ...
+# Subtest: throws a descriptive error when requestedUnitCount is '2' (string)
+ok 53 - throws a descriptive error when requestedUnitCount is '2' (string)
+  ---
+  duration_ms: 0.186917
+  type: 'test'
+  ...
+# Subtest: clear_to_crossmatch when requestedUnitCount is 1
+ok 54 - clear_to_crossmatch when requestedUnitCount is 1
+  ---
+  duration_ms: 0.096875
+  type: 'test'
+  ...
+# Subtest: clear_to_crossmatch when requestedUnitCount is 3
+ok 55 - clear_to_crossmatch when requestedUnitCount is 3
+  ---
+  duration_ms: 1.330625
+  type: 'test'
+  ...
+# Subtest: rejects invalid gracePeriodHours: NaN
+ok 56 - rejects invalid gracePeriodHours: NaN
+  ---
+  duration_ms: 2.790625
+  type: 'test'
+  ...
+# Subtest: rejects invalid gracePeriodHours: Infinity
+ok 57 - rejects invalid gracePeriodHours: Infinity
+  ---
+  duration_ms: 12.129708
+  type: 'test'
+  ...
+# Subtest: rejects invalid gracePeriodHours: -Infinity
+ok 58 - rejects invalid gracePeriodHours: -Infinity
+  ---
+  duration_ms: 0.379291
+  type: 'test'
+  ...
+# Subtest: rejects invalid gracePeriodHours: -1
+ok 59 - rejects invalid gracePeriodHours: -1
+  ---
+  duration_ms: 0.37275
+  type: 'test'
+  ...
+# Subtest: rejects invalid gracePeriodHours: -0.5
+ok 60 - rejects invalid gracePeriodHours: -0.5
+  ---
+  duration_ms: 0.572042
+  type: 'test'
+  ...
+# Subtest: rejects finite grace hours whose conversion to milliseconds overflows
+ok 61 - rejects finite grace hours whose conversion to milliseconds overflows
+  ---
+  duration_ms: 0.118792
+  type: 'test'
+  ...
+# Subtest: preserves strict overdue boundary with 0 hours of grace
+ok 62 - preserves strict overdue boundary with 0 hours of grace
+  ---
+  duration_ms: 0.159459
+  type: 'test'
+  ...
+# Subtest: preserves strict overdue boundary with 0.5 hours of grace
+ok 63 - preserves strict overdue boundary with 0.5 hours of grace
+  ---
+  duration_ms: 0.066875
+  type: 'test'
+  ...
+# Subtest: preserves strict overdue boundary with 6 hours of grace
+ok 64 - preserves strict overdue boundary with 6 hours of grace
+  ---
+  duration_ms: 0.866584
+  type: 'test'
+  ...
+# Subtest: five crossmatch scenarios match the real evaluator on exported fixtures
+ok 65 - five crossmatch scenarios match the real evaluator on exported fixtures
+  ---
+  duration_ms: 107.65125
+  type: 'test'
+  ...
+# Subtest: negative screen with prior antibody history still holds for antibody workup
+ok 66 - negative screen with prior antibody history still holds for antibody workup
+  ---
+  duration_ms: 0.590333
+  type: 'test'
+  ...
+# Subtest: four culture scenarios match the real scheduler and overdue check on exported fixtures
+ok 67 - four culture scenarios match the real scheduler and overdue check on exported fixtures
+  ---
+  duration_ms: 2.036375
+  type: 'test'
+  ...
+# Subtest: culture reads cover overdue, within-grace and future examples
+ok 68 - culture reads cover overdue, within-grace and future examples
+  ---
+  duration_ms: 0.798541
+  type: 'test'
+  ...
+# Subtest: blood, urine, wound and a respiratory extended-incubation culture are all represented
+ok 69 - blood, urine, wound and a respiratory extended-incubation culture are all represented
+  ---
+  duration_ms: 0.32875
+  type: 'test'
+  ...
+# Subtest: headline counts, explanations and synthetic identifiers cover every fixture and row
+ok 70 - headline counts, explanations and synthetic identifiers cover every fixture and row
+  ---
+  duration_ms: 410.329458
+  type: 'test'
+  ...
+# Subtest: builder is deterministic and isolated from fixture mutation, without ambient inputs
+ok 71 - builder is deterministic and isolated from fixture mutation, without ambient inputs
+  ---
+  duration_ms: 7.194958
+  type: 'test'
+  ...
+# Subtest: panel is a read-only server component that calls the builder and stays within copy rules
+ok 72 - panel is a read-only server component that calls the builder and stays within copy rules
+  ---
+  duration_ms: 32.578292
+  type: 'test'
+  ...
+# Subtest: critical-results page imports and renders CrossmatchCulturePanel exactly once
+ok 73 - critical-results page imports and renders CrossmatchCulturePanel exactly once
+  ---
+  duration_ms: 43.398333
+  type: 'test'
+  ...
+# Subtest: fabricated rows contain every required decision from the real evaluators and explanations
+ok 74 - fabricated rows contain every required decision from the real evaluators and explanations
+  ---
+  duration_ms: 341.204375
+  type: 'test'
+  ...
+# Subtest: all-good fixture is ready, and due-soon alone remains advisory
+ok 75 - all-good fixture is ready, and due-soon alone remains advisory
+  ---
+  duration_ms: 0.591125
+  type: 'test'
+  ...
+# Subtest: each blocking condition independently prevents readiness, including an unknown flag mixed with a known flag
+ok 76 - each blocking condition independently prevents readiness, including an unknown flag mixed with a known flag
+  ---
+  duration_ms: 0.891875
+  type: 'test'
+  ...
+# Subtest: every fabricated identifier is SYNTHETIC-prefixed and view text contains no vendor names
+ok 77 - every fabricated identifier is SYNTHETIC-prefixed and view text contains no vendor names
+  ---
+  duration_ms: 294.344583
+  type: 'test'
+  ...
+# Subtest: output is deterministic, does not mutate fixture, and has no clock, environment or fetching access
+ok 78 - output is deterministic, does not mutate fixture, and has no clock, environment or fetching access
+  ---
+  duration_ms: 7.001916
+  type: 'test'
+  ...
+# Subtest: page renders readiness, analytical checks, then supplier questions in order
+ok 79 - page renders readiness, analytical checks, then supplier questions in order
+  ---
+  duration_ms: 37.899708
+  type: 'test'
+  ...
+# Subtest: six authorization scenarios use the real decisions and privacy-safe explanations
+ok 80 - six authorization scenarios use the real decisions and privacy-safe explanations
+  ---
+  duration_ms: 118.334416
+  type: 'test'
+  ...
+# Subtest: all five read-back statuses and complete issue lists come from the real evaluator
+ok 81 - all five read-back statuses and complete issue lists come from the real evaluator
+  ---
+  duration_ms: 5.101667
+  type: 'test'
+  ...
+# Subtest: all five add-on statuses use fixed time, rounded hours, volumes and real issues
+ok 82 - all five add-on statuses use fixed time, rounded hours, volumes and real issues
+  ---
+  duration_ms: 0.589125
+  type: 'test'
+  ...
+# Subtest: headline counts exclude written orders and eligible buffer warnings
+ok 83 - headline counts exclude written orders and eligible buffer warnings
+  ---
+  duration_ms: 4.359666
+  type: 'test'
+  ...
+# Subtest: every identifier is synthetic and no view row exposes requester identities or role values
+ok 84 - every identifier is synthetic and no view row exposes requester identities or role values
+  ---
+  duration_ms: 40.177417
+  type: 'test'
+  ...
+# Subtest: fixtures are fresh and output is deterministic without ambient inputs
+ok 85 - fixtures are fresh and output is deterministic without ambient inputs
+  ---
+  duration_ms: 36.800625
+  type: 'test'
+  ...
+# Subtest: page renders exactly one final read-only intake section with three tables
+ok 86 - page renders exactly one final read-only intake section with three tables
+  ---
+  duration_ms: 1.027167
+  type: 'test'
+  ...
+# Subtest: all indicator numbers and formatting reproduce the real evaluator
+ok 87 - all indicator numbers and formatting reproduce the real evaluator
+  ---
+  duration_ms: 82.887625
+  type: 'test'
+  ...
+# Subtest: zero denominator remains unmeasurable and both target directions include met and missed
+ok 88 - zero denominator remains unmeasurable and both target directions include met and missed
+  ---
+  duration_ms: 2.24525
+  type: 'test'
+  ...
+# Subtest: PT counts, scores, outcomes and explanations come from the real evaluator
+ok 89 - PT counts, scores, outcomes and explanations come from the real evaluator
+  ---
+  duration_ms: 0.494083
+  type: 'test'
+  ...
+# Subtest: every fabricated identifier and declared code has a synthetic prefix
+ok 90 - every fabricated identifier and declared code has a synthetic prefix
+  ---
+  duration_ms: 0.357166
+  type: 'test'
+  ...
+# Subtest: fixtures and view are deterministic and isolated from caller mutation
+ok 91 - fixtures and view are deterministic and isolated from caller mutation
+  ---
+  duration_ms: 0.690625
+  type: 'test'
+  ...
+# Subtest: pure view has no clock, randomness, environment or network dependency
+ok 92 - pure view has no clock, randomness, environment or network dependency
+  ---
+  duration_ms: 0.286292
+  type: 'test'
+  ...
+# Subtest: blood culture without extended incubation: reads at 24h/48h, final negative at 48h
+ok 93 - blood culture without extended incubation: reads at 24h/48h, final negative at 48h
+  ---
+  duration_ms: 9.247417
+  type: 'test'
+  ...
+# Subtest: blood culture with extended incubation: adds Day 5 read, final negative at 5 days
+ok 94 - blood culture with extended incubation: adds Day 5 read, final negative at 5 days
+  ---
+  duration_ms: 0.175709
+  type: 'test'
+  ...
+# Subtest: urine culture: single 18h read, final negative equals that read, regardless of extended flag
+ok 95 - urine culture: single 18h read, final negative equals that read, regardless of extended flag
+  ---
+  duration_ms: 0.124292
+  type: 'test'
+  ...
+# Subtest: wound culture without extended incubation: reads at 24h/48h, final negative at 48h
+ok 96 - wound culture without extended incubation: reads at 24h/48h, final negative at 48h
+  ---
+  duration_ms: 0.049
+  type: 'test'
+  ...
+# Subtest: wound culture with extended incubation: reads unchanged, final negative pushed to 72h
+ok 97 - wound culture with extended incubation: reads unchanged, final negative pushed to 72h
+  ---
+  duration_ms: 0.047167
+  type: 'test'
+  ...
+# Subtest: respiratory culture without extended incubation: reads at 24h/48h, final negative at 48h
+ok 98 - respiratory culture without extended incubation: reads at 24h/48h, final negative at 48h
+  ---
+  duration_ms: 0.039542
+  type: 'test'
+  ...
+# Subtest: respiratory culture with extended incubation: reads unchanged, final negative pushed to 72h
+ok 99 - respiratory culture with extended incubation: reads unchanged, final negative pushed to 72h
+  ---
+  duration_ms: 0.082875
+  type: 'test'
+  ...
+# Subtest: stool culture: reads at 24h/48h/72h and final negative always at 72h, ignoring extended flag
+ok 100 - stool culture: reads at 24h/48h/72h and final negative always at 72h, ignoring extended flag
+  ---
+  duration_ms: 0.054875
+  type: 'test'
+  ...
+# Subtest: isReadOverdue: exactly at the grace-period boundary is not overdue
+ok 101 - isReadOverdue: exactly at the grace-period boundary is not overdue
+  ---
+  duration_ms: 0.309584
+  type: 'test'
+  ...
+# Subtest: isReadOverdue: just under the grace-period boundary is not overdue
+ok 102 - isReadOverdue: just under the grace-period boundary is not overdue
+  ---
+  duration_ms: 3.878541
+  type: 'test'
+  ...
+# Subtest: isReadOverdue: just over the grace-period boundary is overdue
+ok 103 - isReadOverdue: just over the grace-period boundary is overdue
+  ---
+  duration_ms: 0.440625
+  type: 'test'
+  ...
+# Subtest: a lastQcAt later than now locks out as invalid timing, not overdue
+ok 104 - a lastQcAt later than now locks out as invalid timing, not overdue
+  ---
+  duration_ms: 1.091167
+  type: 'test'
+  ...
+# Subtest: an unparseable now locks out as invalid timing
+ok 105 - an unparseable now locks out as invalid timing
+  ---
+  duration_ms: 0.2555
+  type: 'test'
+  ...
+# Subtest: an unparseable lastQcAt locks out as invalid timing
+ok 106 - an unparseable lastQcAt locks out as invalid timing
+  ---
+  duration_ms: 0.243292
+  type: 'test'
+  ...
+# Subtest: a non-finite (Infinity) qcFrequencyHours locks out as invalid timing, even for a very old QC
+ok 107 - a non-finite (Infinity) qcFrequencyHours locks out as invalid timing, even for a very old QC
+  ---
+  duration_ms: 0.102417
+  type: 'test'
+  ...
+# Subtest: a NaN qcFrequencyHours locks out as invalid timing
+ok 108 - a NaN qcFrequencyHours locks out as invalid timing
+  ---
+  duration_ms: 0.103333
+  type: 'test'
+  ...
+# Subtest: a negative qcFrequencyHours locks out as invalid timing
+ok 109 - a negative qcFrequencyHours locks out as invalid timing
+  ---
+  duration_ms: 0.527292
+  type: 'test'
+  ...
+# Subtest: a zero qcFrequencyHours locks out as invalid timing
+ok 110 - a zero qcFrequencyHours locks out as invalid timing
+  ---
+  duration_ms: 0.63375
+  type: 'test'
+  ...
+# Subtest: lastQcAt exactly equal to now (zero elapsed) remains unlocked, not invalid timing
+ok 111 - lastQcAt exactly equal to now (zero elapsed) remains unlocked, not invalid timing
+  ---
+  duration_ms: 0.392292
+  type: 'test'
+  ...
+# Subtest: exactly at qcFrequencyHours elapsed remains the inclusive unlocked boundary, not invalid timing
+ok 112 - exactly at qcFrequencyHours elapsed remains the inclusive unlocked boundary, not invalid timing
+  ---
+  duration_ms: 1.847792
+  type: 'test'
+  ...
+# Subtest: a failed QC result locks out with the failure reason even when timing is also invalid
+ok 113 - a failed QC result locks out with the failure reason even when timing is also invalid
+  ---
+  duration_ms: 1.075375
+  type: 'test'
+  ...
+# Subtest: a not_run QC result locks out with the no-QC-on-record reason even when qcFrequencyHours is invalid
+ok 114 - a not_run QC result locks out with the no-QC-on-record reason even when qcFrequencyHours is invalid
+  ---
+  duration_ms: 0.072584
+  type: 'test'
+  ...
+# Subtest: a null lastQcAt locks out with the no-QC-on-record reason even when now is unparseable
+ok 115 - a null lastQcAt locks out with the no-QC-on-record reason even when now is unparseable
+  ---
+  duration_ms: 0.047833
+  type: 'test'
+  ...
+# Subtest: a failed QC result always locks the device, regardless of timing
+ok 116 - a failed QC result always locks the device, regardless of timing
+  ---
+  duration_ms: 2.14375
+  type: 'test'
+  ...
+# Subtest: a failed QC result locks the device even when it was very recent
+ok 117 - a failed QC result locks the device even when it was very recent
+  ---
+  duration_ms: 0.884208
+  type: 'test'
+  ...
+# Subtest: a not_run QC result locks the device with a no-QC-on-record reason
+ok 118 - a not_run QC result locks the device with a no-QC-on-record reason
+  ---
+  duration_ms: 1.170958
+  type: 'test'
+  ...
+# Subtest: a null lastQcAt locks the device with a no-QC-on-record reason even if a result is somehow present
+ok 119 - a null lastQcAt locks the device with a no-QC-on-record reason even if a result is somehow present
+  ---
+  duration_ms: 0.094083
+  type: 'test'
+  ...
+# Subtest: a passing QC result within frequency unlocks the device
+ok 120 - a passing QC result within frequency unlocks the device
+  ---
+  duration_ms: 0.281375
+  type: 'test'
+  ...
+# Subtest: a passing QC result beyond frequency locks the device as overdue
+ok 121 - a passing QC result beyond frequency locks the device as overdue
+  ---
+  duration_ms: 0.911625
+  type: 'test'
+  ...
+# Subtest: exactly at qcFrequencyHours elapsed, a passing QC is still valid (boundary is inclusive)
+ok 122 - exactly at qcFrequencyHours elapsed, a passing QC is still valid (boundary is inclusive)
+  ---
+  duration_ms: 0.116041
+  type: 'test'
+  ...
+# Subtest: just under qcFrequencyHours elapsed, a passing QC is valid
+ok 123 - just under qcFrequencyHours elapsed, a passing QC is valid
+  ---
+  duration_ms: 0.428459
+  type: 'test'
+  ...
+# Subtest: just over qcFrequencyHours elapsed, a passing QC is overdue
+ok 124 - just over qcFrequencyHours elapsed, a passing QC is overdue
+  ---
+  duration_ms: 0.446
+  type: 'test'
+  ...
+# Subtest: a fresh passing QC within frequency clears a prior lockout
+ok 125 - a fresh passing QC within frequency clears a prior lockout
+  ---
+  duration_ms: 0.298292
+  type: 'test'
+  ...
+# Subtest: priorLockoutActive does not force a lock when the current QC state would otherwise unlock
+ok 126 - priorLockoutActive does not force a lock when the current QC state would otherwise unlock
+  ---
+  duration_ms: 1.238083
+  type: 'test'
+  ...
+# Subtest: a lockout caused by a genuine QC failure requires a supervisor override
+ok 127 - a lockout caused by a genuine QC failure requires a supervisor override
+  ---
+  duration_ms: 0.29725
+  type: 'test'
+  ...
+# Subtest: a lockout caused by an overdue-but-passing QC does not require a supervisor override
+ok 128 - a lockout caused by an overdue-but-passing QC does not require a supervisor override
+  ---
+  duration_ms: 0.063084
+  type: 'test'
+  ...
+# Subtest: a lockout caused by no QC on record does not require a supervisor override
+ok 129 - a lockout caused by no QC on record does not require a supervisor override
+  ---
+  duration_ms: 1.874458
+  type: 'test'
+  ...
+# Subtest: an unlocked device never requires a supervisor override, even if lastQcResult is fail
+ok 130 - an unlocked device never requires a supervisor override, even if lastQcResult is fail
+  ---
+  duration_ms: 0.329292
+  type: 'test'
+  ...
+# Subtest: computes rejection rate by reason against total specimens received
+ok 131 - computes rejection rate by reason against total specimens received
+  ---
+  duration_ms: 9.690667
+  type: 'test'
+  ...
+# Subtest: a declared reason with zero rejections reports a real zero rate, not null
+ok 132 - a declared reason with zero rejections reports a real zero rate, not null
+  ---
+  duration_ms: 0.745166
+  type: 'test'
+  ...
+# Subtest: rejection rate is null, never zero, when no specimens were received
+ok 133 - rejection rate is null, never zero, when no specimens were received
+  ---
+  duration_ms: 0.17275
+  type: 'test'
+  ...
+# Subtest: computes turnaround compliance percentage per priority
+ok 134 - computes turnaround compliance percentage per priority
+  ---
+  duration_ms: 0.501417
+  type: 'test'
+  ...
+# Subtest: a result exactly at the turnaround target duration counts as compliant
+ok 135 - a result exactly at the turnaround target duration counts as compliant
+  ---
+  duration_ms: 0.515125
+  type: 'test'
+  ...
+# Subtest: turnaround compliance is null, never zero, when a declared priority saw no results
+ok 136 - turnaround compliance is null, never zero, when a declared priority saw no results
+  ---
+  duration_ms: 0.4215
+  type: 'test'
+  ...
+# Subtest: computes corrected report rate against total results reported
+ok 137 - computes corrected report rate against total results reported
+  ---
+  duration_ms: 0.32125
+  type: 'test'
+  ...
+# Subtest: corrected report rate is null, never zero, when no results were reported
+ok 138 - corrected report rate is null, never zero, when no results were reported
+  ---
+  duration_ms: 0.4475
+  type: 'test'
+  ...
+# Subtest: a report corrected more than once counts once toward the corrected report rate
+ok 139 - a report corrected more than once counts once toward the corrected report rate
+  ---
+  duration_ms: 0.774083
+  type: 'test'
+  ...
+# Subtest: computes critical value acknowledgement compliance, excluding unacknowledged values from the numerator
+ok 140 - computes critical value acknowledgement compliance, excluding unacknowledged values from the numerator
+  ---
+  duration_ms: 2.484541
+  type: 'test'
+  ...
+# Subtest: critical value acknowledgement compliance is null, never zero, with no critical values
+ok 141 - critical value acknowledgement compliance is null, never zero, with no critical values
+  ---
+  duration_ms: 4.276125
+  type: 'test'
+  ...
+# Subtest: a critical value acknowledged exactly at the target delay counts as compliant
+ok 142 - a critical value acknowledged exactly at the target delay counts as compliant
+  ---
+  duration_ms: 0.278292
+  type: 'test'
+  ...
+# Subtest: rejects a period label that is missing
+ok 143 - rejects a period label that is missing
+  ---
+  duration_ms: 0.528875
+  type: 'test'
+  ...
+# Subtest: rejects specimens received that are not a list
+ok 144 - rejects specimens received that are not a list
+  ---
+  duration_ms: 0.435541
+  type: 'test'
+  ...
+# Subtest: rejects a rejected specimen that references a specimen never received this period
+ok 145 - rejects a rejected specimen that references a specimen never received this period
+  ---
+  duration_ms: 0.309333
+  type: 'test'
+  ...
+# Subtest: rejects a rejected specimen with a reason code that has no declared target
+ok 146 - rejects a rejected specimen with a reason code that has no declared target
+  ---
+  duration_ms: 0.189917
+  type: 'test'
+  ...
+# Subtest: rejects a reported result with a priority that has no declared turnaround target
+ok 147 - rejects a reported result with a priority that has no declared turnaround target
+  ---
+  duration_ms: 0.331667
+  type: 'test'
+  ...
+# Subtest: rejects a reported result with a negative turnaround duration
+ok 148 - rejects a reported result with a negative turnaround duration
+  ---
+  duration_ms: 4.280875
+  type: 'test'
+  ...
+# Subtest: rejects a corrected report that references a result never reported this period
+ok 149 - rejects a corrected report that references a result never reported this period
+  ---
+  duration_ms: 0.614625
+  type: 'test'
+  ...
+# Subtest: rejects a critical value with a non-numeric acknowledgement delay
+ok 150 - rejects a critical value with a non-numeric acknowledgement delay
+  ---
+  duration_ms: 0.247917
+  type: 'test'
+  ...
+# Subtest: rejects turnaround duration and compliance targets that declare different priorities
+ok 151 - rejects turnaround duration and compliance targets that declare different priorities
+  ---
+  duration_ms: 2.812541
+  type: 'test'
+  ...
+# Subtest: rejects a rejection rate target that is out of the 0-100 percent range
+ok 152 - rejects a rejection rate target that is out of the 0-100 percent range
+  ---
+  duration_ms: 0.897125
+  type: 'test'
+  ...
+# Subtest: rejects declared targets that are missing entirely
+ok 153 - rejects declared targets that are missing entirely
+  ---
+  duration_ms: 19.795167
+  type: 'test'
+  ...
+# Subtest: the report never emits a ratePercent of 0 for an indicator that had no denominator, across every indicator
+ok 154 - the report never emits a ratePercent of 0 for an indicator that had no denominator, across every indicator
+  ---
+  duration_ms: 1.485375
+  type: 'test'
+  ...
+# Subtest: duplicate receipts do not dilute the rejection rate
+ok 155 - duplicate receipts do not dilute the rejection rate
+  ---
+  duration_ms: 4.592667
+  type: 'test'
+  ...
+# Subtest: two identical rejections of one received specimen produce 100 percent, not 200
+ok 156 - two identical rejections of one received specimen produce 100 percent, not 200
+  ---
+  duration_ms: 0.273125
+  type: 'test'
+  ...
+# Subtest: one specimen counts once in each distinct declared reason
+ok 157 - one specimen counts once in each distinct declared reason
+  ---
+  duration_ms: 1.418458
+  type: 'test'
+  ...
+# Subtest: an empty period retains zero counts and null rates for every declared reason
+ok 158 - an empty period retains zero counts and null rates for every declared reason
+  ---
+  duration_ms: 0.5135
+  type: 'test'
+  ...
+# Subtest: rejection counts and rates are invariant under receipt and rejection permutations
+ok 159 - rejection counts and rates are invariant under receipt and rejection permutations
+  ---
+  duration_ms: 49.22525
+  type: 'test'
+  ...
+1..159
+# tests 159
+# suites 0
+# pass 159
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 11873.241

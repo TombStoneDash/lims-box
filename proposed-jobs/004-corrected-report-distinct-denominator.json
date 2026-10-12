@@ -1,0 +1,15 @@
+{
+  "id": "LIMS-BOX-CORRECTED-REPORT-DISTINCT-DENOMINATOR-20261012-R9",
+  "repo": "TombStoneDash/lims-box",
+  "project": "LIMS BOX",
+  "title": "Count distinct reported results in the corrected-report percentage",
+  "mod": "lib/ohworks-quality-indicators.ts",
+  "test": "tests/ohworks/quality-indicators.test.ts",
+  "paths": [
+    "lib/ohworks-quality-indicators.ts",
+    "tests/ohworks/quality-indicators.test.ts"
+  ],
+  "priority": "1",
+  "source": "Lines 385 and 414 build unique result-ID sets, but line 417 uses resultsReported.length for the denominator. One corrected R1 gives 100%; repeating the same reported R1 row produces 50% with the same numerator and no new result. Verified on 004e6a6 using docs/planning/2026-10-12-r9/reproduce.cjs; six witnesses passed. Relevant existing baseline: 164 tests passed. Earlier #552 and merged #555 deduplicate specimen rejection rates. The inspected patch does not change correctedReportRate. Distinct metric and defect.",
+  "prompt": "Work on the assigned implementation branch. Edit exactly lib/ohworks-quality-indicators.ts and tests/ohworks/quality-indicators.test.ts. The quality-indicator output can turn a missed 60% correction-rate target into a met target merely because a report row was imported twice.\n\nUse the existing reportedResultIds.size as the corrected-report denominator so numerator and denominator both count distinct results. Keep this job limited to corrected-report rate; do not redefine turnaround or critical-notification metrics.\n\nAcceptance: Repeated identical report rows leave corrected-report percentage unchanged; duplicate correction rows remain deduplicated; two distinct reports with one correction give 50%; zero reports remain null; unknown corrected IDs still reject.\n\nRun node --import tsx --test tests/ohworks/quality-indicators.test.ts; also rerun relevant existing consumer/regression tests listed in the planning evidence. Use synthetic inputs only. No product integration, external services, email, production writes, configuration changes or expanded file scope. Reconcile current ownership and PR coverage before implementation. This is a proposed job, not an implementation claim."
+}

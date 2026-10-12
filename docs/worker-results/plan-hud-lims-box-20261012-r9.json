@@ -1,0 +1,58 @@
+{
+  "task_id": "plan-hud-lims-box-20261012-r9",
+  "run_id": "plan-hud-lims-box-20261012-r9-004e6a6-0446Z",
+  "host_id": "MAIN-DAISY.local",
+  "host_role": "main-daisy",
+  "repo": "TombStoneDash/lims-box",
+  "branch_or_worktree": "codex/plan-hud-lims-box-20261012-r9",
+  "requested_model": "not-exposed",
+  "requested_reasoning_effort": "not-exposed",
+  "client_effective_model": "not-exposed",
+  "provider_returned_model_id": "not-exposed",
+  "model_evidence_source": "not-exposed",
+  "route_id": "not-exposed",
+  "started_at": "2026-10-12T04:39:00Z",
+  "started_at_precision": "approximate; initial tool timestamp not captured",
+  "ended_at": "2026-10-12T04:46:33.281Z",
+  "terminal_state": "PASS",
+  "objective": "Six verified nonduplicate user-noticeable jobs, planning only",
+  "owner": "user-assigned isolated planner",
+  "constraints": [
+    "No product/test edits",
+    "No commit/push",
+    "No external writes"
+  ],
+  "inputs": [
+    "Assigned base 004e6a66d8b083501d380ca524b4161a015096f5",
+    "Repository docs/source/tests",
+    "Live GitHub issues and PRs",
+    "14 earlier planning PRs"
+  ],
+  "timeout": "bounded single planning turn",
+  "retry_cap": 1,
+  "budget": "not-exposed",
+  "verification": [
+    "Existing tests: 159/159 passed across 14 files, exit 0; exact commands and TAP saved",
+    "Release authorization consumer: 5/5 passed, exit 0",
+    "Read-only reproduction: 6/6 defect witnesses and controls passed, exit 0",
+    "Six JSON packets validated: exactly one existing source and one existing test each, zero initial open-PR path overlaps",
+    "GitHub: 3 issues oldest first; 20 initial open PR file lists, 109 merged since 2026-10-09; final refresh 19 open with no new PR and same October 12 merges",
+    "Prior r1-r8 and earlier second-account proposals excluded; related same-file patches inspected",
+    "git diff --exit-code and git diff --check: exit 0; tracked product and tests unchanged"
+  ],
+  "artifacts": [
+    "docs/planning/2026-10-12-r9/PLAN.md",
+    "docs/planning/2026-10-12-r9/github-review.json",
+    "docs/planning/2026-10-12-r9/github-final-check.json",
+    "docs/planning/2026-10-12-r9/reproduce.cjs",
+    "docs/planning/2026-10-12-r9/observations.json",
+    "docs/planning/2026-10-12-r9/tests.tap",
+    "docs/planning/2026-10-12-r9/release-view.tap",
+    "proposed-jobs/"
+  ],
+  "usage_delta": "not-exposed",
+  "blocker": "none for planning; external receipt staged for runner collection because canonical host directory is outside writable roots",
+  "rollback": "Remove only new planning artifacts, packets and this receipt; no product change to reverse",
+  "next_safe_action": "Runner collects/commits plan; reconcile canonical intake/leases/current PRs before implementation; serialize jobs 4 and 5",
+  "definition_of_done": "Six verified jobs with exact existing source/test pairs, evidence, exclusions and executed relevant tests"
+}

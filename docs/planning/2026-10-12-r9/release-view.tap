@@ -1,0 +1,40 @@
+TAP version 13
+# Subtest: all seven fabricated release scenarios match the real authorization rules
+ok 1 - all seven fabricated release scenarios match the real authorization rules
+  ---
+  duration_ms: 2.98775
+  type: 'test'
+  ...
+# Subtest: four fabricated devices match real lockout and supervisor override decisions
+ok 2 - four fabricated devices match real lockout and supervisor override decisions
+  ---
+  duration_ms: 2.196833
+  type: 'test'
+  ...
+# Subtest: all fixture and displayed identifiers are clearly synthetic
+ok 3 - all fixture and displayed identifiers are clearly synthetic
+  ---
+  duration_ms: 0.986584
+  type: 'test'
+  ...
+# Subtest: builder is deterministic, uses fresh fixtures and has no ambient inputs
+ok 4 - builder is deterministic, uses fresh fixtures and has no ambient inputs
+  ---
+  duration_ms: 0.706417
+  type: 'test'
+  ...
+# Subtest: personnel panel is role-filtered, read-only and immediately before discovery
+ok 5 - personnel panel is role-filtered, read-only and immediately before discovery
+  ---
+  duration_ms: 1.435666
+  type: 'test'
+  ...
+1..5
+# tests 5
+# suites 0
+# pass 5
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 4545.067917

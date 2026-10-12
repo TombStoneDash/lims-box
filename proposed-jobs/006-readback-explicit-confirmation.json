@@ -1,0 +1,15 @@
+{
+  "id": "LIMS-BOX-READBACK-EXPLICIT-CONFIRMATION-20261012-R9",
+  "repo": "TombStoneDash/lims-box",
+  "project": "LIMS BOX",
+  "title": "Require boolean true for verbal read-back evidence",
+  "mod": "lib/ohworks-verbal-order-readback.ts",
+  "test": "tests/ohworks-verbal-order-readback.test.ts",
+  "paths": [
+    "lib/ohworks-verbal-order-readback.ts",
+    "tests/ohworks-verbal-order-readback.test.ts"
+  ],
+  "priority": "1",
+  "source": "Lines 103 and 111 use truthiness for evidence. With a verbal order and valid synthetic identity/text, readBackPerformed=true and readBackConfirmedByOriginator='false' returns compliant=true, status=compliant and no issues; literal false correctly refuses. Verified on 004e6a6 using docs/planning/2026-10-12-r9/reproduce.cjs; six witnesses passed. Relevant existing baseline: 164 tests passed. No earlier plan or open/recent PR covers verbal read-back boolean evidence.",
+  "prompt": "Work on the assigned implementation branch. Edit exactly lib/ohworks-verbal-order-readback.ts and tests/ohworks-verbal-order-readback.test.ts. The order-intake evaluator can count textual false as explicit confirmation and report a verbal order ready.\n\nOnly literal true may establish performed or confirmed evidence. Use existing missing_readback/readback_not_confirmed refusal states for absent or non-boolean evidence on verbal orders. Preserve the explicit orderReceivedVerbally=false non-applicable contract; reject malformed orderReceivedVerbally values rather than treating missing evidence as a non-verbal order.\n\nAcceptance: Text false/true, numbers, null and objects cannot establish performed/confirmed evidence; boolean true works and boolean false keeps its existing reason. Explicit non-verbal orders remain not_applicable regardless of unused fields. Tests exercise malformed runtime input with casts, without broadening production interfaces.\n\nRun node --import tsx --test tests/ohworks-verbal-order-readback.test.ts; also rerun relevant existing consumer/regression tests listed in the planning evidence. Use synthetic inputs only. No product integration, external services, email, production writes, configuration changes or expanded file scope. Reconcile current ownership and PR coverage before implementation. This is a proposed job, not an implementation claim."
+}

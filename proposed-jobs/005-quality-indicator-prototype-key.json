@@ -1,0 +1,15 @@
+{
+  "id": "LIMS-BOX-QUALITY-INDICATOR-PROTOTYPE-KEY-20261012-R9",
+  "repo": "TombStoneDash/lims-box",
+  "project": "LIMS BOX",
+  "title": "Preserve every declared quality-indicator key in serialized output",
+  "mod": "lib/ohworks-quality-indicators.ts",
+  "test": "tests/ohworks/quality-indicators.test.ts",
+  "paths": [
+    "lib/ohworks-quality-indicators.ts",
+    "tests/ohworks/quality-indicators.test.ts"
+  ],
+  "priority": "1",
+  "source": "Lines 390/395 and 402/407 populate ordinary objects using declared string keys. An own __proto__ rejection target from JSON, with one matching rejected specimen, produces Object.keys=[] and JSON {}, losing its 100% indicator; the value becomes the output object's prototype. Verified on 004e6a6 using docs/planning/2026-10-12-r9/reproduce.cjs; six witnesses passed. Relevant existing baseline: 164 tests passed. The earlier own-key jobs concern other modules; #555 changes unique specimen counts, not dictionary construction. No open PR touches this pair.",
+  "prompt": "Work on the assigned implementation branch. Edit exactly lib/ohworks-quality-indicators.ts and tests/ohworks/quality-indicators.test.ts. The quality view enumerates output with Object.entries, so a valid declared indicator disappears from the table and JSON export.\n\nBuild both output dictionaries using own data properties (for example Object.fromEntries or defineProperty) so all admitted string keys are preserved without prototype setters. Preserve ordinary-object compatibility if existing consumers/tests depend on it; never ban an otherwise valid declared key merely to hide the bug.\n\nAcceptance: Own __proto__, constructor and toString keys survive Object.entries and JSON serialization for rejection and turnaround metrics with correct values; ordinary keys and object prototype remain intact. Run after job 4 on a refreshed base because they share both files.\n\nRun node --import tsx --test tests/ohworks/quality-indicators.test.ts; also rerun relevant existing consumer/regression tests listed in the planning evidence. Use synthetic inputs only. No product integration, external services, email, production writes, configuration changes or expanded file scope. Reconcile current ownership and PR coverage before implementation. This is a proposed job, not an implementation claim."
+}

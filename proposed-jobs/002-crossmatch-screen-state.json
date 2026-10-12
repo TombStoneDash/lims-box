@@ -1,0 +1,15 @@
+{
+  "id": "LIMS-BOX-CROSSMATCH-SCREEN-STATE-20261012-R9",
+  "repo": "TombStoneDash/lims-box",
+  "project": "LIMS BOX",
+  "title": "Require a known antibody-screen state before clearing crossmatch",
+  "mod": "lib/ohworks-bloodbank-crossmatch-hold.ts",
+  "test": "tests/ohworks/bloodbank-crossmatch-hold.test.ts",
+  "paths": [
+    "lib/ohworks-bloodbank-crossmatch-hold.ts",
+    "tests/ohworks/bloodbank-crossmatch-hold.test.ts"
+  ],
+  "priority": "1",
+  "source": "Lines 90 and 98 recognize pending and positive, then lines 106–112 unconditionally clear the remaining states. With valid O/positive blood group, no history, age 1 of 72 hours, one requested unit, antibodyScreenResult='indeterminate' returns clear_to_crossmatch and falsely says the screen is negative. Verified on 004e6a6 using docs/planning/2026-10-12-r9/reproduce.cjs; six witnesses passed. Relevant existing baseline: 164 tests passed. Earlier crossmatch jobs and merged #547/#589 repair ages and unit counts only; both patches were inspected.",
+  "prompt": "Work on the assigned implementation branch. Edit exactly lib/ohworks-bloodbank-crossmatch-hold.ts and tests/ohworks/bloodbank-crossmatch-hold.test.ts. The crossmatch result can show eligibility without a recorded negative screen.\n\nValidate antibodyScreenResult against the three declared values before disposition and throw a deliberate input error for unknown, missing or non-string runtime values. Do not coerce unknown states into negative and do not change declared pending/positive/negative policy or age/count validation.\n\nAcceptance: Unknown strings, empty strings, undefined, null and non-string states never clear crossmatch; valid negative with no history clears, pending holds, positive/history holds, and expired samples still hold.\n\nRun node --import tsx --test tests/ohworks/bloodbank-crossmatch-hold.test.ts; also rerun relevant existing consumer/regression tests listed in the planning evidence. Use synthetic inputs only. No product integration, external services, email, production writes, configuration changes or expanded file scope. Reconcile current ownership and PR coverage before implementation. This is a proposed job, not an implementation claim."
+}

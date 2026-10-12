@@ -1,0 +1,15 @@
+{
+  "id": "LIMS-BOX-CULTURE-TIMESTAMP-EVIDENCE-20261012-R9",
+  "repo": "TombStoneDash/lims-box",
+  "project": "LIMS BOX",
+  "title": "Reject invalid culture timestamps before scheduling or clearing overdue reads",
+  "mod": "lib/ohworks-micro-culture-incubation.ts",
+  "test": "tests/ohworks/micro-culture-incubation.test.ts",
+  "paths": [
+    "lib/ohworks-micro-culture-incubation.ts",
+    "tests/ohworks/micro-culture-incubation.test.ts"
+  ],
+  "priority": "1",
+  "source": "Lines 62, 127–133 use Date.parse without validating written calendar fields or checking parsed finiteness. Blood culture plated 2026-02-30T08:00:00Z produces its first read at 2026-03-03T08:00:00.000Z; isReadOverdue with dueAt='bad-date' returns false. Verified on 004e6a6 using docs/planning/2026-10-12-r9/reproduce.cjs; six witnesses passed. Relevant existing baseline: 164 tests passed. Earlier #545 culture work and merged #549 validate grace hours only; the inspected patch does not validate timestamps.",
+  "prompt": "Work on the assigned implementation branch. Edit exactly lib/ohworks-micro-culture-incubation.ts and tests/ohworks/micro-culture-incubation.test.ts. The crossmatch/culture evaluator supplies invented read dates and can hide overdue status when timing evidence is unreadable.\n\nValidate caller-supplied UTC ISO calendar/clock fields and finite instants for platedAt, dueAt and now before arithmetic. Throw a deliberate RangeError for invalid timing, rather than publishing a schedule or false overdue result. Preserve supported fractional seconds, valid leap days, UTC-only documented timestamps, grace checks and strict overdue boundaries.\n\nAcceptance: Impossible February/April dates, unreadable text and missing UTC zone are rejected in all three timestamp positions; valid leap days and before/equal/after grace boundaries work. Existing culture-grace tests remain green.\n\nRun node --import tsx --test tests/ohworks/micro-culture-incubation.test.ts; also rerun relevant existing consumer/regression tests listed in the planning evidence. Use synthetic inputs only. No product integration, external services, email, production writes, configuration changes or expanded file scope. Reconcile current ownership and PR coverage before implementation. This is a proposed job, not an implementation claim."
+}

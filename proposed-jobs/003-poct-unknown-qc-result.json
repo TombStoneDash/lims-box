@@ -1,0 +1,15 @@
+{
+  "id": "LIMS-BOX-POCT-UNKNOWN-QC-RESULT-20261012-R9",
+  "repo": "TombStoneDash/lims-box",
+  "project": "LIMS BOX",
+  "title": "Keep POCT locked unless the recorded QC outcome is explicitly pass",
+  "mod": "lib/ohworks-poct-lockout.ts",
+  "test": "tests/ohworks/poct-lockout.test.ts",
+  "paths": [
+    "lib/ohworks-poct-lockout.ts",
+    "tests/ohworks/poct-lockout.test.ts"
+  ],
+  "priority": "1",
+  "source": "Lines 67–81 handle fail/not_run, but lines 103–110 unlock any remaining value with fresh timing. lastQcResult='error', valid QC at 08:00, now 09:00, frequency 24 and priorLockoutActive=true returns locked=false and says QC passed. Verified on 004e6a6 using docs/planning/2026-10-12-r9/reproduce.cjs; six witnesses passed. Relevant existing baseline: 164 tests passed. Earlier POCT proposals and merged #582 cover time/frequency validation, not outcome membership; patch inspected.",
+  "prompt": "Work on the assigned implementation branch. Edit exactly lib/ohworks-poct-lockout.ts and tests/ohworks/poct-lockout.test.ts. The release-authorization demo evaluator can claim a device is unlocked after a QC outcome it does not recognize.\n\nRefuse every QC outcome outside pass/fail/not_run with locked=true, qcOverdue=false and an accurate invalid-outcome reason. Preserve explicit pass timing checks, fail/not_run outcomes and supervisor override semantics.\n\nAcceptance: error, empty/missing/null and non-string outcomes stay locked even with recent timing; only explicit pass may unlock; valid fail/not_run and timing regressions pass.\n\nRun node --import tsx --test tests/ohworks/poct-lockout.test.ts; also rerun relevant existing consumer/regression tests listed in the planning evidence. Use synthetic inputs only. No product integration, external services, email, production writes, configuration changes or expanded file scope. Reconcile current ownership and PR coverage before implementation. This is a proposed job, not an implementation claim."
+}
