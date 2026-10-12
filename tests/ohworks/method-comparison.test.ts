@@ -354,11 +354,44 @@ test('a non-finite candidate value throws candidate-value-invalid', () => {
   assertThrowsCode(() => evaluateMethodComparison(pairs, baselineDeclaration()), 'candidate-value-invalid');
 });
 
-test('a numeric-looking string value is accepted as numeric', () => {
-  const pairs = baselinePairs();
-  (pairs[0] as unknown as { referenceValue: unknown }).referenceValue = '10';
-  const result = evaluateMethodComparison(pairs, baselineDeclaration());
-  assert.equal(result.decision, 'acceptable');
+test('radix-prefixed reference value text throws reference-value-invalid', () => {
+  for (const referenceValue of ['0x10', '0b11', '0o7']) {
+    const pairs = baselinePairs();
+    (pairs[0] as unknown as { referenceValue: unknown }).referenceValue = referenceValue;
+    assertThrowsCode(() => evaluateMethodComparison(pairs, baselineDeclaration()), 'reference-value-invalid');
+  }
+});
+
+test('radix-prefixed candidate value text throws candidate-value-invalid', () => {
+  for (const candidateValue of ['0x10', '0b11', '0o7']) {
+    const pairs = baselinePairs();
+    (pairs[0] as unknown as { candidateValue: unknown }).candidateValue = candidateValue;
+    assertThrowsCode(() => evaluateMethodComparison(pairs, baselineDeclaration()), 'candidate-value-invalid');
+  }
+});
+
+test('decimal text and finite numeric values preserve the equivalent numeric comparison result', () => {
+  const cases: ReadonlyArray<readonly [rawValue: unknown, numericValue: number]> = [
+    ['16', 16],
+    [' 16 ', 16],
+    ['1.6e1', 16],
+    ['+16', 16],
+    ['.5', 0.5],
+    [16, 16],
+  ];
+
+  for (const field of ['referenceValue', 'candidateValue'] as const) {
+    for (const [rawValue, numericValue] of cases) {
+      const actualPairs = baselinePairs();
+      actualPairs[0][field] = rawValue;
+      const expectedPairs = baselinePairs();
+      expectedPairs[0][field] = numericValue;
+      assert.deepEqual(
+        evaluateMethodComparison(actualPairs, baselineDeclaration()),
+        evaluateMethodComparison(expectedPairs, baselineDeclaration()),
+      );
+    }
+  }
 });
 
 test('a missing reference unit throws reference-unit-missing', () => {
