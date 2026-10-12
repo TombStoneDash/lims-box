@@ -72,11 +72,15 @@ export function generateOHWorksSyntheticSamples({
       new Date(receivedFrom).toISOString() !== canonicalIso) {
     throw new Error('A valid UTC ISO receivedFromIso timestamp is required.');
   }
-  if (!Array.isArray(profiles) || profiles.length === 0 || profiles.some(profile =>
-    !profile || !MATRICES.has(profile.matrixCode) ||
-    !Array.isArray(profile.analyses) || profile.analyses.length === 0 ||
-    profile.analyses.some(code => typeof code !== 'string' || !/^SYNTHETIC-ANALYSIS-\d{1,6}$/.test(code))
-  )) {
+  if (!Array.isArray(profiles) || profiles.length === 0 ||
+    Array.from({ length: profiles.length }, (_, index) => profiles[index]).some(profile =>
+      !profile || !MATRICES.has(profile.matrixCode) ||
+      !Array.isArray(profile.analyses) || profile.analyses.length === 0 ||
+      Array.from({ length: profile.analyses.length }, (_, index) => profile.analyses[index]).some(
+        code => typeof code !== 'string' || !/^SYNTHETIC-ANALYSIS-\d{1,6}$/.test(code),
+      )
+    )
+  ) {
     throw new Error('Profiles require supported matrices and synthetic numeric analysis codes.');
   }
 
