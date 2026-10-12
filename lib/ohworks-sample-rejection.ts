@@ -304,17 +304,21 @@ function isRealCalendarDate(year: number, month: number, day: number): boolean {
  * 2026-02-30) is rejected as unparsable instead of being silently rolled
  * forward by the underlying Date implementation. This applies regardless of
  * whether the timestamp is UTC (`Z`) or carries an explicit offset, because
- * the offset never changes which calendar date was actually written.
+ * the offset never changes which calendar date was actually written. Values
+ * that don't even match the ISO calendar-date prefix (e.g. month-name or
+ * slash-delimited strings) are rejected as unparsable too, instead of
+ * falling through to `Date.parse`'s more permissive, non-ISO parsing.
  */
 function parseCalendarTimestamp(value: string): number {
   const match = ISO_CALENDAR_TIMESTAMP_PATTERN.exec(value);
-  if (match) {
-    const year = Number(match[1]);
-    const month = Number(match[2]);
-    const day = Number(match[3]);
-    if (!isRealCalendarDate(year, month, day)) {
-      return NaN;
-    }
+  if (!match) {
+    return NaN;
+  }
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+  if (!isRealCalendarDate(year, month, day)) {
+    return NaN;
   }
   return Date.parse(value);
 }
