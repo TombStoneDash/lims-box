@@ -1,0 +1,77 @@
+{
+  "task_id": "hud-review-lims-box-702b",
+  "run_id": "hud-review-lims-box-702b-20261012T075040Z",
+  "host_id": "DESKTOP-1TV907A",
+  "host_role": "lenovo",
+  "repo": "TombStoneDash/lims-box",
+  "branch_or_worktree": "codex-lenovo/hud-review-lims-box-702b",
+  "requested_model": "not-exposed",
+  "requested_reasoning_effort": "not-exposed",
+  "client_effective_model": "not-exposed",
+  "provider_returned_model_id": "not-exposed",
+  "model_evidence_source": "not-exposed",
+  "route_id": "not-exposed",
+  "started_at": "2026-10-12T07:50:40.4251804Z",
+  "ended_at": "2026-10-12T07:54:16.1871588Z",
+  "terminal_state": "BLOCKED",
+  "head_sha": "3d2f25fd4840f8702fc79a49dc3949ed31525678",
+  "base_sha": "a59d26a456352851efb359afb3c791d218fcc953",
+  "verification": [
+    "Checked-out HEAD and live PR head match the exact requested SHA; complete diff reviewed: 2 files, 134 insertions.",
+    "node --import tsx --test tests/ohworks/senaite-create-contract.test.ts tests/ohworks/senaite-create-impossible-dates.test.ts tests/ohworks/senaite-create-outcome-shape.test.ts tests/ohworks/synthetic-sample-batch.test.ts: exit 0; 75 passed, 0 failed, 0 skipped, Node v24.14.1.",
+    "Initial local test invocation failed before test execution because tsx was absent. After dependency installation supplied tsx, identical source passed. Environment-only setup failure; no unresolved assertion failures or source regressions found; base rerun not needed.",
+    "git diff --check base...HEAD: exit 0.",
+    "Read docs/testing/full-suite-ci.md, scripts/run-all-tests.mjs, package.json and all seven CI workflows. Full Test Suite CI runs npm ci then npm run test:all on Node 22; newly added tests are included by recursive discovery.",
+    "Authenticated GitHub API: every check run bound to the exact head is completed/success; combined Vercel status is success.",
+    "Branch protection endpoint returned HTTP 404 Branch not protected; repository rulesets and effective main branch rules both returned empty arrays.",
+    "Required .codex-review-host-evidence.json missing before and after checkout; timestamp, completeness and authenticated binding cannot be verified. Live API does not replace the expressly required artifact.",
+    "npm ci --cache .review-npm-cache --no-audit --no-fund: exit 0; 459 packages installed; temporary npm cache removed within this worktree."
+  ],
+  "checks": [
+    {
+      "conclusion": "success",
+      "url": "https://github.com/TombStoneDash/lims-box/actions/runs/38217549840/job/114705725417",
+      "name": "full-tests"
+    },
+    {
+      "conclusion": "success",
+      "url": "https://github.com/TombStoneDash/lims-box/actions/runs/38217549932/job/114705725711",
+      "name": "lint"
+    },
+    {
+      "conclusion": "success",
+      "url": "https://github.com/TombStoneDash/lims-box/actions/runs/38217549863/job/114705725320",
+      "name": "verify"
+    },
+    {
+      "conclusion": "success",
+      "url": "https://github.com/TombStoneDash/lims-box/actions/runs/38217549785/job/114705724594",
+      "name": "wake-phrase"
+    },
+    {
+      "conclusion": "success",
+      "url": "https://github.com/TombStoneDash/lims-box/actions/runs/38217543568/job/114705703234",
+      "name": "wake-phrase"
+    },
+    {
+      "conclusion": "success",
+      "url": "https://vercel.com/github",
+      "name": "Vercel Preview Comments"
+    }
+  ],
+  "status_contexts": [
+    {
+      "state": "success",
+      "context": "Vercel",
+      "url": "https://vercel.com/tombstone-dashs-projects/lims-box/9jTikznkpDid2ShMwxLpiEkgtWbX"
+    }
+  ],
+  "artifacts": [
+    "docs/worker-results/hud-review-lims-box-702b.json"
+  ],
+  "usage_delta": "not-exposed",
+  "blocker": "Required authenticated host evidence file .codex-review-host-evidence.json is missing.",
+  "rollback": "No source edits, commits, pushes, merge, deployment, or external comments. Review receipt is removable.",
+  "next_safe_action": "Runner supplies fresh complete authenticated host evidence bound to PR 702 and the exact full head; reviewer validates it before acceptance.",
+  "receipt_location_note": "Repository-local receipt only; no out-of-repository canonical results path accessed, per task constraint."
+}
