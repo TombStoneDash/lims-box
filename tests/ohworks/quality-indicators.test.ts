@@ -88,6 +88,27 @@ test('computes rejection rate by reason against total specimens received', () =>
   });
 });
 
+test('rejection indicators preserve declared object-name keys in entries and JSON', () => {
+  const input = baselineInput();
+  input.specimensReceived = [{ specimenId: 'spec-synth-1' }];
+  input.specimensRejected = [{ specimenId: 'spec-synth-1', reasonCode: '__proto__' }];
+  input.targets.rejectionRatePercentByReason = JSON.parse(
+    '{"__proto__":5,"constructor":6,"toString":7,"ordinary":8}',
+  );
+
+  const indicators = computeQualityIndicators(input).rejectionRateByReason;
+  const expected = [
+    ['__proto__', { numerator: 1, denominator: 1, ratePercent: 100, targetPercent: 5 }],
+    ['constructor', { numerator: 0, denominator: 1, ratePercent: 0, targetPercent: 6 }],
+    ['toString', { numerator: 0, denominator: 1, ratePercent: 0, targetPercent: 7 }],
+    ['ordinary', { numerator: 0, denominator: 1, ratePercent: 0, targetPercent: 8 }],
+  ];
+  assert.equal(Object.getPrototypeOf(indicators), Object.prototype);
+  assert.deepEqual(Object.entries(indicators), expected);
+  assert.deepEqual(Object.entries(JSON.parse(JSON.stringify(indicators))), expected);
+  assert.equal(Object.getPrototypeOf(Object.prototype), null);
+});
+
 test('a declared reason with zero rejections reports a real zero rate, not null', () => {
   const input = baselineInput();
   input.specimensRejected = [{ specimenId: 'spec-synth-1', reasonCode: 'hemolysis' }];
@@ -124,6 +145,34 @@ test('computes turnaround compliance percentage per priority', () => {
     ratePercent: 50,
     targetPercent: 90,
   });
+});
+
+test('turnaround indicators preserve declared object-name keys in entries and JSON', () => {
+  const input = baselineInput();
+  input.resultsReported = [
+    { resultId: 'result-synth-1', priority: '__proto__', turnaroundMinutes: 30 },
+    { resultId: 'result-synth-2', priority: 'constructor', turnaroundMinutes: 90 },
+    { resultId: 'result-synth-3', priority: 'toString', turnaroundMinutes: 15 },
+    { resultId: 'result-synth-4', priority: 'ordinary', turnaroundMinutes: 100 },
+  ];
+  input.targets.turnaroundTargetMinutesByPriority = JSON.parse(
+    '{"__proto__":60,"constructor":60,"toString":30,"ordinary":60}',
+  );
+  input.targets.turnaroundCompliancePercentByPriority = JSON.parse(
+    '{"__proto__":95,"constructor":90,"toString":85,"ordinary":80}',
+  );
+
+  const indicators = computeQualityIndicators(input).turnaroundComplianceByPriority;
+  const expected = [
+    ['__proto__', { numerator: 1, denominator: 1, ratePercent: 100, targetPercent: 95 }],
+    ['constructor', { numerator: 0, denominator: 1, ratePercent: 0, targetPercent: 90 }],
+    ['toString', { numerator: 1, denominator: 1, ratePercent: 100, targetPercent: 85 }],
+    ['ordinary', { numerator: 0, denominator: 1, ratePercent: 0, targetPercent: 80 }],
+  ];
+  assert.equal(Object.getPrototypeOf(indicators), Object.prototype);
+  assert.deepEqual(Object.entries(indicators), expected);
+  assert.deepEqual(Object.entries(JSON.parse(JSON.stringify(indicators))), expected);
+  assert.equal(Object.getPrototypeOf(Object.prototype), null);
 });
 
 test('a result exactly at the turnaround target duration counts as compliant', () => {
