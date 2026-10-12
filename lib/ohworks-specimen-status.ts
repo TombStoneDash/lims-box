@@ -377,10 +377,13 @@ export function projectSpecimenStatuses(
     throw new SpecimenStatusInputError('invalid-context');
   }
 
-  return records.map((raw) => {
+  const views: SpecimenStatusView[] = [];
+  for (let index = 0; index < records.length; index += 1) {
+    const raw = records[index];
     if (!isStructurallyValidRecord(raw)) {
       throw new SpecimenStatusInputError('record-malformed');
     }
-    return projectSingleRecord(raw, context);
-  });
+    views.push(projectSingleRecord(raw, context));
+  }
+  return views;
 }
