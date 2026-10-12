@@ -119,6 +119,36 @@ test('accepts an empty test panel', () => {
   assert.deepEqual(result.shortTestCodes, []);
 });
 
+for (const [label, panel] of [
+  ['null', null],
+  ['plain object', { syntheticMarker: 'SYNTHETIC_PANEL' }],
+  ['string', 'SYNTHETIC_PANEL'],
+] as const) {
+  test(`fails closed on a ${label} test panel with a static privacy-safe error`, () => {
+    assert.throws(
+      () => evaluateSampleVolumeSufficiency(10, 2, panel as unknown as SampleVolumeTestRequest[]),
+      (error: unknown) => {
+        assert.ok(error instanceof SampleVolumeError);
+        assert.equal(error.code, 'tests-not-array');
+        assert.equal(error.message, 'The test panel must be an array.');
+        return true;
+      },
+    );
+  });
+}
+
+test('checks specimen volume, then dead volume, before test panel shape', () => {
+  const panel = null as unknown as SampleVolumeTestRequest[];
+  assert.throws(
+    () => evaluateSampleVolumeSufficiency(-1, -1, panel),
+    (error: unknown) => error instanceof SampleVolumeError && error.code === 'specimen-volume-invalid',
+  );
+  assert.throws(
+    () => evaluateSampleVolumeSufficiency(10, -1, panel),
+    (error: unknown) => error instanceof SampleVolumeError && error.code === 'container-dead-volume-invalid',
+  );
+});
+
 test('fails closed on a negative specimen volume', () => {
   assert.throws(
     () => evaluateSampleVolumeSufficiency(-1, 0, []),
@@ -215,6 +245,7 @@ test('explainSampleVolumeError returns deterministic, non-empty text for every e
   const codes: SampleVolumeErrorCode[] = [
     'specimen-volume-invalid',
     'container-dead-volume-invalid',
+    'tests-not-array',
     'test-code-duplicate',
     'test-code-unknown',
     'test-required-volume-invalid',
