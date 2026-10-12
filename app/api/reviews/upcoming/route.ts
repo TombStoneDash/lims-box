@@ -12,9 +12,10 @@ export const dynamic = "force-dynamic";
  */
 export async function GET(req: NextRequest) {
   const url = new URL(req.url);
-  const rawDays = parseInt(url.searchParams.get("days") ?? "30", 10);
-  const days = Math.min(Math.max(isNaN(rawDays) ? 30 : rawDays, 1), 90);
-  const reviewerName = url.searchParams.get("reviewer_name");
+  const rawDaysParam = url.searchParams.get("days") ?? "";
+  const rawDays = /^\d+$/.test(rawDaysParam) ? parseInt(rawDaysParam, 10) : 30;
+  const days = Math.min(Math.max(rawDays, 1), 90);
+  const reviewerName = url.searchParams.get("reviewer_name")?.trim() || null;
 
   const now = new Date();
   const cutoff = new Date(now);
@@ -23,7 +24,7 @@ export async function GET(req: NextRequest) {
   const events = await prisma.reviewEvent.findMany({
     where: {
       nextReviewDue: { gte: now, lte: cutoff },
-      ...(reviewerName ? { reviewerName: { contains: reviewerName } } : {}),
+      ...(reviewerName ? { reviewerName: { contains: reviewerName, mode: "insensitive" } } : {}),
     },
     orderBy: { nextReviewDue: "asc" },
     include: {
