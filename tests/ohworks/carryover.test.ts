@@ -352,6 +352,44 @@ test('a missing identity field throws a sanitized typed error', () => {
   );
 });
 
+test('a whitespace-only result identifier throws the existing missing-identity error', () => {
+  const run: CarryoverRun = { results: [result({ resultId: '   ' })], rules: baselineRules() };
+  assert.throws(
+    () => evaluateCarryoverRisk(run),
+    (error: unknown) => {
+      assert.ok(error instanceof CarryoverInputError);
+      assert.equal((error as CarryoverInputError).code, 'result-missing-identity');
+      return true;
+    },
+  );
+});
+
+test('a whitespace-only result analyte code throws the existing missing-identity error', () => {
+  const run: CarryoverRun = { results: [result({ analyteCode: '   ' })], rules: baselineRules() };
+  assert.throws(
+    () => evaluateCarryoverRisk(run),
+    (error: unknown) => {
+      assert.ok(error instanceof CarryoverInputError);
+      assert.equal((error as CarryoverInputError).code, 'result-missing-identity');
+      return true;
+    },
+  );
+});
+
+test('valid opaque identifiers with spaces are matched and preserved byte-for-byte', () => {
+  const resultId = '  result synthetic 1  ';
+  const analyteCode = '  ANALYTE SYNTH A  ';
+  const run: CarryoverRun = {
+    results: [result({ resultId, analyteCode })],
+    rules: [{ analyteCode, highThreshold: 100, carryoverFactor: 0.1, repeatThreshold: 5 }],
+  };
+
+  const [assessment] = evaluateCarryoverRisk(run);
+
+  assert.equal(assessment.resultId, resultId);
+  assert.equal(assessment.reasonCode, 'no-preceding-high');
+});
+
 test('a non-boolean washBefore throws a sanitized typed error', () => {
   const run: CarryoverRun = { results: [{ ...result(), washBefore: 'yes' as unknown as boolean }], rules: baselineRules() };
   assert.throws(
@@ -421,6 +459,21 @@ test('an empty rules array throws a sanitized typed error', () => {
     (error: unknown) => {
       assert.ok(error instanceof CarryoverInputError);
       assert.equal((error as CarryoverInputError).code, 'rules-empty');
+      return true;
+    },
+  );
+});
+
+test('a whitespace-only rule analyte code throws the existing invalid-rules error', () => {
+  const run: CarryoverRun = {
+    results: [result({ analyteCode: '   ' })],
+    rules: [{ analyteCode: '   ', highThreshold: 100, carryoverFactor: 0.1, repeatThreshold: 5 }],
+  };
+  assert.throws(
+    () => evaluateCarryoverRisk(run),
+    (error: unknown) => {
+      assert.ok(error instanceof CarryoverInputError);
+      assert.equal((error as CarryoverInputError).code, 'rules-invalid');
       return true;
     },
   );

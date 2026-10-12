@@ -150,9 +150,9 @@ function hasResultIdentity(
   const candidate = value as Record<string, unknown>;
   return (
     typeof candidate.resultId === 'string' &&
-    candidate.resultId.length > 0 &&
+    candidate.resultId.trim().length > 0 &&
     typeof candidate.analyteCode === 'string' &&
-    candidate.analyteCode.length > 0 &&
+    candidate.analyteCode.trim().length > 0 &&
     typeof candidate.washBefore === 'boolean' &&
     'position' in candidate &&
     'value' in candidate
@@ -177,7 +177,7 @@ function isValidRule(rule: unknown): rule is CarryoverThresholdRule {
   const candidate = rule as Record<string, unknown>;
   return (
     typeof candidate.analyteCode === 'string' &&
-    candidate.analyteCode.length > 0 &&
+    candidate.analyteCode.trim().length > 0 &&
     typeof candidate.highThreshold === 'number' &&
     Number.isFinite(candidate.highThreshold) &&
     typeof candidate.carryoverFactor === 'number' &&
