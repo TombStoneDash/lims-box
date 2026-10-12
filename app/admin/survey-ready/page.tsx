@@ -1,8 +1,10 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+import { competencyDisplayStatus } from "@/lib/competency-display-status";
 import { StatusBadge, formatDate } from "../_components/StatusBadge";
 
 export default async function SurveyReadyPage() {
+  const now = new Date();
   const people = await prisma.person.findMany({
     where: { active: true },
     include: {
@@ -79,7 +81,7 @@ export default async function SurveyReadyPage() {
                       p.competencies.map((c) => (
                         <li key={c.id} className="flex items-center justify-between">
                           <span>{c.type}</span>
-                          <StatusBadge status={c.status} />
+                          <StatusBadge status={competencyDisplayStatus(c, p.competencies, now)} />
                         </li>
                       ))
                     )}
