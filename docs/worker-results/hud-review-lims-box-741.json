@@ -1,0 +1,42 @@
+{
+  "task_id": "hud-review-lims-box-741",
+  "run_id": "hud-review-lims-box-741-20261012T1600Z",
+  "host_id": "DESKTOP-1TV907A",
+  "host_role": "lenovo",
+  "repo": "TombStoneDash/lims-box",
+  "branch_or_worktree": "codex-lenovo/hud-review-lims-box-741",
+  "requested_model": "not-exposed",
+  "requested_reasoning_effort": "not-exposed",
+  "client_effective_model": "not-exposed",
+  "provider_returned_model_id": "not-exposed",
+  "model_evidence_source": "not-exposed",
+  "route_id": "not-exposed",
+  "started_at": "2026-10-12T16:00:00Z",
+  "ended_at": "2026-10-12T16:04:21.5144555Z",
+  "terminal_state": "BLOCKED",
+  "head_sha": "6f2621d8ec8f871c97b405c074a0cad431c027db",
+  "base_sha": "93c0fda112566de1889ed60c1467f5b5ab459df0",
+  "verification": [
+    "Local HEAD and live PR head match exact requested SHA; entire two-file diff reviewed; no source defect identified",
+    "npm ci --cache .npm-cache --no-audit --no-fund: exit 0; Node v24.14.1",
+    "node --import tsx --test tests/ohworks/pilot-bot-api-role-validation.test.ts tests/ohworks/assistant.test.ts tests/ohworks/assistant-reply.test.ts tests/ohworks/role-filter.test.ts tests/ohworks/pilot-contract.test.ts: exit 0, 47 passed, 0 failed or skipped",
+    "git diff --check base...head: exit 0",
+    "Exact-head check runs: full-tests, lint, verify, wake-phrase (two runs): all completed/success",
+    "Full CI: 408 files, 6332 passed, 0 failed/skipped; merge 3713de36e6305f1864b0031c5491fdef978c3c01 has same tree c0e795793fab697b31f117d692f310b1a95b0e25 as head",
+    "Branch protection: HTTP 404 Branch not protected; repository rulesets and applicable main rules both empty",
+    "Legacy status: pending aggregate with zero contexts; not a failed or running check",
+    "Host snapshot missing; timestamp, binding, completeness cannot be verified"
+  ],
+  "artifacts": [
+    "https://github.com/TombStoneDash/lims-box/pull/741",
+    "https://github.com/TombStoneDash/lims-box/actions/runs/38271920835/job/114888001734",
+    "https://github.com/TombStoneDash/lims-box/actions/runs/38271920829/job/114888002112",
+    "https://github.com/TombStoneDash/lims-box/actions/runs/38271920745/job/114888002376",
+    "https://github.com/TombStoneDash/lims-box/actions/runs/38271920780/job/114888001589",
+    "https://github.com/TombStoneDash/lims-box/actions/runs/38271912571/job/114887974717"
+  ],
+  "usage_delta": "not-exposed",
+  "blocker": "Required .codex-review-host-evidence.json is absent",
+  "rollback": "No code edits, commits, pushes, comments, merges or deployments. Dependencies/cache confined to ignored node_modules.",
+  "next_safe_action": "Runner supplies authenticated, fresh, complete host snapshot bound to PR 741 and exact head, then reviewer validates it."
+}
