@@ -1,7 +1,7 @@
 import 'server-only';
 
 import { NextResponse } from 'next/server';
-import { askOHWorksAssistant, resolveRoleView } from '@/lib/ohworks-pilot';
+import { askOHWorksAssistant, getRoleViews, resolveRoleView } from '@/lib/ohworks-pilot';
 
 const SAFE_ERROR = {
   answer: 'The request could not be evaluated. Synthetic demonstration data only.',
@@ -11,6 +11,8 @@ const SAFE_ERROR = {
   label: 'Synthetic demonstration data only' as const,
   disposition: 'evidence_missing' as const,
 };
+
+const supportedRoleIds = new Set(getRoleViews().map((role) => role.id));
 
 export async function POST(request: Request) {
   let body: unknown;
@@ -25,16 +27,18 @@ export async function POST(request: Request) {
   }
 
   const candidate = body as Record<string, unknown>;
+  const trimmedQuestion = typeof candidate.question === 'string' ? candidate.question.trim() : '';
   if (
     typeof candidate.question !== 'string' ||
-    candidate.question.length === 0 ||
-    candidate.question.length > 500 ||
+    trimmedQuestion.length === 0 ||
+    trimmedQuestion.length > 500 ||
     (candidate.mode !== 'expert' && candidate.mode !== 'discovery') ||
-    typeof candidate.roleId !== 'string'
+    typeof candidate.roleId !== 'string' ||
+    !supportedRoleIds.has(candidate.roleId as ReturnType<typeof getRoleViews>[number]['id'])
   ) {
     return NextResponse.json(SAFE_ERROR, { status: 400 });
   }
 
   const role = resolveRoleView(candidate.roleId);
-  return NextResponse.json(askOHWorksAssistant(candidate.question, role.id, candidate.mode));
+  return NextResponse.json(askOHWorksAssistant(trimmedQuestion, role.id, candidate.mode));
 }
