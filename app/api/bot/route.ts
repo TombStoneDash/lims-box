@@ -19,7 +19,32 @@ function isRateLimited(key: string): boolean {
   const recent = (hits.get(key) ?? []).filter((t) => now - t < WINDOW_MS);
   recent.push(now);
   hits.set(key, recent);
-  if (hits.size > 10_000) hits.clear(); // memory guard
+
+  // Memory guard: prune entries with no hits left in the window first, then,
+  // if still over the cap, evict entries that are not currently over the
+  // limit. Never touch the current key or an entry that is over its limit,
+  // so a client that is being limited stays limited for its own window.
+  if (hits.size > 10_000) {
+    for (const [otherKey, timestamps] of hits) {
+      if (otherKey === key) continue;
+      const active = timestamps.filter((t) => now - t < WINDOW_MS);
+      if (active.length === 0) {
+        hits.delete(otherKey);
+      } else if (active.length !== timestamps.length) {
+        hits.set(otherKey, active);
+      }
+    }
+  }
+  if (hits.size > 10_000) {
+    for (const [otherKey, timestamps] of hits) {
+      if (hits.size <= 10_000) break;
+      if (otherKey === key) continue;
+      if (timestamps.length <= MAX_REQUESTS_PER_WINDOW) {
+        hits.delete(otherKey);
+      }
+    }
+  }
+
   return recent.length > MAX_REQUESTS_PER_WINDOW;
 }
 
