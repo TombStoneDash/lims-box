@@ -264,6 +264,38 @@ function isUtcTimestamp(value: string): boolean {
   );
 }
 
+/** The fraction-of-a-second digits beyond the third (i.e. beyond millisecond precision), or '' if none. */
+function subMillisecondDigits(value: string): string {
+  const match = /\.(\d+)Z$/.exec(value);
+  return match ? match[1].slice(3) : '';
+}
+
+/**
+ * Compare two already-validated UTC timestamps at full precision, not just
+ * at the millisecond precision Date.parse preserves. Date.parse truncates
+ * everything past milliseconds, so two timestamps that differ only in their
+ * fourth-or-later fractional-second digit (e.g. ".0001Z" vs ".0009Z")
+ * otherwise parse to the same instant and a later sub-ms event would be
+ * wrongly treated as simultaneous with, rather than after, an earlier one.
+ * Returns <0 if a is before b, 0 if equal, >0 if a is after b.
+ */
+function compareOccurredAt(a: string, b: string): number {
+  const msDiff = Date.parse(a) - Date.parse(b);
+  if (msDiff !== 0) {
+    return msDiff;
+  }
+
+  const fractionA = subMillisecondDigits(a);
+  const fractionB = subMillisecondDigits(b);
+  const length = Math.max(fractionA.length, fractionB.length);
+  const paddedA = fractionA.padEnd(length, '0');
+  const paddedB = fractionB.padEnd(length, '0');
+  if (paddedA === paddedB) {
+    return 0;
+  }
+  return paddedA < paddedB ? -1 : 1;
+}
+
 /**
  * Evaluate a single candidate event against the current state and prior
  * history, and either accept it or return a bounded reason it was blocked.
@@ -323,7 +355,7 @@ export function applyAccessionEvent(
   }
 
   const previous = history.at(-1);
-  if (previous && Date.parse(rawEvent.occurredAt) <= Date.parse(previous.occurredAt)) {
+  if (previous && compareOccurredAt(rawEvent.occurredAt, previous.occurredAt) <= 0) {
     return block('timestamp-backwards');
   }
 
