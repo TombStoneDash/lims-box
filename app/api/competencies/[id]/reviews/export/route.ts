@@ -107,7 +107,7 @@ export async function GET(_req: NextRequest, { params }: Params) {
 
     // ── Corrective Actions ───────────────────────────────────────────────────
     const corrective = reviewEvents.filter((e) =>
-      ["requires_remediation", "restricted"].includes(e.reviewOutcome)
+      ["requires_remediation", "restricted", "suspended"].includes(e.reviewOutcome)
     );
     doc.fontSize(10).font("Helvetica-Bold").text("CORRECTIVE ACTIONS");
     doc.moveDown(0.3);
