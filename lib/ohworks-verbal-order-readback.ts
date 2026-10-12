@@ -65,6 +65,9 @@ function isNonEmptyString(value: string | null): value is string {
 /**
  * Evaluate whether a single fabricated verbal-order record satisfies the
  * read-back requirement.
+ * Only literal false marks an order non-verbal; a malformed verbal-order
+ * flag reports 'missing_required_fields'. Only literal true establishes
+ * performed or confirmed read-back evidence.
  *
  * Fail-closed for verbal orders: any of receivingStaffId, originatorName,
  * or orderText missing or blank reports status 'missing_required_fields'
@@ -77,11 +80,14 @@ function isNonEmptyString(value: string | null): value is string {
  * recommending the role be recorded for the audit trail.
  */
 export function evaluateVerbalOrderReadback(input: VerbalOrderReadbackInput): VerbalOrderReadbackResult {
-  if (!input.orderReceivedVerbally) {
+  if (input.orderReceivedVerbally === false) {
     return { compliant: true, status: 'not_applicable', issues: [] };
   }
 
   const missingFieldIssues: string[] = [];
+  if (input.orderReceivedVerbally !== true) {
+    missingFieldIssues.push('orderReceivedVerbally must be a boolean to establish whether read-back is required.');
+  }
   if (!isNonEmptyString(input.receivingStaffId)) {
     missingFieldIssues.push('receivingStaffId is required to record who received this verbal order.');
   }
@@ -100,7 +106,7 @@ export function evaluateVerbalOrderReadback(input: VerbalOrderReadbackInput): Ve
     roleIssues.push('originatorRole is unspecified -- record the originator’s role for the audit trail.');
   }
 
-  if (!input.readBackPerformed) {
+  if (input.readBackPerformed !== true) {
     return {
       compliant: false,
       status: 'missing_readback',
@@ -108,7 +114,7 @@ export function evaluateVerbalOrderReadback(input: VerbalOrderReadbackInput): Ve
     };
   }
 
-  if (!input.readBackConfirmedByOriginator) {
+  if (input.readBackConfirmedByOriginator !== true) {
     return {
       compliant: false,
       status: 'readback_not_confirmed',
