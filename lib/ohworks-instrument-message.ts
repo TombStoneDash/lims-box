@@ -81,15 +81,14 @@ function identifier(raw: unknown, field: InstrumentMessageField, errors: Errors)
   return text;
 }
 
+/**
+ * A number is accepted only when its JavaScript string form is itself plain
+ * decimal text, so the returned value always re-validates. Numbers that
+ * stringify with an exponent (e.g. 0.0000001 -> "1e-7") are rejected exactly
+ * like the equivalent exponent string.
+ */
 function numericValue(raw: unknown, errors: Errors): string | undefined {
-  if (typeof raw === 'number') {
-    if (!Number.isFinite(raw)) {
-      errors.push({ field: 'value', code: 'value-not-numeric' });
-      return undefined;
-    }
-    return String(raw);
-  }
-  const text = requiredString(raw, 'value', errors);
+  const text = typeof raw === 'number' ? String(raw) : requiredString(raw, 'value', errors);
   if (text === undefined) return undefined;
   if (!DECIMAL_PATTERN.test(text)) {
     errors.push({ field: 'value', code: 'value-not-numeric' });

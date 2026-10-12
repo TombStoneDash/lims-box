@@ -106,3 +106,26 @@ test('never echoes raw input values in errors', () => {
   const errors = errorsOf({ ...VALID, specimenId: `${secret} x`, value: secret, units: `${secret} y` });
   assert.equal(JSON.stringify(errors).includes(secret), false);
 });
+
+test('rejects a number whose string form uses an exponent, same as the exponent string', () => {
+  assert.deepEqual(errorsOf({ ...VALID, value: 0.0000001 }), [{ field: 'value', code: 'value-not-numeric' }]);
+  assert.deepEqual(errorsOf({ ...VALID, value: '1e-7' }), [{ field: 'value', code: 'value-not-numeric' }]);
+  assert.deepEqual(errorsOf({ ...VALID, value: 1e21 }), [{ field: 'value', code: 'value-not-numeric' }]);
+});
+
+test('every accepted message re-validates to the identical message', () => {
+  const values: unknown[] = [
+    12, -0.5, 0, -0, 0.000001, 0.0000001, 123456.789, 1e20, 1e21, NaN, Infinity,
+    '5.40', '-0.50', '+3', '.5', '0007.10', '1e-7', ' 42 ',
+  ];
+  let accepted = 0;
+  for (const value of values) {
+    const first = validateInstrumentMessage({ ...VALID, value });
+    if (!first.ok) continue;
+    accepted += 1;
+    const again = validateInstrumentMessage(first.message);
+    assert.equal(again.ok, true, `re-validation failed for ${String(value)}`);
+    assert.deepEqual(again.ok && again.message, first.message);
+  }
+  assert.ok(accepted >= 10);
+});
