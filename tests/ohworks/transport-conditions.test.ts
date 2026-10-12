@@ -224,11 +224,20 @@ test('accepts two readings sharing the exact same timestamp', () => {
   assert.equal(result.readingCount, 2);
 });
 
-test('an empty reading list is acceptable with zero excursion time', () => {
-  const result = evaluateTransportConditions([limits('SERUM')], log('SPEC-1', 'SERUM', []));
+test('rejects an empty reading list instead of returning an acceptable decision', () => {
+  assertThrowsCode(
+    () => evaluateTransportConditions([limits('SERUM')], log('SPEC-1', 'SERUM', [])),
+    'readings-empty',
+  );
+});
+
+test('a one-reading in-band log keeps its acceptable result', () => {
+  const result = evaluateTransportConditions([limits('SERUM')], log('SPEC-1', 'SERUM', [reading(5, T(1))]));
   assert.deepEqual(result.excursions, []);
+  assert.equal(result.totalExcursionMs, 0);
+  assert.equal(result.longestExcursionMs, 0);
   assert.equal(result.decision, 'acceptable');
-  assert.equal(result.readingCount, 0);
+  assert.equal(result.readingCount, 1);
 });
 
 test('rejects a log naming a specimen type absent from the declared limits', () => {
@@ -392,6 +401,7 @@ test('explainTransportConditionsError covers every declared error code', () => {
     'specimen-type-duplicate',
     'log-invalid',
     'readings-not-array',
+    'readings-empty',
     'reading-invalid',
     'specimen-type-unknown',
     'timestamp-invalid',

@@ -23,8 +23,8 @@
  * required field or declaring an invalid (non-finite, out-of-order, or
  * non-positive where required) threshold, a duplicate specimen type across
  * declared limits, a log that is not a well-shaped object, a reading list
- * that is not an array, a reading missing a required field or with the
- * wrong shape, a log naming a specimen type absent from the declared
+ * that is not an array, an empty reading list (no temperature evidence), a
+ * reading missing a required field or with the wrong shape, a log naming a specimen type absent from the declared
  * limits, a reading with a non-finite value, a reading with an unparsable
  * timestamp, a reading whose timestamp precedes an earlier reading's
  * timestamp (the input is required to already be time-ordered), or a gap
@@ -102,6 +102,7 @@ export type TransportConditionsErrorCode =
   | 'specimen-type-duplicate'
   | 'log-invalid'
   | 'readings-not-array'
+  | 'readings-empty'
   | 'reading-invalid'
   | 'specimen-type-unknown'
   | 'timestamp-invalid'
@@ -115,6 +116,7 @@ const ERROR_MESSAGES: Record<TransportConditionsErrorCode, string> = {
   'specimen-type-duplicate': 'The same specimen type appears in more than one declared transport limits entry.',
   'log-invalid': 'The transport log is missing a required field or has the wrong shape.',
   'readings-not-array': 'The transport log reading input is not a list of readings.',
+  'readings-empty': 'The transport log contains no readings, so there is no temperature evidence to evaluate.',
   'reading-invalid': 'A reading is missing a required field or has the wrong shape.',
   'specimen-type-unknown': 'The transport log names a specimen type absent from the declared limits.',
   'timestamp-invalid': 'The reading timestamp could not be parsed as a UTC timestamp.',
@@ -339,6 +341,9 @@ export function evaluateTransportConditions(rawLimits: unknown, rawLog: unknown)
 
   if (!Array.isArray(rawReadings)) {
     fail('readings-not-array');
+  }
+  if (rawReadings.length === 0) {
+    fail('readings-empty');
   }
 
   const readings: TemperatureReading[] = rawReadings.map((raw) => {
