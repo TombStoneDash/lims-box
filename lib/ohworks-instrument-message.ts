@@ -51,8 +51,30 @@ const DECIMAL_PATTERN = /^[+-]?(?:\d+(?:\.\d+)?|\.\d+)$/;
 const UNITS_PATTERN = /^[A-Za-z0-9%/^*.()µ-]{1,32}$/;
 const STRICT_ISO_TIMESTAMP_PATTERN =
   /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(\.\d{1,3})?(Z|([+-])(\d{2}):(\d{2}))$/;
+// Accepted year range, for both the reported local year and the normalized UTC
+// year. Date.UTC maps years 0-99 onto 1900-1999, and toISOString writes years
+// past 9999 as "+010000", so only 0100-9999 is representable without ambiguity.
+const MIN_YEAR = 100;
+const MAX_YEAR = 9999;
 
 type Errors = InstrumentMessageError[];
+type FieldRule = (raw: unknown, errors: Errors) => string | undefined;
+
+/**
+ * Round-trip guard for every field: the normalized output must pass the same
+ * field rule again and come back unchanged. If normalization would produce
+ * text its own rule rejects (or would rewrite again), the input is rejected,
+ * so an accepted message always re-validates to itself.
+ */
+function roundTripSafe(raw: unknown, errors: Errors, failure: InstrumentMessageError, rule: FieldRule): string | undefined {
+  const normalized = rule(raw, errors);
+  if (normalized === undefined) return undefined;
+  if (rule(normalized, []) !== normalized) {
+    errors.push(failure);
+    return undefined;
+  }
+  return normalized;
+}
 
 function requiredString(raw: unknown, field: InstrumentMessageField, errors: Errors): string | undefined {
   if (raw === undefined || raw === null) {
@@ -129,12 +151,20 @@ function timestamp(raw: unknown, errors: Errors): string | undefined {
     local.getUTCMinutes() === minute &&
     local.getUTCSeconds() === second;
   const offsetOk = !sign || (Number(oh) <= 14 && Number(om) <= 59);
-  if (!calendarExact || !offsetOk) {
+  const offsetMinutes = sign ? (sign === '-' ? -1 : 1) * (Number(oh) * 60 + Number(om)) : 0;
+  const utc = new Date(local.getTime() - offsetMinutes * 60_000);
+  // An offset can push the UTC instant across a year bound (e.g. 9999-12-31 at
+  // -14:00 is year 10000 in UTC), so the normalized year is range-checked too.
+  const yearsOk = inYearRange(year) && inYearRange(utc.getUTCFullYear());
+  if (!calendarExact || !offsetOk || !yearsOk) {
     errors.push({ field: 'resultedAt', code: 'timestamp-invalid' });
     return undefined;
   }
-  const offsetMinutes = sign ? (sign === '-' ? -1 : 1) * (Number(oh) * 60 + Number(om)) : 0;
-  return new Date(local.getTime() - offsetMinutes * 60_000).toISOString();
+  return utc.toISOString();
+}
+
+function inYearRange(year: number): boolean {
+  return year >= MIN_YEAR && year <= MAX_YEAR;
 }
 
 /**
@@ -147,12 +177,14 @@ export function validateInstrumentMessage(input: unknown): InstrumentMessageVali
   }
   const raw = input as Record<string, unknown>;
   const errors: Errors = [];
-  const instrumentId = identifier(raw.instrumentId, 'instrumentId', errors);
-  const specimenId = identifier(raw.specimenId, 'specimenId', errors);
-  const analyteCode = identifier(raw.analyteCode, 'analyteCode', errors);
-  const value = numericValue(raw.value, errors);
-  const unitText = units(raw.units, errors);
-  const resultedAt = timestamp(raw.resultedAt, errors);
+  const id = (field: 'instrumentId' | 'specimenId' | 'analyteCode') =>
+    roundTripSafe(raw[field], errors, { field, code: 'identifier-ambiguous' }, (r, e) => identifier(r, field, e));
+  const instrumentId = id('instrumentId');
+  const specimenId = id('specimenId');
+  const analyteCode = id('analyteCode');
+  const value = roundTripSafe(raw.value, errors, { field: 'value', code: 'value-not-numeric' }, numericValue);
+  const unitText = roundTripSafe(raw.units, errors, { field: 'units', code: 'units-invalid' }, units);
+  const resultedAt = roundTripSafe(raw.resultedAt, errors, { field: 'resultedAt', code: 'timestamp-invalid' }, timestamp);
 
   if (
     errors.length > 0 ||

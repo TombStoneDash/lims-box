@@ -129,3 +129,63 @@ test('every accepted message re-validates to the identical message', () => {
   }
   assert.ok(accepted >= 10);
 });
+
+test('rejects a timestamp whose UTC normalization leaves the accepted year range', () => {
+  for (const resultedAt of [
+    '9999-12-31T23:59:59-14:00',
+    '9999-12-31T23:00:00-01:00',
+    '0100-01-01T00:00:00+01:00',
+    '0100-01-01T00:00:00+14:00',
+    '0099-12-31T23:59:59Z',
+    '0000-01-01T00:00:00Z',
+  ]) {
+    assert.deepEqual(errorsOf({ ...VALID, resultedAt }), [{ field: 'resultedAt', code: 'timestamp-invalid' }], resultedAt);
+  }
+  const top = validateInstrumentMessage({ ...VALID, resultedAt: '9999-12-31T23:59:59+14:00' });
+  assert.equal(top.ok && top.message.resultedAt, '9999-12-31T09:59:59.000Z');
+  const bottom = validateInstrumentMessage({ ...VALID, resultedAt: '0100-01-01T00:00:00-14:00' });
+  assert.equal(bottom.ok && bottom.message.resultedAt, '0100-01-01T14:00:00.000Z');
+});
+
+test('property: for every field edge input, an accepted message re-validates to itself', () => {
+  const offsets = ['Z', '+00:00', '+14:00', '-14:00', '+01:00', '-01:00', '+05:45', '-09:30', '+14:59', '-14:59'];
+  const instants = [
+    '9999-12-31T23:59:59', '9999-12-31T10:00:00', '9999-12-31T00:00:00.999', '0100-01-01T00:00:00',
+    '0100-01-01T14:00:00', '0100-01-01T23:59:59.5', '2028-02-29T23:59:59.5', '1970-01-01T00:00:00',
+  ];
+  const edges: Record<string, unknown[]> = {
+    instrumentId: ['a', '  a  ', 'A'.repeat(128), 'A'.repeat(129), '\tX-1\n', 'x.y_z-0', '-x', 'x-'],
+    specimenId: ['SYN-SPEC-0001', '  SYN-SPEC-0001 ', '0', ' 0 ', 'S'.repeat(128), 'SYN 0001'],
+    analyteCode: ['GLU', ' glu ', 'a.b', 'a..b', '.a'],
+    value: [
+      0, -0, 1, -1, 0.000001, 0.0000001, 5e-324, Number.MIN_VALUE, Number.MAX_SAFE_INTEGER,
+      Number.MAX_VALUE, 1e20, 1e21, -1e21, 123456.789, NaN, Infinity, -Infinity,
+      '0', '-0', '+0', '.5', '-.5', '0007.10', ' 42 ', '\t-3.0\n', '1e-7', '9'.repeat(400), `0.${'0'.repeat(400)}1`,
+    ],
+    units: ['%', ' mg/dL ', 'x'.repeat(32), ` ${'x'.repeat(32)} `, 'x'.repeat(33), 'µg/L', '10^3/uL'],
+    resultedAt: [
+      ...instants.flatMap((instant) => offsets.map((offset) => `${instant}${offset}`)),
+      ' 2026-03-04T09:15:00-08:00 ',
+      '2026-03-04T09:15:00.1Z',
+      '2026-03-04T09:15:00.12+00:00',
+    ],
+  };
+
+  let accepted = 0;
+  let rejected = 0;
+  for (const [field, inputs] of Object.entries(edges)) {
+    for (const input of inputs) {
+      const label = `${field}=${String(input).slice(0, 60)}`;
+      const first = validateInstrumentMessage({ ...VALID, [field]: input });
+      if (!first.ok) {
+        rejected += 1;
+        continue;
+      }
+      accepted += 1;
+      const again = validateInstrumentMessage(first.message);
+      assert.equal(again.ok, true, `re-validation failed for ${label}`);
+      assert.deepEqual(again.ok && again.message, first.message, label);
+    }
+  }
+  assert.ok(accepted >= 60 && rejected >= 15, `accepted=${accepted} rejected=${rejected}`);
+});
