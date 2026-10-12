@@ -27,6 +27,30 @@ test('clear_to_crossmatch: negative screen, no antibody history, sample within a
   assert.ok(decision.reason.length > 0);
 });
 
+for (const [label, value] of [
+  ['unknown string', 'indeterminate'],
+  ['empty string', ''],
+  ['undefined', undefined],
+  ['null', null],
+  ['number', 1],
+  ['object', {}],
+] as const) {
+  test(`rejects ${label} antibody screen result before deciding`, () => {
+    for (const overrides of [{}, { sampleAgeHours: 73 }, { priorAntibodyIdentified: ['Anti-K'] }]) {
+      assert.throws(
+        () => evaluateCrossmatchHold(baselineInput({
+          rhD: 'positive',
+          requestedUnitCount: 1,
+          sampleAgeHours: 1,
+          ...overrides,
+          antibodyScreenResult: value as CrossmatchHoldInput['antibodyScreenResult'],
+        })),
+        { name: 'Error', message: 'antibodyScreenResult must be pending, positive, or negative' },
+      );
+    }
+  });
+}
+
 test('hold_sample_expired takes precedence over a negative screen', () => {
   const decision = evaluateCrossmatchHold(
     baselineInput({ sampleAgeHours: 100, maxSampleAgeHoursForType: 72, antibodyScreenResult: 'negative' }),
