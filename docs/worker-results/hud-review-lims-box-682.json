@@ -1,0 +1,113 @@
+{
+  "task_id": "HUD-REVIEW-LIMS-BOX-682",
+  "run_id": "HUD-REVIEW-LIMS-BOX-682-20261012T0250Z",
+  "host_id": "DESKTOP-1TV907A",
+  "host_role": "lenovo",
+  "repo": "TombStoneDash/lims-box",
+  "branch_or_worktree": "codex-lenovo/hud-review-lims-box-682",
+  "requested_model": "not-exposed",
+  "requested_reasoning_effort": "not-exposed",
+  "client_effective_model": "not-exposed",
+  "provider_returned_model_id": "not-exposed",
+  "model_evidence_source": "not-exposed",
+  "route_id": "not-exposed",
+  "started_at": "2026-10-12T02:50:28Z",
+  "ended_at": "2026-10-12T02:54:27.4582179Z",
+  "terminal_state": "BLOCKED",
+  "reviewed_head": "acc1e3b6ab88f768e5c690ca56dddae56b8b87fc",
+  "checked_out_head": "acc1e3b6ab88f768e5c690ca56dddae56b8b87fc",
+  "live_pr": {
+    "baseRefOid": "4a7ece8a587a2858b8be8ac2d1ca77e620a51dbd",
+    "headRefOid": "acc1e3b6ab88f768e5c690ca56dddae56b8b87fc",
+    "url": "https://github.com/TombStoneDash/lims-box/pull/682"
+  },
+  "verification": [
+    "Read entire two-file diff against base 4a7ece8a587a2858b8be8ac2d1ca77e620a51dbd; no proven source defect found.",
+    "git diff --check BASE...HEAD: exit 0.",
+    "Initial focused test: exit 1, tsx absent in fresh worktree. Setup failure resolved by npm ci; no source change.",
+    "npm ci --cache .npm-review-cache --no-audit --no-fund: exit 0; Prisma generated.",
+    "node --import tsx --test tests/api/competency-review-body-types.test.ts tests/review-history-pagination.test.ts tests/personnel-pack/review-due-calendar.test.ts: exit 0; 22 passed, 0 failed, 0 skipped; Node v24.14.1 (CI specifies Node 22).",
+    "Read all .github/workflows/*.yml, package.json, docs/testing/full-suite-ci.md, scripts/run-all-tests.mjs. Standard full suite is npm ci then npm run test:all, with no excluded TypeScript test files.",
+    "Live GitHub branch protection endpoint: HTTP 404 Branch not protected. Repository rulesets and applicable main rules both empty.",
+    "No base failure comparison needed: initial environment setup failure resolved and focused tests passed. Full local suite not run; hosted full suite remains incomplete, so no full-suite acceptance claimed."
+  ],
+  "host_snapshot": {
+    "exists": false,
+    "path": ".codex-review-host-evidence.json",
+    "timestamp": "unverifiable: file missing",
+    "binding": "unverifiable: file missing"
+  },
+  "check_runs": [
+    {
+      "completed_at": "2026-10-12T02:48:31Z",
+      "conclusion": "success",
+      "head_sha": "acc1e3b6ab88f768e5c690ca56dddae56b8b87fc",
+      "html_url": "https://github.com/TombStoneDash/lims-box/runs/114642539770",
+      "name": "Vercel Preview Comments",
+      "started_at": "2026-10-12T02:48:31Z",
+      "status": "completed"
+    },
+    {
+      "completed_at": null,
+      "conclusion": null,
+      "head_sha": "acc1e3b6ab88f768e5c690ca56dddae56b8b87fc",
+      "html_url": "https://github.com/TombStoneDash/lims-box/actions/runs/38197239786/job/114642527257",
+      "name": "lint",
+      "started_at": "2026-10-12T02:48:28Z",
+      "status": "queued"
+    },
+    {
+      "completed_at": "2026-10-12T02:50:38Z",
+      "conclusion": "success",
+      "head_sha": "acc1e3b6ab88f768e5c690ca56dddae56b8b87fc",
+      "html_url": "https://github.com/TombStoneDash/lims-box/actions/runs/38197239741/job/114642527151",
+      "name": "verify",
+      "started_at": "2026-10-12T02:48:30Z",
+      "status": "completed"
+    },
+    {
+      "completed_at": null,
+      "conclusion": null,
+      "head_sha": "acc1e3b6ab88f768e5c690ca56dddae56b8b87fc",
+      "html_url": "https://github.com/TombStoneDash/lims-box/actions/runs/38197239751/job/114642527144",
+      "name": "full-tests",
+      "started_at": "2026-10-12T02:48:28Z",
+      "status": "queued"
+    },
+    {
+      "completed_at": "2026-10-12T02:48:39Z",
+      "conclusion": "success",
+      "head_sha": "acc1e3b6ab88f768e5c690ca56dddae56b8b87fc",
+      "html_url": "https://github.com/TombStoneDash/lims-box/actions/runs/38197239748/job/114642526867",
+      "name": "wake-phrase",
+      "started_at": "2026-10-12T02:48:30Z",
+      "status": "completed"
+    },
+    {
+      "completed_at": "2026-10-12T02:48:41Z",
+      "conclusion": "success",
+      "head_sha": "acc1e3b6ab88f768e5c690ca56dddae56b8b87fc",
+      "html_url": "https://github.com/TombStoneDash/lims-box/actions/runs/38197236322/job/114642516074",
+      "name": "wake-phrase",
+      "started_at": "2026-10-12T02:48:27Z",
+      "status": "completed"
+    }
+  ],
+  "status_contexts": [
+    {
+      "url": "https://vercel.com/tombstone-dashs-projects/lims-box/GQYCUKwVmGAz5CLe6PQjp3XMuaCF",
+      "sha": "acc1e3b6ab88f768e5c690ca56dddae56b8b87fc",
+      "context": "Vercel",
+      "description": "Canceled by Ignored Build Step",
+      "state": "success",
+      "updated_at": "2026-10-12T02:48:28Z"
+    }
+  ],
+  "artifacts": [
+    "docs/worker-results/hud-review-lims-box-682.json"
+  ],
+  "usage_delta": "not-exposed",
+  "blocker": "Required authenticated host evidence file absent, so timestamp/completeness/binding cannot be verified. Exact-head Full Test Suite CI / full-tests and CI / lint remain queued with null conclusions.",
+  "rollback": "No source edits, commits, push, merge, deployment, or external comments. Dependencies remain ignored in node_modules.",
+  "next_safe_action": "Host runner supplies the authenticated exact-head snapshot and completes queued CI; repeat acceptance verification."
+}
