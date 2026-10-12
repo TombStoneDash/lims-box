@@ -216,6 +216,7 @@ test('explainRecordRetentionError returns deterministic, non-empty text for ever
     'current-timestamp-invalid',
     'current-timestamp-precedes-creation-date',
     'record-id-missing',
+    'duplicate-record-id',
     'purge-under-litigation-hold',
     'purge-before-retention-elapsed',
     'purge-timestamp-missing',
@@ -254,6 +255,28 @@ test('builds a manifest across multiple eligible records of different classes, p
     purgeTimestamp,
   );
   assert.deepEqual(manifest.recordIds, ['REC-0001', 'REC-0002', 'REC-0003', 'REC-0004', 'REC-0005']);
+});
+
+for (const recordIds of [['SYN-R', 'SYN-R'], ['SYN-R', 'SYN-S', 'SYN-R']]) {
+  test(`fails the entire eligible batch on duplicate identifiers: ${recordIds.join(', ')}`, () => {
+    const entries = recordIds.map((recordId, index) => baselineEntry({
+      recordId,
+      profile: baselineProfile({ recordClass: RECORD_CLASSES[index] }),
+    }));
+    assert.throws(
+      () => createRecordPurgeManifest(entries, currentAfter(30 * 24 * 60 * 60 * 1000)),
+      (error: unknown) => error instanceof RecordRetentionError && error.code === 'duplicate-record-id',
+    );
+  });
+}
+
+test('preserves input order and treats case and whitespace differences as distinct opaque identifiers', () => {
+  const recordIds = ['SYN-Z', 'SYN-R', 'syn-r', ' SYN-R', 'SYN-R ', 'SYN-A'];
+  const manifest = createRecordPurgeManifest(
+    recordIds.map((recordId) => baselineEntry({ recordId })),
+    currentAfter(30 * 24 * 60 * 60 * 1000),
+  );
+  assert.deepEqual(manifest.recordIds, recordIds);
 });
 
 test('manifest contains no keys beyond purgeTimestamp and recordIds', () => {

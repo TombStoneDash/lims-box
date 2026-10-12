@@ -120,6 +120,7 @@ export type RecordRetentionErrorCode =
   | 'current-timestamp-invalid'
   | 'current-timestamp-precedes-creation-date'
   | 'record-id-missing'
+  | 'duplicate-record-id'
   | 'purge-under-litigation-hold'
   | 'purge-before-retention-elapsed'
   | 'purge-timestamp-missing'
@@ -134,6 +135,7 @@ const ERROR_MESSAGES: Record<RecordRetentionErrorCode, string> = {
   'current-timestamp-invalid': 'The current timestamp could not be parsed as a UTC timestamp.',
   'current-timestamp-precedes-creation-date': 'The current timestamp precedes the record creation date.',
   'record-id-missing': 'The record identifier is missing.',
+  'duplicate-record-id': 'The record identifier appears more than once in the purge batch.',
   'purge-under-litigation-hold': 'The record is under litigation hold and may not be purged.',
   'purge-before-retention-elapsed': 'The record retention period has not yet elapsed; purge is not permitted.',
   'purge-timestamp-missing': 'The purge timestamp is missing.',
@@ -292,9 +294,9 @@ export function evaluateRecordRetention(
  * Fail-closed and all-or-nothing: this throws RecordRetentionError instead
  * of producing a manifest when the purge timestamp is missing or
  * unparsable, when any entry's underlying retention evaluation would throw,
- * when any entry's record identifier is missing, or when any entry is under
- * litigation hold or has not yet reached its retention end date. No partial
- * manifest is ever returned.
+ * when any entry's record identifier is missing or duplicated, or when any
+ * entry is under litigation hold or has not yet reached its retention end
+ * date. No partial manifest is ever returned.
  */
 export function createRecordPurgeManifest(
   entries: readonly RecordPurgeEntry[],
@@ -308,6 +310,7 @@ export function createRecordPurgeManifest(
   }
 
   const recordIds: string[] = [];
+  const seenRecordIds = new Set<string>();
 
   for (const entry of entries) {
     const evaluation = evaluateRecordRetention(entry.profile, entry.creationDate, purgeTimestamp);
@@ -324,6 +327,11 @@ export function createRecordPurgeManifest(
       throw new RecordRetentionError('record-id-missing');
     }
 
+    if (seenRecordIds.has(entry.recordId)) {
+      throw new RecordRetentionError('duplicate-record-id');
+    }
+
+    seenRecordIds.add(entry.recordId);
     recordIds.push(entry.recordId);
   }
 
