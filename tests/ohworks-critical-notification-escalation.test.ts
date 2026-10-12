@@ -113,3 +113,33 @@ test('short-circuits with the already-acknowledged sentinel once any attempt was
   assert.equal(plan.waitMinutes, 0);
   assert.equal(plan.reason, 'already acknowledged, no further escalation needed');
 });
+
+for (const reached of ['false', 'true', 0, 1, undefined, null, 'synthetic-contact-secret']) {
+  for (const alreadyAcknowledged of [false, true]) {
+    test(`rejects reached ${String(reached)} with sanitized error (acknowledged: ${alreadyAcknowledged})`, () => {
+      const invalidAttempt = {
+        chainIndex: 3,
+        attemptedAt: '2026-01-01T09:30:00.000Z',
+        ...(reached === undefined ? {} : { reached }),
+      };
+      const input = baselineInput({
+        attemptsSoFar: [
+          { chainIndex: 0, attemptedAt: '2026-01-01T09:00:00.000Z', reached: alreadyAcknowledged },
+          invalidAttempt as unknown as PlanNextEscalationContactInput['attemptsSoFar'][number],
+        ],
+      });
+
+      assert.throws(() => planNextEscalationContact(input), (error: unknown) => {
+        assert.ok(error instanceof TypeError);
+        assert.equal(error.message, 'planNextEscalationContact: unusable reached input');
+        for (const contact of input.escalationChain) {
+          assert.ok(!error.message.includes(contact.name));
+          assert.ok(!error.message.includes(contact.contactMethod));
+        }
+        assert.ok(!error.message.includes(invalidAttempt.attemptedAt));
+        assert.ok(!error.message.includes('synthetic-contact-secret'));
+        return true;
+      });
+    });
+  }
+}
