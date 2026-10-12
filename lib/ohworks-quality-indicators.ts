@@ -392,11 +392,12 @@ export function computeQualityIndicators(input: MonthlyQualityIndicatorInput): Q
     const rejectedIds = new Set(
       specimensRejected.filter((event) => event.reasonCode === reasonCode).map((event) => event.specimenId),
     );
-    rejectionRateByReason[reasonCode] = computeResult(
-      rejectedIds.size,
-      receivedIds.size,
-      targets.rejectionRatePercentByReason[reasonCode],
-    );
+    Object.defineProperty(rejectionRateByReason, reasonCode, {
+      value: computeResult(rejectedIds.size, receivedIds.size, targets.rejectionRatePercentByReason[reasonCode]),
+      enumerable: true,
+      writable: true,
+      configurable: true,
+    });
   }
 
   const turnaroundComplianceByPriority: Record<string, QualityIndicatorResult> = {};
@@ -404,11 +405,12 @@ export function computeQualityIndicators(input: MonthlyQualityIndicatorInput): Q
     const resultsForPriority = resultsReported.filter((event) => event.priority === priority);
     const targetMinutes = targets.turnaroundTargetMinutesByPriority[priority];
     const numerator = resultsForPriority.filter((event) => event.turnaroundMinutes <= targetMinutes).length;
-    turnaroundComplianceByPriority[priority] = computeResult(
-      numerator,
-      resultsForPriority.length,
-      targets.turnaroundCompliancePercentByPriority[priority],
-    );
+    Object.defineProperty(turnaroundComplianceByPriority, priority, {
+      value: computeResult(numerator, resultsForPriority.length, targets.turnaroundCompliancePercentByPriority[priority]),
+      enumerable: true,
+      writable: true,
+      configurable: true,
+    });
   }
 
   const correctedResultIds = new Set(correctedReports.map((event) => event.resultId));
