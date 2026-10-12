@@ -9,6 +9,7 @@ import {
   type ResultReviewBlockCode,
   type ResultReviewContext,
   type ResultReviewEventInput,
+  type ResultReviewState,
 } from '../../lib/ohworks-result-review-state';
 
 /**
@@ -765,6 +766,67 @@ test('runResultReviewWorkflow is deterministic across repeated calls with equiva
 // ---------------------------------------------------------------------------
 // Structurally malformed input throws, rather than guessing
 // ---------------------------------------------------------------------------
+
+for (const blank of ['   ', '\t\r\n', '\u00a0\u2003']) {
+  for (const field of ['eventId', 'resultId', 'tenantId', 'kind', 'actorRole', 'actorId', 'reasonCode', 'occurredAt'] as const) {
+    test(`whitespace-only event ${field} (${JSON.stringify(blank)}) throws without applying`, () => {
+      const context = baselineContext();
+      const raw = { ...event(), [field]: blank };
+      const history: ResultReviewEventInput[] = [];
+      let state: ResultReviewState = 'draft';
+      const expected = {
+        name: 'ResultReviewInputError',
+        code: 'event-malformed',
+        message: 'A result-review event is missing a required field or has the wrong shape.',
+      };
+      assert.throws(() => {
+        const result = applyResultReviewEvent(state, raw, history, context);
+        state = result.nextState;
+        if (result.allowed) history.push(result.event);
+      }, expected);
+      assert.equal(state, 'draft');
+      assert.deepEqual(history, []);
+      assert.throws(() => runResultReviewWorkflow(context, [raw]), expected);
+    });
+  }
+
+  for (const field of ['tenantId', 'resultId'] as const) {
+    test(`whitespace-only context ${field} (${JSON.stringify(blank)}) throws without applying`, () => {
+      const context = { ...baselineContext(), [field]: blank };
+      const history: ResultReviewEventInput[] = [];
+      let state: ResultReviewState = 'draft';
+      const expected = {
+        name: 'ResultReviewInputError',
+        code: 'context-malformed',
+        message: 'The result-review workflow context has an invalid tenant or result identifier.',
+      };
+      assert.throws(() => {
+        const result = applyResultReviewEvent(state, event(), history, context);
+        state = result.nextState;
+        if (result.allowed) history.push(result.event);
+      }, expected);
+      assert.equal(state, 'draft');
+      assert.deepEqual(history, []);
+      assert.throws(() => runResultReviewWorkflow(context, [event()]), expected);
+      assert.throws(() => runResultReviewWorkflow(context, []), expected);
+    });
+  }
+}
+
+test('nonblank identifiers retain surrounding whitespace through acceptance and replay', () => {
+  const context = { tenantId: ' tenant-synthetic-a ', resultId: '\tresult-synthetic-001\t' };
+  const raw = event({ ...context, eventId: ' evt-submit-1 ', actorId: '\tactor-synthetic-submitter-001 ' });
+  const result = runResultReviewWorkflow(context, [raw, { ...raw }]);
+  assert.equal(result.finalState, 'ready_for_review');
+  assert.equal(result.blocked, true);
+  assert.equal(result.tenantId, context.tenantId);
+  assert.equal(result.resultId, context.resultId);
+  assert.deepEqual(result.history, [{ ...raw, note: undefined }]);
+  assert.deepEqual(result.steps[1], {
+    index: 1, allowed: false, state: 'ready_for_review', blockCode: 'duplicate-event-id-replay',
+  });
+  assert.ok(Object.isFrozen(result.history[0]));
+});
 
 test('a non-array events input throws a sanitized typed error', () => {
   assert.throws(
