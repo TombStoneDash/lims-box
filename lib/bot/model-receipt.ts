@@ -65,7 +65,7 @@ function containsSecretShape(value: unknown): boolean {
     return value.some(containsSecretShape);
   }
   if (value && typeof value === 'object') {
-    return Object.values(value).some(containsSecretShape);
+    return Object.entries(value).some(([key, val]) => containsSecretShape(key) || containsSecretShape(val));
   }
   return false;
 }
@@ -75,7 +75,9 @@ function containsPrivateContent(value: unknown): boolean {
     return value.includes('\n') || PRIVATE_CONTENT_PATTERNS.some((pattern) => pattern.test(value));
   }
   if (Array.isArray(value)) return value.some(containsPrivateContent);
-  if (value && typeof value === 'object') return Object.values(value).some(containsPrivateContent);
+  if (value && typeof value === 'object') {
+    return Object.entries(value).some(([key, val]) => containsPrivateContent(key) || containsPrivateContent(val));
+  }
   return false;
 }
 
@@ -105,6 +107,15 @@ function isUsage(value: unknown): value is string | Record<string, number> {
       && Number.isFinite(amount)
       && amount >= 0
     ));
+}
+
+function isDenseValidSourceIdArray(value: unknown[]): value is string[] {
+  for (let index = 0; index < value.length; index += 1) {
+    if (!Object.prototype.hasOwnProperty.call(value, index)) return false;
+    const id = value[index];
+    if (typeof id !== 'string' || !SAFE_SOURCE_ID_PATTERN.test(id)) return false;
+  }
+  return true;
 }
 
 export interface RecordReceiptResult {
@@ -154,8 +165,7 @@ export function recordModelReceipt(input: unknown): RecordReceiptResult {
   }
   if (!isUsage(input.usage)) return { ok: false, reason: 'invalid_usage' };
   if (typeof input.fallbackUsed !== 'boolean') return { ok: false, reason: 'invalid_fallback_used' };
-  if (!Array.isArray(input.sourceIdsCited)
-    || !input.sourceIdsCited.every((id) => typeof id === 'string' && SAFE_SOURCE_ID_PATTERN.test(id))) {
+  if (!Array.isArray(input.sourceIdsCited) || !isDenseValidSourceIdArray(input.sourceIdsCited)) {
     return { ok: false, reason: 'invalid_source_ids_cited' };
   }
   if (typeof input.outputVerdict !== 'string'
