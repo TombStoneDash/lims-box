@@ -1,0 +1,1720 @@
+TAP version 13
+# Subtest: a reproduced declared-consensus range wide enough to overflow standard deviation throws derived-statistics-invalid, not a pass
+ok 1 - a reproduced declared-consensus range wide enough to overflow standard deviation throws derived-statistics-invalid, not a pass
+  ---
+  duration_ms: 2.766459
+  type: 'test'
+  ...
+# Subtest: robust statistics whose scaled median absolute deviation overflows throw derived-statistics-invalid
+ok 2 - robust statistics whose scaled median absolute deviation overflows throw derived-statistics-invalid
+  ---
+  duration_ms: 0.918084
+  type: 'test'
+  ...
+# Subtest: a z-score whose numerator overflows even with a finite assigned value and standard deviation throws derived-statistics-invalid
+ok 3 - a z-score whose numerator overflows even with a finite assigned value and standard deviation throws derived-statistics-invalid
+  ---
+  duration_ms: 0.264834
+  type: 'test'
+  ...
+# Subtest: ordinary finite declared-consensus scoring is unaffected and still passes
+ok 4 - ordinary finite declared-consensus scoring is unaffected and still passes
+  ---
+  duration_ms: 0.348209
+  type: 'test'
+  ...
+# Subtest: ordinary finite robust-statistics scoring is unaffected and still passes
+ok 5 - ordinary finite robust-statistics scoring is unaffected and still passes
+  ---
+  duration_ms: 0.228042
+  type: 'test'
+  ...
+# Subtest: the existing zero-width and zero-spread errors are preserved and take priority over overflow handling
+ok 6 - the existing zero-width and zero-spread errors are preserved and take priority over overflow handling
+  ---
+  duration_ms: 0.225125
+  type: 'test'
+  ...
+# Subtest: an overflowing event never produces a pass outcome or a published participant score
+ok 7 - an overflowing event never produces a pass outcome or a published participant score
+  ---
+  duration_ms: 0.437459
+  type: 'test'
+  ...
+# Subtest: eight fabricated carryover positions match the real evaluator including wash resets and rounding
+ok 8 - eight fabricated carryover positions match the real evaluator including wash resets and rounding
+  ---
+  duration_ms: 4.4085
+  type: 'test'
+  ...
+# Subtest: five dilution scenarios reproduce decisions, reason text and applicable numeric outputs
+ok 9 - five dilution scenarios reproduce decisions, reason text and applicable numeric outputs
+  ---
+  duration_ms: 1.348667
+  type: 'test'
+  ...
+# Subtest: identifiers are synthetic and fixtures and view are deterministic and isolated
+ok 10 - identifiers are synthetic and fixtures and view are deterministic and isolated
+  ---
+  duration_ms: 1.621042
+  type: 'test'
+  ...
+# Subtest: one read-only analytical section follows readiness and immediately precedes supplier questions
+ok 11 - one read-only analytical section follows readiness and immediately precedes supplier questions
+  ---
+  duration_ms: 0.591375
+  type: 'test'
+  ...
+# Subtest: fabricated rows contain every required decision from the real evaluators and explanations
+ok 12 - fabricated rows contain every required decision from the real evaluators and explanations
+  ---
+  duration_ms: 15.289125
+  type: 'test'
+  ...
+# Subtest: all-good fixture is ready, and due-soon alone remains advisory
+ok 13 - all-good fixture is ready, and due-soon alone remains advisory
+  ---
+  duration_ms: 0.889
+  type: 'test'
+  ...
+# Subtest: each blocking condition independently prevents readiness, including an unknown flag mixed with a known flag
+ok 14 - each blocking condition independently prevents readiness, including an unknown flag mixed with a known flag
+  ---
+  duration_ms: 2.383875
+  type: 'test'
+  ...
+# Subtest: every fabricated identifier is SYNTHETIC-prefixed and view text contains no vendor names
+ok 15 - every fabricated identifier is SYNTHETIC-prefixed and view text contains no vendor names
+  ---
+  duration_ms: 8.371
+  type: 'test'
+  ...
+# Subtest: output is deterministic, does not mutate fixture, and has no clock, environment or fetching access
+ok 16 - output is deterministic, does not mutate fixture, and has no clock, environment or fetching access
+  ---
+  duration_ms: 1.708875
+  type: 'test'
+  ...
+# Subtest: page renders readiness, analytical checks, then supplier questions in order
+ok 17 - page renders readiness, analytical checks, then supplier questions in order
+  ---
+  duration_ms: 3.04225
+  type: 'test'
+  ...
+# Subtest: six method validation gate scenarios match the real evaluator on exported fixtures
+ok 18 - six method validation gate scenarios match the real evaluator on exported fixtures
+  ---
+  duration_ms: 2.492
+  type: 'test'
+  ...
+# Subtest: three linearity sets match the real evaluator on exported fixtures
+ok 19 - three linearity sets match the real evaluator on exported fixtures
+  ---
+  duration_ms: 1.877542
+  type: 'test'
+  ...
+# Subtest: three method comparison sets match the real evaluator on exported fixtures, including a caught MethodComparisonError
+ok 20 - three method comparison sets match the real evaluator on exported fixtures, including a caught MethodComparisonError
+  ---
+  duration_ms: 1.430583
+  type: 'test'
+  ...
+# Subtest: the builder never throws out of any error row and headline counts are correct
+ok 21 - the builder never throws out of any error row and headline counts are correct
+  ---
+  duration_ms: 1.201208
+  type: 'test'
+  ...
+# Subtest: every explanation string is non-empty and every fabricated identifier is prefixed
+ok 22 - every explanation string is non-empty and every fabricated identifier is prefixed
+  ---
+  duration_ms: 1.604125
+  type: 'test'
+  ...
+# Subtest: builder is deterministic and isolated from fixture and row mutation, without ambient inputs
+ok 23 - builder is deterministic and isolated from fixture and row mutation, without ambient inputs
+  ---
+  duration_ms: 1.131875
+  type: 'test'
+  ...
+# Subtest: the panel is a read-only server component that imports the builder, mentions fabricated, and avoids forbidden compliance claims
+ok 24 - the panel is a read-only server component that imports the builder, mentions fabricated, and avoids forbidden compliance claims
+  ---
+  duration_ms: 2.413542
+  type: 'test'
+  ...
+# Subtest: the QC page imports and renders MethodPerformancePanel exactly once
+ok 25 - the QC page imports and renders MethodPerformancePanel exactly once
+  ---
+  duration_ms: 4.804625
+  type: 'test'
+  ...
+# Subtest: all indicator numbers and formatting reproduce the real evaluator
+ok 26 - all indicator numbers and formatting reproduce the real evaluator
+  ---
+  duration_ms: 20.649583
+  type: 'test'
+  ...
+# Subtest: zero denominator remains unmeasurable and both target directions include met and missed
+ok 27 - zero denominator remains unmeasurable and both target directions include met and missed
+  ---
+  duration_ms: 20.545084
+  type: 'test'
+  ...
+# Subtest: PT counts, scores, outcomes and explanations come from the real evaluator
+ok 28 - PT counts, scores, outcomes and explanations come from the real evaluator
+  ---
+  duration_ms: 15.59225
+  type: 'test'
+  ...
+# Subtest: every fabricated identifier and declared code has a synthetic prefix
+ok 29 - every fabricated identifier and declared code has a synthetic prefix
+  ---
+  duration_ms: 0.44475
+  type: 'test'
+  ...
+# Subtest: fixtures and view are deterministic and isolated from caller mutation
+ok 30 - fixtures and view are deterministic and isolated from caller mutation
+  ---
+  duration_ms: 3.298291
+  type: 'test'
+  ...
+# Subtest: pure view has no clock, randomness, environment or network dependency
+ok 31 - pure view has no clock, randomness, environment or network dependency
+  ---
+  duration_ms: 0.9075
+  type: 'test'
+  ...
+# Subtest: five fabricated formatting scenarios come from the real formatter, including the typed unresolved error
+ok 32 - five fabricated formatting scenarios come from the real formatter, including the typed unresolved error
+  ---
+  duration_ms: 12.102542
+  type: 'test'
+  ...
+# Subtest: four fabricated distribution scenarios reproduce routing, unrouted classes and fail-closed outcomes
+ok 33 - four fabricated distribution scenarios reproduce routing, unrouted classes and fail-closed outcomes
+  ---
+  duration_ms: 1.231167
+  type: 'test'
+  ...
+# Subtest: three fabricated amendment chains reproduce accepted links and invalid reasons
+ok 34 - three fabricated amendment chains reproduce accepted links and invalid reasons
+  ---
+  duration_ms: 5.162625
+  type: 'test'
+  ...
+# Subtest: headline counts, identifiers and all output remain synthetic, contact-free and deterministic
+ok 35 - headline counts, identifiers and all output remain synthetic, contact-free and deterministic
+  ---
+  duration_ms: 30.643875
+  type: 'test'
+  ...
+# Subtest: builder has no ambient dependencies and page only renders its results
+ok 36 - builder has no ambient dependencies and page only renders its results
+  ---
+  duration_ms: 16.252667
+  type: 'test'
+  ...
+# Subtest: a reading within the measuring range reports as-is with the corrected result
+ok 37 - a reading within the measuring range reports as-is with the corrected result
+  ---
+  duration_ms: 3.29625
+  type: 'test'
+  ...
+# Subtest: a reading exactly at the upper limit reports as-is
+ok 38 - a reading exactly at the upper limit reports as-is
+  ---
+  duration_ms: 0.525583
+  type: 'test'
+  ...
+# Subtest: a reading exactly at the lower limit reports as-is as within range
+ok 39 - a reading exactly at the lower limit reports as-is as within range
+  ---
+  duration_ms: 0.335875
+  type: 'test'
+  ...
+# Subtest: a reading below the lower limit reports as-is; dilution cannot rescue it
+ok 40 - a reading below the lower limit reports as-is; dilution cannot rescue it
+  ---
+  duration_ms: 0.176125
+  type: 'test'
+  ...
+# Subtest: the corrected result accounts for a previously applied dilution factor
+ok 41 - the corrected result accounts for a previously applied dilution factor
+  ---
+  duration_ms: 0.371375
+  type: 'test'
+  ...
+# Subtest: evaluation is pure: it does not mutate the request
+ok 42 - evaluation is pure: it does not mutate the request
+  ---
+  duration_ms: 0.167042
+  type: 'test'
+  ...
+# Subtest: evaluation is deterministic across repeated calls
+ok 43 - evaluation is deterministic across repeated calls
+  ---
+  duration_ms: 0.763125
+  type: 'test'
+  ...
+# Subtest: a decision other than the four defined values is never produced
+ok 44 - a decision other than the four defined values is never produced
+  ---
+  duration_ms: 0.352708
+  type: 'test'
+  ...
+# Subtest: a reading over the upper limit requires a rerun at the next declared ladder factor
+ok 45 - a reading over the upper limit requires a rerun at the next declared ladder factor
+  ---
+  duration_ms: 0.459167
+  type: 'test'
+  ...
+# Subtest: a rerun climbs to the next ladder rung strictly above the already-applied factor
+ok 46 - a rerun climbs to the next ladder rung strictly above the already-applied factor
+  ---
+  duration_ms: 0.524875
+  type: 'test'
+  ...
+# Subtest: a rerun never selects a ladder factor above the declared maximum dilution
+ok 47 - a rerun never selects a ladder factor above the declared maximum dilution
+  ---
+  duration_ms: 0.080541
+  type: 'test'
+  ...
+# Subtest: a reading still over range at the highest usable ladder rung reports as greater-than
+ok 48 - a reading still over range at the highest usable ladder rung reports as greater-than
+  ---
+  duration_ms: 0.104959
+  type: 'test'
+  ...
+# Subtest: a declared maximum dilution below the next ladder rung reports as greater-than instead of reaching for it
+ok 49 - a declared maximum dilution below the next ladder rung reports as greater-than instead of reaching for it
+  ---
+  duration_ms: 0.04375
+  type: 'test'
+  ...
+# Subtest: exceeding the declared maximum rerun count blocks instead of allowing another rerun
+ok 50 - exceeding the declared maximum rerun count blocks instead of allowing another rerun
+  ---
+  duration_ms: 0.038167
+  type: 'test'
+  ...
+# Subtest: a rerun count below the declared maximum still allows a rerun
+ok 51 - a rerun count below the declared maximum still allows a rerun
+  ---
+  duration_ms: 0.028875
+  type: 'test'
+  ...
+# Subtest: a within-range reading is never blocked by an exhausted rerun budget
+ok 52 - a within-range reading is never blocked by an exhausted rerun budget
+  ---
+  duration_ms: 0.091375
+  type: 'test'
+  ...
+# Subtest: an out-of-range reading with no viable ladder rung is not blocked by rerun budget; it reports greater-than
+ok 53 - an out-of-range reading with no viable ladder rung is not blocked by rerun budget; it reports greater-than
+  ---
+  duration_ms: 0.12675
+  type: 'test'
+  ...
+# Subtest: an analyte with no declared measuring range fails closed to block
+ok 54 - an analyte with no declared measuring range fails closed to block
+  ---
+  duration_ms: 0.081958
+  type: 'test'
+  ...
+# Subtest: a declared measuring range with a mismatched unit fails closed to block
+ok 55 - a declared measuring range with a mismatched unit fails closed to block
+  ---
+  duration_ms: 0.076125
+  type: 'test'
+  ...
+# Subtest: a ladder declared for a different analyte fails closed to block
+ok 56 - a ladder declared for a different analyte fails closed to block
+  ---
+  duration_ms: 0.322875
+  type: 'test'
+  ...
+# Subtest: an empty ladder fails closed to block
+ok 57 - an empty ladder fails closed to block
+  ---
+  duration_ms: 0.172666
+  type: 'test'
+  ...
+# Subtest: a ladder with a factor of 1 or less fails closed to block
+ok 58 - a ladder with a factor of 1 or less fails closed to block
+  ---
+  duration_ms: 0.10275
+  type: 'test'
+  ...
+# Subtest: a ladder that is not strictly increasing fails closed to block
+ok 59 - a ladder that is not strictly increasing fails closed to block
+  ---
+  duration_ms: 0.072875
+  type: 'test'
+  ...
+# Subtest: a ladder with a duplicated factor fails closed to block
+ok 60 - a ladder with a duplicated factor fails closed to block
+  ---
+  duration_ms: 0.062541
+  type: 'test'
+  ...
+# Subtest: a malformed result throws DilutionRerunInputError instead of guessing
+ok 61 - a malformed result throws DilutionRerunInputError instead of guessing
+  ---
+  duration_ms: 0.3805
+  type: 'test'
+  ...
+# Subtest: a missing analyte code on the result throws DilutionRerunInputError
+ok 62 - a missing analyte code on the result throws DilutionRerunInputError
+  ---
+  duration_ms: 0.143333
+  type: 'test'
+  ...
+# Subtest: an applied dilution factor below 1 throws DilutionRerunInputError
+ok 63 - an applied dilution factor below 1 throws DilutionRerunInputError
+  ---
+  duration_ms: 0.149292
+  type: 'test'
+  ...
+# Subtest: measuring ranges that are not an array throws DilutionRerunInputError
+ok 64 - measuring ranges that are not an array throws DilutionRerunInputError
+  ---
+  duration_ms: 0.126833
+  type: 'test'
+  ...
+# Subtest: a measuring range entry with an inverted limit throws DilutionRerunInputError
+ok 65 - a measuring range entry with an inverted limit throws DilutionRerunInputError
+  ---
+  duration_ms: 0.062458
+  type: 'test'
+  ...
+# Subtest: a ladder missing its factors array throws DilutionRerunInputError
+ok 66 - a ladder missing its factors array throws DilutionRerunInputError
+  ---
+  duration_ms: 0.322
+  type: 'test'
+  ...
+# Subtest: a ladder with a non-numeric factor throws DilutionRerunInputError
+ok 67 - a ladder with a non-numeric factor throws DilutionRerunInputError
+  ---
+  duration_ms: 0.18225
+  type: 'test'
+  ...
+# Subtest: a maximum dilution factor below 1 throws DilutionRerunInputError
+ok 68 - a maximum dilution factor below 1 throws DilutionRerunInputError
+  ---
+  duration_ms: 0.126125
+  type: 'test'
+  ...
+# Subtest: a non-finite maximum dilution factor throws DilutionRerunInputError
+ok 69 - a non-finite maximum dilution factor throws DilutionRerunInputError
+  ---
+  duration_ms: 0.256833
+  type: 'test'
+  ...
+# Subtest: a negative rerun count throws DilutionRerunInputError
+ok 70 - a negative rerun count throws DilutionRerunInputError
+  ---
+  duration_ms: 0.137541
+  type: 'test'
+  ...
+# Subtest: a non-integer maximum rerun count throws DilutionRerunInputError
+ok 71 - a non-integer maximum rerun count throws DilutionRerunInputError
+  ---
+  duration_ms: 0.122875
+  type: 'test'
+  ...
+# Subtest: every reason code maps to exactly one of the four defined decisions
+ok 72 - every reason code maps to exactly one of the four defined decisions
+  ---
+  duration_ms: 0.099334
+  type: 'test'
+  ...
+# Subtest: reason explanations never claim approval, compliance, accreditation, or releasability
+ok 73 - reason explanations never claim approval, compliance, accreditation, or releasability
+  ---
+  duration_ms: 0.846833
+  type: 'test'
+  ...
+# Subtest: a zero maximum rerun count blocks any required rerun immediately
+ok 74 - a zero maximum rerun count blocks any required rerun immediately
+  ---
+  duration_ms: 0.064959
+  type: 'test'
+  ...
+# Subtest: the outcome object is frozen
+ok 75 - the outcome object is frozen
+  ---
+  duration_ms: 0.902709
+  type: 'test'
+  ...
+# Subtest: a within-range reading whose corrected result overflows to Infinity blocks instead of reporting
+ok 76 - a within-range reading whose corrected result overflows to Infinity blocks instead of reporting
+  ---
+  duration_ms: 11.913125
+  type: 'test'
+  ...
+# Subtest: a below-range reading whose corrected result overflows to -Infinity blocks instead of reporting
+ok 77 - a below-range reading whose corrected result overflows to -Infinity blocks instead of reporting
+  ---
+  duration_ms: 0.317083
+  type: 'test'
+  ...
+# Subtest: an out-of-range reading whose greater-than limit overflows to Infinity blocks instead of reporting
+ok 78 - an out-of-range reading whose greater-than limit overflows to Infinity blocks instead of reporting
+  ---
+  duration_ms: 0.210875
+  type: 'test'
+  ...
+# Subtest: a large but representable corrected result still reports as-is with a finite numeric output
+ok 79 - a large but representable corrected result still reports as-is with a finite numeric output
+  ---
+  duration_ms: 0.283416
+  type: 'test'
+  ...
+# Subtest: a single mapped flag translates to its canonical flag and action
+ok 80 - a single mapped flag translates to its canonical flag and action
+  ---
+  duration_ms: 1.491292
+  type: 'test'
+  ...
+# Subtest: an empty raw flag list maps cleanly with no canonical flags and no required action
+ok 81 - an empty raw flag list maps cleanly with no canonical flags and no required action
+  ---
+  duration_ms: 2.385792
+  type: 'test'
+  ...
+# Subtest: multiple mapped flags produce one entry per distinct canonical flag in first-seen order
+ok 82 - multiple mapped flags produce one entry per distinct canonical flag in first-seen order
+  ---
+  duration_ms: 0.340417
+  type: 'test'
+  ...
+# Subtest: the same instrument-specific flag code maps consistently across two independent calls
+ok 83 - the same instrument-specific flag code maps consistently across two independent calls
+  ---
+  duration_ms: 0.375167
+  type: 'test'
+  ...
+# Subtest: the same raw flag code can map to a different canonical flag under a different instrument model
+ok 84 - the same raw flag code can map to a different canonical flag under a different instrument model
+  ---
+  duration_ms: 0.454625
+  type: 'test'
+  ...
+# Subtest: conflicting flags resolve to the highest declared severity and its action
+ok 85 - conflicting flags resolve to the highest declared severity and its action
+  ---
+  duration_ms: 0.5465
+  type: 'test'
+  ...
+# Subtest: severity resolution is independent of raw flag order
+ok 86 - severity resolution is independent of raw flag order
+  ---
+  duration_ms: 0.310167
+  type: 'test'
+  ...
+# Subtest: a lower-severity flag never overrides an already-resolved higher severity
+ok 87 - a lower-severity flag never overrides an already-resolved higher severity
+  ---
+  duration_ms: 0.20725
+  type: 'test'
+  ...
+# Subtest: a tie in resolved severity breaks toward the more visible action: report over review
+ok 88 - a tie in resolved severity breaks toward the more visible action: report over review
+  ---
+  duration_ms: 0.441208
+  type: 'test'
+  ...
+# Subtest: a tie in resolved severity breaks toward review over suppress when report is not present
+ok 89 - a tie in resolved severity breaks toward review over suppress when report is not present
+  ---
+  duration_ms: 0.740792
+  type: 'test'
+  ...
+# Subtest: duplicate raw flag codes collapse to a single canonical flag entry
+ok 90 - duplicate raw flag codes collapse to a single canonical flag entry
+  ---
+  duration_ms: 0.30625
+  type: 'test'
+  ...
+# Subtest: an instrument model absent from the table is blocked as unknown
+ok 91 - an instrument model absent from the table is blocked as unknown
+  ---
+  duration_ms: 0.223875
+  type: 'test'
+  ...
+# Subtest: an empty table blocks every lookup as unknown
+ok 92 - an empty table blocks every lookup as unknown
+  ---
+  duration_ms: 0.083917
+  type: 'test'
+  ...
+# Subtest: a raw flag code not declared for the instrument model is blocked
+ok 93 - a raw flag code not declared for the instrument model is blocked
+  ---
+  duration_ms: 0.176625
+  type: 'test'
+  ...
+# Subtest: a raw flag code declared for a different instrument model is still blocked as unmapped
+ok 94 - a raw flag code declared for a different instrument model is still blocked as unmapped
+  ---
+  duration_ms: 0.243209
+  type: 'test'
+  ...
+# Subtest: one unmapped flag blocks the whole translation even when earlier flags were mappable
+ok 95 - one unmapped flag blocks the whole translation even when earlier flags were mappable
+  ---
+  duration_ms: 0.1345
+  type: 'test'
+  ...
+# Subtest: a null table throws a sanitized typed error
+ok 96 - a null table throws a sanitized typed error
+  ---
+  duration_ms: 0.662792
+  type: 'test'
+  ...
+# Subtest: an array table throws a sanitized typed error
+ok 97 - an array table throws a sanitized typed error
+  ---
+  duration_ms: 0.443583
+  type: 'test'
+  ...
+# Subtest: an empty-string instrument model throws a sanitized typed error
+ok 98 - an empty-string instrument model throws a sanitized typed error
+  ---
+  duration_ms: 0.149541
+  type: 'test'
+  ...
+# Subtest: a non-string instrument model throws a sanitized typed error
+ok 99 - a non-string instrument model throws a sanitized typed error
+  ---
+  duration_ms: 0.258583
+  type: 'test'
+  ...
+# Subtest: a non-array raw flag list throws a sanitized typed error
+ok 100 - a non-array raw flag list throws a sanitized typed error
+  ---
+  duration_ms: 0.061042
+  type: 'test'
+  ...
+# Subtest: a raw flag list containing an empty string throws a sanitized typed error
+ok 101 - a raw flag list containing an empty string throws a sanitized typed error
+  ---
+  duration_ms: 0.542166
+  type: 'test'
+  ...
+# Subtest: a raw flag list containing a non-string element throws a sanitized typed error
+ok 102 - a raw flag list containing a non-string element throws a sanitized typed error
+  ---
+  duration_ms: 0.416916
+  type: 'test'
+  ...
+# Subtest: a non-object model mapping entry throws a sanitized typed error
+ok 103 - a non-object model mapping entry throws a sanitized typed error
+  ---
+  duration_ms: 0.182334
+  type: 'test'
+  ...
+# Subtest: an array model mapping entry throws a sanitized typed error
+ok 104 - an array model mapping entry throws a sanitized typed error
+  ---
+  duration_ms: 0.432958
+  type: 'test'
+  ...
+# Subtest: a flag definition missing a required field throws a sanitized typed error
+ok 105 - a flag definition missing a required field throws a sanitized typed error
+  ---
+  duration_ms: 0.2075
+  type: 'test'
+  ...
+# Subtest: a flag definition with an unrecognized severity throws a sanitized typed error
+ok 106 - a flag definition with an unrecognized severity throws a sanitized typed error
+  ---
+  duration_ms: 0.117792
+  type: 'test'
+  ...
+# Subtest: a flag definition with an unrecognized action throws a sanitized typed error
+ok 107 - a flag definition with an unrecognized action throws a sanitized typed error
+  ---
+  duration_ms: 0.103708
+  type: 'test'
+  ...
+# Subtest: a typed input error message never echoes any submitted data
+ok 108 - a typed input error message never echoes any submitted data
+  ---
+  duration_ms: 0.290291
+  type: 'test'
+  ...
+# Subtest: the result is deterministic across repeated calls with equivalent input
+ok 109 - the result is deterministic across repeated calls with equivalent input
+  ---
+  duration_ms: 0.62375
+  type: 'test'
+  ...
+# Subtest: the result object is frozen
+ok 110 - the result object is frozen
+  ---
+  duration_ms: 0.287791
+  type: 'test'
+  ...
+# Subtest: the canonicalFlags array is frozen
+ok 111 - the canonicalFlags array is frozen
+  ---
+  duration_ms: 0.144875
+  type: 'test'
+  ...
+# Subtest: mapInstrumentFlags does not mutate its table input
+ok 112 - mapInstrumentFlags does not mutate its table input
+  ---
+  duration_ms: 0.099666
+  type: 'test'
+  ...
+# Subtest: mapInstrumentFlags does not mutate its raw flag codes input
+ok 113 - mapInstrumentFlags does not mutate its raw flag codes input
+  ---
+  duration_ms: 0.145709
+  type: 'test'
+  ...
+# Subtest: every reason code has a non-empty, privacy-safe explanation
+ok 114 - every reason code has a non-empty, privacy-safe explanation
+  ---
+  duration_ms: 0.882291
+  type: 'test'
+  ...
+# Subtest: explanations are stable across repeated calls for the same code
+ok 115 - explanations are stable across repeated calls for the same code
+  ---
+  duration_ms: 0.103667
+  type: 'test'
+  ...
+# Subtest: the reason field on a result matches explainFlagMappingReason for its reasonCode
+ok 116 - the reason field on a result matches explainFlagMappingReason for its reasonCode
+  ---
+  duration_ms: 0.080792
+  type: 'test'
+  ...
+# Subtest: zero reference mean with difference 100 cannot resolve a sole percent-bias criterion
+ok 117 - zero reference mean with difference 100 cannot resolve a sole percent-bias criterion
+  ---
+  duration_ms: 1.63175
+  type: 'test'
+  ...
+# Subtest: zero reference mean with difference 0 cannot resolve a sole percent-bias criterion
+ok 118 - zero reference mean with difference 0 cannot resolve a sole percent-bias criterion
+  ---
+  duration_ms: 0.567375
+  type: 'test'
+  ...
+# Subtest: zero reference mean retains null percent bias and uses a declared absolute limit
+ok 119 - zero reference mean retains null percent bias and uses a declared absolute limit
+  ---
+  duration_ms: 0.479167
+  type: 'test'
+  ...
+# Subtest: nonzero reference mean still evaluates a sole percent-bias criterion
+ok 120 - nonzero reference mean still evaluates a sole percent-bias criterion
+  ---
+  duration_ms: 0.350583
+  type: 'test'
+  ...
+# Subtest: insufficient reference spread retains precedence over unavailable percent bias
+ok 121 - insufficient reference spread retains precedence over unavailable percent bias
+  ---
+  duration_ms: 0.355625
+  type: 'test'
+  ...
+# Subtest: a well-behaved set of pairs is acceptable with within-allowable-bias as the governing criterion
+ok 122 - a well-behaved set of pairs is acceptable with within-allowable-bias as the governing criterion
+  ---
+  duration_ms: 1.633583
+  type: 'test'
+  ...
+# Subtest: mean difference is the signed mean of (candidate - reference)
+ok 123 - mean difference is the signed mean of (candidate - reference)
+  ---
+  duration_ms: 0.307292
+  type: 'test'
+  ...
+# Subtest: standard deviation of differences uses the sample (n-1) formula
+ok 124 - standard deviation of differences uses the sample (n-1) formula
+  ---
+  duration_ms: 0.215875
+  type: 'test'
+  ...
+# Subtest: limits of agreement are mean difference plus and minus the declared multiplier times the standard deviation
+ok 125 - limits of agreement are mean difference plus and minus the declared multiplier times the standard deviation
+  ---
+  duration_ms: 0.06875
+  type: 'test'
+  ...
+# Subtest: percent bias is the mean difference relative to the mean reference value
+ok 126 - percent bias is the mean difference relative to the mean reference value
+  ---
+  duration_ms: 0.049167
+  type: 'test'
+  ...
+# Subtest: percent bias is null when the mean reference value is zero
+ok 127 - percent bias is null when the mean reference value is zero
+  ---
+  duration_ms: 0.047417
+  type: 'test'
+  ...
+# Subtest: a per-pair percent difference is null when that pair reference value is zero
+ok 128 - a per-pair percent difference is null when that pair reference value is zero
+  ---
+  duration_ms: 0.052208
+  type: 'test'
+  ...
+# Subtest: the Passing-Bablok slope is the median of pairwise slopes between distinct-reference-value pairs
+ok 129 - the Passing-Bablok slope is the median of pairwise slopes between distinct-reference-value pairs
+  ---
+  duration_ms: 0.040166
+  type: 'test'
+  ...
+# Subtest: the Passing-Bablok intercept is the median of (candidateValue - slope * referenceValue)
+ok 130 - the Passing-Bablok intercept is the median of (candidateValue - slope * referenceValue)
+  ---
+  duration_ms: 0.166
+  type: 'test'
+  ...
+# Subtest: a reference value set with no spread throws insufficient-reference-value-spread
+ok 131 - a reference value set with no spread throws insufficient-reference-value-spread
+  ---
+  duration_ms: 0.833209
+  type: 'test'
+  ...
+# Subtest: evaluation is pure: it does not mutate input pairs or declaration
+ok 132 - evaluation is pure: it does not mutate input pairs or declaration
+  ---
+  duration_ms: 0.22275
+  type: 'test'
+  ...
+# Subtest: evaluation is deterministic across repeated calls
+ok 133 - evaluation is deterministic across repeated calls
+  ---
+  duration_ms: 1.515333
+  type: 'test'
+  ...
+# Subtest: a decision other than acceptable or not-acceptable is never produced
+ok 134 - a decision other than acceptable or not-acceptable is never produced
+  ---
+  duration_ms: 0.239292
+  type: 'test'
+  ...
+# Subtest: the returned result is frozen, including nested structures
+ok 135 - the returned result is frozen, including nested structures
+  ---
+  duration_ms: 0.224458
+  type: 'test'
+  ...
+# Subtest: a mean difference exactly at the declared limit does not reject
+ok 136 - a mean difference exactly at the declared limit does not reject
+  ---
+  duration_ms: 0.145
+  type: 'test'
+  ...
+# Subtest: a mean difference exceeding the declared limit rejects with mean-difference-exceeded
+ok 137 - a mean difference exceeding the declared limit rejects with mean-difference-exceeded
+  ---
+  duration_ms: 0.162125
+  type: 'test'
+  ...
+# Subtest: a percent bias exceeding the declared limit rejects with percent-bias-exceeded when mean difference is within limit
+ok 138 - a percent bias exceeding the declared limit rejects with percent-bias-exceeded when mean difference is within limit
+  ---
+  duration_ms: 0.184916
+  type: 'test'
+  ...
+# Subtest: mean-difference-exceeded takes priority over percent-bias-exceeded
+ok 139 - mean-difference-exceeded takes priority over percent-bias-exceeded
+  ---
+  duration_ms: 0.102083
+  type: 'test'
+  ...
+# Subtest: fewer pairs than the declared minimum throws pairs-below-minimum
+ok 140 - fewer pairs than the declared minimum throws pairs-below-minimum
+  ---
+  duration_ms: 0.1055
+  type: 'test'
+  ...
+# Subtest: a non-array pairs input throws pairs-not-array
+ok 141 - a non-array pairs input throws pairs-not-array
+  ---
+  duration_ms: 0.1725
+  type: 'test'
+  ...
+# Subtest: malformed declared parameters throw declaration-malformed
+ok 142 - malformed declared parameters throw declaration-malformed
+  ---
+  duration_ms: 0.1075
+  type: 'test'
+  ...
+# Subtest: declared parameters with minPairs below 2 throw declaration-malformed
+ok 143 - declared parameters with minPairs below 2 throw declaration-malformed
+  ---
+  duration_ms: 0.081833
+  type: 'test'
+  ...
+# Subtest: declared parameters with a non-integer minPairs throw declaration-malformed
+ok 144 - declared parameters with a non-integer minPairs throw declaration-malformed
+  ---
+  duration_ms: 0.08375
+  type: 'test'
+  ...
+# Subtest: declared parameters with a non-positive loaMultiplier throw declaration-malformed
+ok 145 - declared parameters with a non-positive loaMultiplier throw declaration-malformed
+  ---
+  duration_ms: 0.111083
+  type: 'test'
+  ...
+# Subtest: declared parameters with a non-finite loaMultiplier throw declaration-malformed
+ok 146 - declared parameters with a non-finite loaMultiplier throw declaration-malformed
+  ---
+  duration_ms: 0.137041
+  type: 'test'
+  ...
+# Subtest: declared allowable bias with both axes null throws declaration-malformed
+ok 147 - declared allowable bias with both axes null throws declaration-malformed
+  ---
+  duration_ms: 0.43125
+  type: 'test'
+  ...
+# Subtest: declared allowable bias with a negative axis throws declaration-malformed
+ok 148 - declared allowable bias with a negative axis throws declaration-malformed
+  ---
+  duration_ms: 0.156292
+  type: 'test'
+  ...
+# Subtest: a duplicate specimen identifier throws duplicate-specimen-id
+ok 149 - a duplicate specimen identifier throws duplicate-specimen-id
+  ---
+  duration_ms: 0.235208
+  type: 'test'
+  ...
+# Subtest: a pair missing a specimen identifier throws pair-malformed
+ok 150 - a pair missing a specimen identifier throws pair-malformed
+  ---
+  duration_ms: 0.133916
+  type: 'test'
+  ...
+# Subtest: a non-finite reference value throws reference-value-invalid
+ok 151 - a non-finite reference value throws reference-value-invalid
+  ---
+  duration_ms: 0.1045
+  type: 'test'
+  ...
+# Subtest: a non-finite candidate value throws candidate-value-invalid
+ok 152 - a non-finite candidate value throws candidate-value-invalid
+  ---
+  duration_ms: 0.103875
+  type: 'test'
+  ...
+# Subtest: a numeric-looking string value is accepted as numeric
+ok 153 - a numeric-looking string value is accepted as numeric
+  ---
+  duration_ms: 0.118833
+  type: 'test'
+  ...
+# Subtest: a missing reference unit throws reference-unit-missing
+ok 154 - a missing reference unit throws reference-unit-missing
+  ---
+  duration_ms: 0.092542
+  type: 'test'
+  ...
+# Subtest: a missing candidate unit throws candidate-unit-missing
+ok 155 - a missing candidate unit throws candidate-unit-missing
+  ---
+  duration_ms: 0.077542
+  type: 'test'
+  ...
+# Subtest: a reference unit mismatched with the declared comparison unit throws reference-unit-mismatched
+ok 156 - a reference unit mismatched with the declared comparison unit throws reference-unit-mismatched
+  ---
+  duration_ms: 0.078375
+  type: 'test'
+  ...
+# Subtest: a candidate unit mismatched with the declared comparison unit throws candidate-unit-mismatched
+ok 157 - a candidate unit mismatched with the declared comparison unit throws candidate-unit-mismatched
+  ---
+  duration_ms: 0.077292
+  type: 'test'
+  ...
+# Subtest: unit comparison ignores outer whitespace and case
+ok 158 - unit comparison ignores outer whitespace and case
+  ---
+  duration_ms: 0.08075
+  type: 'test'
+  ...
+# Subtest: unit comparison never infers a conversion: g/dL still mismatches mg/dL
+ok 159 - unit comparison never infers a conversion: g/dL still mismatches mg/dL
+  ---
+  duration_ms: 0.146042
+  type: 'test'
+  ...
+# Subtest: a typed error message never echoes any submitted specimen identifier
+ok 160 - a typed error message never echoes any submitted specimen identifier
+  ---
+  duration_ms: 0.715208
+  type: 'test'
+  ...
+# Subtest: every error code has a non-empty, privacy-safe explanation
+ok 161 - every error code has a non-empty, privacy-safe explanation
+  ---
+  duration_ms: 0.890542
+  type: 'test'
+  ...
+# Subtest: every governing criterion has a non-empty, privacy-safe explanation
+ok 162 - every governing criterion has a non-empty, privacy-safe explanation
+  ---
+  duration_ms: 0.157667
+  type: 'test'
+  ...
+# Subtest: explanations are stable across repeated calls for the same code
+ok 163 - explanations are stable across repeated calls for the same code
+  ---
+  duration_ms: 0.047167
+  type: 'test'
+  ...
+# Subtest: no decision or criterion ever uses approval, compliance, accreditation, or release language
+ok 164 - no decision or criterion ever uses approval, compliance, accreditation, or release language
+  ---
+  duration_ms: 0.116041
+  type: 'test'
+  ...
+# Subtest: standard PT acceptance limits are 2 and 3
+ok 165 - standard PT acceptance limits are 2 and 3
+  ---
+  duration_ms: 1.574
+  type: 'test'
+  ...
+# Subtest: classifyPtZScore classifies at and around the standard limits
+ok 166 - classifyPtZScore classifies at and around the standard limits
+  ---
+  duration_ms: 0.306708
+  type: 'test'
+  ...
+# Subtest: a well-behaved event with a declared consensus scores each participant and passes
+ok 167 - a well-behaved event with a declared consensus scores each participant and passes
+  ---
+  duration_ms: 1.238
+  type: 'test'
+  ...
+# Subtest: the standard deviation is derived from the declared range as width / (2 * questionable limit)
+ok 168 - the standard deviation is derived from the declared range as width / (2 * questionable limit)
+  ---
+  duration_ms: 0.299583
+  type: 'test'
+  ...
+# Subtest: a questionable result is classified correctly and counted
+ok 169 - a questionable result is classified correctly and counted
+  ---
+  duration_ms: 0.170958
+  type: 'test'
+  ...
+# Subtest: an unsatisfactory result is classified correctly and counted
+ok 170 - an unsatisfactory result is classified correctly and counted
+  ---
+  duration_ms: 0.174708
+  type: 'test'
+  ...
+# Subtest: event fails with satisfactory-rate-below-minimum when the satisfactory rate is too low
+ok 171 - event fails with satisfactory-rate-below-minimum when the satisfactory rate is too low
+  ---
+  duration_ms: 0.104667
+  type: 'test'
+  ...
+# Subtest: event fails with unsatisfactory-count-exceeded when unsatisfactory results exceed the declared maximum
+ok 172 - event fails with unsatisfactory-count-exceeded when unsatisfactory results exceed the declared maximum
+  ---
+  duration_ms: 0.137917
+  type: 'test'
+  ...
+# Subtest: an event can fail with both reasons at once
+ok 173 - an event can fail with both reasons at once
+  ---
+  duration_ms: 0.70675
+  type: 'test'
+  ...
+# Subtest: a satisfactory rate exactly at the declared minimum does not fail on that reason
+ok 174 - a satisfactory rate exactly at the declared minimum does not fail on that reason
+  ---
+  duration_ms: 1.655792
+  type: 'test'
+  ...
+# Subtest: an unsatisfactory count exactly at the declared maximum does not fail on that reason
+ok 175 - an unsatisfactory count exactly at the declared maximum does not fail on that reason
+  ---
+  duration_ms: 0.094333
+  type: 'test'
+  ...
+# Subtest: a null consensus falls back to robust statistics computed from the declared results
+ok 176 - a null consensus falls back to robust statistics computed from the declared results
+  ---
+  duration_ms: 0.536583
+  type: 'test'
+  ...
+# Subtest: robust statistics use the median for an even number of results
+ok 177 - robust statistics use the median for an even number of results
+  ---
+  duration_ms: 0.26525
+  type: 'test'
+  ...
+# Subtest: a null consensus with fewer numeric results than the declared minimum throws consensus-missing-insufficient-participants
+ok 178 - a null consensus with fewer numeric results than the declared minimum throws consensus-missing-insufficient-participants
+  ---
+  duration_ms: 0.539958
+  type: 'test'
+  ...
+# Subtest: robust statistics with zero spread throw robust-statistics-zero-spread
+ok 179 - robust statistics with zero spread throw robust-statistics-zero-spread
+  ---
+  duration_ms: 0.093084
+  type: 'test'
+  ...
+# Subtest: a declared acceptable range with zero width throws consensus-range-zero-width
+ok 180 - a declared acceptable range with zero width throws consensus-range-zero-width
+  ---
+  duration_ms: 0.061041
+  type: 'test'
+  ...
+# Subtest: a declared acceptable range with low above high throws consensus-range-invalid
+ok 181 - a declared acceptable range with low above high throws consensus-range-invalid
+  ---
+  duration_ms: 0.046125
+  type: 'test'
+  ...
+# Subtest: a structurally invalid declared consensus throws consensus-malformed
+ok 182 - a structurally invalid declared consensus throws consensus-malformed
+  ---
+  duration_ms: 0.045709
+  type: 'test'
+  ...
+# Subtest: a declared consensus with a non-finite assigned value throws consensus-malformed
+ok 183 - a declared consensus with a non-finite assigned value throws consensus-malformed
+  ---
+  duration_ms: 0.185708
+  type: 'test'
+  ...
+# Subtest: malformed declared limits throw limits-malformed
+ok 184 - malformed declared limits throw limits-malformed
+  ---
+  duration_ms: 0.293583
+  type: 'test'
+  ...
+# Subtest: declared limits with an out-of-range minSatisfactoryRate throw limits-malformed
+ok 185 - declared limits with an out-of-range minSatisfactoryRate throw limits-malformed
+  ---
+  duration_ms: 0.069959
+  type: 'test'
+  ...
+# Subtest: declared limits with a non-integer maxUnsatisfactoryCount throw limits-malformed
+ok 186 - declared limits with a non-integer maxUnsatisfactoryCount throw limits-malformed
+  ---
+  duration_ms: 0.130292
+  type: 'test'
+  ...
+# Subtest: declared limits with a non-positive minParticipantsForRobustStatistics throw limits-malformed
+ok 187 - declared limits with a non-positive minParticipantsForRobustStatistics throw limits-malformed
+  ---
+  duration_ms: 0.095
+  type: 'test'
+  ...
+# Subtest: a non-array results input throws results-not-array
+ok 188 - a non-array results input throws results-not-array
+  ---
+  duration_ms: 0.036833
+  type: 'test'
+  ...
+# Subtest: an empty results array throws results-empty
+ok 189 - an empty results array throws results-empty
+  ---
+  duration_ms: 0.033833
+  type: 'test'
+  ...
+# Subtest: a result missing a participant identifier throws result-malformed
+ok 190 - a result missing a participant identifier throws result-malformed
+  ---
+  duration_ms: 0.127625
+  type: 'test'
+  ...
+# Subtest: a duplicate participant identifier throws duplicate-participant-id
+ok 191 - a duplicate participant identifier throws duplicate-participant-id
+  ---
+  duration_ms: 0.0395
+  type: 'test'
+  ...
+# Subtest: a non-numeric reported value throws reported-value-invalid
+ok 192 - a non-numeric reported value throws reported-value-invalid
+  ---
+  duration_ms: 0.056375
+  type: 'test'
+  ...
+# Subtest: a non-finite reported value throws reported-value-invalid
+ok 193 - a non-finite reported value throws reported-value-invalid
+  ---
+  duration_ms: 0.15075
+  type: 'test'
+  ...
+# Subtest: a numeric-looking string reported value is accepted as numeric
+ok 194 - a numeric-looking string reported value is accepted as numeric
+  ---
+  duration_ms: 0.05675
+  type: 'test'
+  ...
+# Subtest: evaluation is pure: it does not mutate input results, consensus, or limits
+ok 195 - evaluation is pure: it does not mutate input results, consensus, or limits
+  ---
+  duration_ms: 0.049666
+  type: 'test'
+  ...
+# Subtest: evaluation is deterministic across repeated calls
+ok 196 - evaluation is deterministic across repeated calls
+  ---
+  duration_ms: 0.525083
+  type: 'test'
+  ...
+# Subtest: the returned result is frozen, including the participant scores and fail reasons arrays
+ok 197 - the returned result is frozen, including the participant scores and fail reasons arrays
+  ---
+  duration_ms: 0.042875
+  type: 'test'
+  ...
+# Subtest: an outcome other than pass or fail is never produced
+ok 198 - an outcome other than pass or fail is never produced
+  ---
+  duration_ms: 0.030167
+  type: 'test'
+  ...
+# Subtest: every classification appears in PT_CLASSIFICATIONS
+ok 199 - every classification appears in PT_CLASSIFICATIONS
+  ---
+  duration_ms: 0.033708
+  type: 'test'
+  ...
+# Subtest: a typed error message never echoes any submitted participant identifier
+ok 200 - a typed error message never echoes any submitted participant identifier
+  ---
+  duration_ms: 0.750875
+  type: 'test'
+  ...
+# Subtest: every error code has a non-empty, privacy-safe explanation
+ok 201 - every error code has a non-empty, privacy-safe explanation
+  ---
+  duration_ms: 0.200459
+  type: 'test'
+  ...
+# Subtest: every classification has a non-empty, privacy-safe explanation
+ok 202 - every classification has a non-empty, privacy-safe explanation
+  ---
+  duration_ms: 0.057625
+  type: 'test'
+  ...
+# Subtest: every event fail reason has a non-empty, privacy-safe explanation
+ok 203 - every event fail reason has a non-empty, privacy-safe explanation
+  ---
+  duration_ms: 0.264666
+  type: 'test'
+  ...
+# Subtest: explanations are stable across repeated calls for the same code
+ok 204 - explanations are stable across repeated calls for the same code
+  ---
+  duration_ms: 1.282417
+  type: 'test'
+  ...
+# Subtest: no classification, outcome, or fail reason ever uses approval, compliance, accreditation, or release language
+ok 205 - no classification, outcome, or fail reason ever uses approval, compliance, accreditation, or release language
+  ---
+  duration_ms: 0.067125
+  type: 'test'
+  ...
+# Subtest: a value inside the declared reference range is within_range with the matching flag
+ok 206 - a value inside the declared reference range is within_range with the matching flag
+  ---
+  duration_ms: 5.369625
+  type: 'test'
+  ...
+# Subtest: a value exactly at the reference range upper bound is within_range
+ok 207 - a value exactly at the reference range upper bound is within_range
+  ---
+  duration_ms: 0.114875
+  type: 'test'
+  ...
+# Subtest: a value exactly at the limit of detection is within_range, not below_detection
+ok 208 - a value exactly at the limit of detection is within_range, not below_detection
+  ---
+  duration_ms: 0.104667
+  type: 'test'
+  ...
+# Subtest: a value exactly at the limit of detection and exactly at the reference range lower bound is within_range
+ok 209 - a value exactly at the limit of detection and exactly at the reference range lower bound is within_range
+  ---
+  duration_ms: 0.042375
+  type: 'test'
+  ...
+# Subtest: a value exactly at the reference range lower bound is within_range
+ok 210 - a value exactly at the reference range lower bound is within_range
+  ---
+  duration_ms: 0.063125
+  type: 'test'
+  ...
+# Subtest: a value exactly at the upper limit of quantitation is within_range, not above_quantitation
+ok 211 - a value exactly at the upper limit of quantitation is within_range, not above_quantitation
+  ---
+  duration_ms: 0.28425
+  type: 'test'
+  ...
+# Subtest: a value below the limit of detection is below_detection
+ok 212 - a value below the limit of detection is below_detection
+  ---
+  duration_ms: 0.124667
+  type: 'test'
+  ...
+# Subtest: a value below both the limit of detection and the reference range lower bound is below_detection, not below_range
+ok 213 - a value below both the limit of detection and the reference range lower bound is below_detection, not below_range
+  ---
+  duration_ms: 0.043833
+  type: 'test'
+  ...
+# Subtest: a value above the reference range upper bound but within quantitation is above_range
+ok 214 - a value above the reference range upper bound but within quantitation is above_range
+  ---
+  duration_ms: 0.160583
+  type: 'test'
+  ...
+# Subtest: a value above the upper limit of quantitation is above_quantitation, taking priority over above_range
+ok 215 - a value above the upper limit of quantitation is above_quantitation, taking priority over above_range
+  ---
+  duration_ms: 0.263792
+  type: 'test'
+  ...
+# Subtest: a value below the declared reference range lower bound but above detection is below_range
+ok 216 - a value below the declared reference range lower bound but above detection is below_range
+  ---
+  duration_ms: 0.061416
+  type: 'test'
+  ...
+# Subtest: a less-than censored value at the limit of detection is below_detection
+ok 217 - a less-than censored value at the limit of detection is below_detection
+  ---
+  duration_ms: 0.166459
+  type: 'test'
+  ...
+# Subtest: a less-than censored value with surrounding whitespace is handled the same way
+ok 218 - a less-than censored value with surrounding whitespace is handled the same way
+  ---
+  duration_ms: 1.010916
+  type: 'test'
+  ...
+# Subtest: a greater-than censored value at the upper limit of quantitation is above_quantitation
+ok 219 - a greater-than censored value at the upper limit of quantitation is above_quantitation
+  ---
+  duration_ms: 0.34075
+  type: 'test'
+  ...
+# Subtest: a less-than censored value whose threshold does not match the limit of detection is invalid
+ok 220 - a less-than censored value whose threshold does not match the limit of detection is invalid
+  ---
+  duration_ms: 0.277542
+  type: 'test'
+  ...
+# Subtest: a greater-than censored value whose threshold does not match the upper limit of quantitation is invalid
+ok 221 - a greater-than censored value whose threshold does not match the upper limit of quantitation is invalid
+  ---
+  duration_ms: 0.086209
+  type: 'test'
+  ...
+# Subtest: a plain numeric string result is parsed as a direct numeric value
+ok 222 - a plain numeric string result is parsed as a direct numeric value
+  ---
+  duration_ms: 0.606792
+  type: 'test'
+  ...
+# Subtest: a non-finite numeric result fails closed to invalid
+ok 223 - a non-finite numeric result fails closed to invalid
+  ---
+  duration_ms: 0.456875
+  type: 'test'
+  ...
+# Subtest: an Infinity numeric result fails closed to invalid
+ok 224 - an Infinity numeric result fails closed to invalid
+  ---
+  duration_ms: 0.255833
+  type: 'test'
+  ...
+# Subtest: an unparsable string result fails closed to invalid
+ok 225 - an unparsable string result fails closed to invalid
+  ---
+  duration_ms: 0.119333
+  type: 'test'
+  ...
+# Subtest: an empty string result fails closed to invalid
+ok 226 - an empty string result fails closed to invalid
+  ---
+  duration_ms: 0.096667
+  type: 'test'
+  ...
+# Subtest: a less-than marker with no numeric operand fails closed to invalid, not zero
+ok 227 - a less-than marker with no numeric operand fails closed to invalid, not zero
+  ---
+  duration_ms: 0.092208
+  type: 'test'
+  ...
+# Subtest: a greater-than marker with no numeric operand fails closed to invalid, not zero
+ok 228 - a greater-than marker with no numeric operand fails closed to invalid, not zero
+  ---
+  duration_ms: 1.979125
+  type: 'test'
+  ...
+# Subtest: a less-than marker with a whitespace-only operand fails closed to invalid, not zero
+ok 229 - a less-than marker with a whitespace-only operand fails closed to invalid, not zero
+  ---
+  duration_ms: 0.1215
+  type: 'test'
+  ...
+# Subtest: a greater-than marker with a whitespace-only operand fails closed to invalid, not zero
+ok 230 - a greater-than marker with a whitespace-only operand fails closed to invalid, not zero
+  ---
+  duration_ms: 0.157041
+  type: 'test'
+  ...
+# Subtest: a less-than censored genuine zero at the limit of detection is preserved as below_detection
+ok 231 - a less-than censored genuine zero at the limit of detection is preserved as below_detection
+  ---
+  duration_ms: 0.103
+  type: 'test'
+  ...
+# Subtest: a less-than censored value with a valid finite decimal operand matching the limit of detection is below_detection
+ok 232 - a less-than censored value with a valid finite decimal operand matching the limit of detection is below_detection
+  ---
+  duration_ms: 0.20575
+  type: 'test'
+  ...
+# Subtest: a unit mismatch between the result and the declared reference range fails closed to invalid
+ok 233 - a unit mismatch between the result and the declared reference range fails closed to invalid
+  ---
+  duration_ms: 0.097042
+  type: 'test'
+  ...
+# Subtest: outer-whitespace and case differences in matching units are tolerated, not flagged mismatched
+ok 234 - outer-whitespace and case differences in matching units are tolerated, not flagged mismatched
+  ---
+  duration_ms: 0.072167
+  type: 'test'
+  ...
+# Subtest: a missing result unit fails closed to invalid as a unit mismatch
+ok 235 - a missing result unit fails closed to invalid as a unit mismatch
+  ---
+  duration_ms: 0.074417
+  type: 'test'
+  ...
+# Subtest: a non-string reference range unit fails closed to invalid as a unit mismatch
+ok 236 - a non-string reference range unit fails closed to invalid as a unit mismatch
+  ---
+  duration_ms: 0.069042
+  type: 'test'
+  ...
+# Subtest: a non-finite limit of detection fails closed to invalid
+ok 237 - a non-finite limit of detection fails closed to invalid
+  ---
+  duration_ms: 0.070708
+  type: 'test'
+  ...
+# Subtest: a non-finite upper limit of quantitation fails closed to invalid
+ok 238 - a non-finite upper limit of quantitation fails closed to invalid
+  ---
+  duration_ms: 0.145208
+  type: 'test'
+  ...
+# Subtest: an inverted detection/quantitation range (LOD above ULOQ) fails closed to invalid
+ok 239 - an inverted detection/quantitation range (LOD above ULOQ) fails closed to invalid
+  ---
+  duration_ms: 0.087708
+  type: 'test'
+  ...
+# Subtest: a limit of detection exactly equal to the upper limit of quantitation is not inverted
+ok 240 - a limit of detection exactly equal to the upper limit of quantitation is not inverted
+  ---
+  duration_ms: 0.095084
+  type: 'test'
+  ...
+# Subtest: an inverted declared reference range fails closed to invalid
+ok 241 - an inverted declared reference range fails closed to invalid
+  ---
+  duration_ms: 0.086167
+  type: 'test'
+  ...
+# Subtest: a reference range with an equal lower and upper bound is not inverted
+ok 242 - a reference range with an equal lower and upper bound is not inverted
+  ---
+  duration_ms: 0.066542
+  type: 'test'
+  ...
+# Subtest: a non-finite reference range bound fails closed to invalid
+ok 243 - a non-finite reference range bound fails closed to invalid
+  ---
+  duration_ms: 0.968791
+  type: 'test'
+  ...
+# Subtest: multiple independent defects are all reported, deterministically sorted
+ok 244 - multiple independent defects are all reported, deterministically sorted
+  ---
+  duration_ms: 0.685
+  type: 'test'
+  ...
+# Subtest: evaluation is pure: it does not mutate the input
+ok 245 - evaluation is pure: it does not mutate the input
+  ---
+  duration_ms: 0.13225
+  type: 'test'
+  ...
+# Subtest: evaluation is deterministic across repeated calls with the same input
+ok 246 - evaluation is deterministic across repeated calls with the same input
+  ---
+  duration_ms: 1.2185
+  type: 'test'
+  ...
+# Subtest: every classification is one of the six defined outcomes
+ok 247 - every classification is one of the six defined outcomes
+  ---
+  duration_ms: 2.876417
+  type: 'test'
+  ...
+# Subtest: a declared decimal places over 100 throws ReportingFormatError with code formats-malformed
+ok 248 - a declared decimal places over 100 throws ReportingFormatError with code formats-malformed
+  ---
+  duration_ms: 1.317
+  type: 'test'
+  ...
+# Subtest: a declared decimal places of 1000 throws ReportingFormatError with code formats-malformed
+ok 249 - a declared decimal places of 1000 throws ReportingFormatError with code formats-malformed
+  ---
+  duration_ms: 0.306333
+  type: 'test'
+  ...
+# Subtest: a declared decimal places of 2 rounds and reports normally
+ok 250 - a declared decimal places of 2 rounds and reports normally
+  ---
+  duration_ms: 0.307208
+  type: 'test'
+  ...
+# Subtest: a declared decimal places of 100 is still accepted and reports at full precision
+ok 251 - a declared decimal places of 100 is still accepted and reports at full precision
+  ---
+  duration_ms: 0.224125
+  type: 'test'
+  ...
+# Subtest: an in-range result is rounded to the declared decimal places and unit appended
+ok 252 - an in-range result is rounded to the declared decimal places and unit appended
+  ---
+  duration_ms: 1.66975
+  type: 'test'
+  ...
+# Subtest: an in-range result rounds using the declared decimal places
+ok 253 - an in-range result rounds using the declared decimal places
+  ---
+  duration_ms: 0.280958
+  type: 'test'
+  ...
+# Subtest: a result exactly at the below-detection limit is in range, not censored
+ok 254 - a result exactly at the below-detection limit is in range, not censored
+  ---
+  duration_ms: 0.107667
+  type: 'test'
+  ...
+# Subtest: a result exactly at the above-quantitation limit is in range, not censored
+ok 255 - a result exactly at the above-quantitation limit is in range, not censored
+  ---
+  duration_ms: 0.039125
+  type: 'test'
+  ...
+# Subtest: a result strictly below the detection limit is censored low, reporting the limit itself
+ok 256 - a result strictly below the detection limit is censored low, reporting the limit itself
+  ---
+  duration_ms: 0.05325
+  type: 'test'
+  ...
+# Subtest: a result strictly above the quantitation limit is censored high, reporting the limit itself
+ok 257 - a result strictly above the quantitation limit is censored high, reporting the limit itself
+  ---
+  duration_ms: 0.277042
+  type: 'test'
+  ...
+# Subtest: a censored limit is never rounded to the declared decimal places, even when it has more precision
+ok 258 - a censored limit is never rounded to the declared decimal places, even when it has more precision
+  ---
+  duration_ms: 0.128208
+  type: 'test'
+  ...
+# Subtest: a censored above-quantitation limit is never rounded to the declared decimal places
+ok 259 - a censored above-quantitation limit is never rounded to the declared decimal places
+  ---
+  duration_ms: 0.7175
+  type: 'test'
+  ...
+# Subtest: a rounded-to-zero negative value is never reported as negative zero
+ok 260 - a rounded-to-zero negative value is never reported as negative zero
+  ---
+  duration_ms: 0.237084
+  type: 'test'
+  ...
+# Subtest: a declared qualitative threshold produces the matching label for an in-range result
+ok 261 - a declared qualitative threshold produces the matching label for an in-range result
+  ---
+  duration_ms: 8.136291
+  type: 'test'
+  ...
+# Subtest: a qualitative threshold band boundary is inclusive on the lower bound and exclusive on the upper bound
+ok 262 - a qualitative threshold band boundary is inclusive on the lower bound and exclusive on the upper bound
+  ---
+  duration_ms: 0.130834
+  type: 'test'
+  ...
+# Subtest: the topmost qualitative band with a null maxValue has no upper bound
+ok 263 - the topmost qualitative band with a null maxValue has no upper bound
+  ---
+  duration_ms: 0.661042
+  type: 'test'
+  ...
+# Subtest: a result matching no declared qualitative band yields no label
+ok 264 - a result matching no declared qualitative band yields no label
+  ---
+  duration_ms: 0.937334
+  type: 'test'
+  ...
+# Subtest: a format with no declared qualitative thresholds yields no label
+ok 265 - a format with no declared qualitative thresholds yields no label
+  ---
+  duration_ms: 0.1495
+  type: 'test'
+  ...
+# Subtest: the qualitative label is matched against the raw value even for a censored result
+ok 266 - the qualitative label is matched against the raw value even for a censored result
+  ---
+  duration_ms: 4.373958
+  type: 'test'
+  ...
+# Subtest: formatting is pure: it does not mutate the request
+ok 267 - formatting is pure: it does not mutate the request
+  ---
+  duration_ms: 0.218917
+  type: 'test'
+  ...
+# Subtest: formatting is deterministic across repeated calls
+ok 268 - formatting is deterministic across repeated calls
+  ---
+  duration_ms: 3.059917
+  type: 'test'
+  ...
+# Subtest: the outcome object is frozen
+ok 269 - the outcome object is frozen
+  ---
+  duration_ms: 0.26625
+  type: 'test'
+  ...
+# Subtest: an analyte with no declared reporting format fails closed
+ok 270 - an analyte with no declared reporting format fails closed
+  ---
+  duration_ms: 2.819833
+  type: 'test'
+  ...
+# Subtest: NaN fails closed as a non-finite result
+ok 271 - NaN fails closed as a non-finite result
+  ---
+  duration_ms: 0.209791
+  type: 'test'
+  ...
+# Subtest: positive infinity fails closed as a non-finite result
+ok 272 - positive infinity fails closed as a non-finite result
+  ---
+  duration_ms: 0.204292
+  type: 'test'
+  ...
+# Subtest: negative infinity fails closed as a non-finite result
+ok 273 - negative infinity fails closed as a non-finite result
+  ---
+  duration_ms: 0.259833
+  type: 'test'
+  ...
+# Subtest: a declared format with negative decimal places fails closed
+ok 274 - a declared format with negative decimal places fails closed
+  ---
+  duration_ms: 0.051041
+  type: 'test'
+  ...
+# Subtest: a zero decimal-place format is not treated as negative
+ok 275 - a zero decimal-place format is not treated as negative
+  ---
+  duration_ms: 0.257125
+  type: 'test'
+  ...
+# Subtest: an unaffected format with negative decimal places for a different analyte does not block this result
+ok 276 - an unaffected format with negative decimal places for a different analyte does not block this result
+  ---
+  duration_ms: 0.070791
+  type: 'test'
+  ...
+# Subtest: a non-object request throws ReportingFormatError
+ok 277 - a non-object request throws ReportingFormatError
+  ---
+  duration_ms: 0.059083
+  type: 'test'
+  ...
+# Subtest: a missing analyte code throws ReportingFormatError
+ok 278 - a missing analyte code throws ReportingFormatError
+  ---
+  duration_ms: 0.0555
+  type: 'test'
+  ...
+# Subtest: a non-numeric value throws ReportingFormatError instead of coercing
+ok 279 - a non-numeric value throws ReportingFormatError instead of coercing
+  ---
+  duration_ms: 0.044792
+  type: 'test'
+  ...
+# Subtest: formats that are not an array throws ReportingFormatError
+ok 280 - formats that are not an array throws ReportingFormatError
+  ---
+  duration_ms: 3.9
+  type: 'test'
+  ...
+# Subtest: a format entry missing a required field throws ReportingFormatError
+ok 281 - a format entry missing a required field throws ReportingFormatError
+  ---
+  duration_ms: 0.099791
+  type: 'test'
+  ...
+# Subtest: a format with a non-integer decimal-places value throws ReportingFormatError
+ok 282 - a format with a non-integer decimal-places value throws ReportingFormatError
+  ---
+  duration_ms: 0.068291
+  type: 'test'
+  ...
+# Subtest: a qualitative threshold with an inverted range throws ReportingFormatError
+ok 283 - a qualitative threshold with an inverted range throws ReportingFormatError
+  ---
+  duration_ms: 0.045375
+  type: 'test'
+  ...
+# Subtest: a qualitative threshold missing a label throws ReportingFormatError
+ok 284 - a qualitative threshold missing a label throws ReportingFormatError
+  ---
+  duration_ms: 0.043083
+  type: 'test'
+  ...
+# Subtest: every error code has a non-empty explanation
+ok 285 - every error code has a non-empty explanation
+  ---
+  duration_ms: 0.044875
+  type: 'test'
+  ...
+1..285
+# tests 285
+# suites 0
+# pass 285
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 10510.796542

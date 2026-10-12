@@ -1,0 +1,51 @@
+J1 radix reference result: {
+  classification: 'within_range',
+  flag: 'WITHIN REFERENCE RANGE',
+  reasons: []
+}
+J2 radix PT result: pass [
+  {
+    participantId: 'SYNTHETIC-LAB',
+    reportedValue: 100,
+    zScore: 0,
+    classification: 'satisfactory'
+  }
+]
+J3 non-finite comparison: {
+  decision: 'acceptable',
+  governingCriterion: 'within-allowable-bias',
+  pairCount: 2,
+  meanDifference: NaN,
+  standardDeviationOfDifferences: NaN,
+  limitsOfAgreement: { multiplier: 1.96, lower: NaN, upper: NaN },
+  percentBias: null,
+  passingBablok: { slope: NaN, intercept: NaN, pairwiseSlopeCount: 1 },
+  pairDifferences: [
+    {
+      specimenId: 'SYNTH-A',
+      difference: Infinity,
+      percentDifference: Infinity
+    },
+    {
+      specimenId: 'SYNTH-B',
+      difference: -Infinity,
+      percentDifference: -Infinity
+    }
+  ]
+}
+J4 excessive applied dilution: {
+  decision: 'report_as_is',
+  reasonCode: 'within-range',
+  reason: "The raw reading is within the analyte's measuring range at the currently applied dilution.",
+  correctedResult: 5000,
+  nextDilutionFactor: null,
+  greaterThanLimit: null
+}
+J5 inverted censoring limits: {
+  analyteCode: 'SYNTH-A',
+  reportString: '<100 mg/L',
+  censoring: 'below-detection',
+  qualitativeLabel: null
+}
+J6 same-canonical action order dependence: suppress report
+Verified 6 current defects; no product changes or external writes.

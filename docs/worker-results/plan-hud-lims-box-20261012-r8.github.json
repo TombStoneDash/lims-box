@@ -1,0 +1,770 @@
+{
+  "issues": [
+    {
+      "url": "https://github.com/TombStoneDash/lims-box/issues/72",
+      "title": "Fable commander: reconcile LIMS outputs across clinical and water/public-utility lanes",
+      "issue_number": 72,
+      "body": "## Purpose\n\nUse one bounded Fable 5 commander pass to reconcile all existing LIMS BOX/LIMS BOT Fable outputs, specs, proof and current repo state, then execute the useful delta. Do not create another general roadmap.\n\n## Scope\n\nReconcile across the related LIMS repositories and canonical product truth:\n\n- `TombStoneDash/lims-box`;\n- `TombStoneDash/limsbot`;\n- `TombStoneDash/lims-bot-demo` where relevant;\n- clinical/public-health laboratory product and revenue work;\n- water, wastewater, environmental and public-utility laboratory opportunities;\n- issue #70 duplicate Vercel project/domain reconciliation;\n- demo, pricing, early-access, analytics, CRM/outreach packets and current production proof;\n- all accessible prior Fable/Claude outputs and abandoned implementation packets.\n\n## Fable work\n\n1. classify outputs as DONE, ACTIVE, BUILD_NOW, TRUE_GATE, SUPERSEDED, DUPLICATE, HOLD or KILL;\n2. identify one clinical-lab revenue lane and one water/public-utility revenue lane;\n3. preserve current repos/domains and avoid duplicate product surfaces;\n4. produce no more than five bounded Sonnet/Codex packets;\n5. dispatch machine-safe implementation, tests, demo and reconciliation work immediately.\n\nUse Fable for cross-file/product synthesis, market/offer judgment and contradictory-plan resolution. Use Sonnet/Codex for code, tests, PRs, demo preparation, data-safe CRM tooling and domain/project inventory.\n\n## Stops\n\nNo protected LIMS outbound send, payment, contract, production database mutation, DNS/domain transfer, secret mutation or project deletion without the named gate. Read-only production checks, repo work, draft outreach assets, event/opportunity research and PR creation are not gates.\n\n## Terminal output\n\nReturn only verified current state, stale/duplicate outputs rejected, clinical lane, water/public-utility lane, work dispatched/completed, true gates, proof and next automatic actions.",
+      "state": null,
+      "user": null,
+      "assignees": null,
+      "labels": null,
+      "milestone": null,
+      "state_reason": null,
+      "comments": null,
+      "created_at": null,
+      "updated_at": null,
+      "closed_at": null,
+      "display_url": "https://github.com/TombStoneDash/lims-box/issues/72",
+      "display_title": "Fable commander: reconcile LIMS outputs across clinical and water/public-utility lanes"
+    },
+    {
+      "url": "https://github.com/TombStoneDash/lims-box/issues/94",
+      "title": "Restore automatic Personnel Pack PDF fulfillment",
+      "issue_number": 94,
+      "body": "## Incident\n\nA production Personnel Pack request on 2026-08-26 was captured, but the internal fallback notice reported that no PDF URL is configured and manual fulfillment is required.\n\nNo applicant name, email address, organization, or request-specific PII is included here.\n\n## Impact\n\n- lead capture succeeds;\n- the applicant does not receive the requested Personnel Pack automatically;\n- support must acknowledge and fulfill each request manually;\n- a configured accreditation selection cannot produce a verified download.\n\n## Containment completed\n\nThe affected applicant received one manual acknowledgment from Tombstone Dash Gmail. Do not send a duplicate acknowledgment.\n\n## Required repair\n\n1. Identify the intended source-of-truth Personnel Pack PDF for each supported accreditation type.\n2. Verify each asset contains only approved public/demo content and no customer data.\n3. Configure the production download URL through the existing secret/configuration path.\n4. Make the applicant confirmation include a working, access-controlled or public download as intended.\n5. Add regression coverage for configured and missing-PDF behavior.\n6. Run one production-safe external-inbox test proving the confirmation and download both work.\n\n## Acceptance\n\n- supported accreditation selections map to approved assets;\n- no fallback/manual-fulfillment notice on the test;\n- external confirmation arrives once;\n- download returns the intended PDF;\n- no applicant PII appears in issues, fixtures, logs, or receipts;\n- production proof is timestamped before closure.",
+      "state": null,
+      "user": null,
+      "assignees": null,
+      "labels": null,
+      "milestone": null,
+      "state_reason": null,
+      "comments": null,
+      "created_at": null,
+      "updated_at": null,
+      "closed_at": null,
+      "display_url": "https://github.com/TombStoneDash/lims-box/issues/94",
+      "display_title": "Restore automatic Personnel Pack PDF fulfillment"
+    },
+    {
+      "url": "https://github.com/TombStoneDash/lims-box/issues/95",
+      "title": "Audit inactive Google OAuth clients before deletion",
+      "issue_number": 95,
+      "body": "## Alert\n\nGoogle Developers reported on 2026-08-27 that the `lims-box` Google Cloud project has OAuth clients inactive for at least five months and scheduled for automatic deletion in 30 days.\n\nNo client IDs, secrets, account data, or customer information are included here.\n\n## Required work\n\n1. Inventory the inactive OAuth clients in the `lims-box` Google Cloud project.\n2. Map each client to its current production, preview, local, or retired use without exposing credentials.\n3. For every client still required, exercise it through a legitimate Sign in with Google flow or refresh-token exchange before the deadline.\n4. Allow truly retired clients to expire or remove them deliberately.\n5. Verify current LIMS BOX authentication in production and the supported development environment after the audit.\n6. Record privacy-safe proof and the final keep/retire disposition for each client.\n\n## Acceptance\n\n- Every listed inactive client has one owner and a keep/retire decision.\n- Required clients are exercised before 2026-09-26 and remain valid.\n- Retired clients are not referenced by deployed configuration.\n- Production authentication is verified without logging tokens, client secrets, or user PII.",
+      "state": null,
+      "user": null,
+      "assignees": null,
+      "labels": null,
+      "milestone": null,
+      "state_reason": null,
+      "comments": null,
+      "created_at": null,
+      "updated_at": null,
+      "closed_at": null,
+      "display_url": "https://github.com/TombStoneDash/lims-box/issues/95",
+      "display_title": "Audit inactive Google OAuth clients before deletion"
+    }
+  ],
+  "open": [
+    {
+      "number": 680,
+      "title": "feat: complete fleet task 850-LIMS-BOX-LIMS-CUSTODY-MERGE-FRACTION-TRUNCATE-SECOND-20261011-R5",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/680",
+      "files": [
+        "lib/ohworks-custody-merge.ts",
+        "tests/ohworks/custody-merge-fraction-truncation.test.ts"
+      ]
+    },
+    {
+      "number": 678,
+      "title": "feat: complete fleet task 847-LIMS-BOX-LIMS-CALIBRATOR-TRACEABILITY-OWN-LOT-KEYS-SECOND-20261011-R5",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/678",
+      "files": [
+        "lib/ohworks-calibrator-traceability.ts",
+        "tests/ohworks/calibrator-traceability-own-lot-keys.test.ts"
+      ]
+    },
+    {
+      "number": 675,
+      "title": "feat: complete fleet task 845-LIMS-BOX-LIMS-QC-RULES-EXACT-SD-LIMIT-SECOND-20261011-R5",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/675",
+      "files": [
+        "lib/ohworks-qc-rules.ts",
+        "tests/ohworks/qc-rules-exact-sd-limit.test.ts"
+      ]
+    },
+    {
+      "number": 669,
+      "title": "review: exact-head review of lims-box#665",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/669",
+      "files": [
+        ".review-665/all.log",
+        ".review-665/focused.log",
+        ".review-665/native-focused.log",
+        ".review-665/native-related-final.log",
+        ".review-665/native-related.log",
+        ".review-665/ohworks.log",
+        ".review-665/receipt.txt"
+      ]
+    },
+    {
+      "number": 661,
+      "title": "fix(ohworks): reject worklist specimens with blank identifiers",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/661",
+      "files": [
+        "lib/ohworks-worklist.ts",
+        "tests/ohworks/worklist-blank-specimen-id.test.ts"
+      ]
+    },
+    {
+      "number": 659,
+      "title": "review: exact-head review of lims-box#650",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/659",
+      "files": [
+        ".review-650/base-all.log",
+        ".review-650/base-targeted.log",
+        ".review-650/head-all.log",
+        ".review-650/head-native.log",
+        ".review-650/head-targeted.log",
+        ".review-650/receipt.md",
+        ".review-650/regression.log"
+      ]
+    },
+    {
+      "number": 656,
+      "title": "fix(ohworks): scale uncertainty crossing tolerance to numeric magnitude",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/656",
+      "files": [
+        "lib/ohworks-measurement-uncertainty.ts",
+        "tests/ohworks/uncertainty-relative-tolerance.test.ts"
+      ]
+    },
+    {
+      "number": 651,
+      "title": "fix(ohworks): treat prototype-named order codes as unknown panels",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/651",
+      "files": [
+        "lib/ohworks-order-panel.ts",
+        "tests/ohworks/order-panel-own-keys.test.ts"
+      ]
+    },
+    {
+      "number": 615,
+      "title": "fix: hide competency review form when admin writes are disabled",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/615",
+      "files": [
+        "app/admin/competencies/[id]/page.tsx",
+        "tests/admin-read-only-person-flow.test.ts"
+      ]
+    },
+    {
+      "number": 607,
+      "title": "fix: land lims-box#574 on current main with green CI (supersedes #574)",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/607",
+      "files": [
+        "lib/ohworks-lot-comparison.ts",
+        "tests/ohworks-lot-percent-evidence.test.ts",
+        "tests/ohworks/lot-comparison.test.ts"
+      ]
+    },
+    {
+      "number": 574,
+      "title": "feat: complete fleet task LOT-PERCENT-EVIDENCE-SECOND-20261010-R1",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/574",
+      "files": [
+        "lib/ohworks-lot-comparison.ts",
+        "tests/ohworks-lot-percent-evidence.test.ts"
+      ]
+    },
+    {
+      "number": 563,
+      "title": "ops: enable the first-contact email for LIMS (schema + env flag), receipt",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/563",
+      "files": [
+        "docs/reviews/FIRST_CONTACT_ENABLE_LIMS_ACTORLAB_20261008.md",
+        "docs/reviews/first-contact-lims-schema.sql",
+        "docs/worker-results/PL24-FIRST-CONTACT-ENABLE-20261008-R2.yaml"
+      ]
+    },
+    {
+      "number": 558,
+      "title": "Stop expired consumables inflating later-lot waste",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/558",
+      "files": [
+        "lib/ohworks-consumable-inventory.ts",
+        "tests/ohworks/consumable-expiry-consumption.test.ts"
+      ]
+    },
+    {
+      "number": 534,
+      "title": "feat: LIMS first-contact sender v4 (re-land of #522, conflicts resolved, flag OFF)",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/534",
+      "files": [
+        ".env.example",
+        "PR_BODY.md",
+        "docs/worker-results/bo-lims-box-first-contact-sender-v4.yaml",
+        "scripts/first-contact-maintenance.ts",
+        "tests/first-contact-maintenance-run.test.ts",
+        "tests/first-contact-maintenance.test.ts"
+      ]
+    },
+    {
+      "number": 317,
+      "title": "ohworks-ci-email-validation-trigger-r16",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/317",
+      "files": [
+        ".dockerignore",
+        ".github/workflows/attribution-ci.yml",
+        ".github/workflows/ohworks-ci.yml",
+        ".gitignore",
+        "app/internal/ohworks-proof/page.tsx",
+        "app/pilot/ohworks/_components/laboratory-unavailable.tsx",
+        "app/pilot/ohworks/_components/page-heading.tsx",
+        "app/pilot/ohworks/_components/pilot-nav-link.tsx",
+        "app/pilot/ohworks/_components/role-switch.tsx",
+        "app/pilot/ohworks/_components/sample-actions.tsx",
+        "app/pilot/ohworks/_components/state-badge.tsx",
+        "app/pilot/ohworks/_components/test-environment-badge.tsx",
+        "app/pilot/ohworks/api/actions/route.ts",
+        "app/pilot/ohworks/api/health/route.ts",
+        "app/pilot/ohworks/api/login/route.ts",
+        "app/pilot/ohworks/api/logout/route.ts",
+        "app/pilot/ohworks/audit/page.tsx",
+        "app/pilot/ohworks/bot/api/route.ts",
+        "app/pilot/ohworks/bot/assistant-console.tsx",
+        "app/pilot/ohworks/bot/page.tsx",
+        "app/pilot/ohworks/instrument/page.tsx",
+        "app/pilot/ohworks/layout.tsx",
+        "app/pilot/ohworks/login/page.tsx",
+        "app/pilot/ohworks/page.tsx",
+        "app/pilot/ohworks/personnel/page.tsx",
+        "app/pilot/ohworks/reports/[reportId]/page.tsx",
+        "app/pilot/ohworks/reports/page.tsx",
+        "app/pilot/ohworks/results/page.tsx",
+        "app/pilot/ohworks/samples/page.tsx",
+        "deploy/ohworks-test-tenant/Caddyfile.candidate",
+        "deploy/ohworks-test-tenant/Dockerfile",
+        "deploy/ohworks-test-tenant/ROLLBACK.md",
+        "deploy/ohworks-test-tenant/SOURCE_BOUNDARY.md",
+        "deploy/ohworks-test-tenant/compose.yaml",
+        "deploy/ohworks-test-tenant/runtime.env.example",
+        "lib/ohworks-senaite/adapter.ts",
+        "lib/ohworks-senaite/client.ts",
+        "lib/ohworks-senaite/importer-contract.ts",
+        "lib/ohworks-senaite/provenance.ts",
+        "lib/ohworks-tenant/auth-core.ts",
+        "lib/ohworks-tenant/auth.ts",
+        "lib/ohworks-tenant/fixtures.ts",
+        "lib/ohworks-tenant/model.ts",
+        "lib/ohworks-tenant/permissions.ts",
+        "lib/ohworks-tenant/personnel-store.ts",
+        "lib/ohworks-tenant/public-origin.ts",
+        "lib/ohworks-tenant/store.ts",
+        "package.json",
+        "tests/ohworks-runtime.mjs",
+        "tests/ohworks/importer-contract.test.ts",
+        "tests/ohworks/persistence-isolation.test.ts",
+        "tests/ohworks/pilot-contract.test.ts",
+        "tests/ohworks/senaite-adapter.test.ts",
+        "tests/ohworks/tenant-contract.test.ts"
+      ]
+    }
+  ],
+  "merged": [
+    {
+      "number": 569,
+      "title": "feat: complete fleet task LIMS-BOX-CRITICAL-REPEAT-CALENDAR-SECOND-20261009-R1",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/569"
+    },
+    {
+      "number": 568,
+      "title": "feat: complete fleet task LIMS-BOX-PRIORITY-RECEIPT-CALENDAR-SECOND-20261009-R1",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/568"
+    },
+    {
+      "number": 562,
+      "title": "fix: lims.bot/bot shows \"initial beta release\", not \"Prototype\" (re-apply #518 after cc30dcbb regression)",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/562"
+    },
+    {
+      "number": 557,
+      "title": "Reject impossible calibration verification dates",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/557"
+    },
+    {
+      "number": 556,
+      "title": "Block method validation based on impossible dates",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/556"
+    },
+    {
+      "number": 555,
+      "title": "Count each specimen once per rejection reason",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/555"
+    },
+    {
+      "number": 554,
+      "title": "Reject impossible equipment qualification dates",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/554"
+    },
+    {
+      "number": 547,
+      "title": "Reject invalid sample ages before clearing synthetic crossmatches",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/547"
+    },
+    {
+      "number": 543,
+      "title": "feat: complete fleet task LIMSBOX-STORAGE-CALENDAR-VALIDITY-SECOND-20261007-R1",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/543"
+    },
+    {
+      "number": 536,
+      "title": "ohworks CI email validation trigger (re-land of #317, recovered from Lenovo)",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/536"
+    },
+    {
+      "number": 601,
+      "title": "Keep failed replay commands out of the success path",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/601"
+    },
+    {
+      "number": 600,
+      "title": "Count pending samples beyond the first 25",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/600"
+    },
+    {
+      "number": 599,
+      "title": "Refuse offline commands that lack a durable sample target",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/599"
+    },
+    {
+      "number": 598,
+      "title": "Preserve the active sample when submission is unconfirmed",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/598"
+    },
+    {
+      "number": 596,
+      "title": "feat: complete fleet task LIMS-INSTRUMENT-CALIBRATION-CALENDAR-DATES-SECOND-20261010-R1",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/596"
+    },
+    {
+      "number": 595,
+      "title": "feat: complete fleet task LIMS-SPECIMEN-HOLD-TIME-CALENDAR-DATES-SECOND-20261010-R1",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/595"
+    },
+    {
+      "number": 594,
+      "title": "feat: complete fleet task LIMS-QC-DECISION-HEX-RAW-VALUE-SECOND-20261010-R1",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/594"
+    },
+    {
+      "number": 593,
+      "title": "feat: complete fleet task LIMS-EMAIL-VALIDATION-MALFORMED-DOMAINS-SECOND-20261010-R3",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/593"
+    },
+    {
+      "number": 590,
+      "title": "feat: complete fleet task DEMO-ACCESS-UTF8-BASIC-CREDENTIALS-SECOND-20261010-R1",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/590"
+    },
+    {
+      "number": 589,
+      "title": "feat: complete fleet task CROSSMATCH-UNIT-COUNT-WHOLE-NUMBER-SECOND-20261010-R1",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/589"
+    },
+    {
+      "number": 588,
+      "title": "feat: complete fleet task LIMS-UNSUBSCRIBE-ALL-CASE-INSENSITIVE-SECOND-20261010-R1",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/588"
+    },
+    {
+      "number": 587,
+      "title": "feat: complete fleet task LIMS-WAITLIST-BLANK-FIELD-FALLBACKS-SECOND-20261010-R1",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/587"
+    },
+    {
+      "number": 586,
+      "title": "feat: complete fleet task LIMS-CONTACT-BLANK-OPTIONAL-NULL-SECOND-20261010-R1",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/586"
+    },
+    {
+      "number": 585,
+      "title": "feat: complete fleet task LIMS-REVIEW-REMINDER-INVALID-DATE-SECOND-20261010-R1",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/585"
+    },
+    {
+      "number": 584,
+      "title": "feat: complete fleet task LIMS-EARLY-ACCESS-WATER-LANE-EXACT-SECOND-20261010-R1",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/584"
+    },
+    {
+      "number": 583,
+      "title": "feat: complete fleet task LIMS-AUTHORIZED-PERSONNEL-CURRENT-ONLY-SECOND-20261010-R1",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/583"
+    },
+    {
+      "number": 582,
+      "title": "feat: complete fleet task LIMS-POCT-LOCKOUT-INVALID-QC-TIMING-SECOND-20261010-R1",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/582"
+    },
+    {
+      "number": 581,
+      "title": "feat: complete fleet task DOCUMENT-VERSIONS-PAGINATION-LOOKAHEAD-SECOND-20261010-R1",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/581"
+    },
+    {
+      "number": 580,
+      "title": "feat: complete fleet task INSTRUMENT-MAINTENANCE-CALENDAR-VALIDITY-SECOND-20261010-R1",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/580"
+    },
+    {
+      "number": 579,
+      "title": "feat: complete fleet task SAMPLE-RETENTION-CALENDAR-VALIDITY-SECOND-20261010-R1",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/579"
+    },
+    {
+      "number": 578,
+      "title": "feat: complete fleet task ESCALATION-INVALID-TIME-SECOND-20261010-R1",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/578"
+    },
+    {
+      "number": 577,
+      "title": "feat: complete fleet task ADD-ON-INVALID-TIME-SECOND-20261010-R1",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/577"
+    },
+    {
+      "number": 576,
+      "title": "feat: complete fleet task PT-DERIVED-OVERFLOW-SECOND-20261010-R1",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/576"
+    },
+    {
+      "number": 575,
+      "title": "feat: complete fleet task ENVIRONMENTAL-CRITICAL-SEVERITY-SECOND-20261010-R1",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/575"
+    },
+    {
+      "number": 572,
+      "title": "feat: complete fleet task LIMS-BOX-CORRECTIVE-ACTION-EVENT-CALENDAR-SECOND-20261009-R1",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/572"
+    },
+    {
+      "number": 571,
+      "title": "feat: complete fleet task LIMS-BOX-NONCONFORMANCE-EVENT-CALENDAR-SECOND-20261009-R1",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/571"
+    },
+    {
+      "number": 570,
+      "title": "feat: complete fleet task LIMS-BOX-RECORD-RETENTION-CALENDAR-SECOND-20261009-R1",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/570"
+    },
+    {
+      "number": 567,
+      "title": "feat: complete fleet task LIMS-BOX-DILUTION-RESULT-OVERFLOW-SECOND-20261009-R1",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/567"
+    },
+    {
+      "number": 565,
+      "title": "chore: bring lims-box#514 up to date with main (test(bot): 100-scenario eval set with no critical failures ()",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/565"
+    },
+    {
+      "number": 559,
+      "title": "test: automatic Personnel Pack PDF end-to-end check (refs #94)",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/559"
+    },
+    {
+      "number": 679,
+      "title": "feat: complete fleet task 848-LIMS-BOX-LIMS-SENDOUT-FRACTION-TRUNCATE-SECOND-20261011-R5",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/679"
+    },
+    {
+      "number": 674,
+      "title": "fix(ohworks): fail closed on calibration trigger events dated after the evaluation time",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/674"
+    },
+    {
+      "number": 672,
+      "title": "fix(ohworks): reject impossible receipt dates before assigning a TAT deadline",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/672"
+    },
+    {
+      "number": 671,
+      "title": "fix: land lims-box#651 with lint and verify green (supersedes #651)",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/671"
+    },
+    {
+      "number": 670,
+      "title": "fix(ohworks): refuse report routes whose recipient role is blank",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/670"
+    },
+    {
+      "number": 668,
+      "title": "fix(ohworks): reject an identical padded requester id as its own co-signer",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/668"
+    },
+    {
+      "number": 667,
+      "title": "fix: land lims-box#656 with green CI (supersedes #656)",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/667"
+    },
+    {
+      "number": 666,
+      "title": "fix(ohworks): do not demand a repeat at the exact decimal carryover limit",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/666"
+    },
+    {
+      "number": 665,
+      "title": "fix(ohworks): fail closed on malformed timezone offsets in analyst release evidence",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/665"
+    },
+    {
+      "number": 663,
+      "title": "feat: complete fleet task 835-LIMS-BOX-LIMS-BOT-DATA-CLASS-BLANK-TENANT-SECOND-20261011-R4",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/663"
+    },
+    {
+      "number": 662,
+      "title": "feat: complete fleet task 834-LIMS-BOX-LIMS-CONTACT-DRY-RUN-FAILURE-SECOND-20261011-R4",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/662"
+    },
+    {
+      "number": 660,
+      "title": "feat: complete fleet task 833-LIMS-BOX-LIMS-DEMO-LIMIT-STRICT-INTEGER-SECOND-20261011-R4",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/660"
+    },
+    {
+      "number": 658,
+      "title": "feat: complete fleet task 832-LIMS-BOX-LIMS-BOT-PROMPT-SURROGATE-CUT-SECOND-20261011-R4",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/658"
+    },
+    {
+      "number": 657,
+      "title": "fix(ohworks): stop rejecting exact decimal volume consumption as overdrawn",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/657"
+    },
+    {
+      "number": 655,
+      "title": "fix(ohworks): handle missing prototype-named comment values and order repeated codes deterministically",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/655"
+    },
+    {
+      "number": 654,
+      "title": "fix(ohworks): reject unreadable report amendment timestamps",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/654"
+    },
+    {
+      "number": 653,
+      "title": "feat: complete fleet task 830-LIMS-BOX-LIMS-ALIQUOT-BLANK-LABEL-SECOND-20261011-R4",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/653"
+    },
+    {
+      "number": 652,
+      "title": "fix(ohworks): refuse invalid peer-group statistics before reporting acceptable QC",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/652"
+    },
+    {
+      "number": 650,
+      "title": "fix(ohworks): do not pass linearity fits outside small intercept limits",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/650"
+    },
+    {
+      "number": 649,
+      "title": "feat: complete fleet task 829-LIMS-BOX-LIMS-INTERFERENCE-OWN-KEYS-SECOND-20261011-R4",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/649"
+    },
+    {
+      "number": 648,
+      "title": "fix(ohworks): reject impossible dates and inverted bounds in effective catalog selection",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/648"
+    },
+    {
+      "number": 646,
+      "title": "feat: complete fleet task 828-LIMS-BOX-LIMS-RESULT-UNITS-OWN-KEYS-SECOND-20261011-R4",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/646"
+    },
+    {
+      "number": 645,
+      "title": "fix: land lims-box#615 on current main (supersedes #615)",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/645"
+    },
+    {
+      "number": 644,
+      "title": "fix(ohworks): reject radix-prefixed values in delta checks",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/644"
+    },
+    {
+      "number": 643,
+      "title": "fix(ohworks): sort audit CSV rows by instant, not timestamp spelling",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/643"
+    },
+    {
+      "number": 642,
+      "title": "fix(ohworks): reject impossible accession event dates",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/642"
+    },
+    {
+      "number": 640,
+      "title": "feat: complete fleet task 827-LIMS-BOX-LIMS-LAB-DAY-REFLEX-TRACE-SINGULAR-SECOND-20261011-R3",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/640"
+    },
+    {
+      "number": 639,
+      "title": "feat: complete fleet task 826-LIMS-BOX-LIMS-INSTRUMENT-READINESS-SINGULAR-FINDING-SECOND-20261011-R3",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/639"
+    },
+    {
+      "number": 638,
+      "title": "feat: complete fleet task 825-LIMS-BOX-LIMS-CRITICAL-RESULTS-VIEW-SHARED-CONTACT-SECOND-20261011-R3",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/638"
+    },
+    {
+      "number": 637,
+      "title": "feat: complete fleet task 824-LIMS-BOX-LIMS-UNSUBSCRIBE-PAGE-LIST-CASE-SECOND-20261011-R3",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/637"
+    },
+    {
+      "number": 636,
+      "title": "feat: complete fleet task 823-LIMS-BOX-LIMS-BLOG-FRONTMATTER-TEXT-NOT-COERCED-SECOND-20261011-R3",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/636"
+    },
+    {
+      "number": 635,
+      "title": "feat: complete fleet task 822-LIMS-BOX-LIMS-REFERENCE-INTERVAL-DUPLICATE-SUBJECT-SECOND-20261011-R3",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/635"
+    },
+    {
+      "number": 634,
+      "title": "feat: complete fleet task 821-LIMS-BOX-LIMS-MOLECULAR-ZONE-GUARD-UNRECOGNIZED-PRIOR-ZONE-SECOND-20261011-R3",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/634"
+    },
+    {
+      "number": 633,
+      "title": "fix(ohworks): reject impossible calendar dates in worksheet events",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/633"
+    },
+    {
+      "number": 632,
+      "title": "fix(ohworks): refuse impossible sample dates before the SENAITE adapter call",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/632"
+    },
+    {
+      "number": 631,
+      "title": "fix(ohworks): block shift handoff on unreadable timing or notification evidence",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/631"
+    },
+    {
+      "number": 630,
+      "title": "fix(ohworks): report every rule that sits on a reflex cycle",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/630"
+    },
+    {
+      "number": 629,
+      "title": "fix(ohworks): treat radix-prefixed result text as text in report diffs",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/629"
+    },
+    {
+      "number": 628,
+      "title": "feat: complete fleet task 819-LIMS-BOX-LIMS-QC-WESTGARD-EXACT-SD-LIMIT-FLOAT-SECOND-20261011-R3",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/628"
+    },
+    {
+      "number": 626,
+      "title": "feat: complete fleet task 794-LIMS-BOX-LIMS-PROCEDURES-API-CURRENT-AUTHORIZATION-COUNT-SECOND-20261011-R2",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/626"
+    },
+    {
+      "number": 625,
+      "title": "feat: complete fleet task 793-LIMS-BOX-LIMS-PROSPECTS-FIELD-BENCH-SPLIT-STRICT-SECOND-20261011-R2",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/625"
+    },
+    {
+      "number": 624,
+      "title": "feat: complete fleet task 792-LIMS-BOX-LIMS-PEOPLE-AUTHORIZATIONS-PAGINATION-LOOKAHEAD-SECOND-20261011-R2",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/624"
+    },
+    {
+      "number": 623,
+      "title": "feat: complete fleet task 791-LIMS-BOX-LIMS-REPORTING-FORMAT-DECIMAL-PLACES-LIMIT-SECOND-20261011-R2",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/623"
+    },
+    {
+      "number": 622,
+      "title": "feat: complete fleet task 789-LIMS-BOX-LIMS-AUTOVERIFICATION-REJECT-HEX-VALUE-TEXT-SECOND-20261011-R2",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/622"
+    },
+    {
+      "number": 620,
+      "title": "fix: do not announce a rejected result write as recorded",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/620"
+    },
+    {
+      "number": 619,
+      "title": "fix: do not announce a rejected sticker request as accepted",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/619"
+    },
+    {
+      "number": 618,
+      "title": "fix: hide person grant, revoke and edit controls when admin writes are disabled",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/618"
+    },
+    {
+      "number": 617,
+      "title": "fix: hide document version form when admin writes are disabled",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/617"
+    },
+    {
+      "number": 616,
+      "title": "fix: reject a sample lookup that returns a different sample id",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/616"
+    },
+    {
+      "number": 614,
+      "title": "feat: complete fleet task 782-LIMS-BOX-LIMS-TRAINING-HOURS-HEX-EXPONENT-SECOND-20261011-R1",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/614"
+    },
+    {
+      "number": 613,
+      "title": "feat: complete fleet task 781-LIMS-BOX-LIMS-QC-DECISION-IMPOSSIBLE-DATE-SECOND-20261011-R2",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/613"
+    },
+    {
+      "number": 610,
+      "title": "feat: complete fleet task 780-LIMS-BOX-LIMS-QC-REVIEW-IMPOSSIBLE-DATE-SECOND-20261011-R1",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/610"
+    },
+    {
+      "number": 609,
+      "title": "feat: complete fleet task 779-LIMS-BOX-LIMS-CRITICAL-VALUE-LOG-IMPOSSIBLE-DATE-SECOND-20261011-R1",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/609"
+    },
+    {
+      "number": 608,
+      "title": "fix: land lims-box#607 on current main with green CI (supersedes #607)",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/608"
+    },
+    {
+      "number": 606,
+      "title": "fix: land lims-box#558 on current main with green CI (supersedes #558)",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/606"
+    },
+    {
+      "number": 605,
+      "title": "fix: land lims-box#534 on current main with green CI (supersedes #534)",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/605"
+    },
+    {
+      "number": 550,
+      "title": "Reject impossible dates before marking reagent lots usable",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/550"
+    },
+    {
+      "number": 549,
+      "title": "Reject invalid culture-read grace periods instead of hiding overdue reads",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/549"
+    },
+    {
+      "number": 548,
+      "title": "Reject impossible QC timestamps before computing release brackets",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/548"
+    },
+    {
+      "number": 677,
+      "title": "fix(ohworks): reject radix-prefixed critical-repeat result text",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/677"
+    },
+    {
+      "number": 676,
+      "title": "fix(ohworks): reject cancellation requests with a whitespace-only order reference",
+      "url": "https://github.com/TombStoneDash/lims-box/pull/676"
+    }
+  ]
+}
