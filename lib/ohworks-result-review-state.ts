@@ -339,7 +339,7 @@ function daysInMonth(year: number, month: number): number {
 function hasImpossibleCalendarDate(value: string): boolean {
   const parts = calendarDateParts(value);
   if (!parts) {
-    return false;
+    return true;
   }
   if (parts.month < 1 || parts.month > 12) {
     return true;
