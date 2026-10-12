@@ -280,7 +280,7 @@ function parseStrictTimestamp(raw: string): number {
     offsetMinutes = sign * (offsetHours * 60 + offsetMins);
   }
 
-  const fractionMs = fractionStr ? Math.round(Number(`0.${fractionStr}`) * 1000) : 0;
+  const fractionMs = fractionStr ? Number(fractionStr.slice(0, 3).padEnd(3, '0')) : 0;
   const utcMs =
     daysFromCivil(year, month, day) * 86_400_000 +
     hour * 3_600_000 +
