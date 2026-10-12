@@ -207,7 +207,7 @@ const REASON_MESSAGES: Record<QualificationReasonCode, string> = {
 };
 
 function isNonEmptyString(value: unknown): value is string {
-  return typeof value === 'string' && value.length > 0;
+  return typeof value === 'string' && value.trim().length > 0;
 }
 
 function isUtcTimestamp(value: string): boolean {
