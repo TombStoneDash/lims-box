@@ -123,6 +123,9 @@ export function planNextEscalationContact(input: PlanNextEscalationContactInput)
     if (!Number.isFinite(attemptTime)) {
       throw new RangeError(UNUSABLE_TIMESTAMP_MESSAGE);
     }
+    if (attemptTime > nowTime) {
+      throw new RangeError('planNextEscalationContact: attempt timestamp is after now');
+    }
     if (mostRecentAttemptTime === null || attemptTime > mostRecentAttemptTime) {
       mostRecentAttemptTime = attemptTime;
     }
