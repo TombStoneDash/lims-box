@@ -228,7 +228,10 @@ export function mapInstrumentFlags(
     if (existing === undefined) {
       canonicalFlagsByFlag.set(mapped.canonicalFlag, mapped);
       orderedCanonicalFlags.push(mapped.canonicalFlag);
-    } else if (SEVERITY_RANK[mapped.severity] > SEVERITY_RANK[existing.severity]) {
+    } else if (
+      SEVERITY_RANK[mapped.severity] > SEVERITY_RANK[existing.severity] ||
+      (mapped.severity === existing.severity && ACTION_PRIORITY[mapped.action] > ACTION_PRIORITY[existing.action])
+    ) {
       canonicalFlagsByFlag.set(mapped.canonicalFlag, mapped);
     }
   }
