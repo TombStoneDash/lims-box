@@ -86,6 +86,57 @@ test('walks the full happy path from opened to closed', () => {
   assert.equal(result.tenantId, CONTEXT.tenantId);
 });
 
+const REQUIRED_EVIDENCE_CASES = [
+  { field: 'investigationScope', index: 0, state: 'opened', blockCode: 'investigation-scope-missing' },
+  { field: 'proposedAction', index: 1, state: 'investigating', blockCode: 'proposed-action-missing' },
+  { field: 'implementationEvidence', index: 2, state: 'action_proposed', blockCode: 'implementation-evidence-missing' },
+  { field: 'closureSummary', index: 4, state: 'effectiveness_checked', blockCode: 'closure-summary-missing' },
+  { field: 'newFinding', index: 5, state: 'closed', blockCode: 'reopen-finding-missing' },
+] as const;
+
+function fullWorkflowWithReopen(): CorrectiveActionEventInput[] {
+  return [
+    ...fullHappyPathEvents(),
+    baseFields({
+      eventId: 'evt-6',
+      kind: 'reopen',
+      actorRole: 'lab_director',
+      occurredAt: '2026-01-06T12:00:00.000Z',
+      newFinding: 'finding-synthetic-2',
+    }),
+  ];
+}
+
+for (const { field, index, state, blockCode } of REQUIRED_EVIDENCE_CASES) {
+  for (const whitespace of ['   ', '\t\r\n', '\u00a0\u2003']) {
+    test(`rejects whitespace-only ${field}: ${JSON.stringify(whitespace)}`, () => {
+      const events = fullWorkflowWithReopen();
+      events[index] = { ...events[index], [field]: whitespace };
+
+      const result = runCorrectiveActionWorkflow(CONTEXT, events);
+
+      assert.equal(result.blocked, true);
+      assert.equal(result.finalState, state);
+      assert.equal(result.history.length, index);
+      assert.equal(result.steps.length, index + 1);
+      assert.deepEqual(result.steps.at(-1), { index, allowed: false, state, blockCode });
+    });
+  }
+}
+
+test('preserves nonblank evidence with surrounding whitespace byte-for-byte in accepted history', () => {
+  const events = fullWorkflowWithReopen();
+  for (const { field, index } of REQUIRED_EVIDENCE_CASES) {
+    events[index] = { ...events[index], [field]: ` \t\u00a0${events[index][field]}\u2003\r\n ` };
+  }
+
+  const result = runCorrectiveActionWorkflow(CONTEXT, events);
+
+  assert.equal(result.blocked, false);
+  assert.equal(result.finalState, 'investigating');
+  assert.deepEqual(result.history, events);
+});
+
 test('reopens a closed record with a genuinely new finding and returns to investigating', () => {
   const events = [
     ...fullHappyPathEvents(),
