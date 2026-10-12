@@ -246,6 +246,11 @@ function parseCalendarTimestamp(value: string): number {
   const daysInMonth = [31, leapYear ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
   if (month < 1 || month > 12 || day < 1 || day > daysInMonth[month - 1]) return NaN;
 
+  // A time part without an explicit Z or numeric offset is host-local in
+  // Date.parse, so the same value yields different elapsed times per
+  // process timezone. Fail closed instead of trusting local-time parsing.
+  if (/[Tt\s]\d/.test(value) && !/(?:Z|[+-]\d{2}:?\d{2})$/.test(value)) return NaN;
+
   return Date.parse(value);
 }
 
