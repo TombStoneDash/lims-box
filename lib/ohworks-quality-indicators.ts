@@ -414,7 +414,7 @@ export function computeQualityIndicators(input: MonthlyQualityIndicatorInput): Q
   const correctedResultIds = new Set(correctedReports.map((event) => event.resultId));
   const correctedReportRate = computeResult(
     correctedResultIds.size,
-    resultsReported.length,
+    reportedResultIds.size,
     targets.correctedReportRatePercent,
   );
 
