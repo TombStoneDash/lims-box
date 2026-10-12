@@ -204,6 +204,13 @@ test('throws ReportDistributionInputError for an invalid reference token', () =>
   );
 });
 
+test('rejects a whitespace-only report reference before distribution', () => {
+  assert.throws(
+    () => computeReportDistribution(baselineReport({ reportReferenceToken: '   ' }), baselineMatrix()),
+    (error: unknown) => error instanceof ReportDistributionInputError && error.code === 'report-reference-token-invalid',
+  );
+});
+
 test('throws ReportDistributionInputError for an unrecognized report kind', () => {
   const malformed = { ...baselineReport(), kind: 'DRAFT' };
   assert.throws(
@@ -215,6 +222,13 @@ test('throws ReportDistributionInputError for an unrecognized report kind', () =
 test('throws ReportDistributionInputError when test classes is not a list of non-empty strings', () => {
   assert.throws(
     () => computeReportDistribution(baselineReport({ testClasses: ['MICROBIOLOGY', ''] }), baselineMatrix()),
+    (error: unknown) => error instanceof ReportDistributionInputError && error.code === 'test-classes-invalid',
+  );
+});
+
+test('rejects a whitespace-only report test class before distribution', () => {
+  assert.throws(
+    () => computeReportDistribution(baselineReport({ testClasses: ['   '] }), baselineMatrix()),
     (error: unknown) => error instanceof ReportDistributionInputError && error.code === 'test-classes-invalid',
   );
 });
@@ -258,6 +272,28 @@ test('throws ReportDistributionInputError for an empty allowedTestClasses list',
     () => computeReportDistribution(baselineReport(), [malformed]),
     (error: unknown) => error instanceof ReportDistributionInputError && error.code === 'rule-malformed',
   );
+});
+
+test('rejects a whitespace-only matrix allowed class before distribution', () => {
+  const matrix = baselineMatrix();
+  const malformed = { ...matrix[0], allowedTestClasses: ['   '] };
+  assert.throws(
+    () => computeReportDistribution(baselineReport(), [malformed]),
+    (error: unknown) => error instanceof ReportDistributionInputError && error.code === 'rule-malformed',
+  );
+});
+
+test('preserves valid opaque reference and class tokens with inner spaces', () => {
+  const referenceToken = 'report synthetic 1';
+  const testClass = 'HEAVY METALS';
+  const matrix = [{ ...baselineMatrix()[0], allowedTestClasses: [testClass] }];
+  const summary = computeReportDistribution(baselineReport({ reportReferenceToken: referenceToken, testClasses: [testClass] }), matrix);
+
+  assert.equal(summary.status, 'DISTRIBUTED');
+  assert.equal(summary.reportReferenceToken, referenceToken);
+  assert.deepEqual(summary.routedEntries, [
+    { testClass, recipientRole: 'ORDERING_PROVIDER', channelType: 'PORTAL_SECURE_MESSAGE' },
+  ]);
 });
 
 test('explainDistributionBlockReason and explainDistributionBlockNextAction cover every block reason code', () => {
