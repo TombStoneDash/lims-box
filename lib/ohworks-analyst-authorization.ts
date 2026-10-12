@@ -341,7 +341,7 @@ export function authorizeAnalystRelease(rawAnalyst: unknown, rawCandidate: unkno
     if (!secondReviewerId) {
       return refuse('second-reviewer-required');
     }
-    if (secondReviewerId === analyst.analystId) {
+    if (secondReviewerId === analyst.analystId.trim()) {
       return refuse('second-reviewer-same-as-analyst');
     }
     return { resultId: candidate.resultId, decision: 'AUTHORIZED', rule: 'critical-authorized-with-second-reviewer' };
