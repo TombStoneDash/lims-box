@@ -1,6 +1,15 @@
 import { MetadataRoute } from 'next'
 import { getAllPosts } from '@/lib/blog'
 
+function firstValidDate(...candidates: Array<string | undefined>): Date | null {
+  for (const candidate of candidates) {
+    if (!candidate) continue
+    const date = new Date(candidate)
+    if (!Number.isNaN(date.getTime())) return date
+  }
+  return null
+}
+
 export default function sitemap(): MetadataRoute.Sitemap {
   const baseUrl = 'https://lims.bot'
   const lastModified = new Date()
@@ -45,7 +54,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     url: `/blog/${post.slug}`,
     priority: post.featured ? 0.8 : 0.7,
     changeFrequency: 'weekly' as const,
-    lastModified: new Date(post.updatedAt || post.publishedAt),
+    lastModified: firstValidDate(post.updatedAt, post.publishedAt) ?? lastModified,
   }))
 
   return [
