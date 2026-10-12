@@ -190,6 +190,51 @@ test('throws CustodyChainInputError for an invalid reference token', () => {
   );
 });
 
+test('throws reference-token-invalid for whitespace-only reference tokens', () => {
+  for (const referenceToken of ['   ', '\t\r\n', '\u00a0\u2003']) {
+    assert.throws(
+      () => validateCustodyChain(referenceToken, baselineChain()),
+      (error: unknown) => error instanceof CustodyChainInputError && error.code === 'reference-token-invalid',
+    );
+  }
+});
+
+for (const field of ['releasingActor', 'receivingActor', 'releasingRole', 'receivingRole', 'timestamp', 'sealId'] as const) {
+  test(`throws transfer-malformed for whitespace-only ${field}`, () => {
+    for (const blank of ['   ', '\t\r\n', '\u00a0\u2003']) {
+      assert.throws(
+        () => validateCustodyChain('ref-synthetic-blank', [baselineTransfer({ [field]: blank })]),
+        (error: unknown) => error instanceof CustodyChainInputError && error.code === 'transfer-malformed',
+      );
+    }
+  });
+}
+
+test('preserves nonblank reference tokens and actors with surrounding whitespace', () => {
+  const referenceToken = '  ref-synthetic-padded\t';
+  const chain = baselineChain();
+  chain[0].releasingActor = ' actor-synthetic-a ';
+  chain[0].receivingActor = '\tactor-synthetic-b ';
+  chain[1].releasingActor = chain[0].receivingActor;
+  const original = structuredClone(chain);
+
+  assert.deepEqual(validateCustodyChain(referenceToken, chain), { referenceToken, status: 'VALID' });
+  assert.deepEqual(chain, original);
+});
+
+test('does not normalize actors for self-transfer or continuity decisions', () => {
+  const chain = baselineChain();
+  chain[0].receivingActor = ` ${chain[0].releasingActor} `;
+  assert.deepEqual(validateCustodyChain('ref-synthetic-distinct', [chain[0]]), {
+    referenceToken: 'ref-synthetic-distinct', status: 'VALID',
+  });
+  chain[1].releasingActor = chain[0].receivingActor.trim();
+  assert.deepEqual(validateCustodyChain('ref-synthetic-gap', chain), {
+    referenceToken: 'ref-synthetic-gap', status: 'INVALID',
+    failure: { transferIndex: 1, code: 'custody-gap' },
+  });
+});
+
 test('throws CustodyChainInputError when transfers is not an array', () => {
   assert.throws(
     () => validateCustodyChain('ref-synthetic-not-array', 'not-an-array' as unknown as unknown[]),
