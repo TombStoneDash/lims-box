@@ -128,6 +128,22 @@ function isNonEmptyString(value: unknown): value is string {
   return typeof value === 'string' && value.length > 0;
 }
 
+function isNonBlankString(value: unknown): value is string {
+  return typeof value === 'string' && value.trim().length > 0;
+}
+
+function hasValidOutcomeShape(outcome: unknown): outcome is SenaiteSampleCreateOutcome {
+  if (typeof outcome !== 'object' || outcome === null) {
+    return false;
+  }
+  const candidate = outcome as Record<string, unknown>;
+  return (
+    isNonBlankString(candidate.senaiteSampleId) &&
+    isNonBlankString(candidate.tenantId) &&
+    isNonBlankString(candidate.matrixCode)
+  );
+}
+
 function hasRequiredIdentity(
   request: unknown,
 ): request is OHWorksSampleCreateRequest {
@@ -211,6 +227,11 @@ function evaluateAdapterOutcomes(
   const flag = (code: SampleCreateReasonCode) => reasons.push({ code });
 
   if (outcomes.length === 0) {
+    flag('adapter-outcome-missing');
+    return { reasons };
+  }
+
+  if (outcomes.some((outcome) => !hasValidOutcomeShape(outcome))) {
     flag('adapter-outcome-missing');
     return { reasons };
   }
