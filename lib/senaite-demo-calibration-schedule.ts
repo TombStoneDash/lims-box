@@ -16,6 +16,16 @@ export function projectUpcomingCalibrations(
   dueInDays: number;
   evaluation: InstrumentEvaluation;
 }> {
+  if (!Array.isArray(instruments)) {
+    throw new TypeError('projectUpcomingCalibrations: instruments must be an array');
+  }
+  if (!(asOf instanceof Date) || !Number.isFinite(asOf.getTime())) {
+    throw new TypeError('projectUpcomingCalibrations: asOf must be a valid Date');
+  }
+  if (!Number.isFinite(horizonDays)) {
+    throw new TypeError('projectUpcomingCalibrations: horizonDays must be a finite number');
+  }
+
   const asOfTime = asOf.getTime();
   const asOfDate = asOf.toISOString().slice(0, 10);
   const horizonTime = asOfTime + horizonDays * MILLISECONDS_PER_DAY;
