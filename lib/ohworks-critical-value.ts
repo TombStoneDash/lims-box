@@ -360,6 +360,10 @@ export function applyAcknowledgementEvent(record: AcknowledgementRecord, event: 
     if (!isPlainObject(transition) || !isNonEmptyString(transition.at)) {
       fail('acknowledgement-record-malformed');
     }
+    const state = transition.state;
+    if (state !== 'pending' && state !== 'escalated' && state !== 'acknowledged') {
+      fail('acknowledgement-record-malformed');
+    }
     const time = parseCalendarInstant(transition.at);
     const legalState = previousState === undefined
       ? transition.state === 'pending'
@@ -368,7 +372,7 @@ export function applyAcknowledgementEvent(record: AcknowledgementRecord, event: 
     if (!legalState || !Number.isFinite(time) || time <= previousTime) {
       fail('acknowledgement-record-malformed');
     }
-    previousState = transition.state;
+    previousState = state;
     previousTime = time;
   }
   if (record.state !== previousState) {
