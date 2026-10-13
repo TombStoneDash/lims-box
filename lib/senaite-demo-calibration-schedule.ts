@@ -22,8 +22,9 @@ export function projectUpcomingCalibrations(
   if (!(asOf instanceof Date) || !Number.isFinite(asOf.getTime())) {
     throw new TypeError('projectUpcomingCalibrations: asOf must be a valid Date');
   }
-  if (!Number.isFinite(horizonDays)) {
-    throw new TypeError('projectUpcomingCalibrations: horizonDays must be a finite number');
+  // Existing dashboard uses +Infinity for an unlimited forward horizon.
+  if (!Number.isFinite(horizonDays) && horizonDays !== Infinity) {
+    throw new TypeError('projectUpcomingCalibrations: horizonDays must be finite or positive Infinity');
   }
 
   const asOfTime = asOf.getTime();

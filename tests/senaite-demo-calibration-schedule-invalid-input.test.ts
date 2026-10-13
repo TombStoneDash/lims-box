@@ -23,8 +23,12 @@ test('throws a TypeError for a NaN horizonDays', () => {
   assert.throws(() => projectUpcomingCalibrations([instrument('2026-04-14')], asOf, NaN), TypeError);
 });
 
-test('throws a TypeError for an Infinity horizonDays', () => {
-  assert.throws(() => projectUpcomingCalibrations([instrument('9999-12-31')], asOf, Infinity), TypeError);
+test('preserves the unlimited positive Infinity horizon used by the dashboard', () => {
+  const farFuture = instrument('9999-12-31');
+  const result = projectUpcomingCalibrations([farFuture], asOf, Infinity);
+  assert.equal(result.length, 1);
+  assert.equal(result[0].instrument, farFuture);
+  assert.deepEqual(projectUpcomingCalibrations([farFuture], asOf, 7), []);
 });
 
 test('throws a TypeError for a -Infinity horizonDays', () => {
