@@ -229,7 +229,10 @@ function parsePausedIntervals(raw: unknown): ParsedPausedInterval[] {
   if (!Array.isArray(raw)) {
     throw new TurnaroundTimeInputError('paused-intervals-not-array');
   }
-  return raw.map((entry) => {
+  // `Array.from` iterates via the array iterator, which reads every index
+  // (yielding `undefined` for holes); `raw.map` would instead skip holes
+  // entirely, letting a sparse list slip past validation unnoticed.
+  return Array.from(raw, (entry) => {
     if (typeof entry !== 'object' || entry === null) {
       throw new TurnaroundTimeInputError('paused-interval-invalid');
     }
