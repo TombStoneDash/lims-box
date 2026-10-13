@@ -102,6 +102,7 @@ export type CriticalValueInputErrorCode =
   | 'result-value-invalid'
   | 'limits-missing'
   | 'limits-malformed'
+  | 'limits-analyte-mismatch'
   | 'limits-unit-mismatch'
   | 'limits-range-malformed'
   | 'limits-range-empty'
@@ -121,6 +122,7 @@ const INPUT_ERROR_MESSAGES: Record<CriticalValueInputErrorCode, string> = {
   'result-value-invalid': 'The result’s value is not a finite number.',
   'limits-missing': 'No critical limits were declared for this analyte.',
   'limits-malformed': 'The declared critical limits are not structurally valid.',
+  'limits-analyte-mismatch': 'The result analyte does not match the declared limits analyte.',
   'limits-unit-mismatch': 'The result’s declared unit does not match the critical limits’ declared unit.',
   'limits-range-malformed': 'The declared critical range bounds are not numbers or null.',
   'limits-range-empty': 'The declared critical range has no lower or upper bound.',
@@ -198,7 +200,7 @@ function validateResultShape(result: CriticalResultInput): void {
   }
 }
 
-function validateLimits(limits: CriticalLimits, resultUnit: string): { low: number | null; high: number | null } {
+function validateLimits(limits: CriticalLimits, resultUnit: string, resultAnalyte: string): { low: number | null; high: number | null } {
   if (limits === null || limits === undefined) {
     fail('limits-missing');
   }
@@ -208,6 +210,9 @@ function validateLimits(limits: CriticalLimits, resultUnit: string): { low: numb
   const candidate = limits as unknown as Record<string, unknown>;
   if (!isNonEmptyString(candidate.analyteCode) || !isNonEmptyString(candidate.unit)) {
     fail('limits-malformed');
+  }
+  if (candidate.analyteCode !== resultAnalyte) {
+    fail('limits-analyte-mismatch');
   }
   if (candidate.unit !== resultUnit) {
     fail('limits-unit-mismatch');
@@ -267,7 +272,7 @@ export function evaluateCriticalValue(
   identifiedAt: string,
 ): CriticalValueDecision {
   validateResultShape(result);
-  const range = validateLimits(limits, result.unit);
+  const range = validateLimits(limits, result.unit, result.analyteCode);
 
   const value = toFiniteNumber(result.value);
   if (value === undefined) {
@@ -332,7 +337,7 @@ export function createAcknowledgementRecord(identifiedAt: string): Acknowledgeme
   }
   return Object.freeze({
     state: 'pending' as const,
-    history: [Object.freeze({ state: 'pending' as const, at: identifiedAt })],
+    history: Object.freeze([Object.freeze({ state: 'pending' as const, at: identifiedAt })]),
   });
 }
 
@@ -347,6 +352,26 @@ export function createAcknowledgementRecord(identifiedAt: string): Acknowledgeme
  */
 export function applyAcknowledgementEvent(record: AcknowledgementRecord, event: AcknowledgementEvent): AcknowledgementRecord {
   if (!isPlainObject(record) || !Array.isArray(record.history) || record.history.length === 0) {
+    fail('acknowledgement-record-malformed');
+  }
+  let previousState: AcknowledgementState | undefined;
+  let previousTime = -Infinity;
+  for (const transition of record.history) {
+    if (!isPlainObject(transition) || !isNonEmptyString(transition.at)) {
+      fail('acknowledgement-record-malformed');
+    }
+    const time = parseCalendarInstant(transition.at);
+    const legalState = previousState === undefined
+      ? transition.state === 'pending'
+      : (previousState === 'pending' && (transition.state === 'escalated' || transition.state === 'acknowledged')) ||
+        (previousState === 'escalated' && transition.state === 'acknowledged');
+    if (!legalState || !Number.isFinite(time) || time <= previousTime) {
+      fail('acknowledgement-record-malformed');
+    }
+    previousState = transition.state;
+    previousTime = time;
+  }
+  if (record.state !== previousState) {
     fail('acknowledgement-record-malformed');
   }
   if (!isPlainObject(event) || (event.type !== 'acknowledge' && event.type !== 'escalate') || !isNonEmptyString(event.at)) {
@@ -374,6 +399,6 @@ export function applyAcknowledgementEvent(record: AcknowledgementRecord, event: 
 
   return Object.freeze({
     state: nextState,
-    history: Object.freeze([...record.history, Object.freeze({ state: nextState, at: event.at })]),
+    history: Object.freeze([...record.history.map((transition) => Object.freeze({ ...transition })), Object.freeze({ state: nextState, at: event.at })]),
   });
 }

@@ -272,3 +272,42 @@ test('createAcknowledgementRecord fails closed on an unparseable identifiedAt', 
     (error: unknown) => error instanceof CriticalValueInputError && error.code === 'identified-at-invalid',
   );
 });
+
+
+test('same-unit limits for another analyte fail closed before decision', () => {
+  for (const high of [100, 6.5]) {
+    assert.throws(
+      () => evaluateCriticalValue(baselineResult(), { ...baselineLimits(), analyteCode: 'OTHER-SYNTH', high }, IDENTIFIED_AT),
+      (error: unknown) => error instanceof CriticalValueInputError && error.code === 'limits-analyte-mismatch',
+    );
+  }
+});
+
+test('fresh acknowledgement history is frozen', () => {
+  const record = createAcknowledgementRecord(IDENTIFIED_AT);
+  assert.ok(Object.isFrozen(record.history));
+  assert.ok(Object.isFrozen(record.history[0]));
+});
+
+test('deserialized acknowledgement histories cannot bypass terminal or ordering rules', () => {
+  const cases = [
+    { state: 'pending', history: [{ state: 'pending', at: IDENTIFIED_AT }, { state: 'acknowledged', at: '2026-01-02T12:10:00.000Z' }] },
+    { state: 'escalated', history: [{ state: 'pending', at: IDENTIFIED_AT }, { state: 'acknowledged', at: '2026-01-02T12:10:00.000Z' }, { state: 'escalated', at: '2026-01-02T12:20:00.000Z' }] },
+    { state: 'pending', history: [{ state: 'pending', at: IDENTIFIED_AT }, { state: 'pending', at: '2026-01-02T12:10:00.000Z' }] },
+    { state: 'escalated', history: [{ state: 'pending', at: IDENTIFIED_AT }, { state: 'escalated', at: IDENTIFIED_AT }] },
+    { state: 'pending', history: [null] },
+  ];
+  for (const record of cases) {
+    assert.throws(
+      () => applyAcknowledgementEvent(record as unknown as AcknowledgementRecord, { type: 'escalate', at: '2026-01-02T12:40:00.000Z' }),
+      (error: unknown) => error instanceof CriticalValueInputError && error.code === 'acknowledgement-record-malformed',
+    );
+  }
+});
+
+test('accepted deserialized history is copied and frozen in returned record', () => {
+  const record = clone(createAcknowledgementRecord(IDENTIFIED_AT));
+  const next = applyAcknowledgementEvent(record, { type: 'escalate', at: '2026-01-02T12:10:00.000Z' });
+  assert.ok(Object.isFrozen(next.history[0]));
+  assert.notEqual(next.history[0], record.history[0]);
+});
