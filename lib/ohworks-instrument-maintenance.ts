@@ -110,6 +110,7 @@ export type MaintenanceGateInputErrorCode =
   | 'run-timestamp-malformed'
   | 'options-malformed'
   | 'schedule-malformed'
+  | 'schedule-instrument-mismatch'
   | 'task-entry-malformed'
   | 'duplicate-task-code';
 
@@ -119,6 +120,7 @@ const INPUT_ERROR_MESSAGES: Record<MaintenanceGateInputErrorCode, string> = {
   'run-timestamp-malformed': 'The supplied run timestamp is not a non-empty string.',
   'options-malformed': 'The maintenance gate options are invalid.',
   'schedule-malformed': 'The registry entry for this instrument is missing a required field or has the wrong shape.',
+  'schedule-instrument-mismatch': 'The registry entry instrument identifier does not match its lookup key.',
   'task-entry-malformed': 'A scheduled maintenance task entry is missing a required field or has the wrong shape.',
   'duplicate-task-code': 'The maintenance schedule lists the same task code more than once.',
 };
@@ -317,9 +319,9 @@ function evaluateTask(entry: MaintenanceTaskScheduleEntry, runAtMs: number, dueS
  * one task is due soon resolves to `usable_with_flag`.
  *
  * Structurally unusable input (a malformed registry, instrument id, run
- * timestamp, options, schedule entry, task entry, or a schedule with a
- * duplicated task code) throws MaintenanceGateInputError instead of
- * guessing at a reason code.
+ * timestamp, options, schedule entry, schedule instrument mismatch, task
+ * entry, or a schedule with a duplicated task code) throws
+ * MaintenanceGateInputError instead of guessing at a reason code.
  */
 export function evaluateInstrumentMaintenanceGate(
   registry: InstrumentMaintenanceRegistry,
@@ -346,6 +348,9 @@ export function evaluateInstrumentMaintenanceGate(
   }
   if (!isStructurallyValidSchedule(raw)) {
     throw new MaintenanceGateInputError('schedule-malformed');
+  }
+  if (raw.instrumentId !== instrumentId) {
+    throw new MaintenanceGateInputError('schedule-instrument-mismatch');
   }
 
   const seenTaskCodes = new Set<string>();
