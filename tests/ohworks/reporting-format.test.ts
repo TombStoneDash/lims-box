@@ -390,3 +390,62 @@ test('every error code has a non-empty explanation', () => {
     assert.ok(message.length > 0);
   }
 });
+
+for (const value of [0, 1, 50, 100, 150, Number.NaN, Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY]) {
+  test(`inverted detection and quantitation limits fail as formats-malformed for value ${value}`, () => {
+    const request = baselineRequest();
+    request.value = value;
+    request.formats = [{ ...baselineFormat(), belowDetectionLimit: 100, aboveQuantitationLimit: 1 }];
+    assert.throws(
+      () => formatReportedResult(request),
+      (error: unknown) => error instanceof ReportingFormatError && error.code === 'formats-malformed',
+    );
+  });
+}
+
+for (const [value, reportString, censoring] of [
+  [0, '<1.234 mg/L', 'below-detection'],
+  [1.234, '1.23 mg/L', null],
+  [50.126, '50.13 mg/L', null],
+  [100.567, '100.57 mg/L', null],
+  [150, '>100.567 mg/L', 'above-quantitation'],
+] as const) {
+  test(`ordered limits preserve boundaries and precision for value ${value}`, () => {
+    const request = baselineRequest();
+    request.value = value;
+    request.formats = [{ ...baselineFormat(), belowDetectionLimit: 1.234, aboveQuantitationLimit: 100.567 }];
+    const result = formatReportedResult(request);
+    assert.equal(result.reportString, reportString);
+    assert.equal(result.censoring, censoring);
+  });
+}
+
+for (const [value, reportString, censoring] of [
+  [0, '<1.234 mg/L', 'below-detection'],
+  [1.234, '1.23 mg/L', null],
+  [2, '>1.234 mg/L', 'above-quantitation'],
+] as const) {
+  test(`equal limits preserve censoring and precision for value ${value}`, () => {
+    const request = baselineRequest();
+    request.value = value;
+    request.formats = [{ ...baselineFormat(), belowDetectionLimit: 1.234, aboveQuantitationLimit: 1.234 }];
+    const result = formatReportedResult(request);
+    assert.equal(result.reportString, reportString);
+    assert.equal(result.censoring, censoring);
+  });
+}
+
+test('ordered limits retain the decimal-place cap and its accepted boundary', () => {
+  const request = baselineRequest();
+  request.value = 1.5;
+  request.formats = [{ ...baselineFormat(), decimalPlaces: 100 }];
+  assert.equal(formatReportedResult(request).reportString, `1.5${'0'.repeat(99)} mg/L`);
+  for (const value of [0, 1.5, 150]) {
+    request.value = value;
+    request.formats = [{ ...baselineFormat(), decimalPlaces: 101 }];
+    assert.throws(
+      () => formatReportedResult(request),
+      (error: unknown) => error instanceof ReportingFormatError && error.code === 'formats-malformed',
+    );
+  }
+});
