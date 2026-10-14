@@ -171,17 +171,49 @@ const UNAVAILABLE_MESSAGE = 'This download link is temporarily unavailable. Requ
 const INVALID_MESSAGE = 'This download link is invalid or has expired. Request a new one from the Personnel Pack form.';
 export const DOWNLOAD_CLAIM_REDEEM_PATH = '/api/personnel-pack-download/claim';
 
-function claimUnavailable() {
-  return NextResponse.json({ error: UNAVAILABLE_MESSAGE, code: 'download_claim_unavailable' }, { status: 503, headers: PRIVATE_HEADERS });
+function wantsHtml(request: NextRequest): boolean {
+  return (request.headers.get('accept') ?? '').split(',').some((entry) => {
+    const [type, ...parameters] = entry.trim().toLowerCase().split(';');
+    const quality = parameters.find((parameter) => parameter.trim().startsWith('q='));
+    return type.trim() === 'text/html' && (quality === undefined || Number(quality.trim().slice(2)) > 0);
+  });
 }
 
-function claimRejected(asset: string, code: DownloadClaimFailureCode) {
-  console.error('[personnel-pack-download]', 'download_claim_rejected', JSON.stringify({ asset: resolvePersonnelPackAsset(asset)?.key ?? 'unsupported', stage: 'authorization', code }));
+function claimError(request: NextRequest, code: DownloadClaimFailureCode) {
   const unavailable = code === 'download_claim_unavailable';
-  return NextResponse.json(
-    { error: unavailable ? UNAVAILABLE_MESSAGE : INVALID_MESSAGE, code },
-    { status: unavailable ? 503 : 401, headers: PRIVATE_HEADERS },
-  );
+  const status = unavailable ? 503 : 401;
+  const headers = { ...PRIVATE_HEADERS, Vary: 'Accept' };
+  if (!wantsHtml(request)) {
+    return NextResponse.json(
+      { error: unavailable ? UNAVAILABLE_MESSAGE : INVALID_MESSAGE, code },
+      { status, headers },
+    );
+  }
+  const heading = unavailable ? 'Downloads are temporarily unavailable' : 'This download link has expired or is no longer valid';
+  const detail = unavailable
+    ? 'Please try again in a few minutes, or request a new link from the Personnel Pack form.'
+    : 'Each link works once and only for a short time. Request a new link from the Personnel Pack form.';
+  return new NextResponse(`<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow"><title>${escapeHtml(heading)} | LIMS BOX</title></head>
+<body style="font-family:system-ui,sans-serif;max-width:32rem;margin:4rem auto;padding:0 1rem;color:#0f172a;">
+<main><h1 style="font-size:1.5rem;">${escapeHtml(heading)}</h1>
+<p>${escapeHtml(detail)}</p>
+<p><a href="/personnel-pack" style="display:inline-block;font-size:1rem;padding:.75rem 1.25rem;background:#2E8B57;color:#fff;border-radius:.5rem;">Request a new link</a></p>
+<p style="font-size:.875rem;color:#64748b;">Reference: ${escapeHtml(code)}</p></main>
+</body></html>`, {
+    status,
+    headers: { ...headers, 'Content-Type': 'text/html; charset=utf-8', 'X-Robots-Tag': 'noindex, nofollow', 'X-Content-Type-Options': 'nosniff' },
+  });
+}
+
+function claimUnavailable(request: NextRequest) {
+  return claimError(request, 'download_claim_unavailable');
+}
+
+function claimRejected(request: NextRequest, asset: string, code: DownloadClaimFailureCode) {
+  console.error('[personnel-pack-download]', 'download_claim_rejected', JSON.stringify({ asset: resolvePersonnelPackAsset(asset)?.key ?? 'unsupported', stage: 'authorization', code }));
+  return claimError(request, code);
 }
 
 async function assetResponse(key: string, loadAsset: DownloadAssetLoader) {
@@ -264,9 +296,9 @@ export function createPersonnelPackGetHandler(
 
     if (claimToken !== null) {
       const claims = resolveClaims();
-      if (!claims) return claimUnavailable();
+      if (!claims) return claimUnavailable(request);
       const checked = claims.verify(claimToken, key, Date.now());
-      if (checked.ok === false) return claimRejected(key, checked.code);
+      if (checked.ok === false) return claimRejected(request, key, checked.code);
       return confirmPage(key, claimToken);
     }
 
@@ -291,17 +323,17 @@ export function createPersonnelPackClaimPostHandler(
       if (typeof asset === 'string' && asset) key = asset;
       if (typeof claim === 'string') claimToken = claim;
     } catch {
-      return claimRejected(key, 'download_claim_malformed');
+      return claimRejected(request, key, 'download_claim_malformed');
     }
 
     const claims = resolveClaims();
-    if (!claims) return claimUnavailable();
+    if (!claims) return claimUnavailable(request);
     const checked = claims.verify(claimToken, key, Date.now());
-    if (checked.ok === false) return claimRejected(key, checked.code);
+    if (checked.ok === false) return claimRejected(request, key, checked.code);
     const response = await assetResponse(key, loadAsset);
     if (response.status !== 200) return response;
     const claimResult = await claims.verifyAndConsume(claimToken, key, Date.now());
-    if (claimResult.ok === false) return claimRejected(key, claimResult.code);
+    if (claimResult.ok === false) return claimRejected(request, key, claimResult.code);
     return response;
   };
 }
