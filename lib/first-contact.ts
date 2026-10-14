@@ -128,12 +128,19 @@ export function nextRetryAction(
   now: Date,
 ): RetryAction {
   const age = now.getTime() - new Date(row.updatedAt).getTime()
+  const ageIsFinite = Number.isFinite(age)
+  const attemptsAreValid = Number.isInteger(row.attempts) && row.attempts >= 0
   switch (row.outcome) {
     case 'failed':
+      // An unparseable timestamp or a corrupt attempts count must never fall
+      // through to an unlimited retry: treat it as capped out instead.
+      if (!attemptsAreValid || !ageIsFinite) return 'draft_for_hudson'
       if (row.attempts >= MAX_ATTEMPTS) return 'draft_for_hudson'
       // Inside the window a retry may only return the cached first response.
       return age >= IDEMPOTENCY_WINDOW_MS ? 'retry' : 'wait'
     case 'pending':
+      // Same reasoning: an unresolvable age must never auto-resend.
+      if (!ageIsFinite) return 'resolve_delivery'
       return age >= IDEMPOTENCY_WINDOW_MS ? 'resolve_delivery' : 'wait'
     case 'unresolved':
       return 'resolve_delivery'

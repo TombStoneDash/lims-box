@@ -29,9 +29,9 @@ function parseCitation(value: unknown): OHWorksAssistantCitation | null {
   if (!value || typeof value !== 'object') return null;
   const candidate = value as Record<string, unknown>;
   if (
-    typeof candidate.sourceId !== 'string' ||
-    typeof candidate.recordId !== 'string' ||
-    typeof candidate.corpusVersion !== 'string'
+    typeof candidate.sourceId !== 'string' || candidate.sourceId.trim().length === 0 ||
+    typeof candidate.recordId !== 'string' || candidate.recordId.trim().length === 0 ||
+    typeof candidate.corpusVersion !== 'string' || candidate.corpusVersion.trim().length === 0
   ) {
     return null;
   }
@@ -46,12 +46,14 @@ export function parseAssistantReply(payload: unknown): OHWorksAssistantReply | n
   if (!payload || typeof payload !== 'object') return null;
   const candidate = payload as Record<string, unknown>;
 
-  if (typeof candidate.answer !== 'string' || candidate.answer.length === 0) return null;
+  if (typeof candidate.answer !== 'string' || candidate.answer.trim().length === 0) return null;
   if (typeof candidate.grounded !== 'boolean') return null;
   if (typeof candidate.mode !== 'string' || !MODES.has(candidate.mode)) return null;
-  if (typeof candidate.label !== 'string') return null;
+  if (typeof candidate.label !== 'string' || candidate.label.trim().length === 0) return null;
   if (typeof candidate.disposition !== 'string' || !DISPOSITIONS.has(candidate.disposition)) return null;
+  if (candidate.grounded !== (candidate.disposition === 'grounded')) return null;
   if (!Array.isArray(candidate.citations)) return null;
+  if (candidate.grounded && candidate.citations.length === 0) return null;
 
   const citations: OHWorksAssistantCitation[] = [];
   for (const item of candidate.citations) {

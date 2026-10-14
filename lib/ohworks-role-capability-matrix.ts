@@ -43,8 +43,7 @@ const KNOWN_CAPABILITIES: ReadonlySet<OHWorksCapability> = new Set([
   'EXPORT_AUDIT_LOG', 'CONFIGURE_INSTRUMENTS',
 ]);
 
-/** Least-privilege defaults; administrative powers do not imply clinical powers. */
-export const ROLE_CAPABILITY_MATRIX: Readonly<Record<OHWorksRole, ReadonlySet<OHWorksCapability>>> = Object.freeze({
+const PRIVATE_ROLE_CAPABILITY_MATRIX: Readonly<Record<OHWorksRole, Set<OHWorksCapability>>> = Object.freeze({
   FRONT_DESK: new Set<OHWorksCapability>(['VIEW_RESULTS']),
   TRAINEE: new Set<OHWorksCapability>(['VIEW_RESULTS', 'ENTER_RESULTS']),
   ANALYST: new Set<OHWorksCapability>(['VIEW_RESULTS', 'ENTER_RESULTS', 'VERIFY_RESULTS']),
@@ -65,6 +64,29 @@ export const ROLE_CAPABILITY_MATRIX: Readonly<Record<OHWorksRole, ReadonlySet<OH
   ]),
 });
 
+/** Wrap a mutable Set so add/delete/clear throw; has/size/iteration pass through untouched. */
+function immutableSetView<T>(target: Set<T>): ReadonlySet<T> {
+  return new Proxy(target, {
+    get(obj, prop, receiver) {
+      if (prop === 'add' || prop === 'delete' || prop === 'clear') {
+        return () => {
+          throw new TypeError('ROLE_CAPABILITY_MATRIX sets are immutable; mutation is refused');
+        };
+      }
+      const value = Reflect.get(obj, prop, obj);
+      return typeof value === 'function' ? value.bind(obj) : value;
+    },
+  }) as ReadonlySet<T>;
+}
+
+/** Least-privilege defaults; administrative powers do not imply clinical powers. */
+export const ROLE_CAPABILITY_MATRIX: Readonly<Record<OHWorksRole, ReadonlySet<OHWorksCapability>>> = Object.freeze(
+  Object.fromEntries(
+    (Object.entries(PRIVATE_ROLE_CAPABILITY_MATRIX) as [OHWorksRole, Set<OHWorksCapability>][])
+      .map(([role, capabilities]) => [role, immutableSetView(capabilities)]),
+  ),
+) as Readonly<Record<OHWorksRole, ReadonlySet<OHWorksCapability>>>;
+
 function isRole(value: unknown): value is OHWorksRole {
   return typeof value === 'string' && KNOWN_ROLES.has(value as OHWorksRole);
 }
@@ -75,12 +97,12 @@ function isCapability(value: unknown): value is OHWorksCapability {
 
 /** Refuse any unknown role or capability without inspecting or coercing it. */
 export function can(role: unknown, capability: unknown): boolean {
-  return isRole(role) && isCapability(capability) && ROLE_CAPABILITY_MATRIX[role].has(capability);
+  return isRole(role) && isCapability(capability) && PRIVATE_ROLE_CAPABILITY_MATRIX[role].has(capability);
 }
 
 /** Return sorted capabilities, or an empty array for an unknown role. */
 export function capabilitiesFor(role: unknown): OHWorksCapability[] {
-  return isRole(role) ? [...ROLE_CAPABILITY_MATRIX[role]].sort() : [];
+  return isRole(role) ? [...PRIVATE_ROLE_CAPABILITY_MATRIX[role]].sort() : [];
 }
 
 /** Return sorted roles, or an empty array for an unknown capability. */

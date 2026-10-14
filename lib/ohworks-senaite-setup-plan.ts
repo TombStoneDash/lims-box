@@ -83,6 +83,9 @@ function record(value: unknown): Record<string, unknown> {
 
 function list(value: unknown): unknown[] {
   if (!Array.isArray(value)) fail('invalid-config');
+  for (let index = 0; index < value.length; index++) {
+    if (!(index in value)) fail('invalid-config');
+  }
   return value;
 }
 

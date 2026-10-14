@@ -6,6 +6,15 @@ import {
   resolveRoleView,
   workflowStages,
 } from '@/lib/ohworks-pilot';
+import {
+  applyAccessionEvent,
+  explainAccessionBlock,
+  explainAccessionBlockNextAction,
+  runAccessionWorkflow,
+  type AccessionEventInput,
+  type AccessionEventKind,
+  type AccessionReasonCode,
+} from '@/lib/ohworks-accession-workflow';
 
 interface PageProps {
   searchParams?: Promise<{ role?: string }>;
@@ -20,6 +29,82 @@ const stateStyles: Record<string, string> = {
   Released: 'bg-emerald-50 text-emerald-700 ring-emerald-200',
 };
 
+// Fabricated accession queue. Every identifier and event below is synthetic;
+// the shared accession workflow decides each state and refusal.
+const ACCESSION_TENANT_ID = 'tenant-synthetic-ohworks';
+
+type AccessionStep = [AccessionEventKind, AccessionReasonCode, string];
+
+const ACCESSION_QUEUE: { sampleId: string; steps: AccessionStep[] }[] = [
+  { sampleId: 'sample-synthetic-queue-01', steps: [['receive', 'sample-intake-logged', '2026-01-02T08:00:00.000Z']] },
+  {
+    sampleId: 'sample-synthetic-queue-02',
+    steps: [
+      ['receive', 'sample-intake-logged', '2026-01-02T08:10:00.000Z'],
+      ['hold', 'missing-requisition', '2026-01-02T08:15:00.000Z'],
+    ],
+  },
+  {
+    sampleId: 'sample-synthetic-queue-03',
+    steps: [
+      ['receive', 'sample-intake-logged', '2026-01-02T08:20:00.000Z'],
+      ['accession', 'requisition-verified', '2026-01-02T08:25:00.000Z'],
+    ],
+  },
+  {
+    sampleId: 'sample-synthetic-queue-04',
+    steps: [
+      ['receive', 'sample-intake-logged', '2026-01-02T08:30:00.000Z'],
+      ['reject', 'chain-of-custody-broken', '2026-01-02T08:35:00.000Z'],
+      ['accession', 'requisition-verified', '2026-01-02T08:40:00.000Z'],
+    ],
+  },
+];
+
+const NEXT_ACTION_CANDIDATES: [AccessionEventKind, AccessionReasonCode][] = [
+  ['accession', 'requisition-verified'],
+  ['hold', 'missing-requisition'],
+  ['reject', 'sample-integrity-compromised'],
+  ['cancel', 'submitted-in-error'],
+];
+
+const ACCESSION_ACTOR_ROLES = ['worker', 'reviewer'];
+
+function buildAccessionQueue() {
+  return ACCESSION_QUEUE.map(({ sampleId, steps }) => {
+    const context = { tenantId: ACCESSION_TENANT_ID, sampleId };
+    const events: AccessionEventInput[] = steps.map(([kind, reasonCode, occurredAt], index) => ({
+      eventId: `${sampleId}-evt-${index + 1}`,
+      sampleId,
+      tenantId: ACCESSION_TENANT_ID,
+      kind,
+      actorClass: kind === 'receive' ? 'submitter' : 'accessioner',
+      reasonCode,
+      occurredAt,
+    }));
+    const run = runAccessionWorkflow(context, events);
+    const blocked = run.steps.find((step) => step.allowed === false);
+    const lastEvent = run.history.at(-1);
+    const probeAt = new Date(Date.parse(lastEvent?.occurredAt ?? '2026-01-02T00:00:00.000Z') + 60_000).toISOString();
+    const nextActions = NEXT_ACTION_CANDIDATES.filter(
+      ([kind, reasonCode]) =>
+        applyAccessionEvent(
+          run.finalState,
+          { eventId: `${sampleId}-probe-${kind}`, sampleId, tenantId: ACCESSION_TENANT_ID, kind, actorClass: 'accessioner', reasonCode, occurredAt: probeAt },
+          run.history,
+          context,
+        ).allowed,
+    ).map(([kind]) => kind);
+    return {
+      sampleId,
+      state: run.finalState,
+      holdReason: run.finalState === 'HOLD' ? lastEvent?.reasonCode : undefined,
+      refusal: blocked && blocked.allowed === false ? blocked.blockCode : undefined,
+      nextActions,
+    };
+  });
+}
+
 export default async function OHWorksSampleWorkflow({ searchParams }: PageProps) {
   const params = searchParams ? await searchParams : undefined;
   const role = resolveRoleView(params?.role);
@@ -28,6 +113,9 @@ export default async function OHWorksSampleWorkflow({ searchParams }: PageProps)
 
   const tatPriorityView = buildPilotTatPriorityView();
   const specimenIntegrity = buildPilotSpecimenIntegrityView();
+  const accessionQueue = buildAccessionQueue();
+  const canActOnAccession = ACCESSION_ACTOR_ROLES.includes(role.id);
+  const canSeeAccessionReasons = role.id !== 'employer';
 
   return (
     <div className="space-y-7">
@@ -135,6 +223,57 @@ export default async function OHWorksSampleWorkflow({ searchParams }: PageProps)
               </div>
             </article>
           ))}
+        </div>
+      </section>
+
+      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <h2 className="font-semibold">Accession queue (fabricated samples)</h2>
+        <p className="mt-2 text-sm text-slate-600">
+          Synthetic samples only. States, allowed next actions and refusals come from the shared fail-closed accession
+          workflow. This panel has no SENAITE connection and performs no writes.
+        </p>
+        <div className="mt-4 overflow-x-auto">
+          <table className="w-full text-left text-sm">
+            <thead className="border-b border-slate-200 text-xs text-slate-500">
+              <tr>
+                <th scope="col" className="p-3">Synthetic sample</th>
+                <th scope="col" className="p-3">Accession state</th>
+                <th scope="col" className="p-3">Allowed next action</th>
+                <th scope="col" className="p-3">Hold or refusal reason</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {accessionQueue.map((row) => (
+                <tr key={row.sampleId} data-accession-sample={row.sampleId}>
+                  <th scope="row" className="p-3 font-mono text-xs font-semibold">{row.sampleId}</th>
+                  <td className="p-3">
+                    <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-700">{row.state}</span>
+                  </td>
+                  <td className="p-3 text-xs">
+                    {!canActOnAccession
+                      ? 'Read-only for this role'
+                      : row.nextActions.length > 0
+                        ? row.nextActions.join(', ')
+                        : 'None (terminal state)'}
+                  </td>
+                  <td className="p-3 text-xs text-slate-600">
+                    {!canSeeAccessionReasons ? (
+                      'Hidden for this role'
+                    ) : row.refusal ? (
+                      <>
+                        <p>Refused: {explainAccessionBlock(row.refusal)}</p>
+                        <p className="mt-1 text-slate-500">{explainAccessionBlockNextAction(row.refusal)}</p>
+                      </>
+                    ) : row.holdReason ? (
+                      `On hold: ${row.holdReason}`
+                    ) : (
+                      'None'
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </section>
 

@@ -1,5 +1,10 @@
 const FALLBACK = 'The local demo could not answer. Try again.';
 
+function isLocalPath(value: unknown): value is string {
+  return typeof value === 'string' && value.startsWith('/') &&
+    !value.startsWith('//') && !/[\\\x00-\x20\x7f]/.test(value);
+}
+
 export function replyText(
   ok: boolean,
   body: unknown,
@@ -22,7 +27,7 @@ export function replyText(
       if (
         source && typeof source === 'object' && !Array.isArray(source) &&
         typeof source.title === 'string' && source.title.trim() &&
-        typeof source.path === 'string' && source.path.trim()
+        isLocalPath(source.path)
       ) {
         sources.push({ title: source.title, path: source.path });
       }

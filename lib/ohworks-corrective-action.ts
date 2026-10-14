@@ -230,6 +230,10 @@ function isNonEmptyString(value: unknown): value is string {
   return typeof value === 'string' && value.length > 0;
 }
 
+function hasRequiredEvidence(value: unknown): value is string {
+  return typeof value === 'string' && value.trim().length > 0;
+}
+
 function isOptionalString(value: unknown): value is string | undefined {
   return value === undefined || typeof value === 'string';
 }
@@ -446,13 +450,13 @@ export function applyCorrectiveActionEvent(
   }
 
   if (rawEvent.kind === 'start_investigation') {
-    if (!isNonEmptyString(rawEvent.investigationScope)) {
+    if (!hasRequiredEvidence(rawEvent.investigationScope)) {
       return block('investigation-scope-missing');
     }
   }
 
   if (rawEvent.kind === 'propose_action') {
-    if (!isNonEmptyString(rawEvent.proposedAction)) {
+    if (!hasRequiredEvidence(rawEvent.proposedAction)) {
       return block('proposed-action-missing');
     }
     if (!isNonEmptyString(rawEvent.rootCause)) {
@@ -464,7 +468,7 @@ export function applyCorrectiveActionEvent(
   }
 
   if (rawEvent.kind === 'implement_action') {
-    if (!isNonEmptyString(rawEvent.implementationEvidence)) {
+    if (!hasRequiredEvidence(rawEvent.implementationEvidence)) {
       return block('implementation-evidence-missing');
     }
   }
@@ -479,7 +483,7 @@ export function applyCorrectiveActionEvent(
   }
 
   if (rawEvent.kind === 'close') {
-    if (!isNonEmptyString(rawEvent.closureSummary)) {
+    if (!hasRequiredEvidence(rawEvent.closureSummary)) {
       return block('closure-summary-missing');
     }
     const recordedRootCause = lastRecordedRootCause(history);
@@ -493,7 +497,7 @@ export function applyCorrectiveActionEvent(
   }
 
   if (rawEvent.kind === 'reopen') {
-    if (!isNonEmptyString(rawEvent.newFinding)) {
+    if (!hasRequiredEvidence(rawEvent.newFinding)) {
       return block('reopen-finding-missing');
     }
     if (usedFindingReferences(history, context).has(rawEvent.newFinding)) {

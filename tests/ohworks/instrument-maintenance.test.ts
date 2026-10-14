@@ -368,6 +368,57 @@ test('a schedule entry missing a required field throws a sanitized typed error',
   );
 });
 
+test('a registry key that differs from its embedded instrument id throws a sanitized typed error', () => {
+  const requestedInstrumentId = 'requested-instrument';
+  const embeddedInstrumentId = 'different-instrument';
+  const entry = schedule({ instrumentId: embeddedInstrumentId }, []);
+  assert.throws(
+    () =>
+      evaluateInstrumentMaintenanceGate(
+        { [requestedInstrumentId]: entry },
+        requestedInstrumentId,
+        '2026-01-05T00:00:00.000Z',
+      ),
+    (error: unknown) => {
+      assert.ok(error instanceof MaintenanceGateInputError);
+      assert.equal((error as MaintenanceGateInputError).code, 'schedule-instrument-mismatch');
+      assert.doesNotMatch((error as Error).message, /requested-instrument|different-instrument/);
+      return true;
+    },
+  );
+});
+
+test('an exact registry key and embedded instrument id match evaluates normally', () => {
+  const instrumentId = 'exact-instrument';
+  const entry = schedule({ instrumentId }, []);
+  const result = evaluateInstrumentMaintenanceGate(
+    { [instrumentId]: entry },
+    instrumentId,
+    '2026-01-05T00:00:00.000Z',
+  );
+  assert.equal(result.decision, 'usable');
+  assert.equal(result.reasonCode, 'no-scheduled-tasks');
+});
+
+test('case and whitespace variants of an instrument id do not alias', () => {
+  const variants = [
+    { requested: 'case-sensitive-instrument', embedded: 'Case-Sensitive-Instrument' },
+    { requested: 'space-sensitive-instrument', embedded: 'space-sensitive-instrument ' },
+  ];
+
+  for (const { requested, embedded } of variants) {
+    const entry = schedule({ instrumentId: embedded }, []);
+    assert.throws(
+      () => evaluateInstrumentMaintenanceGate({ [requested]: entry }, requested, '2026-01-05T00:00:00.000Z'),
+      (error: unknown) => {
+        assert.ok(error instanceof MaintenanceGateInputError);
+        assert.equal((error as MaintenanceGateInputError).code, 'schedule-instrument-mismatch');
+        return true;
+      },
+    );
+  }
+});
+
 test('a task entry missing a required field throws a sanitized typed error', () => {
   const malformedTask = task();
   delete (malformedTask as Partial<MaintenanceTaskScheduleEntry>).intervalDays;

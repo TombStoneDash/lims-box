@@ -36,22 +36,39 @@ const OUT_OF_RANGE_SD_THRESHOLD = 3;
 // so a result that is decimally exactly at the threshold is still classified out of range.
 const SD_THRESHOLD_EPSILON = 1e-9;
 
-function isValidAnalyteInput(analyte: QCAnalyteInput): boolean {
-  if (!Number.isFinite(analyte.mean) || !Number.isFinite(analyte.sd) || analyte.sd <= 0) {
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
+}
+
+function isValidRun(run: unknown): run is QCRunInput {
+  return isRecord(run) && Number.isFinite((run as { result: unknown }).result as number);
+}
+
+function isValidAnalyteInput(analyte: unknown): analyte is QCAnalyteInput {
+  if (!isRecord(analyte)) {
     return false;
   }
-  if (!Array.isArray(analyte.runs) || analyte.runs.length === 0) {
+  const { mean, sd, runs } = analyte as QCAnalyteInput;
+  if (!Number.isFinite(mean) || !Number.isFinite(sd) || sd <= 0) {
     return false;
   }
-  return analyte.runs.every(run => Number.isFinite(run.result));
+  if (!Array.isArray(runs) || runs.length === 0) {
+    return false;
+  }
+  // Spread to turn array holes into explicit `undefined` entries: every()/map()/filter()
+  // silently skip holes (per spec), which would otherwise let a sparse runs list pass validation.
+  return [...runs].every(isValidRun);
 }
 
 export function evaluateAnalyteQC(analyte: QCAnalyteInput): QCAnalyteEvaluation {
   if (!isValidAnalyteInput(analyte)) {
+    const unsafeAnalyte: unknown = analyte;
+    const name = isRecord(unsafeAnalyte) && typeof unsafeAnalyte.name === 'string' ? unsafeAnalyte.name : '';
+    const runs = isRecord(unsafeAnalyte) ? unsafeAnalyte.runs : undefined;
     return {
-      name: analyte.name,
+      name,
       status: 'invalid',
-      totalRuns: Array.isArray(analyte.runs) ? analyte.runs.length : 0,
+      totalRuns: Array.isArray(runs) ? runs.length : 0,
       outOfRangeCount: 0,
       runs: [],
     };
@@ -73,7 +90,21 @@ export function evaluateAnalyteQC(analyte: QCAnalyteInput): QCAnalyteEvaluation 
 }
 
 export function evaluateQCSummary(analytes: QCAnalyteInput[]): QCEvaluationSummary {
-  const evaluations = analytes.map(evaluateAnalyteQC);
+  if (!Array.isArray(analytes)) {
+    return {
+      status: 'invalid',
+      analyteCount: 0,
+      totalRuns: 0,
+      outOfRangeCount: 0,
+      outOfRangeAnalytes: [],
+      invalidAnalytes: [],
+    };
+  }
+
+  // Spread to turn array holes into explicit `undefined` entries: map() silently skips
+  // holes (per spec), which would otherwise let a sparse analytes list evade validation.
+  const denseAnalytes = [...analytes];
+  const evaluations = denseAnalytes.map(evaluateAnalyteQC);
 
   const invalidAnalytes = evaluations.filter(e => e.status === 'invalid').map(e => e.name);
   const outOfRangeAnalytes = evaluations.filter(e => e.status === 'out-of-range').map(e => e.name);
@@ -81,11 +112,15 @@ export function evaluateQCSummary(analytes: QCAnalyteInput[]): QCEvaluationSumma
   const outOfRangeCount = evaluations.reduce((n, e) => n + e.outOfRangeCount, 0);
 
   const status: QCAnalyteStatusValue =
-    analytes.length === 0 || invalidAnalytes.length > 0 ? 'invalid' : outOfRangeAnalytes.length > 0 ? 'out-of-range' : 'in-range';
+    denseAnalytes.length === 0 || invalidAnalytes.length > 0
+      ? 'invalid'
+      : outOfRangeAnalytes.length > 0
+        ? 'out-of-range'
+        : 'in-range';
 
   return {
     status,
-    analyteCount: analytes.length,
+    analyteCount: denseAnalytes.length,
     totalRuns,
     outOfRangeCount,
     outOfRangeAnalytes,

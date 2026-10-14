@@ -82,8 +82,9 @@ export function resolveEvidence(
   registry: EvidenceRegistry,
 ): EvidenceRecord | null {
   if (!isSanitizedId(evidenceRef)) return null;
-  const found = registry.find((record) => record.id === evidenceRef);
-  if (!found) return null;
+  const matches = registry.filter((record) => record.id === evidenceRef);
+  if (matches.length !== 1) return null;
+  const [found] = matches;
   if (!isSanitizedId(found.id)) return null;
   if (found.status !== 'approved') return null;
   if (!SHA256_HEX_PATTERN.test(found.contentHash)) return null;
@@ -104,9 +105,17 @@ export interface AdmissionResult {
  * spec 7.3. EMPLOYER_RESTRICTED_EXCLUDED can never reach `approved`.
  */
 export function admitSource(
-  input: (Partial<SourceRecord> & { id: string }) | Record<string, unknown>,
+  input: (Partial<SourceRecord> & { id: string }) | Record<string, unknown> | null | undefined,
   registry: EvidenceRegistry,
 ): AdmissionResult {
+  if (typeof input !== 'object' || input === null) {
+    return {
+      ok: false,
+      record: { id: '', rightsClass: 'METADATA_ONLY', status: 'rejected' },
+      reason: 'invalid_source_id',
+    };
+  }
+
   const knownRights = KNOWN_RIGHTS_CLASSES.includes(input.rightsClass as RightsClass);
   const rightsClass: RightsClass = knownRights
     ? (input.rightsClass as RightsClass)
@@ -142,14 +151,14 @@ export function admitSource(
 
   const evidence = record.rightsEvidence;
   if (!evidence
-    || typeof evidence.reference !== 'string' || evidence.reference.length === 0
+    || typeof evidence.reference !== 'string' || evidence.reference.trim().length === 0
     || typeof evidence.reviewer !== 'string' || !REVIEWER_ID_PATTERN.test(evidence.reviewer)
     || !isIsoTimestamp(evidence.reviewedAt)) {
     return { ok: false, record: { ...record, status: 'rejected' }, reason: 'approved_without_rights_evidence' };
   }
 
   if (rightsClass === 'ORIGINAL_INTERNAL') {
-    if (!record.employerIpAttestation) {
+    if (record.employerIpAttestation !== true) {
       return { ok: false, record: { ...record, status: 'rejected' }, reason: 'original_internal_missing_attestation' };
     }
     if (!resolveEvidence(record.evidenceRef, registry)) {

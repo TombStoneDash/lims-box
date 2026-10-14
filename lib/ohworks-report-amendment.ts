@@ -207,6 +207,22 @@ function isIso8601Timestamp(value: unknown): value is string {
   return month >= 1 && month <= 12 && day >= 1 && day <= daysInMonth[month - 1];
 }
 
+/**
+ * The fractional-second digits beyond the millisecond place, as a value in
+ * [0, 1). Date.parse truncates to milliseconds, so two timestamps that share
+ * the same millisecond epoch are ordered by this remainder instead. Whole-
+ * minute UTC offsets only shift the whole-second portion, so this remainder
+ * is independent of the timestamp's offset.
+ */
+function subMillisecondRemainder(timestamp: string): number {
+  const match = /\.(\d+)(?:Z|[+-]\d{2}:\d{2})$/.exec(timestamp);
+  if (!match) {
+    return 0;
+  }
+  const remainder = match[1].slice(3);
+  return remainder.length === 0 ? 0 : Number(`0.${remainder}`);
+}
+
 function isStructurallyValidAmendment(raw: unknown): raw is ReportAmendment {
   if (!isPlainObject(raw)) {
     return false;
@@ -239,7 +255,7 @@ export function applyReportAmendments(reportReferenceToken: unknown, rawAmendmen
     fail('amendments-not-array');
   }
 
-  const amendments: ReportAmendment[] = rawAmendments.map((raw) => {
+  const amendments: ReportAmendment[] = Array.from(rawAmendments, (raw) => {
     if (!isStructurallyValidAmendment(raw)) {
       fail('amendment-malformed');
     }
@@ -248,7 +264,7 @@ export function applyReportAmendments(reportReferenceToken: unknown, rawAmendmen
 
   const usedVersionNumbers = new Set<number>([BASELINE_VERSION]);
   let currentEffectiveVersion = BASELINE_VERSION;
-  let previousAcceptedEpoch: number | undefined;
+  let previousAccepted: { epoch: number; subMs: number } | undefined;
   const supersedeChain: ReportVersionRecord[] = [];
 
   for (let index = 0; index < amendments.length; index += 1) {
@@ -278,13 +294,18 @@ export function applyReportAmendments(reportReferenceToken: unknown, rawAmendmen
     }
 
     const amendmentEpoch = Date.parse(amendment.timestamp);
-    if (previousAcceptedEpoch !== undefined && amendmentEpoch <= previousAcceptedEpoch) {
+    const amendmentSubMs = subMillisecondRemainder(amendment.timestamp);
+    if (
+      previousAccepted !== undefined &&
+      (amendmentEpoch < previousAccepted.epoch ||
+        (amendmentEpoch === previousAccepted.epoch && amendmentSubMs <= previousAccepted.subMs))
+    ) {
       return invalid('timestamp-out-of-order');
     }
 
     usedVersionNumbers.add(amendment.versionNumber);
     currentEffectiveVersion = amendment.versionNumber;
-    previousAcceptedEpoch = amendmentEpoch;
+    previousAccepted = { epoch: amendmentEpoch, subMs: amendmentSubMs };
     supersedeChain.push({
       versionNumber: amendment.versionNumber,
       supersedesVersion: amendment.supersedesVersion,

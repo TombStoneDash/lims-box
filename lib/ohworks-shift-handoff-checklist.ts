@@ -10,7 +10,7 @@
  *
  * Severity rules:
  *
- *   - A pending critical value without a valid notification timestamp is `blocking`:
+ *   - A pending critical value without a valid notification timestamp at or before now is `blocking`:
  *     a critical result must be acknowledged before handoff, never silently
  *     passed along.
  *   - An open worklist item with `stat` or `critical` priority that has
@@ -131,14 +131,19 @@ function buildWorklistItems(input: ShiftHandoffChecklistInput, now: number | nul
   });
 }
 
-function buildCriticalValueItems(input: ShiftHandoffChecklistInput): HandoffItem[] {
+function buildCriticalValueItems(input: ShiftHandoffChecklistInput, now: number | null): HandoffItem[] {
   return input.pendingCriticalValues.map((entry) => {
-    const acknowledged = timestampMillis(entry.notifiedAt) !== null;
+    const notifiedAt = timestampMillis(entry.notifiedAt);
+    const acknowledged = notifiedAt !== null && now !== null && notifiedAt <= now;
     return {
       category: 'critical_value',
       description: acknowledged
         ? `Critical value for ${entry.analyte} on specimen ${entry.specimenId} was notified at ${entry.notifiedAt}.`
-        : `Critical value for ${entry.analyte} on specimen ${entry.specimenId} has no valid notification timestamp; notification is unverified.`,
+        : notifiedAt === null
+          ? `Critical value for ${entry.analyte} on specimen ${entry.specimenId} has no valid notification timestamp; notification is unverified.`
+          : now === null
+            ? `Critical value for ${entry.analyte} on specimen ${entry.specimenId} cannot be verified because the checklist time is invalid.`
+            : `Critical value for ${entry.analyte} on specimen ${entry.specimenId} has a notification time after the checklist time; notification is unverified.`,
       severity: acknowledged ? 'info' : 'blocking',
     } satisfies HandoffItem;
   });
@@ -193,7 +198,7 @@ export function buildShiftHandoffChecklist(input: ShiftHandoffChecklistInput): S
       severity: 'blocking' as const,
     }] : []),
     ...buildWorklistItems(input, now),
-    ...buildCriticalValueItems(input),
+    ...buildCriticalValueItems(input, now),
     ...buildQCItem(input),
     ...buildInstrumentItems(input),
   ].sort(compareItems);
