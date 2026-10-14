@@ -83,7 +83,7 @@ test('identifiers are synthetic and fixtures and view are deterministic and isol
 });
 
 test('one read-only analytical section follows readiness and immediately precedes supplier questions', () => {
-  const source = readFileSync('app/pilot/ohworks/instrument/page.tsx', 'utf8');
+  const source = readFileSync('app/demo/labs/[labType]/instrument/page.tsx', 'utf8');
   const title = 'Analytical run checks — carryover and dilution (fabricated run)';
   assert.equal(source.split(title).length - 1, 1);
   assert.match(source, /const analyticalRun = buildPilotAnalyticalRunView\(\)/);

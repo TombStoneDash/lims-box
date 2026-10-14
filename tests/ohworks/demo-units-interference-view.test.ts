@@ -168,7 +168,7 @@ test('builder is deterministic and isolated from fixture and row mutation, witho
 });
 
 test('panel is a read-only, dependency-free server component that renders the real view-model with no compliance claims', () => {
-  const source = readFileSync('app/pilot/ohworks/_components/units-interference-panel.tsx', 'utf8');
+  const source = readFileSync('app/demo/labs/[labType]/_components/units-interference-panel.tsx', 'utf8');
   assert.doesNotMatch(source, /use client/);
   assert.match(source, /fabricated/);
   assert.match(source, /import \{ buildPilotUnitsInterferenceView \} from '@\/lib\/ohworks-demo-units-interference-view';/);
@@ -178,7 +178,7 @@ test('panel is a read-only, dependency-free server component that renders the re
 });
 
 test('result-review page mounts the units-and-interference panel exactly once', () => {
-  const source = readFileSync('app/pilot/ohworks/result-review/page.tsx', 'utf8');
-  assert.match(source, /import \{ UnitsInterferencePanel \} from '@\/app\/pilot\/ohworks\/_components\/units-interference-panel';/);
+  const source = readFileSync('app/demo/labs/[labType]/result-review/page.tsx', 'utf8');
+  assert.match(source, /import \{ UnitsInterferencePanel \} from '..\/_components\/units-interference-panel';/);
   assert.equal(source.split('<UnitsInterferencePanel />').length - 1, 1);
 });

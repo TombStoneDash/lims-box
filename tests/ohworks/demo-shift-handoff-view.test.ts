@@ -78,16 +78,16 @@ test('threshold wiring: re-running the rule module on the exported fixtures at t
 
 test('result-review page imports and renders ShiftHandoffPanel', () => {
   const source = readFileSync(
-    new URL('../../app/pilot/ohworks/result-review/page.tsx', import.meta.url),
+    new URL('../../app/demo/labs/[labType]/result-review/page.tsx', import.meta.url),
     'utf8',
   );
-  assert.match(source, /from '@\/app\/pilot\/ohworks\/_components\/shift-handoff-panel'/);
+  assert.match(source, /from '..\/_components\/shift-handoff-panel'/);
   assert.match(source, /<ShiftHandoffPanel \/>/);
 });
 
 test('shift-handoff-panel is a server component with accessible severity labels', () => {
   const source = readFileSync(
-    new URL('../../app/pilot/ohworks/_components/shift-handoff-panel.tsx', import.meta.url),
+    new URL('../../app/demo/labs/[labType]/_components/shift-handoff-panel.tsx', import.meta.url),
     'utf8',
   );
   assert.match(source, /scope="col"/);

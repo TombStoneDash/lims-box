@@ -180,7 +180,7 @@ test('builder is deterministic, isolated from fixture mutation, and reads no amb
 });
 
 test('panel is a read-only server component that renders the builder with required disclosure language', () => {
-  const source = readFileSync('app/pilot/ohworks/_components/sendout-cancellation-comments-panel.tsx', 'utf8');
+  const source = readFileSync('app/demo/labs/[labType]/_components/sendout-cancellation-comments-panel.tsx', 'utf8');
   assert.doesNotMatch(source, /use client/);
   assert.match(source, /fabricated/);
   assert.match(source, /buildPilotSendoutCancellationCommentsView/);
@@ -190,7 +190,7 @@ test('panel is a read-only server component that renders the builder with requir
 });
 
 test('reports page imports and renders SendoutCancellationCommentsPanel exactly once', () => {
-  const source = readFileSync('app/pilot/ohworks/reports/page.tsx', 'utf8');
-  assert.equal((source.match(/import\s*\{\s*SendoutCancellationCommentsPanel\s*\}\s*from\s*['"]@\/app\/pilot\/ohworks\/_components\/sendout-cancellation-comments-panel['"]/g) ?? []).length, 1);
+  const source = readFileSync('app/demo/labs/[labType]/reports/page.tsx', 'utf8');
+  assert.equal((source.match(/import\s*\{\s*SendoutCancellationCommentsPanel\s*\}\s*from\s*['"]..\/_components\/sendout-cancellation-comments-panel['"]/g) ?? []).length, 1);
   assert.equal((source.match(/<SendoutCancellationCommentsPanel\s*\/>/g) ?? []).length, 1);
 });

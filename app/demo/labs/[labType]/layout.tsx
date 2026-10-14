@@ -3,29 +3,37 @@ import {
   ShieldCheck,
 } from 'lucide-react';
 import { Suspense } from 'react';
+import { labDemoPath } from '@/lib/demo-labs';
+import { resolveLabProfileOrNotFound } from '@/lib/demo-labs/resolve';
 import { PilotNavLink } from './_components/pilot-nav-link';
 import { RoleSwitch } from './_components/role-switch';
 
 export const metadata: Metadata = {
-  title: 'OHWorks supervised demo (synthetic data) — LIMS BOX',
+  title: 'Multi-lab supervised demo (synthetic data) — LIMS BOX',
   robots: { index: false, follow: false },
 };
 
 const nav = [
-  { href: '/pilot/ohworks', label: 'Overview', icon: 'gauge' },
-  { href: '/pilot/ohworks/samples', label: 'Sample workflow', icon: 'flask' },
-  { href: '/pilot/ohworks/accessions', label: 'Accession rejections', icon: 'shieldAlert' },
-  { href: '/pilot/ohworks/instrument', label: 'Instrument discovery', icon: 'activity' },
-  { href: '/pilot/ohworks/qc', label: 'QC review', icon: 'activity' },
-  { href: '/pilot/ohworks/result-review', label: 'Result review', icon: 'clipboard' },
-  { href: '/pilot/ohworks/critical-results', label: 'Critical results', icon: 'shieldAlert' },
-  { href: '/pilot/ohworks/reports', label: 'Report delivery', icon: 'clipboard' },
-  { href: '/pilot/ohworks/personnel', label: 'Personnel', icon: 'users' },
-  { href: '/pilot/ohworks/audit', label: 'Audit readiness', icon: 'clipboard' },
-  { href: '/pilot/ohworks/bot', label: 'Expert assistant', icon: 'bot' },
+  { path: '', label: 'Overview', icon: 'gauge' },
+  { path: '/samples', label: 'Sample workflow', icon: 'flask' },
+  { path: '/accessions', label: 'Accession rejections', icon: 'shieldAlert' },
+  { path: '/instrument', label: 'Instrument discovery', icon: 'activity' },
+  { path: '/qc', label: 'QC review', icon: 'activity' },
+  { path: '/result-review', label: 'Result review', icon: 'clipboard' },
+  { path: '/critical-results', label: 'Critical results', icon: 'shieldAlert' },
+  { path: '/reports', label: 'Report delivery', icon: 'clipboard' },
+  { path: '/personnel', label: 'Personnel', icon: 'users' },
+  { path: '/audit', label: 'Audit readiness', icon: 'clipboard' },
+  { path: '/bot', label: 'Expert assistant', icon: 'bot' },
 ] as const;
 
-export default function OHWorksPilotLayout({ children }: { children: React.ReactNode }) {
+interface LayoutProps {
+  children: React.ReactNode;
+  params: Promise<{ labType: string }>;
+}
+
+export default async function DemoLabLayout({ children, params }: LayoutProps) {
+  const profile = await resolveLabProfileOrNotFound(params);
   return (
     <div className="min-h-screen bg-[#f4f7f8] text-slate-900">
       <header className="border-b border-slate-700 bg-[#12232e] text-white">
@@ -36,7 +44,7 @@ export default function OHWorksPilotLayout({ children }: { children: React.React
             </div>
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.22em] text-teal-300">LIMS BOX</p>
-              <p className="text-xl font-semibold">OHWorks supervised demo</p>
+              <p className="text-xl font-semibold">{profile.displayName} supervised demo</p>
               <p className="mt-1 text-sm text-slate-300">Synthetic demonstration data only. Discovery simulator and local workflow proof only.</p>
             </div>
           </div>
@@ -57,8 +65,8 @@ export default function OHWorksPilotLayout({ children }: { children: React.React
       <nav className="border-b border-slate-200 bg-white shadow-sm">
         <div className="mx-auto flex max-w-[1500px] gap-1 overflow-x-auto px-4">
           <Suspense fallback={<span className="px-4 py-3 text-sm text-slate-500">Loading synthetic demo navigation...</span>}>
-            {nav.map(({ href, label, icon }) => (
-              <PilotNavLink key={href} href={href} label={label} icon={icon} />
+            {nav.map(({ path, label, icon }) => (
+              <PilotNavLink key={path} href={labDemoPath(profile.slug, path)} label={label} icon={icon} />
             ))}
           </Suspense>
         </div>

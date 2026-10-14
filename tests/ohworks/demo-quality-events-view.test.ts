@@ -89,7 +89,7 @@ test('builder is deterministic and contains no environment, clock, or network re
 });
 
 test('quality-events panel stays server-rendered and immediately precedes the audit-integrity panel', () => {
-  const source = readFileSync(new URL('../../app/pilot/ohworks/audit/page.tsx', import.meta.url), 'utf8');
+  const source = readFileSync(new URL('../../app/demo/labs/[labType]/audit/page.tsx', import.meta.url), 'utf8');
   assert.doesNotMatch(source, /use client|<form\b|fetch\s*\(/);
   assert.match(source, /const qualityEvents = buildPilotQualityEventsView\(\)/);
   const panel = source.slice(

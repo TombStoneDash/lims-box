@@ -4,7 +4,7 @@ import { dirname, relative, resolve, sep } from 'node:path';
 import { test } from 'node:test';
 
 const root = resolve(import.meta.dirname, '../..');
-const pilotRoot = resolve(root, 'app/pilot/ohworks');
+const pilotRoot = resolve(root, 'app/demo/labs/[labType]');
 
 function findPages(directory: string): string[] {
   return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
@@ -17,11 +17,12 @@ function findPages(directory: string): string[] {
 // The layout supplies href literals to PilotNavLink, which preserves the role query.
 // Match link targets, rather than unrelated mentions of a route in source copy.
 const navSources = ['layout.tsx', '_components/pilot-nav-link.tsx'];
+// Nav entries carry a profile-relative `path`; the layout prefixes it with labDemoPath(slug).
 const navTargets = new Set(navSources.flatMap((file) => {
   const source = readFileSync(resolve(pilotRoot, file), 'utf8');
   return Array.from(
-    source.matchAll(/\bhref\s*(?::|=\s*\{?)\s*(['"`])([^'"`]+)\1/g),
-    (match) => match[2],
+    source.matchAll(/\b(?:href|path)\s*(?::|=\s*\{?)\s*(['"`])([^'"`]*)\1/g),
+    (match) => `/demo/labs/[labType]${match[2]}`,
   );
 }));
 
@@ -29,13 +30,13 @@ const pages = findPages(pilotRoot)
   .filter((file) => file !== resolve(pilotRoot, 'page.tsx'))
   .sort();
 
-test('OHWorks navigation coverage discovers child pages', () => {
-  assert.ok(pages.length > 0, 'expected child page.tsx files under app/pilot/ohworks');
+test('demo-lab navigation coverage discovers child pages', () => {
+  assert.ok(pages.length > 0, 'expected child page.tsx files under app/demo/labs/[labType]');
 });
 
 for (const page of pages) {
   const pagePath = relative(root, page).split(sep).join('/');
-  const route = `/pilot/ohworks/${relative(pilotRoot, dirname(page)).split(sep).join('/')}`;
+  const route = `/demo/labs/[labType]/${relative(pilotRoot, dirname(page)).split(sep).join('/')}`;
 
   test(`${pagePath} is linked from pilot navigation`, () => {
     assert.ok(

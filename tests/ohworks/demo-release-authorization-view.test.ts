@@ -75,7 +75,7 @@ test('builder is deterministic, uses fresh fixtures and has no ambient inputs', 
 });
 
 test('personnel panel is role-filtered, read-only and immediately before discovery', () => {
-  const source = readFileSync('app/pilot/ohworks/personnel/page.tsx', 'utf8');
+  const source = readFileSync('app/demo/labs/[labType]/personnel/page.tsx', 'utf8');
   const title = 'Release authorization and device lockout (fabricated)';
   assert.equal(source.split(title).length - 1, 1);
   assert.match(source, /visiblePersonnel\.length > 0 && \(\s*<section[^>]*>\s*<h2[^>]*>Release authorization and device lockout/);

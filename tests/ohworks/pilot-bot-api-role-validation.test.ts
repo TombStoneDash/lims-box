@@ -5,12 +5,15 @@ import test from 'node:test';
 import { runInNewContext } from 'node:vm';
 import ts from 'typescript';
 import * as nextServer from 'next/server';
+import { getLabProfile } from '../../lib/demo-labs';
 import { askOHWorksAssistant, getRoleViews, resolveRoleView } from '../../lib/ohworks-pilot';
 
-const sourcePath = path.join(process.cwd(), 'app/pilot/ohworks/bot/api/route.ts');
+const sourcePath = path.join(process.cwd(), 'app/demo/labs/[labType]/bot/api/route.ts');
 const source = readFileSync(sourcePath, 'utf8');
 
-type PostHandler = (request: Request) => Promise<Response>;
+type RouteContext = { params: Promise<{ labType: string }> };
+type RawPostHandler = (request: Request, context: RouteContext) => Promise<Response>;
+type PostHandler = (request: Request, labType?: string) => Promise<Response>;
 
 function loadRoute(): PostHandler {
   // Evaluate the real route with a stubbed 'server-only' module and the real
@@ -20,8 +23,9 @@ function loadRoute(): PostHandler {
     'server-only': {},
     'next/server': nextServer,
     '@/lib/ohworks-pilot': { askOHWorksAssistant, getRoleViews, resolveRoleView },
+    '@/lib/demo-labs': { getLabProfile },
   };
-  const exports: { POST?: PostHandler } = {};
+  const exports: { POST?: RawPostHandler } = {};
   const { outputText } = ts.transpileModule(source, {
     compilerOptions: { module: ts.ModuleKind.CommonJS },
   });
@@ -32,13 +36,14 @@ function loadRoute(): PostHandler {
       return modules[name];
     },
   });
-  return exports.POST!;
+  const raw = exports.POST!;
+  return (request, labType = 'clinical') => raw(request, { params: Promise.resolve({ labType }) });
 }
 
 const POST = loadRoute();
 
 const SAFE_ERROR_ANSWER = 'The request could not be evaluated. Synthetic demonstration data only.';
-const url = 'http://localhost/pilot/ohworks/bot/api';
+const url = 'http://localhost/demo/labs/clinical/bot/api';
 
 function postJson(body: unknown): Request {
   return new Request(url, {
@@ -99,4 +104,15 @@ test('every supported role returns the same grounded body as askOHWorksAssistant
     assert.equal(response.status, 200, role.id);
     assert.deepEqual(payload, jsonRoundTrip(askOHWorksAssistant(question, role.id, 'expert')), role.id);
   }
+});
+
+test('an unknown lab slug fails closed with 404 SAFE_ERROR before reading the body', async () => {
+  const response = await POST(
+    postJson({ question: 'What is the status of OW-SYN-S2-10062?', mode: 'expert', roleId: 'reviewer' }),
+    'nope',
+  );
+  assert.equal(response.status, 404);
+  const payload = (await response.json()) as { answer: string; grounded: boolean };
+  assert.equal(payload.answer, SAFE_ERROR_ANSWER);
+  assert.equal(payload.grounded, false);
 });

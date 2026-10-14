@@ -4,14 +4,17 @@ import test from 'node:test';
 import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 
-import SamplesPage from '../../app/pilot/ohworks/samples/page';
+import SamplesPage from '../../app/demo/labs/[labType]/samples/page';
 import { explainAccessionBlock } from '../../lib/ohworks-accession-workflow';
 
 // The page is compiled with the classic JSX runtime under tsx, so expose React globally.
 (globalThis as { React?: typeof React }).React = React;
 
 async function render(role: string): Promise<string> {
-  const element = await SamplesPage({ searchParams: Promise.resolve({ role }) });
+  const element = await SamplesPage({
+    params: Promise.resolve({ labType: 'clinical' }),
+    searchParams: Promise.resolve({ role }),
+  });
   return renderToStaticMarkup(element);
 }
 
@@ -22,7 +25,7 @@ function queueRow(markup: string, sampleId: string): string {
 }
 
 test('samples page imports the shared accession workflow primitive', () => {
-  const source = readFileSync(new URL('../../app/pilot/ohworks/samples/page.tsx', import.meta.url), 'utf8');
+  const source = readFileSync(new URL('../../app/demo/labs/[labType]/samples/page.tsx', import.meta.url), 'utf8');
   assert.match(source, /from '@\/lib\/ohworks-accession-workflow'/);
   assert.match(source, /runAccessionWorkflow\(/);
   assert.match(source, /applyAccessionEvent\(/);

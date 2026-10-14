@@ -101,7 +101,7 @@ test('headline counts, identifiers and all output remain synthetic, contact-free
 test('builder has no ambient dependencies and page only renders its results', () => {
   const source = readFileSync('lib/ohworks-demo-report-delivery-view.ts', 'utf8');
   assert.doesNotMatch(source, /Date\.now\s*\(|new Date\s*\(\s*\)|process\.env|fetch\s*\(/);
-  const page = readFileSync('app/pilot/ohworks/reports/page.tsx', 'utf8');
+  const page = readFileSync('app/demo/labs/[labType]/reports/page.tsx', 'utf8');
   assert.match(page, /buildPilotReportDeliveryView\(\)/);
   assert.match(page, /NOTHING is sent/);
   assert.doesNotMatch(page, /use client|<form\b|fetch\s*\(|formatReportedResult\(|computeReportDistribution\(|applyReportAmendments\(/);

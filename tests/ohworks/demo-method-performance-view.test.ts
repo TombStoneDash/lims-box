@@ -158,7 +158,7 @@ test('builder is deterministic and isolated from fixture and row mutation, witho
 });
 
 test('the panel is a read-only server component that imports the builder, mentions fabricated, and avoids forbidden compliance claims', () => {
-  const source = readFileSync('app/pilot/ohworks/_components/method-performance-panel.tsx', 'utf8');
+  const source = readFileSync('app/demo/labs/[labType]/_components/method-performance-panel.tsx', 'utf8');
   assert.doesNotMatch(source, /use client/);
   assert.match(source, /fabricated/);
   assert.match(source, /buildPilotMethodPerformanceView/);
@@ -168,7 +168,7 @@ test('the panel is a read-only server component that imports the builder, mentio
 });
 
 test('the QC page imports and renders MethodPerformancePanel exactly once', () => {
-  const source = readFileSync('app/pilot/ohworks/qc/page.tsx', 'utf8');
-  assert.equal((source.match(/import\s*\{\s*MethodPerformancePanel\s*\}\s*from\s*'@\/app\/pilot\/ohworks\/_components\/method-performance-panel';/g) ?? []).length, 1);
+  const source = readFileSync('app/demo/labs/[labType]/qc/page.tsx', 'utf8');
+  assert.equal((source.match(/import\s*\{\s*MethodPerformancePanel\s*\}\s*from\s*'..\/_components\/method-performance-panel';/g) ?? []).length, 1);
   assert.equal((source.match(/<MethodPerformancePanel\s*\/>/g) ?? []).length, 1);
 });
