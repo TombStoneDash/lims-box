@@ -115,7 +115,7 @@ test('builder is deterministic and isolated from fixture and row mutation, witho
 });
 
 test('page adds exactly one final read-only section with three tables after Westgard runs', () => {
-  const source = readFileSync('app/pilot/ohworks/qc/page.tsx', 'utf8');
+  const source = readFileSync('app/demo/labs/[labType]/qc/page.tsx', 'utf8');
   const title = 'QC bracketing, reagent lots and lot-to-lot comparison (fabricated)';
   assert.equal(source.split(title).length - 1, 1);
   assert.ok(source.indexOf(title) > source.indexOf('run.firedRules.map'));

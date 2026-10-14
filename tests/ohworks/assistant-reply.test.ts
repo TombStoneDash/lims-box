@@ -126,10 +126,10 @@ test('lib/ohworks-assistant-reply.ts does not reference ohworks-pilot', () => {
 });
 
 test('assistant-console.tsx imports and uses the new helper and keeps required source markers', () => {
-  const source = readFileSync(resolve(root, 'app/pilot/ohworks/bot/assistant-console.tsx'), 'utf8');
+  const source = readFileSync(resolve(root, 'app/demo/labs/[labType]/bot/assistant-console.tsx'), 'utf8');
   assert.match(source, /@\/lib\/ohworks-assistant-reply/);
   assert.match(source, /parseAssistantReply\(/);
-  assert.match(source, /fetch\('\/pilot\/ohworks\/bot\/api'/);
+  assert.match(source, /fetch\(apiPath, \{/);
   assert.match(source, /htmlFor="ohworks-assistant-question"/);
   assert.match(source, /id="ohworks-assistant-question"/);
   const ariaPressedCount = (source.match(/aria-pressed/g) ?? []).length;

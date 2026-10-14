@@ -4,8 +4,22 @@ import path from "node:path";
 import test from "node:test";
 import { isProtectedDemoPath } from "../../lib/demo-access";
 
-// Exact paths only: additions to the pilot must receive an explicit decision.
+// Exact paths only: additions to the demo-lab tree must receive an explicit decision.
+// /pilot/ohworks/* are 308 redirects into /demo/labs/clinical/* (pilot closed 2026-09-23).
 export const KNOWN_UNPROTECTED_PENDING_OWNER_DECISION: readonly string[] = [
+  "/demo/labs/x",
+  "/demo/labs/x/accessions",
+  "/demo/labs/x/audit",
+  "/demo/labs/x/audit/export",
+  "/demo/labs/x/bot",
+  "/demo/labs/x/bot/api",
+  "/demo/labs/x/critical-results",
+  "/demo/labs/x/instrument",
+  "/demo/labs/x/personnel",
+  "/demo/labs/x/qc",
+  "/demo/labs/x/reports",
+  "/demo/labs/x/result-review",
+  "/demo/labs/x/samples",
   "/pilot/ohworks",
   "/pilot/ohworks/accessions",
   "/pilot/ohworks/audit",
@@ -106,7 +120,8 @@ function discoverRoutes(directory: string, segments: string[] = []): Route[] {
 const routes = discoverRoutes(path.join(process.cwd(), "app"));
 const discoveredPaths = [...new Set(routes.map((route) => route.path))].sort();
 const isPilotPath = (pathname: string) =>
-  pathname === "/pilot/ohworks" || pathname.startsWith("/pilot/ohworks/");
+  pathname === "/pilot/ohworks" || pathname.startsWith("/pilot/ohworks/")
+  || pathname === "/demo/labs/x" || pathname.startsWith("/demo/labs/x/");
 
 test("every discovered route has exactly one conscious exposure classification", () => {
   assert.ok(routes.length > 0, "Expected routable files in app/");
@@ -129,12 +144,12 @@ test("exposure inventory has no stale explicit entries", () => {
   }
 });
 
-test("known unprotected entries equal exactly the still-unprotected OHWorks routes", () => {
+test("known unprotected entries equal exactly the still-unprotected demo-lab routes", () => {
   // Filtering protection is intentional: once the owner gates the pilot, the
   // expected list becomes empty and the explicit exceptions must be removed.
   const expected = discoveredPaths.filter((pathname) => isPilotPath(pathname) && !isProtectedDemoPath(pathname));
   assert.deepEqual([...KNOWN_UNPROTECTED_PENDING_OWNER_DECISION].sort(), expected,
-    "Reconcile the explicit OHWorks exceptions; empty them when the pilot is protected.");
+    "Reconcile the explicit demo-lab exceptions; empty them when the tree is protected.");
 });
 
 test("middleware matcher text names every discovered protected prefix", () => {

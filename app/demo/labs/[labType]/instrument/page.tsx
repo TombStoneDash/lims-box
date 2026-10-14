@@ -1,0 +1,269 @@
+import { resolveLabProfileOrNotFound } from '@/lib/demo-labs/resolve';
+import { buildPilotAnalyticalRunView } from '@/lib/ohworks-demo-analytical-run-view';
+import { buildPilotInstrumentReadinessView } from '@/lib/ohworks-demo-instrument-readiness-view';
+import { AlertOctagon, Cable, CheckCircle2, GitBranch, ShieldAlert } from 'lucide-react';
+import {
+  discoveryGates,
+  faultCategories,
+  instrumentMappings,
+  interfaceControls,
+  pilotMeta,
+  resolveRoleView,
+} from '@/lib/ohworks-pilot';
+
+interface PageProps {
+  params: Promise<{ labType: string }>;
+  searchParams?: Promise<{ role?: string }>;
+}
+
+export default async function OHWorksInstrumentWorkbench({ params: routeParams, searchParams }: PageProps) {
+  const profile = await resolveLabProfileOrNotFound(routeParams);
+  const params = searchParams ? await searchParams : undefined;
+  const role = resolveRoleView(params?.role);
+  const readiness = buildPilotInstrumentReadinessView();
+  const analyticalRun = buildPilotAnalyticalRunView();
+
+  return (
+    <div className="space-y-7">
+      <div>
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-teal-700">Synthetic demonstration data only</p>
+        <h1 className="mt-2 text-3xl font-semibold tracking-tight">LIAISON XL and Orchidlive discovery simulator</h1>
+        <p className="mt-3 max-w-4xl text-sm leading-6 text-slate-600">
+          {pilotMeta.instrumentCandidate}. The workbench shows safe adapter boundaries and unresolved supplier
+          questions only. It does not claim a validated customer interface, supported topology, or live transport.
+        </p>
+      </div>
+
+      <section className="grid gap-4 lg:grid-cols-4">
+        {[
+          ['01', 'Receive', 'Accept only synthetic simulated payloads and capture a stable messageSourceId before any interpretation.'],
+          ['02', 'Parse', 'Record parser version, mapping version, and disposition for every ingest attempt.'],
+          ['03', 'Decide', 'Structured results can proceed only from approved mappings; all other inputs quarantine.'],
+          ['04', 'Review', 'Human review and release remain separate from ingestion and from this discovery simulator.'],
+        ].map(([step, title, detail]) => (
+          <div key={step} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+            <span className="text-xs font-bold text-teal-700">{step}</span>
+            <h2 className="mt-3 font-semibold">{title}</h2>
+            <p className="mt-2 text-xs leading-5 text-slate-600">{detail}</p>
+          </div>
+        ))}
+      </section>
+
+      <section className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
+        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          <div className="flex items-center gap-2">
+            <Cable className="h-5 w-5 text-teal-700" />
+            <h2 className="text-lg font-semibold">Adapter controls</h2>
+          </div>
+          <div className="mt-5 divide-y divide-slate-100">
+            {interfaceControls.map(([label, text]) => (
+              <div key={label} className="grid gap-2 py-4 sm:grid-cols-[140px_1fr]">
+                <p className="text-sm font-semibold text-slate-900">{label}</p>
+                <p className="text-sm leading-6 text-slate-600">{text}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="rounded-2xl border border-amber-200 bg-amber-50 p-6 shadow-sm">
+          <div className="flex items-center gap-2 text-amber-900">
+            <ShieldAlert className="h-5 w-5" />
+            <h2 className="text-lg font-semibold">Discovery lock</h2>
+          </div>
+          <p className="mt-4 text-sm leading-6 text-amber-950">
+            Current role view: {role.label}. Every role sees the same discovery warning because no role in this
+            demo has authority to convert the hypothesis into a supported integration claim.
+          </p>
+          <div className="mt-5 rounded-xl bg-white/70 p-4 ring-1 ring-amber-200">
+            <p className="text-xs font-semibold uppercase tracking-wide text-amber-800">Unverified hypothesis only</p>
+            <p className="mt-2 text-sm font-semibold">LIAISON XL -&gt; Orchidlive -&gt; LIMS BOX</p>
+            <p className="mt-2 text-xs leading-5 text-slate-600">
+              The simulator shows the chain as a discovery question, not a confirmed laboratory fact. Supplier documents
+              and synthetic message samples remain required before any adapter code would be warranted.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <div className="border-b border-slate-200 px-6 py-4">
+          <div className="flex items-center gap-2">
+            <GitBranch className="h-5 w-5 text-teal-700" />
+            <h2 className="font-semibold">Versioned synthetic mapping set</h2>
+          </div>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[760px] text-left text-sm">
+            <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+              <tr>
+                <th className="px-6 py-3">Instrument code</th>
+                <th className="px-4 py-3">Canonical test</th>
+                <th className="px-4 py-3">Components</th>
+                <th className="px-4 py-3">State</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {instrumentMappings.map((mapping) => (
+                <tr key={mapping.instrumentCode}>
+                  <td className="px-6 py-4 font-mono text-xs font-semibold">{mapping.instrumentCode}</td>
+                  <td className="px-4 py-4">{mapping.canonicalTest}</td>
+                  <td className="px-4 py-4 text-slate-600">{mapping.components}</td>
+                  <td className="px-4 py-4">
+                    <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-700">
+                      {mapping.status}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+        {faultCategories.map((fault) => (
+          <div key={fault.name} className="rounded-2xl border border-rose-100 bg-white p-4 shadow-sm">
+            <AlertOctagon className="h-5 w-5 text-rose-500" />
+            <h3 className="mt-3 text-sm font-semibold">{fault.name}</h3>
+            <p className="mt-2 text-xs leading-5 text-slate-600">{fault.action}</p>
+          </div>
+        ))}
+      </section>
+
+      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <h2 className="text-lg font-semibold text-teal-700">Run-readiness checks (fabricated instrument)</h2>
+        <p className="mt-2 text-sm leading-6 text-slate-600">
+          These checks run on a fabricated analyzer and fabricated flag vocabulary; they demonstrate fail-closed
+          behaviour and do not describe any vendor interface. Every value and outcome below is synthetic.
+          This demonstration does not use a real SENAITE server or real customer data.
+        </p>
+        <p className="mt-2 break-words text-xs text-slate-600">
+          Fabricated analyzer: {readiness.instrumentModel}. Synthetic evaluation instant: {readiness.asOf}.
+        </p>
+        <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4 text-amber-950">
+          <p className="font-semibold">{readiness.statusText}</p>
+          <p className="mt-1 text-xs">Synthetic findings count each blocking row once. Review and suppress actions require attention;
+            event-required verification blocks the fabricated run. Due-soon is advisory.</p>
+        </div>
+        {[
+          { title: 'Flag mapping', rows: readiness.flagRows },
+          { title: 'Calibration verification', rows: readiness.calibrationRows },
+          { title: 'Calibrator lot traceability', rows: readiness.traceabilityRows },
+        ].map(({ title, rows }) => (
+          <div key={title} className="mt-5 overflow-x-auto">
+            <table className="w-full min-w-[640px] text-left text-xs">
+              <caption className="pb-2 text-left text-sm font-semibold text-teal-700">{title} — fabricated inputs and synthetic outcomes</caption>
+              <thead className="bg-slate-50 text-slate-600">
+                <tr>
+                  <th scope="col" className="px-3 py-2">Synthetic identifier / details</th>
+                  <th scope="col" className="px-3 py-2">Synthetic decision</th>
+                  <th scope="col" className="px-3 py-2">Reason code / explanation</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {rows.map((row) => (
+                  <tr key={row.id}>
+                    <th scope="row" className="px-3 py-3 font-normal">
+                      <span className="font-mono font-semibold">{row.id}</span>
+                      <p className="mt-1 text-slate-600">{row.detail}</p>
+                    </th>
+                    <td className="px-3 py-3 align-top font-semibold">
+                      {row.decision}
+                      <p className="mt-1 font-normal">{row.blocking ? 'Blocking synthetic finding' : 'No blocking synthetic finding'}</p>
+                    </td>
+                    <td className="px-3 py-3 align-top text-slate-600">
+                      <span className="font-mono">{row.reasonCode}</span>
+                      <p className="mt-1">{row.explanation}</p>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ))}
+      </section>
+
+      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <h2 className="text-lg font-semibold text-teal-700">Analytical run checks — carryover and dilution (fabricated run)</h2>
+        <p className="mt-2 text-sm leading-6 text-slate-600">
+          A fabricated analyser run evaluated by the real rule modules. Thresholds, factors and ranges are
+          fabricated examples, not LIAISON XL specifications, and no instrument is connected.
+          Every value and outcome below is synthetic; no real SENAITE server or customer data is used.
+        </p>
+        <div className="mt-4 flex flex-wrap gap-3 text-sm font-semibold text-teal-800">
+          <p className="rounded-xl bg-teal-50 p-3">Synthetic results that must repeat: {analyticalRun.counts.mustRepeat}</p>
+          <p className="rounded-xl bg-teal-50 p-3">Synthetic reruns required: {analyticalRun.counts.rerunsRequired}</p>
+          <p className="rounded-xl bg-teal-50 p-3">Synthetic blocked readings: {analyticalRun.counts.blocked}</p>
+        </div>
+        <div className="mt-5 overflow-x-auto">
+          <table className="w-full min-w-[900px] text-left text-xs">
+            <caption className="pb-2 text-left text-sm font-semibold text-teal-700">Carryover — fabricated values and synthetic outcomes</caption>
+            <thead className="bg-slate-50 text-slate-600">
+              <tr>
+                {['Synthetic position / result', 'Fabricated value', 'Synthetic status', 'Synthetic contribution', 'Synthetic source position', 'Reason / explanation'].map((title) => (
+                  <th key={title} scope="col" className="px-3 py-2">{title}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {analyticalRun.carryoverRows.map((row) => (
+                <tr key={row.resultId}>
+                  <th scope="row" className="px-3 py-3 font-mono font-normal">{row.positionId}<p>{row.resultId}</p></th>
+                  <td className="px-3 py-3">{row.value}<p className="mt-1 text-slate-600">Fabricated wash before: {row.washBefore ? 'yes' : 'no'}</p></td>
+                  <td className="px-3 py-3">
+                    <span className={`whitespace-nowrap rounded-full px-2.5 py-1 font-semibold ${row.status === 'clear' ? 'bg-teal-50 text-teal-800' : row.status === 'must_repeat' ? 'bg-rose-50 text-rose-800' : 'bg-amber-50 text-amber-800'}`}>{row.status}</span>
+                  </td>
+                  <td className="px-3 py-3">{row.contributionText}</td>
+                  <td className="px-3 py-3 font-mono">{row.sourcePositionText}</td>
+                  <td className="px-3 py-3 text-slate-600"><span className="font-mono">{row.reasonCode}</span><p className="mt-1">{row.explanation}</p></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <div className="mt-5 overflow-x-auto">
+          <table className="w-full min-w-[900px] text-left text-xs">
+            <caption className="pb-2 text-left text-sm font-semibold text-teal-700">Dilution / rerun — fabricated readings, factors and synthetic outcomes</caption>
+            <thead className="bg-slate-50 text-slate-600">
+              <tr>
+                {['Fabricated reading', 'Fabricated raw reading (synthetic-units)', 'Fabricated applied factor', 'Synthetic decision', 'Synthetic next factor / limit / corrected result', 'Reason / explanation'].map((title) => (
+                  <th key={title} scope="col" className="px-3 py-2">{title}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {analyticalRun.dilutionRows.map((row) => (
+                <tr key={row.id}>
+                  <th scope="row" className="px-3 py-3 font-normal"><span className="font-mono">{row.id}</span><p className="mt-1">{row.label}</p></th>
+                  <td className="px-3 py-3">{row.rawReading}</td>
+                  <td className="px-3 py-3">{row.appliedDilutionFactor}</td>
+                  <td className="px-3 py-3">
+                    <span className={`whitespace-nowrap rounded-full px-2.5 py-1 font-semibold ${row.decision === 'block' ? 'bg-rose-50 text-rose-800' : row.decision === 'report_as_is' ? 'bg-teal-50 text-teal-800' : 'bg-amber-50 text-amber-800'}`}>{row.decision}</span>
+                  </td>
+                  <td className="px-3 py-3">{row.outcomeText}</td>
+                  <td className="px-3 py-3 text-slate-600"><span className="font-mono">{row.reasonCode}</span><p className="mt-1">{row.reason}</p></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section className="rounded-2xl border border-emerald-200 bg-emerald-50 p-6">
+        <div className="flex items-center gap-2 text-emerald-900">
+          <CheckCircle2 className="h-5 w-5" />
+          <h2 className="font-semibold">Supplier questions still open</h2>
+        </div>
+        <div className="mt-4 grid gap-3 md:grid-cols-2">
+          {discoveryGates.map((gate) => (
+            <div key={gate.id} className="rounded-xl bg-white/75 p-4 ring-1 ring-emerald-100">
+              <p className="text-sm font-semibold text-slate-900">{gate.area}</p>
+              <p className="mt-1 text-xs leading-5 text-slate-600">{gate.question}</p>
+              <p className="mt-2 text-[11px] font-semibold uppercase tracking-wide text-emerald-800">{gate.owner}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+    </div>
+  );
+}

@@ -24,8 +24,8 @@ test('roleChangeAnnouncement announces the resolved role or pending state', () =
   assert.equal(roleChangeAnnouncement(undefined, false), '');
 });
 
-const navLink = readFileSync(resolve(root, 'app/pilot/ohworks/_components/pilot-nav-link.tsx'), 'utf8');
-const roleSwitch = readFileSync(resolve(root, 'app/pilot/ohworks/_components/role-switch.tsx'), 'utf8');
+const navLink = readFileSync(resolve(root, 'app/demo/labs/[labType]/_components/pilot-nav-link.tsx'), 'utf8');
+const roleSwitch = readFileSync(resolve(root, 'app/demo/labs/[labType]/_components/role-switch.tsx'), 'utf8');
 const navState = readFileSync(resolve(root, 'lib/ohworks-pilot-nav-state.ts'), 'utf8');
 
 test('pilot-nav-link.tsx exposes the active page and keeps the icon map parseable', () => {

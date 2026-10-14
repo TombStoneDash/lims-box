@@ -187,7 +187,7 @@ test('builder is deterministic (two calls deepEqual) and the view-model source h
 });
 
 test('the panel source is a read-only server component that names its own fabrication', () => {
-  const source = readFileSync('app/pilot/ohworks/_components/facility-readiness-panel.tsx', 'utf8');
+  const source = readFileSync('app/demo/labs/[labType]/_components/facility-readiness-panel.tsx', 'utf8');
   assert.doesNotMatch(source, /use client/);
   assert.match(source, /fabricated/);
   assert.match(source, /buildPilotFacilityReadinessView/);
@@ -198,8 +198,8 @@ test('the panel source is a read-only server component that names its own fabric
 });
 
 test('the pilot overview page imports and renders FacilityReadinessPanel exactly once', () => {
-  const source = readFileSync('app/pilot/ohworks/page.tsx', 'utf8');
+  const source = readFileSync('app/demo/labs/[labType]/page.tsx', 'utf8');
   assert.equal((source.match(/FacilityReadinessPanel/g) ?? []).length, 2);
-  assert.match(source, /import \{ FacilityReadinessPanel \} from '@\/app\/pilot\/ohworks\/_components\/facility-readiness-panel';/);
+  assert.match(source, /import \{ FacilityReadinessPanel \} from '\.\/_components\/facility-readiness-panel';/);
   assert.match(source, /<FacilityReadinessPanel \/>/);
 });

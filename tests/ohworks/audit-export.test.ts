@@ -3,7 +3,10 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { test } from 'node:test';
 
-import { GET } from '../../app/pilot/ohworks/audit/export/route';
+import { GET as demoLabGET } from '../../app/demo/labs/[labType]/audit/export/route';
+
+const GET = (request: Request, labType = 'clinical') =>
+  demoLabGET(request, { params: Promise.resolve({ labType }) });
 import {
   buildOHWorksAuditCsv,
   OHWORKS_AUDIT_CSV_COLUMNS,
@@ -15,11 +18,11 @@ import {
   type AuditFixture,
 } from '../../lib/ohworks-pilot';
 
-const exportUrl = (query = '') => `http://localhost/pilot/ohworks/audit/export${query}`;
+const exportUrl = (query = '') => `http://localhost/demo/labs/clinical/audit/export${query}`;
 
 test('every supported role exports exactly its existing visible audit records', async () => {
   for (const role of getRoleViews()) {
-    const response = GET(new Request(exportUrl(`?role=${role.id}`)));
+    const response = await GET(new Request(exportUrl(`?role=${role.id}`)));
     const body = await response.text();
 
     assert.equal(response.status, 200, role.id);
@@ -34,7 +37,7 @@ test('every supported role exports exactly its existing visible audit records', 
 
 test('outcome-only roles cannot export hidden admin audit records', async () => {
   for (const roleId of ['worker', 'employer'] as const) {
-    const body = await GET(new Request(exportUrl(`?role=${roleId}`))).text();
+    const body = await (await GET(new Request(exportUrl(`?role=${roleId}`)))).text();
     assert.match(body, /ohworks-audit-001/u, roleId);
     assert.doesNotMatch(body, /ohworks-audit-002|ohworks-audit-003/u, roleId);
     assert.doesNotMatch(body, /ohworks-actor-technical-reviewer-001/u, roleId);
@@ -50,7 +53,7 @@ test('an empty role-filtered result remains a valid header-only CSV', () => {
 
 test('missing, empty, invalid, case-shifted, and duplicate roles fail closed', async () => {
   for (const query of ['', '?role=', '?role=unknown', '?role=ADMIN', '?role=worker&role=admin']) {
-    const response = GET(new Request(exportUrl(query)));
+    const response = await GET(new Request(exportUrl(query)));
     const body = await response.text();
 
     assert.equal(response.status, 400, query || 'missing');
@@ -60,8 +63,8 @@ test('missing, empty, invalid, case-shifted, and duplicate roles fail closed', a
   }
 });
 
-test('successful export uses safe deterministic attachment headers', () => {
-  const response = GET(new Request(exportUrl('?role=reviewer')));
+test('successful export uses safe deterministic attachment headers', async () => {
+  const response = await GET(new Request(exportUrl('?role=reviewer')));
 
   assert.equal(response.headers.get('content-type'), 'text/csv; charset=utf-8');
   assert.equal(
@@ -114,11 +117,11 @@ test('CSV escaping covers commas, quotes, newlines, and formula prefixes', () =>
 
 test('audit page links the download to the resolved role and preserves warnings', () => {
   const page = readFileSync(
-    resolve(import.meta.dirname, '../../app/pilot/ohworks/audit/page.tsx'),
+    resolve(import.meta.dirname, '../../app/demo/labs/[labType]/audit/page.tsx'),
     'utf8',
   );
 
-  assert.match(page, /audit\/export\?role=\$\{encodeURIComponent\(role\.id\)\}/u);
+  assert.match(page, /labDemoPath\(profile\.slug, '\/audit\/export'\)\}\?role=\$\{encodeURIComponent\(role\.id\)\}/u);
   assert.match(page, /Synthetic demonstration data only/u);
   assert.match(page, /does not certify compliance, accreditation, validation, or customer readiness/u);
 });
@@ -136,3 +139,9 @@ function auditEvent(overrides: Partial<AuditFixture>): AuditFixture {
     ...overrides,
   };
 }
+
+test('an unknown lab slug fails closed with 404 and no CSV body', async () => {
+  const response = await GET(new Request(exportUrl('?role=reviewer')), 'nope');
+  assert.equal(response.status, 404);
+  assert.match(response.headers.get('Content-Type') ?? '', /application\/json/);
+});

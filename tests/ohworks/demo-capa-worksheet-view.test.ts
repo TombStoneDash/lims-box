@@ -96,7 +96,7 @@ test('view-model source has no ambient inputs', () => {
 });
 
 test('panel is a read-only server component with no forbidden copy', () => {
-  const source = readFileSync('app/pilot/ohworks/_components/capa-worksheet-panel.tsx', 'utf8');
+  const source = readFileSync('app/demo/labs/[labType]/_components/capa-worksheet-panel.tsx', 'utf8');
   assert.doesNotMatch(source, /['"]use client['"]/);
   assert.match(source, /fabricated/);
   assert.match(source, /import \{ buildPilotCapaWorksheetView \} from '@\/lib\/ohworks-demo-capa-worksheet-view';/);
@@ -107,7 +107,7 @@ test('panel is a read-only server component with no forbidden copy', () => {
 });
 
 test('personnel page imports and renders CapaWorksheetPanel exactly once', () => {
-  const source = readFileSync('app/pilot/ohworks/personnel/page.tsx', 'utf8');
-  assert.equal((source.match(/import \{ CapaWorksheetPanel \} from '@\/app\/pilot\/ohworks\/_components\/capa-worksheet-panel';/g) ?? []).length, 1);
+  const source = readFileSync('app/demo/labs/[labType]/personnel/page.tsx', 'utf8');
+  assert.equal((source.match(/import \{ CapaWorksheetPanel \} from '..\/_components\/capa-worksheet-panel';/g) ?? []).length, 1);
   assert.equal((source.match(/<CapaWorksheetPanel\s*\/>/g) ?? []).length, 1);
 });

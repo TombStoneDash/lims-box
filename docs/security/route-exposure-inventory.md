@@ -18,12 +18,25 @@ The matcher check verifies that middleware source names each protected prefix, f
 | --- | --- | --- |
 | PROTECTED | 35 | Covered by the existing demo protection helper. |
 | PUBLIC_BY_DESIGN | 51 | Explicit public purpose recorded in the test. |
-| KNOWN_UNPROTECTED_PENDING_OWNER_DECISION | 13 | Explicit OHWorks exceptions; no implied approval to expose real data. |
+| KNOWN_UNPROTECTED_PENDING_OWNER_DECISION | 26 | Explicit demo-lab exceptions (13 `/demo/labs/x/*` pages/handlers plus the 13 `/pilot/ohworks/*` paths that now 308 into them); no implied approval to expose real data. |
 
 Each row below is one discovered page or handler. Dynamic `x` values are inventory placeholders, not actual records.
 
 | Bucket | Route | Kind | Reason |
 | --- | --- | --- | --- |
+| KNOWN_UNPROTECTED_PENDING_OWNER_DECISION | `/demo/labs/x` | Page | Generic multi-lab demo (profile from `[labType]`, synthetic data only); same posture as the former pilot; owner access decision pending. |
+| KNOWN_UNPROTECTED_PENDING_OWNER_DECISION | `/demo/labs/x/accessions` | Page | Generic multi-lab demo (profile from `[labType]`, synthetic data only); same posture as the former pilot; owner access decision pending. |
+| KNOWN_UNPROTECTED_PENDING_OWNER_DECISION | `/demo/labs/x/audit` | Page | Generic multi-lab demo (profile from `[labType]`, synthetic data only); same posture as the former pilot; owner access decision pending. |
+| KNOWN_UNPROTECTED_PENDING_OWNER_DECISION | `/demo/labs/x/audit/export` | Route handler | Generic multi-lab demo (profile from `[labType]`, synthetic data only); same posture as the former pilot; owner access decision pending. |
+| KNOWN_UNPROTECTED_PENDING_OWNER_DECISION | `/demo/labs/x/bot` | Page | Generic multi-lab demo (profile from `[labType]`, synthetic data only); same posture as the former pilot; owner access decision pending. |
+| KNOWN_UNPROTECTED_PENDING_OWNER_DECISION | `/demo/labs/x/bot/api` | Route handler | Generic multi-lab demo (profile from `[labType]`, synthetic data only); same posture as the former pilot; owner access decision pending. |
+| KNOWN_UNPROTECTED_PENDING_OWNER_DECISION | `/demo/labs/x/critical-results` | Page | Generic multi-lab demo (profile from `[labType]`, synthetic data only); same posture as the former pilot; owner access decision pending. |
+| KNOWN_UNPROTECTED_PENDING_OWNER_DECISION | `/demo/labs/x/instrument` | Page | Generic multi-lab demo (profile from `[labType]`, synthetic data only); same posture as the former pilot; owner access decision pending. |
+| KNOWN_UNPROTECTED_PENDING_OWNER_DECISION | `/demo/labs/x/personnel` | Page | Generic multi-lab demo (profile from `[labType]`, synthetic data only); same posture as the former pilot; owner access decision pending. |
+| KNOWN_UNPROTECTED_PENDING_OWNER_DECISION | `/demo/labs/x/qc` | Page | Generic multi-lab demo (profile from `[labType]`, synthetic data only); same posture as the former pilot; owner access decision pending. |
+| KNOWN_UNPROTECTED_PENDING_OWNER_DECISION | `/demo/labs/x/reports` | Page | Generic multi-lab demo (profile from `[labType]`, synthetic data only); same posture as the former pilot; owner access decision pending. |
+| KNOWN_UNPROTECTED_PENDING_OWNER_DECISION | `/demo/labs/x/result-review` | Page | Generic multi-lab demo (profile from `[labType]`, synthetic data only); same posture as the former pilot; owner access decision pending. |
+| KNOWN_UNPROTECTED_PENDING_OWNER_DECISION | `/demo/labs/x/samples` | Page | Generic multi-lab demo (profile from `[labType]`, synthetic data only); same posture as the former pilot; owner access decision pending. |
 | KNOWN_UNPROTECTED_PENDING_OWNER_DECISION | `/pilot/ohworks` | Page | Synthetic supervised pilot; owner access decision pending. |
 | KNOWN_UNPROTECTED_PENDING_OWNER_DECISION | `/pilot/ohworks/accessions` | Page | Synthetic supervised pilot; owner access decision pending. |
 | KNOWN_UNPROTECTED_PENDING_OWNER_DECISION | `/pilot/ohworks/audit` | Page | Synthetic supervised pilot; owner access decision pending. |
@@ -125,9 +138,9 @@ Each row below is one discovered page or handler. Dynamic `x` values are invento
 | PUBLIC_BY_DESIGN | `/unsubscribe` | Page | Public opt-out form. |
 | PUBLIC_BY_DESIGN | `/webinar` | Page | Public webinar information. |
 
-## Known unprotected: OHWorks supervised pilot
+## Known unprotected: multi-lab supervised demo (formerly the OHWorks pilot)
 
-These thirteen routes serve synthetic data only. The layout explicitly says "Demo role simulator - not authentication". They are outside the current demo protection helper and middleware matcher:
+Since the pilot closed (2026-09-23) the demo lives at `/demo/labs/[labType]` (13 pages/handlers, listed as `/demo/labs/x/*` above) and every `/pilot/ohworks/*` path below is a 308 redirect into `/demo/labs/clinical/*` served by the same files. All serve synthetic data only. The layout explicitly says "Demo role simulator - not authentication". They are outside the current demo protection helper and middleware matcher:
 
 - `/pilot/ohworks` — overview page.
 - `/pilot/ohworks/accessions` — accessions page.

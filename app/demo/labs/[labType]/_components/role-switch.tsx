@@ -4,7 +4,7 @@ import { useState, useTransition } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { ShieldCheck } from 'lucide-react';
 
-import { roleChangeAnnouncement } from '../../../../lib/ohworks-pilot-nav-state';
+import { roleChangeAnnouncement } from '../../../../../lib/ohworks-pilot-nav-state';
 
 const DEMO_ROLES = [
   { id: 'worker', label: 'Receiving worker', note: 'Outcome-only operational queue. No review, release, or clinical detail.' },

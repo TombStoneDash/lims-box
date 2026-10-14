@@ -18,7 +18,7 @@ when the underlying defect is fixed. `tests/senaite-demo-qc-accessibility.test.t
 is included again: `QCChartsPage` now imports React explicitly for the plain tsx
 loader's classic JSX transform, with all accessibility assertions unchanged.
 `tests/security/route-exposure-inventory.test.ts` is **included**, with all six
-checks passing, including the inventory containing `/pilot/ohworks/qc`.
+checks passing, including the inventory containing `/demo/labs/x/qc`.
 
 ## Observed verification
 

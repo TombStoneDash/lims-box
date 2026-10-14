@@ -112,7 +112,7 @@ test('output is deterministic, does not mutate fixture, and has no clock, enviro
 });
 
 test('page renders readiness, analytical checks, then supplier questions in order', () => {
-  const source = readFileSync('app/pilot/ohworks/instrument/page.tsx', 'utf8');
+  const source = readFileSync('app/demo/labs/[labType]/instrument/page.tsx', 'utf8');
   assert.match(source, /const readiness = buildPilotInstrumentReadinessView\(\)/);
   assert.doesNotMatch(source, /['"]use client['"]|<form\b|fetch\s*\(|mapInstrumentFlags\(|evaluateCalibrationVerificationSchedule\(|evaluateCalibratorLotTraceability\(/);
   const readinessTitle = 'Run-readiness checks (fabricated instrument)';

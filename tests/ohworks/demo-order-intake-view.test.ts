@@ -110,7 +110,7 @@ test('fixtures are fresh and output is deterministic without ambient inputs', ()
 });
 
 test('page renders exactly one final read-only intake section with three tables', () => {
-  const source = readFileSync('app/pilot/ohworks/accessions/page.tsx', 'utf8');
+  const source = readFileSync('app/demo/labs/[labType]/accessions/page.tsx', 'utf8');
   const title = 'Order intake checks (fabricated orders)';
   assert.equal(source.split(title).length - 1, 1);
   const panel = source.slice(source.lastIndexOf('<section'));

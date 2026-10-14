@@ -1,3 +1,5 @@
+> Pilot closed 2026-09-23 (decisions/DECISIONS_20260923.md); kept for reuse in /demo/labs.
+
 # OHWorks supervised demo package
 
 This package is a local, synthetic, discovery-only OHWorks demo inside the

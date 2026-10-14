@@ -17,6 +17,7 @@ interface ChatItem {
 }
 
 interface AssistantConsoleProps {
+  apiPath: string;
   roleId: string;
   roleLabel: string;
   roleNote: string;
@@ -25,6 +26,7 @@ interface AssistantConsoleProps {
 }
 
 export function AssistantConsole({
+  apiPath,
   roleId,
   roleLabel,
   roleNote,
@@ -43,7 +45,7 @@ export function AssistantConsole({
     setPending(true);
     setInput('');
     try {
-      const result = await fetch('/pilot/ohworks/bot/api', {
+      const result = await fetch(apiPath, {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ question: trimmed, roleId, mode }),
