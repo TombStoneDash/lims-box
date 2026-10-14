@@ -9,6 +9,49 @@ import { computeReadSchedule, isReadOverdue } from '../../lib/ohworks-micro-cult
  */
 const PLATED_AT = '2026-01-01T08:00:00.000Z';
 
+for (const invalid of [
+  '2026-02-30T08:00:00Z',
+  '2026-04-31T08:00:00Z',
+  'bad-date',
+  '2026-01-01T08:00:00',
+  '2026-01-01T08:00:00+00:00',
+  '2026-13-01T08:00:00Z',
+  '2026-01-00T08:00:00Z',
+  '2026-01-01T24:00:00Z',
+  '2026-01-01T08:60:00Z',
+  '2026-01-01T08:00:60Z',
+]) {
+  for (const field of ['platedAt', 'dueAt', 'now'] as const) {
+    test(`${field} rejects invalid UTC timestamp: ${invalid}`, () => {
+      assert.throws(() => field === 'platedAt'
+        ? computeReadSchedule({ specimenType: 'blood', platedAt: invalid, requiresExtendedIncubation: false })
+        : isReadOverdue({ dueAt: PLATED_AT, now: PLATED_AT, gracePeriodHours: 6, [field]: invalid }),
+      { name: 'RangeError', message: `${field} must be a valid UTC ISO timestamp (YYYY-MM-DDTHH:mm:ss[.fraction]Z)` });
+    });
+  }
+}
+
+for (const fraction of ['', '.1', '.123', '.123456']) {
+  test(`valid leap day schedules correctly with fraction '${fraction}'`, () => {
+    const result = computeReadSchedule({
+      specimenType: 'blood',
+      platedAt: `2028-02-29T08:00:00${fraction}Z`,
+      requiresExtendedIncubation: false,
+    });
+    const milliseconds = fraction ? fraction.slice(1).padEnd(3, '0').slice(0, 3) : '000';
+    assert.deepEqual(result.reads, [
+      { label: 'Day 1', dueAt: `2028-03-01T08:00:00.${milliseconds}Z` },
+      { label: 'Day 2', dueAt: `2028-03-02T08:00:00.${milliseconds}Z` },
+    ]);
+    assert.equal(result.finalNegativeAt, `2028-03-02T08:00:00.${milliseconds}Z`);
+    assert.equal(isReadOverdue({
+      dueAt: `2028-02-29T08:00:00${fraction}Z`,
+      now: `2028-02-29T08:00:00${fraction}Z`,
+      gracePeriodHours: 0,
+    }), false);
+  });
+}
+
 test('blood culture without extended incubation: reads at 24h/48h, final negative at 48h', () => {
   const result = computeReadSchedule({
     specimenType: 'blood',
