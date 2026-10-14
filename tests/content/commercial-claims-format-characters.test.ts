@@ -71,3 +71,16 @@ test('visible hyphen handling is preserved alongside invisible character detecti
   assert.equal(matchCommercialClaim('FDA-cleared')?.category, 'fda_cleared');
   assert.equal(matchCommercialClaim('Research workflow software with synthetic demo data.'), null);
 });
+
+for (const mark of ['\u00ad', '\u200b', '\u200c', '\u200d', '\u2060', '\ufeff']) {
+  test(`sole invisible separator ${mark.codePointAt(0)?.toString(16)} cannot evade a claim`, () => {
+    for (const [text, category] of [
+      [`HIPAA${mark}compliant`, 'hipaa_compliant'],
+      [`CLIA${mark}certified`, 'clia_certified'],
+      [`FDA${mark}cleared`, 'fda_cleared'],
+    ] as const) {
+      assert.equal(matchCommercialClaim(text)?.category, category);
+      assert.equal(filterCommercialClaims(text).blocked, true);
+    }
+  });
+}

@@ -127,11 +127,11 @@ export interface CommercialClaimMatch {
  * present. Unmatched language is not represented as proven-safe.
  */
 export function matchCommercialClaim(text: string): CommercialClaimMatch | null {
-  // A soft hyphen can disguise a letter boundary or a word boundary. Check
+  // A format character can disguise a letter boundary or a word boundary. Check
   // both readings through the same canonical rules, preserving rule priority.
   const candidates = [normalizeClaimText(text)];
-  if (text.includes('\u00ad')) {
-    candidates.push(normalizeClaimText(text.replace(/\u00ad/g, ' ')));
+  if (/\p{Cf}/u.test(text)) {
+    candidates.push(normalizeClaimText(text.replace(/\p{Cf}/gu, ' ')));
   }
   for (const rule of COMMERCIAL_CLAIM_RULES) {
     for (const normalized of candidates) {
