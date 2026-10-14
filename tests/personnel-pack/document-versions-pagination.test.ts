@@ -27,7 +27,7 @@ test('limit + 1 lookahead rows trim the extra row and report has_more=true with 
 
 test('the document versions route requests limit + 1 rows and passes them through pagedResponseLookahead as a call expression', () => {
   const routePath = path.join(__dirname, '../../app/api/documents/[id]/versions/route.ts');
-  const source = readFileSync(routePath, 'utf8');
+  const source = readFileSync(routePath, 'utf8').replace(/\r\n/g, '\n');
 
   assert.match(
     source,
