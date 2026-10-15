@@ -4,7 +4,7 @@ import test from 'node:test';
 import { buildPilotQcBracketLotView, createPilotQcBracketLotFixtures, DEMO_USE_AT } from '../../lib/ohworks-demo-qc-bracket-lot-view';
 import { evaluateQCBracketing, explainQCBracketRule } from '../../lib/ohworks-qc-bracket';
 import { evaluateReagentLot, explainReagentLotError, ReagentLotError } from '../../lib/ohworks-reagent-lot';
-import { evaluateLotComparison, explainLotComparisonCriterion } from '../../lib/ohworks-lot-comparison';
+import { evaluateLotComparison, explainLotComparisonCriterion, explainLotComparisonError, LotComparisonError } from '../../lib/ohworks-lot-comparison';
 
 test('all five bracket scenarios match the real evaluator on exported fixtures', () => {
   const view = buildPilotQcBracketLotView();
@@ -65,13 +65,14 @@ test('five reagent scenarios retain real status, limit, hours and typed unknown-
   });
 });
 
-test('accepted and bias-rejected paired sets meet minimum size and match real calculations', () => {
+test('accepted, bias-rejected and zero-baseline paired sets retain fail-closed calculations', () => {
   const view = buildPilotQcBracketLotView();
   const fixtures = createPilotQcBracketLotFixtures();
   assert.deepEqual(view.comparisonRows.map(({ decision, governingCriterion }) => [decision, governingCriterion]), [
     ['accept', 'within-limits'], ['reject', 'percent-bias-exceeded'],
+    ['reject', 'percent-criterion-unavailable'],
   ]);
-  fixtures.comparisons.forEach(({ label, pairs, limits }, index) => {
+  fixtures.comparisons.slice(0, 2).forEach(({ label, pairs, limits }, index) => {
     assert.ok(pairs.length >= limits.minPairs);
     const expected = evaluateLotComparison(pairs, limits);
     assert.deepEqual(view.comparisonRows[index], {
@@ -81,13 +82,27 @@ test('accepted and bias-rejected paired sets meet minimum size and match real ca
       outlierCount: expected.outlierCount, explanation: explainLotComparisonCriterion(expected.governingCriterion),
     });
   });
-  assert.deepEqual(view.comparisonRows.map((row) => [row.meanDifference, row.percentBias]), [['0.12', '1.12'], ['1.23', '11.22']]);
+  const zeroBaseline = fixtures.comparisons[2];
+  assert.equal(zeroBaseline.pairs.reduce((sum, pair) => sum + Number(pair.oldValue), 0), 0);
+  assert.equal(zeroBaseline.limits.allowableDifference.percent, null);
+  assert.equal(zeroBaseline.limits.maxPercentBias, 5);
+  assert.throws(() => evaluateLotComparison(zeroBaseline.pairs, zeroBaseline.limits), (error: unknown) => {
+    assert.ok(error instanceof LotComparisonError);
+    assert.equal(error.code, 'percent-criterion-unavailable');
+    return true;
+  });
+  assert.deepEqual(view.comparisonRows[2], {
+    label: 'Fabricated zero-baseline paired set', decision: 'reject', governingCriterion: 'percent-criterion-unavailable',
+    pairCount: 3, meanDifference: '0.25', percentBias: 'Undefined', unit: 'mg/L', outlierCount: 0,
+    explanation: explainLotComparisonError('percent-criterion-unavailable'),
+  });
+  assert.deepEqual(view.comparisonRows.map((row) => [row.meanDifference, row.percentBias]), [['0.12', '1.12'], ['1.23', '11.22'], ['0.25', 'Undefined']]);
 });
 
 test('headline counts, explanations and synthetic identifiers cover every fixture and row', () => {
   const view = buildPilotQcBracketLotView();
   const fixtures = createPilotQcBracketLotFixtures();
-  assert.deepEqual(view.counts, { resultsNotReleasable: 4, lotsNotUsable: 4, comparisonsRejected: 1 });
+  assert.deepEqual(view.counts, { resultsNotReleasable: 4, lotsNotUsable: 4, comparisonsRejected: 2 });
   assert.equal(view.counts.resultsNotReleasable, view.bracketRows.filter((row) => row.disposition !== 'releasable').length);
   assert.equal(view.counts.lotsNotUsable, view.lotRows.filter((row) => row.status !== 'usable').length);
   assert.equal(view.counts.comparisonsRejected, view.comparisonRows.filter((row) => row.decision === 'reject').length);

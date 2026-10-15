@@ -1,6 +1,6 @@
 import { evaluateQCBracketing, explainQCBracketRule, type QCBracketRun, type QCBracketDecision } from './ohworks-qc-bracket';
 import { evaluateReagentLot, explainReagentLotError, ReagentLotError, type ReagentLotProfile, type ReagentLotRegistry, type ReagentLotStatus, type ReagentLotRuleCode, type ReagentLotErrorCode } from './ohworks-reagent-lot';
-import { evaluateLotComparison, explainLotComparisonCriterion, type LotComparisonPair, type LotComparisonLimits, type LotComparisonResult } from './ohworks-lot-comparison';
+import { evaluateLotComparison, explainLotComparisonCriterion, explainLotComparisonError, LotComparisonError, type LotComparisonPair, type LotComparisonLimits, type LotComparisonResult } from './ohworks-lot-comparison';
 
 export const DEMO_USE_AT = '2026-09-19T12:00:00.000Z';
 const HOUR_MS = 60 * 60 * 1000;
@@ -57,7 +57,14 @@ export function createPilotQcBracketLotFixtures(): {
         oldValue, newValue: oldValue + difference, oldUnit: 'mg/L', newUnit: 'mg/L',
       })),
       limits: { minPairs: 3, unit: 'mg/L', allowableDifference: { absolute: 5, percent: 50 }, maxMeanDifference: 5, maxPercentBias: 5, maxOutlierPairs: 0 },
-    })),
+    })).concat({
+      label: 'Fabricated zero-baseline paired set',
+      pairs: [-1, 0, 1].map((oldValue, index) => ({
+        specimenId: `SYNTHETIC-SPEC-${String(index + 7).padStart(3, '0')}`,
+        oldValue, newValue: oldValue + 0.25, oldUnit: 'mg/L', newUnit: 'mg/L',
+      })),
+      limits: { minPairs: 3, unit: 'mg/L', allowableDifference: { absolute: 5, percent: null }, maxMeanDifference: 5, maxPercentBias: 5, maxOutlierPairs: 0 },
+    }),
   };
 }
 
@@ -74,7 +81,7 @@ export type PilotQcBracketLotView = {
   useAt: string;
   bracketRows: (QCBracketDecision & { runId: string; runStatus: QCBracketRun['status']; timestamp: string; explanation: string })[];
   lotRows: PilotReagentLotRow[];
-  comparisonRows: (Pick<LotComparisonResult, 'decision' | 'governingCriterion' | 'pairCount' | 'outlierCount'> & { label: string; meanDifference: string; percentBias: string; unit: string; explanation: string })[];
+  comparisonRows: (Omit<Pick<LotComparisonResult, 'decision' | 'governingCriterion' | 'pairCount' | 'outlierCount'>, 'governingCriterion'> & { governingCriterion: LotComparisonResult['governingCriterion'] | 'percent-criterion-unavailable'; label: string; meanDifference: string; percentBias: string; unit: string; explanation: string })[];
   counts: { resultsNotReleasable: number; lotsNotUsable: number; comparisonsRejected: number };
 };
 
@@ -102,11 +109,21 @@ export function buildPilotQcBracketLotView(): PilotQcBracketLotView {
     }
   });
   const comparisonRows = fixtures.comparisons.map(({ label, pairs, limits }) => {
-    const result = evaluateLotComparison(pairs, limits);
-    return { label, decision: result.decision, governingCriterion: result.governingCriterion,
-      pairCount: result.pairCount, meanDifference: result.meanDifference.toFixed(2),
-      percentBias: result.percentBias === null ? 'Undefined' : result.percentBias.toFixed(2),
-      unit: limits.unit, outlierCount: result.outlierCount, explanation: explainLotComparisonCriterion(result.governingCriterion) };
+    try {
+      const result = evaluateLotComparison(pairs, limits);
+      return { label, decision: result.decision, governingCriterion: result.governingCriterion,
+        pairCount: result.pairCount, meanDifference: result.meanDifference.toFixed(2),
+        percentBias: result.percentBias === null ? 'Undefined' : result.percentBias.toFixed(2),
+        unit: limits.unit, outlierCount: result.outlierCount, explanation: explainLotComparisonCriterion(result.governingCriterion) };
+    } catch (error) {
+      if (!(error instanceof LotComparisonError) || error.code !== 'percent-criterion-unavailable') throw error;
+      const differences = pairs.map((pair) => Number(pair.newValue) - Number(pair.oldValue));
+      return { label, decision: 'reject' as const, governingCriterion: error.code,
+        pairCount: pairs.length, meanDifference: (differences.reduce((sum, value) => sum + value, 0) / pairs.length).toFixed(2),
+        percentBias: 'Undefined', unit: limits.unit,
+        outlierCount: differences.filter((difference) => limits.allowableDifference.absolute !== null && Math.abs(difference) > limits.allowableDifference.absolute).length,
+        explanation: explainLotComparisonError(error.code) };
+    }
   });
   return { useAt: DEMO_USE_AT, bracketRows, lotRows, comparisonRows, counts: {
     resultsNotReleasable: bracketRows.filter((row) => row.disposition !== 'releasable').length,
