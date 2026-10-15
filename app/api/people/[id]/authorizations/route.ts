@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { apiError, pagedResponse, parsePagination } from "@/lib/personnel-pack-utils";
+import { apiError, pagedResponseLookahead, parsePagination } from "@/lib/personnel-pack-utils";
 
 export const dynamic = "force-dynamic";
 
@@ -19,12 +19,12 @@ export async function GET(req: NextRequest, { params }: Params) {
   const authorizations = await prisma.authorization.findMany({
     where: { personId: id, ...(activeOnly ? { isActive: true } : {}) },
     orderBy: { createdAt: "desc" },
-    take: limit,
+    take: limit + 1,
     ...(cursor ? { skip: 1, cursor: { id: cursor } } : {}),
     include: { procedure: { select: { id: true, name: true, procedureCode: true } } },
   });
 
-  return pagedResponse(authorizations, limit);
+  return pagedResponseLookahead(authorizations, limit);
 }
 
 /** POST /api/people/:id/authorizations — grant authorization for a procedure */

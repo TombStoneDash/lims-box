@@ -133,7 +133,7 @@ export function validateOrderPanelCatalogue(catalogue: OrderPanelCatalogue): voi
       if (!isNonEmptyString(member.code)) {
         throw new OrderPanelError('catalogue-member-code-missing');
       }
-      if (member.kind === 'PANEL' && !(member.code in catalogue)) {
+      if (member.kind === 'PANEL' && !Object.prototype.hasOwnProperty.call(catalogue, member.code)) {
         throw new OrderPanelError('catalogue-unknown-panel-reference');
       }
     }
@@ -258,7 +258,7 @@ export function expandOrderPanels(
 
   for (const line of order) {
     if (line.kind === 'PANEL') {
-      if (!(line.code in catalogue)) {
+      if (!Object.prototype.hasOwnProperty.call(catalogue, line.code)) {
         reportUnknown(line.code, 'PANEL');
         continue;
       }

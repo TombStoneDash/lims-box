@@ -121,6 +121,56 @@ test('duplicate raw flag codes collapse to a single canonical flag entry', () =>
   assert.equal(result.canonicalFlags.length, 1);
 });
 
+const ALIAS_TABLE: InstrumentFlagMappingTable = {
+  'analyzer-synthetic-aliases': {
+    S: { canonicalFlag: 'synthetic-shared', severity: 'high', action: 'suppress' },
+    V: { canonicalFlag: 'synthetic-shared', severity: 'high', action: 'review' },
+    R: { canonicalFlag: 'synthetic-shared', severity: 'high', action: 'report' },
+    C: { canonicalFlag: 'synthetic-shared', severity: 'critical', action: 'suppress' },
+    O: { canonicalFlag: 'synthetic-other', severity: 'low', action: 'review' },
+  },
+};
+
+function permutations(values: string[]): string[][] {
+  if (values.length === 0) return [[]];
+  return values.flatMap((value, index) =>
+    permutations(values.filter((_, otherIndex) => otherIndex !== index)).map((rest) => [value, ...rest]),
+  );
+}
+
+test('equal-severity aliases choose report over review over suppress in every permutation', () => {
+  for (const aliases of [['S', 'V', 'R'], ['S', 'R'], ['V', 'R'], ['S', 'V']]) {
+    const winner = aliases.includes('R') ? 'R' : 'V';
+    for (const rawFlags of permutations(aliases)) {
+      const result = mapInstrumentFlags(ALIAS_TABLE, 'analyzer-synthetic-aliases', rawFlags);
+      assert.deepEqual(result.canonicalFlags, [{ rawFlagCode: winner, ...ALIAS_TABLE['analyzer-synthetic-aliases']![winner]! }]);
+      assert.equal(result.resolvedSeverity, 'high');
+      assert.equal(result.requiredAction, winner === 'R' ? 'report' : 'review');
+    }
+  }
+});
+
+test('higher-severity aliases win over every action priority in every permutation', () => {
+  for (const rawFlags of permutations(['S', 'V', 'R', 'C'])) {
+    const result = mapInstrumentFlags(ALIAS_TABLE, 'analyzer-synthetic-aliases', rawFlags);
+    assert.deepEqual(result.canonicalFlags, [{ rawFlagCode: 'C', ...ALIAS_TABLE['analyzer-synthetic-aliases']!.C! }]);
+    assert.equal(result.resolvedSeverity, 'critical');
+    assert.equal(result.requiredAction, 'suppress');
+  }
+});
+
+test('alias replacement preserves first-seen canonical order and deduplicates repeated raw flags', () => {
+  for (const aliases of permutations(['S', 'V', 'R'])) {
+    const rawFlags = [aliases[0]!, 'O', ...aliases, ...aliases, 'O'];
+    const result = mapInstrumentFlags(ALIAS_TABLE, 'analyzer-synthetic-aliases', rawFlags);
+    assert.deepEqual(result.canonicalFlags, [
+      { rawFlagCode: 'R', ...ALIAS_TABLE['analyzer-synthetic-aliases']!.R! },
+      { rawFlagCode: 'O', ...ALIAS_TABLE['analyzer-synthetic-aliases']!.O! },
+    ]);
+    assert.equal(result.requiredAction, 'report');
+  }
+});
+
 // ---------------------------------------------------------------------------
 // Fail closed: unknown instrument model
 // ---------------------------------------------------------------------------

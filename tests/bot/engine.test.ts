@@ -55,13 +55,13 @@ test('basic product questions route to published overview copy', () => {
   }
 });
 
-test('LIMS BOT identity question routes to the published prototype description', () => {
+test('LIMS BOT identity question routes to the published initial beta release description', () => {
   const response = askBot('Tell me about LIMS BOT');
   assert.equal(response.grounded, true);
   assert.deepEqual(response.sources, [
     { title: 'What is LIMS BOT?', path: '/bot' },
   ]);
-  assert.match(response.answer, /prototype/i);
+  assert.match(response.answer, /initial beta release/i);
   assert.match(response.answer, /never stores your questions/i);
 });
 
@@ -168,11 +168,11 @@ test('answers never interpolate user input (fabrication guard)', () => {
   }
 });
 
-test('grounded how-LIMS-BOT-works answer matches published prototype description', () => {
+test('grounded how-LIMS-BOT-works answer matches published initial beta release description', () => {
   const res = askBot('How does LIMS BOT answer questions?');
   assert.equal(res.grounded, true);
   assert.ok(res.sources.some((s) => s.path === '/bot'), 'source /bot not found');
-  assert.match(res.answer, /prototype/i);
+  assert.match(res.answer, /initial beta release/i);
   assert.match(res.answer, /published LIMS BOX documentation/i);
   assert.match(res.answer, /never stores your questions/i);
 });

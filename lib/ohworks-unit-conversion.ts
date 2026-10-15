@@ -30,7 +30,8 @@ export type UnitConversionErrorCode =
   | 'unit-unknown'
   | 'unit-mismatched'
   | 'value-not-finite'
-  | 'value-negative';
+  | 'value-negative'
+  | 'conversion-overflow';
 
 const ERROR_MESSAGES: Record<UnitConversionErrorCode, string> = {
   'analyte-unknown': 'The analyte code has no declared unit conversion factor.',
@@ -38,6 +39,7 @@ const ERROR_MESSAGES: Record<UnitConversionErrorCode, string> = {
   'unit-mismatched': 'The source and target units are not the declared conventional/SI pair for this analyte.',
   'value-not-finite': 'The value to convert is not a finite number.',
   'value-negative': 'Concentration values cannot be negative.',
+  'conversion-overflow': 'The converted value is not representable as a finite number.',
 };
 
 /** Thrown when a conversion cannot be performed without guessing. */
@@ -151,9 +153,21 @@ export type UnitConversionResult = {
   decimals: number;
 };
 
+/**
+ * Round a finite value to `decimals` decimal places. If scaling the value up
+ * by 10**decimals would itself overflow to +/-Infinity (possible for values
+ * close to Number.MAX_VALUE even though the value itself is finite and
+ * representable), the value is already far beyond the precision that any
+ * decimal rounding could affect, so it is returned unrounded rather than
+ * letting the scaling step manufacture a non-finite result.
+ */
 function round(value: number, decimals: number): number {
   const factor = 10 ** decimals;
-  return Math.round(value * factor) / factor;
+  const scaled = value * factor;
+  if (!Number.isFinite(scaled)) {
+    return value;
+  }
+  return Math.round(scaled) / factor;
 }
 
 /**
@@ -171,6 +185,10 @@ function round(value: number, decimals: number): number {
  *                          (e.g. both equal to the same side).
  *   - 'value-not-finite':  value is NaN, +/-Infinity, or not a number.
  *   - 'value-negative':    value is a finite negative number.
+ *   - 'conversion-overflow': the calculated output (before rounding) is not
+ *                          a finite number, e.g. a huge but finite input
+ *                          value multiplied or divided by the declared
+ *                          factor overflows to +/-Infinity.
  */
 export function convertResultUnit(input: UnitConversionInput): UnitConversionResult {
   const factor = FACTORS_BY_ANALYTE.get(input.analyteCode);
@@ -194,17 +212,25 @@ export function convertResultUnit(input: UnitConversionInput): UnitConversionRes
   }
 
   if (input.fromUnit === factor.conventionalUnit && input.toUnit === factor.siUnit) {
+    const converted = input.value * factor.conventionalToSi;
+    if (!Number.isFinite(converted)) {
+      throw new UnitConversionError('conversion-overflow');
+    }
     return Object.freeze({
       analyteCode: input.analyteCode,
-      value: round(input.value * factor.conventionalToSi, factor.siDecimals),
+      value: round(converted, factor.siDecimals),
       unit: factor.siUnit,
       decimals: factor.siDecimals,
     });
   }
 
+  const converted = input.value / factor.conventionalToSi;
+  if (!Number.isFinite(converted)) {
+    throw new UnitConversionError('conversion-overflow');
+  }
   return Object.freeze({
     analyteCode: input.analyteCode,
-    value: round(input.value / factor.conventionalToSi, factor.conventionalDecimals),
+    value: round(converted, factor.conventionalDecimals),
     unit: factor.conventionalUnit,
     decimals: factor.conventionalDecimals,
   });

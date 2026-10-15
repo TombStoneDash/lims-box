@@ -27,6 +27,51 @@ test('a value inside the declared reference range is within_range with the match
   assert.deepEqual(evaluation.reasons, []);
 });
 
+for (const operand of ['0x10', '0b11', '0o7']) {
+  for (const qualifier of ['', '<', '>']) {
+    test(`non-decimal result ${qualifier}${operand} fails closed to review`, () => {
+      const input = baselineInput();
+      input.referenceRange.lowerBound = 10;
+      input.result = `${qualifier}${operand}`;
+      // Match the censored limit so rejection cannot rely on a threshold mismatch.
+      if (qualifier === '<') input.limitOfDetection = Number(operand);
+      if (qualifier === '>') input.upperLimitOfQuantitation = Number(operand);
+      assert.deepEqual(evaluateReferenceRange(input), {
+        classification: 'invalid',
+        flag: 'INVALID RESULT — REVIEW REQUIRED',
+        reasons: [{ code: 'result-non-finite' }],
+      });
+    });
+  }
+}
+
+for (const result of ['16', ' 16 ', '+16', '16.', '1.6e1', 16]) {
+  test(`decimal result ${JSON.stringify(result)} (${typeof result}) stays within range`, () => {
+    const input = baselineInput();
+    input.referenceRange.lowerBound = 10;
+    input.result = result;
+    assert.deepEqual(evaluateReferenceRange(input), {
+      classification: 'within_range',
+      flag: 'WITHIN REFERENCE RANGE',
+      reasons: [],
+    });
+  });
+}
+
+for (const result of ['.5', '-.5', '<1', ' < +1.0e0 ', '<.5', '>100', ' > +1.e2 ']) {
+  test(`decimal result ${JSON.stringify(result)} preserves its detection or quantitation flag`, () => {
+    const input = baselineInput();
+    input.result = result;
+    if (result === '<.5') input.limitOfDetection = 0.5;
+    const above = result.trim().startsWith('>');
+    assert.deepEqual(evaluateReferenceRange(input), {
+      classification: above ? 'above_quantitation' : 'below_detection',
+      flag: above ? 'ABOVE QUANTITATION LIMIT' : 'BELOW DETECTION LIMIT',
+      reasons: [],
+    });
+  });
+}
+
 test('a value exactly at the reference range upper bound is within_range', () => {
   const input = baselineInput();
   input.result = 20;

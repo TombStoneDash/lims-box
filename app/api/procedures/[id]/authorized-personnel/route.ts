@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { apiError } from "@/lib/personnel-pack-utils";
+import { CURRENT_AUTHORIZATION_WHERE } from "@/lib/current-authorization";
 
 export const dynamic = "force-dynamic";
 
@@ -13,7 +14,7 @@ export async function GET(_req: NextRequest, { params }: Params) {
   if (!proc) return apiError("NOT_FOUND", "Procedure not found", { procedure_id: id }, 404);
 
   const authorizations = await prisma.authorization.findMany({
-    where: { procedureId: id, isActive: true },
+    where: { procedureId: id, ...CURRENT_AUTHORIZATION_WHERE },
     include: { person: { select: { id: true, name: true, role: true } } },
     orderBy: { authorizedAt: "desc" },
   });

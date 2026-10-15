@@ -53,6 +53,7 @@ const ALL_ERROR_CODES: ConsumableInventoryErrorCode[] = [
   'stock-invalid',
   'negative-stock',
   'expiry-invalid',
+  'derived-value-invalid',
 ];
 
 const ALL_STATUSES: ConsumableInventoryStatus[] = ['ok', 'reorder-needed'];
@@ -130,6 +131,77 @@ test('days of cover is null when average daily usage is zero', () => {
   const lots: ConsumableLot[] = [{ consumableId: 'c1', lotId: 'lot-1', quantityOnHand: 50, daysUntilExpiry: null }];
   const [result] = evaluateConsumableInventory(consumables, lots);
   assert.equal(result.daysOfCover, null);
+});
+
+for (const field of ['leadTimeDays', 'targetCoverDays'] as const) {
+  test(`overflow in averageDailyUsage * ${field} throws derived-value-invalid`, () => {
+    const declaration: ConsumableDeclaration = {
+      consumableId: 'c1', averageDailyUsage: Number.MAX_VALUE, leadTimeDays: 1, safetyStock: 0, targetCoverDays: 1,
+    };
+    declaration[field] = 2;
+    assertThrowsCode(() => evaluateConsumableInventory([declaration], []), 'derived-value-invalid');
+  });
+}
+
+test('overflow in the sum of finite lot quantities throws derived-value-invalid', () => {
+  const lots = baselineLots();
+  lots[0].quantityOnHand = Number.MAX_VALUE;
+  lots.push({ ...lots[0], lotId: 'lot-2' });
+  assertThrowsCode(() => evaluateConsumableInventory(baselineConsumables(), lots), 'derived-value-invalid');
+});
+
+test('overflow in days of cover throws derived-value-invalid', () => {
+  const consumables = baselineConsumables();
+  consumables[0].averageDailyUsage = Number.MIN_VALUE;
+  assertThrowsCode(() => evaluateConsumableInventory(consumables, baselineLots()), 'derived-value-invalid');
+});
+
+test('overflow when adding safety stock throws derived-value-invalid', () => {
+  const declaration: ConsumableDeclaration = {
+    consumableId: 'c1', averageDailyUsage: Number.MAX_VALUE / 2, leadTimeDays: 1,
+    safetyStock: Number.MAX_VALUE / 2, targetCoverDays: 1,
+  };
+  for (const field of ['leadTimeDays', 'targetCoverDays'] as const) {
+    assertThrowsCode(
+      () => evaluateConsumableInventory([{ ...declaration, [field]: 2 }], []),
+      'derived-value-invalid',
+    );
+  }
+});
+
+test('overflow in FEFO demand throws even when consumed quantity would be clamped to finite stock', () => {
+  const declaration: ConsumableDeclaration = {
+    consumableId: 'c1', averageDailyUsage: Number.MAX_VALUE, leadTimeDays: 1, safetyStock: 0, targetCoverDays: 1,
+  };
+  const lots: ConsumableLot[] = [{ consumableId: 'c1', lotId: 'lot-1', quantityOnHand: 1, daysUntilExpiry: 2 }];
+  assertThrowsCode(() => evaluateConsumableInventory([declaration], lots), 'derived-value-invalid');
+});
+
+test('large representable derived values return exact finite output without a small cap', () => {
+  const halfMax = Number.MAX_VALUE / 2;
+  const declaration: ConsumableDeclaration = {
+    consumableId: 'c1', averageDailyUsage: halfMax, leadTimeDays: 2, safetyStock: 0, targetCoverDays: 2,
+  };
+  const lots: ConsumableLot[] = [
+    { consumableId: 'c1', lotId: 'lot-1', quantityOnHand: halfMax, daysUntilExpiry: 0 },
+    { consumableId: 'c1', lotId: 'lot-2', quantityOnHand: halfMax, daysUntilExpiry: 2 },
+  ];
+  const [result] = evaluateConsumableInventory([declaration], lots);
+  assert.deepEqual(result, {
+    consumableId: 'c1', stockOnHand: Number.MAX_VALUE, daysOfCover: 2,
+    reorderPoint: Number.MAX_VALUE, reorderQuantity: 0, status: 'reorder-needed',
+    lotFlags: [
+      { lotId: 'lot-1', quantityOnHand: halfMax, daysUntilExpiry: 0, expiredQuantity: halfMax, willExpireUnused: true },
+      { lotId: 'lot-2', quantityOnHand: halfMax, daysUntilExpiry: 2, expiredQuantity: 0, willExpireUnused: false },
+    ],
+    expiredQuantityTotal: halfMax,
+  });
+  const [withoutStock] = evaluateConsumableInventory([declaration], []);
+  assert.equal(withoutStock.reorderQuantity, Number.MAX_VALUE);
+
+  const [zeroUsage] = evaluateConsumableInventory([{ ...declaration, averageDailyUsage: 0 }], lots);
+  assert.equal(zeroUsage.daysOfCover, null);
+  assert.equal(zeroUsage.expiredQuantityTotal, Number.MAX_VALUE);
 });
 
 test('a consumable with no declared lots has zero stock on hand and an empty lot flag list', () => {
@@ -216,10 +288,10 @@ test('a later-expiring lot absorbs usage only after earlier-expiring lots are ac
   // 1/day * 5 days = 5 consumable by lot-near's expiry; 10 on hand => 5 left over.
   const near = result.lotFlags.find((flag) => flag.lotId === 'lot-near')!;
   assert.equal(near.expiredQuantity, 5);
-  // By lot-far's expiry (day 6): 1/day * 6 days = 6 consumable total, minus 10 already
-  // allocated to lot-near => none left for lot-far, so all 10 of lot-far expire.
+  // By lot-far's expiry (day 6): 1/day * 6 days = 6 consumable total, minus 5 consumed
+  // from lot-near => 1 consumed from lot-far, so 9 of lot-far expire.
   const far = result.lotFlags.find((flag) => flag.lotId === 'lot-far')!;
-  assert.equal(far.expiredQuantity, 10);
+  assert.equal(far.expiredQuantity, 9);
   assert.equal(far.willExpireUnused, true);
 });
 

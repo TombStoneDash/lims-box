@@ -21,7 +21,7 @@ export type MicroSpecimenType = 'blood' | 'urine' | 'wound' | 'respiratory' | 's
 
 export type ComputeReadScheduleInput = {
   specimenType: MicroSpecimenType;
-  /** ISO 8601 UTC timestamp the specimen was plated. */
+  /** UTC timestamp the specimen was plated: YYYY-MM-DDTHH:mm:ss[.fraction]Z. */
   platedAt: string;
   /** Whether the culture requires extended incubation, e.g. suspected fastidious organism or prior antibiotic exposure. */
   requiresExtendedIncubation: boolean;
@@ -38,6 +38,25 @@ export type ReadSchedule = {
 };
 
 const HOUR_MS = 60 * 60 * 1000;
+
+/** Accept YYYY-MM-DDTHH:mm:ss[.fraction]Z without calendar or clock rollover. */
+function parseUtcTimestamp(value: string, field: string): number {
+  const fields = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.\d+)?Z$/.exec(value);
+  const instant = Date.parse(value);
+  const date = new Date(instant);
+  if (
+    !fields || !Number.isFinite(instant) ||
+    date.getUTCFullYear() !== Number(fields[1]) ||
+    date.getUTCMonth() + 1 !== Number(fields[2]) ||
+    date.getUTCDate() !== Number(fields[3]) ||
+    date.getUTCHours() !== Number(fields[4]) ||
+    date.getUTCMinutes() !== Number(fields[5]) ||
+    date.getUTCSeconds() !== Number(fields[6])
+  ) {
+    throw new RangeError(`${field} must be a valid UTC ISO timestamp (YYYY-MM-DDTHH:mm:ss[.fraction]Z)`);
+  }
+  return instant;
+}
 
 function addHours(fromMs: number, hours: number): string {
   return new Date(fromMs + hours * HOUR_MS).toISOString();
@@ -57,9 +76,10 @@ function addHours(fromMs: number, hours: number): string {
  *   - stool: reads at 24h, 48h, and 72h; finalNegativeAt is always 72h,
  *     regardless of requiresExtendedIncubation (enteric pathogen
  *     protocols require the full window either way).
+ * Throws RangeError when platedAt is not a valid UTC timestamp.
  */
 export function computeReadSchedule(input: ComputeReadScheduleInput): ReadSchedule {
-  const platedAtMs = Date.parse(input.platedAt);
+  const platedAtMs = parseUtcTimestamp(input.platedAt, 'platedAt');
   const extended = input.requiresExtendedIncubation;
 
   switch (input.specimenType) {
@@ -107,21 +127,29 @@ export function computeReadSchedule(input: ComputeReadScheduleInput): ReadSchedu
 }
 
 export type IsReadOverdueInput = {
-  /** ISO 8601 UTC timestamp the read was due. */
+  /** UTC timestamp the read was due: YYYY-MM-DDTHH:mm:ss[.fraction]Z. */
   dueAt: string;
-  /** ISO 8601 UTC timestamp representing the current moment. */
+  /** UTC timestamp representing the current moment: YYYY-MM-DDTHH:mm:ss[.fraction]Z. */
   now: string;
-  /** Hours of grace after dueAt before the read is considered overdue. */
+  /** Finite, non-negative hours of grace after dueAt before the read is considered overdue. */
   gracePeriodHours: number;
 };
 
 /**
  * True when `now` is strictly more than `gracePeriodHours` past `dueAt`.
  * Exactly at the grace-period boundary is not overdue.
+ * Throws RangeError for invalid grace hours or overflow converting them to milliseconds.
+ * Timestamps must be valid YYYY-MM-DDTHH:mm:ss[.fraction]Z values, otherwise throws RangeError.
  */
 export function isReadOverdue(input: IsReadOverdueInput): boolean {
-  const dueAtMs = Date.parse(input.dueAt);
-  const nowMs = Date.parse(input.now);
+  if (!Number.isFinite(input.gracePeriodHours) || input.gracePeriodHours < 0) {
+    throw new RangeError('gracePeriodHours must be a finite non-negative number');
+  }
+  const dueAtMs = parseUtcTimestamp(input.dueAt, 'dueAt');
+  const nowMs = parseUtcTimestamp(input.now, 'now');
   const graceMs = input.gracePeriodHours * HOUR_MS;
+  if (!Number.isFinite(graceMs)) {
+    throw new RangeError('gracePeriodHours must convert to a finite number of milliseconds');
+  }
   return nowMs > dueAtMs + graceMs;
 }

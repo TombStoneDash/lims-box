@@ -284,7 +284,7 @@ export function BotChat({ cards = [] }: { cards?: CapabilityCard[] } = {}) {
         </div>
       )}
       <p className="mt-3 text-[11px] leading-relaxed text-slate-400 dark:text-slate-500">
-        LIMS BOT is a prototype. It only answers from published LIMS BOX
+        LIMS BOT is an initial beta release. It only answers from published LIMS BOX
         documentation and never stores your questions. For lab-specific
         guidance, <Link href="/contact" className="underline">contact the team</Link>.
       </p>

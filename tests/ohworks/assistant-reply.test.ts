@@ -64,6 +64,21 @@ test('the route SAFE_ERROR shape parses as valid', () => {
   assert.deepEqual(parsed, SAFE_ERROR);
 });
 
+test('a refusal with no citations parses unchanged', () => {
+  const refusal = { ...SAFE_ERROR, disposition: 'refused' };
+  assert.deepEqual(parseAssistantReply(refusal), refusal);
+});
+
+test('accepted text and citation identities retain surrounding whitespace', () => {
+  const reply = {
+    ...FULL_REPLY,
+    answer: ' Synthetic answer text. ',
+    label: ' Synthetic demonstration data only ',
+    citations: [{ sourceId: ' S1 ', recordId: ' OW-SYN-S2-10065 ', corpusVersion: ' v1 ' }],
+  };
+  assert.deepEqual(parseAssistantReply(reply), reply);
+});
+
 test('unknown extra keys on the payload are not copied to the result', () => {
   const withExtra = { ...FULL_REPLY, extraKey: 'should not appear', another: 42 };
   const parsed = parseAssistantReply(withExtra);
@@ -81,6 +96,14 @@ const invalidPayloads: Array<[string, unknown]> = [
   ['an empty object', {}],
   ['an unrelated shape', { error: 'x' }],
   ['empty answer', { ...FULL_REPLY, answer: '' }],
+  ['whitespace-only answer', { ...FULL_REPLY, answer: ' \t\n ' }],
+  ['whitespace-only label', { ...FULL_REPLY, label: ' \t\n ' }],
+  ['whitespace-only citation sourceId', { ...FULL_REPLY, citations: [{ sourceId: '  ', recordId: 'r', corpusVersion: 'v' }] }],
+  ['whitespace-only citation recordId', { ...FULL_REPLY, citations: [{ sourceId: 's', recordId: ' \t', corpusVersion: 'v' }] }],
+  ['whitespace-only citation corpusVersion', { ...FULL_REPLY, citations: [{ sourceId: 's', recordId: 'r', corpusVersion: '\n' }] }],
+  ['grounded flag on refusal', { ...SAFE_ERROR, grounded: true, disposition: 'refused' }],
+  ['grounded reply without citations', { ...FULL_REPLY, citations: [] }],
+  ['grounded disposition without grounded flag', { ...FULL_REPLY, grounded: false }],
   ['missing citations', (() => {
     const { citations, ...rest } = FULL_REPLY;
     return rest;
@@ -103,10 +126,10 @@ test('lib/ohworks-assistant-reply.ts does not reference ohworks-pilot', () => {
 });
 
 test('assistant-console.tsx imports and uses the new helper and keeps required source markers', () => {
-  const source = readFileSync(resolve(root, 'app/pilot/ohworks/bot/assistant-console.tsx'), 'utf8');
+  const source = readFileSync(resolve(root, 'app/demo/labs/[labType]/bot/assistant-console.tsx'), 'utf8');
   assert.match(source, /@\/lib\/ohworks-assistant-reply/);
   assert.match(source, /parseAssistantReply\(/);
-  assert.match(source, /fetch\('\/pilot\/ohworks\/bot\/api'/);
+  assert.match(source, /fetch\(apiPath, \{/);
   assert.match(source, /htmlFor="ohworks-assistant-question"/);
   assert.match(source, /id="ohworks-assistant-question"/);
   const ariaPressedCount = (source.match(/aria-pressed/g) ?? []).length;

@@ -1,3 +1,5 @@
+import { CLINICAL_LAB_PROFILE } from './demo-labs/clinical';
+
 /** Pure validation of an already-parsed brand.yml; no YAML or filesystem access. */
 export type OHWorksBrand = Readonly<{
   labName: string;
@@ -116,12 +118,5 @@ export function parseOHWorksBrand(input: unknown): OHWorksBrand | OHWorksBrandEr
   return issues.length ? new OHWorksBrandError(issues) : Object.freeze(brand);
 }
 
-export const DEFAULT_SYNTHETIC_BRAND: OHWorksBrand = Object.freeze({
-  labName: 'SYNTHETIC-Laboratory',
-  legalName: 'SYNTHETIC-Laboratory Example',
-  primaryColor: '#123456',
-  accentColor: '#55AACC',
-  logoPath: 'SYNTHETIC-assets/SYNTHETIC-logo.svg',
-  reportFooter: 'SYNTHETIC-Report for demonstration only',
-  supportEmail: 'SYNTHETIC-support@SYNTHETIC-example.invalid',
-});
+/** Owned by the clinical demo profile since the pilot closed (2026-09-23); re-exported here so imports keep working. */
+export const DEFAULT_SYNTHETIC_BRAND: OHWorksBrand = CLINICAL_LAB_PROFILE.brand;

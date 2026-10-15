@@ -67,12 +67,14 @@ function parseFrontmatter(content: string): { meta: Record<string, unknown>; con
       }
     }
 
-    if (typeof value === 'string' && !isNaN(Number(value)) && value !== '') {
+    if (key === 'readingTime' && typeof value === 'string' && value !== '' && !isNaN(Number(value))) {
       value = Number(value);
     }
 
-    if (value === 'true') value = true;
-    if (value === 'false') value = false;
+    if (key === 'featured') {
+      if (value === 'true') value = true;
+      if (value === 'false') value = false;
+    }
 
     meta[key] = value;
   }

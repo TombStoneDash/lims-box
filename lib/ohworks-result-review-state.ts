@@ -192,7 +192,7 @@ function looksLikePII(value: string): boolean {
 }
 
 function isNonEmptyString(value: unknown): value is string {
-  return typeof value === 'string' && value.length > 0;
+  return typeof value === 'string' && value.trim().length > 0;
 }
 
 function isStructurallyValidEvent(raw: unknown): raw is ResultReviewEventInput {
@@ -339,7 +339,7 @@ function daysInMonth(year: number, month: number): number {
 function hasImpossibleCalendarDate(value: string): boolean {
   const parts = calendarDateParts(value);
   if (!parts) {
-    return false;
+    return true;
   }
   if (parts.month < 1 || parts.month > 12) {
     return true;

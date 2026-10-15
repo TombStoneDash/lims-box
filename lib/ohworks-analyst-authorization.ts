@@ -250,6 +250,9 @@ function parseExplicitZoneInstant(value: string): number | undefined {
   const offsetSign = zone[0] === '-' ? -1 : 1;
   const offsetHours = Number(zone.slice(1, 3));
   const offsetMinutes = Number(zone.slice(4, 6));
+  if (offsetHours > 23 || offsetMinutes > 59) {
+    return undefined;
+  }
   return naiveMs - offsetSign * (offsetHours * 60 + offsetMinutes) * 60_000;
 }
 
@@ -338,7 +341,7 @@ export function authorizeAnalystRelease(rawAnalyst: unknown, rawCandidate: unkno
     if (!secondReviewerId) {
       return refuse('second-reviewer-required');
     }
-    if (secondReviewerId === analyst.analystId) {
+    if (secondReviewerId === analyst.analystId.trim()) {
       return refuse('second-reviewer-same-as-analyst');
     }
     return { resultId: candidate.resultId, decision: 'AUTHORIZED', rule: 'critical-authorized-with-second-reviewer' };

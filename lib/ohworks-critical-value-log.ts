@@ -262,6 +262,26 @@ function toFiniteNumber(value: unknown): number | undefined {
   return typeof value === 'number' && Number.isFinite(value) ? value : undefined;
 }
 
+/**
+ * Date.parse accepts calendar dates that do not exist (e.g. 2026-04-31)
+ * and silently rolls them over into the following month. Validate the
+ * declared calendar date before delegating to Date.parse so an impossible
+ * date is rejected rather than reinterpreted.
+ */
+function parseCalendarInstant(value: string): number {
+  const date = /^([+-]\d{6}|\d{4})-(\d{2})-(\d{2})(?=[Tt\s]|$)/.exec(value);
+  if (!date) return Date.parse(value);
+
+  const year = Number(date[1]);
+  const month = Number(date[2]);
+  const day = Number(date[3]);
+  const leapYear = year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
+  const daysInMonth = [31, leapYear ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+  if (month < 1 || month > 12 || day < 1 || day > daysInMonth[month - 1]) return NaN;
+
+  return Date.parse(value);
+}
+
 function validateResultShape(result: CriticalResultRecord): void {
   if (!isPlainObject(result)) {
     fail('result-malformed');
@@ -428,7 +448,7 @@ export function buildCriticalValueNotificationLog(input: CriticalValueLogInput):
   ): CriticalValueLogEntry =>
     entry(result, value, range, attemptCount, finalContactRole, status, reasonCode, minutesToConfirmation, windowSatisfied);
 
-  const identifiedTime = Date.parse(result.identifiedAt);
+  const identifiedTime = parseCalendarInstant(result.identifiedAt);
   if (!Number.isFinite(identifiedTime)) {
     return makeEntry('CHAIN_GAP', 'result-identified-timestamp-invalid', null, false);
   }
@@ -443,7 +463,7 @@ export function buildCriticalValueNotificationLog(input: CriticalValueLogInput):
       return makeEntry('CHAIN_GAP', 'sequence-invalid', null, false);
     }
 
-    const calledTime = Date.parse(attempt.calledAt);
+    const calledTime = parseCalendarInstant(attempt.calledAt);
     if (!Number.isFinite(calledTime)) {
       return makeEntry('CHAIN_GAP', 'attempt-timestamp-invalid', null, false);
     }

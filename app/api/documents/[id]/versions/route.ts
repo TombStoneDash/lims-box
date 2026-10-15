@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { apiError, pagedResponse, parsePagination, VERSION_NUMBER_RE } from "@/lib/personnel-pack-utils";
+import { apiError, pagedResponseLookahead, parsePagination, VERSION_NUMBER_RE } from "@/lib/personnel-pack-utils";
 
 export const dynamic = "force-dynamic";
 
@@ -17,11 +17,11 @@ export async function GET(req: NextRequest, { params }: Params) {
   const versions = await prisma.documentVersion.findMany({
     where: { documentId: id },
     orderBy: { createdAt: "desc" },
-    take: limit,
+    take: limit + 1,
     ...(cursor ? { skip: 1, cursor: { id: cursor } } : {}),
   });
 
-  return pagedResponse(versions, limit);
+  return pagedResponseLookahead(versions, limit);
 }
 
 /** POST /api/documents/:id/versions — create a new version, superseding the current one */

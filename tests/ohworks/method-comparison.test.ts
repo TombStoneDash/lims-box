@@ -59,6 +59,8 @@ const ALL_ERROR_CODES: MethodComparisonErrorCode[] = [
   'reference-unit-mismatched',
   'candidate-unit-mismatched',
   'insufficient-reference-value-spread',
+  'non-finite-statistics',
+  'percent-bias-unavailable',
 ];
 
 const ALL_GOVERNING_CRITERIA: MethodComparisonGoverningCriterion[] = [
@@ -86,6 +88,43 @@ test('a well-behaved set of pairs is acceptable with within-allowable-bias as th
   assert.equal(result.governingCriterion, 'within-allowable-bias');
   assert.equal(result.pairCount, 5);
 });
+
+const NON_FINITE_CASES: {
+  name: string;
+  values: [number, number][];
+  loaMultiplier?: number;
+}[] = [
+  { name: 'opposing overflowing differences', values: [[-1e308, 1e308], [1e308, -1e308]] },
+  { name: 'overflowing mean difference', values: [[1e308, 0], [9e307, 0]] },
+  { name: 'overflowing squared deviations', values: [[1e200, 0], [2e200, 0]] },
+  { name: 'overflowing reference mean', values: [[1e308, 1e308], [9e307, 9e307]] },
+  { name: 'overflowing pair percent difference', values: [[1e-308, 1], [1, 1]] },
+  { name: 'overflowing percent bias', values: [[-1, 1e292], [1 + Number.EPSILON, 1e292]] },
+  { name: 'overflowing agreement limits', values: [[1, 1], [2, 4]], loaMultiplier: Number.MAX_VALUE },
+  { name: 'overflowing regression spreads', values: [[-1e308, -1e308], [1e308, 1e308]] },
+  { name: 'overflowing pairwise slope', values: [[0, 1], [Number.MIN_VALUE, 0]] },
+];
+
+for (const { name, values, loaMultiplier = 1.96 } of NON_FINITE_CASES) {
+  test(`${name} throws a typed error instead of returning a decision or non-finite evidence`, () => {
+    const pairs = values.map(([referenceValue, candidateValue], index) => ({
+      specimenId: `spec-synthetic-overflow-${index}`,
+      referenceValue,
+      candidateValue,
+      referenceUnit: 'mg/dL',
+      candidateUnit: 'mg/dL',
+    }));
+    assertThrowsCode(
+      () => evaluateMethodComparison(pairs, {
+        minPairs: 2,
+        unit: 'mg/dL',
+        loaMultiplier,
+        allowableBias: { maxMeanDifference: 2, maxPercentBias: null },
+      }),
+      'non-finite-statistics',
+    );
+  });
+}
 
 test('mean difference is the signed mean of (candidate - reference)', () => {
   const result = evaluateMethodComparison(baselinePairs(), baselineDeclaration());
@@ -315,11 +354,44 @@ test('a non-finite candidate value throws candidate-value-invalid', () => {
   assertThrowsCode(() => evaluateMethodComparison(pairs, baselineDeclaration()), 'candidate-value-invalid');
 });
 
-test('a numeric-looking string value is accepted as numeric', () => {
-  const pairs = baselinePairs();
-  (pairs[0] as unknown as { referenceValue: unknown }).referenceValue = '10';
-  const result = evaluateMethodComparison(pairs, baselineDeclaration());
-  assert.equal(result.decision, 'acceptable');
+test('radix-prefixed reference value text throws reference-value-invalid', () => {
+  for (const referenceValue of ['0x10', '0b11', '0o7']) {
+    const pairs = baselinePairs();
+    (pairs[0] as unknown as { referenceValue: unknown }).referenceValue = referenceValue;
+    assertThrowsCode(() => evaluateMethodComparison(pairs, baselineDeclaration()), 'reference-value-invalid');
+  }
+});
+
+test('radix-prefixed candidate value text throws candidate-value-invalid', () => {
+  for (const candidateValue of ['0x10', '0b11', '0o7']) {
+    const pairs = baselinePairs();
+    (pairs[0] as unknown as { candidateValue: unknown }).candidateValue = candidateValue;
+    assertThrowsCode(() => evaluateMethodComparison(pairs, baselineDeclaration()), 'candidate-value-invalid');
+  }
+});
+
+test('decimal text and finite numeric values preserve the equivalent numeric comparison result', () => {
+  const cases: ReadonlyArray<readonly [rawValue: unknown, numericValue: number]> = [
+    ['16', 16],
+    [' 16 ', 16],
+    ['1.6e1', 16],
+    ['+16', 16],
+    ['.5', 0.5],
+    [16, 16],
+  ];
+
+  for (const field of ['referenceValue', 'candidateValue'] as const) {
+    for (const [rawValue, numericValue] of cases) {
+      const actualPairs = baselinePairs();
+      actualPairs[0][field] = rawValue;
+      const expectedPairs = baselinePairs();
+      expectedPairs[0][field] = numericValue;
+      assert.deepEqual(
+        evaluateMethodComparison(actualPairs, baselineDeclaration()),
+        evaluateMethodComparison(expectedPairs, baselineDeclaration()),
+      );
+    }
+  }
 });
 
 test('a missing reference unit throws reference-unit-missing', () => {

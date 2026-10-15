@@ -2,26 +2,27 @@ import assert from 'node:assert/strict';
 import { existsSync, readFileSync } from 'node:fs';
 import test from 'node:test';
 
-const layout = readFileSync('app/pilot/ohworks/layout.tsx', 'utf8');
-const links = readFileSync('app/pilot/ohworks/_components/pilot-nav-link.tsx', 'utf8');
+const layout = readFileSync('app/demo/labs/[labType]/layout.tsx', 'utf8');
+const links = readFileSync('app/demo/labs/[labType]/_components/pilot-nav-link.tsx', 'utf8');
 
 test('pilot navigation has unique existing routes and known icon keys', () => {
   const nav = layout.match(/const nav = \[([\s\S]*?)\] as const/);
   assert.ok(nav, 'navigation array must be found');
-  const entries = [...nav[1].matchAll(/\{\s*href:\s*'([^']+)'[^}]*icon:\s*'([^']+)'\s*\}/g)];
+  // Entries are profile-relative paths; the layout prefixes them with labDemoPath(slug).
+  const entries = [...nav[1].matchAll(/\{\s*path:\s*'([^']*)'[^}]*icon:\s*'([^']+)'\s*\}/g)];
   assert.ok(entries.length > 0);
-  const hrefs = [...nav[1].matchAll(/href:\s*'([^']+)'/g)].map((entry) => entry[1]);
+  const hrefs = [...nav[1].matchAll(/path:\s*'([^']*)'/g)].map((entry) => entry[1]);
   assert.equal(entries.length, hrefs.length, 'every href has an icon');
   assert.equal(new Set(hrefs).size, hrefs.length);
   const map = links.match(/const icons = \{([\s\S]*?)\} as const/);
   assert.ok(map, 'icon map must be found');
   const keys = new Set([...map[1].matchAll(/\b(\w+)\s*:/g)].map((entry) => entry[1]));
   for (const [, href, icon] of entries) {
-    assert.ok(existsSync(`app${href}/page.tsx`), `missing page for ${href}`);
+    assert.ok(existsSync(`app/demo/labs/[labType]${href}/page.tsx`), `missing page for ${href}`);
     assert.ok(keys.has(icon), `unknown icon ${icon}`);
   }
-  const expected = ['result-review', 'critical-results', 'reports'].filter((route) => existsSync(`app/pilot/ohworks/${route}/page.tsx`)).map((route) => `/pilot/ohworks/${route}`);
-  const qcIndex = hrefs.indexOf('/pilot/ohworks/qc');
+  const expected = ['result-review', 'critical-results', 'reports'].filter((route) => existsSync(`app/demo/labs/[labType]/${route}/page.tsx`)).map((route) => `/${route}`);
+  const qcIndex = hrefs.indexOf('/qc');
   assert.ok(qcIndex >= 0);
   assert.deepEqual(hrefs.slice(qcIndex + 1, qcIndex + 1 + expected.length), expected);
 });

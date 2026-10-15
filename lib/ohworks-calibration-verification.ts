@@ -78,6 +78,7 @@ export type CalibrationVerificationReasonCode =
   | 'trigger-event-kind-unknown'
   | 'trigger-event-timestamp-invalid'
   | 'trigger-event-before-last-verification'
+  | 'trigger-event-in-future'
   | 'trigger-event-required'
   | 'interval-current'
   | 'interval-due-soon'
@@ -158,6 +159,7 @@ const REASON_DECISIONS: Record<CalibrationVerificationReasonCode, CalibrationVer
   'trigger-event-kind-unknown': 'OVERDUE',
   'trigger-event-timestamp-invalid': 'OVERDUE',
   'trigger-event-before-last-verification': 'OVERDUE',
+  'trigger-event-in-future': 'OVERDUE',
   'trigger-event-required': 'REQUIRED_BY_EVENT',
   'interval-current': 'CURRENT',
   'interval-due-soon': 'DUE_SOON',
@@ -173,6 +175,7 @@ const REASON_MESSAGES: Record<CalibrationVerificationReasonCode, string> = {
   'trigger-event-kind-unknown': 'A recorded trigger event has an unrecognized kind.',
   'trigger-event-timestamp-invalid': 'A recorded trigger event timestamp could not be parsed as an explicit UTC timestamp.',
   'trigger-event-before-last-verification': 'A recorded trigger event occurred before the last successful verification.',
+  'trigger-event-in-future': 'A recorded trigger event is dated after the evaluation time.',
   'trigger-event-required': 'A trigger event recorded since the last verification requires re-verification regardless of the calendar interval.',
   'interval-current': 'The verification is current and no trigger event has been recorded since it was performed.',
   'interval-due-soon': 'The verification interval is close to expiring and no trigger event has been recorded since it was performed.',
@@ -184,7 +187,26 @@ function isNonEmptyString(value: unknown): value is string {
 }
 
 function isUtcTimestamp(value: string): boolean {
-  return value.endsWith('Z') && Number.isFinite(Date.parse(value));
+  const fields = /^(\d{4}|[+-]\d{6})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.\d+)?Z$/.exec(value);
+  if (!fields) {
+    return false;
+  }
+  const [, yearText, monthText, dayText, hourText, minuteText, secondText] = fields;
+  const year = Number(yearText);
+  const month = Number(monthText);
+  const day = Number(dayText);
+  const isLeapYear = year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
+  const daysInMonth = [31, isLeapYear ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+
+  // Date.parse normalizes some impossible dates and accepts midnight as 24:00.
+  return (
+    month >= 1 && month <= 12 &&
+    day >= 1 && day <= daysInMonth[month - 1] &&
+    Number(hourText) <= 23 &&
+    Number(minuteText) <= 59 &&
+    Number(secondText) <= 59 &&
+    Number.isFinite(Date.parse(value))
+  );
 }
 
 function isStructurallyValidTriggerEvent(raw: unknown): raw is TriggerEventInput {
@@ -245,7 +267,8 @@ function triggerEventPriorityIndex(kind: TriggerEventKind): number {
  * last-verification timestamp, an invalid evaluation timestamp, a
  * last-verification timestamp after the evaluation timestamp, or any
  * trigger event with an unrecognized kind, an invalid timestamp, or a
- * timestamp before the last verification, all resolve to OVERDUE with a
+ * timestamp before the last verification or after the evaluation instant,
+ * all resolve to OVERDUE with a
  * null due instant. Otherwise, any valid trigger event recorded since the
  * last verification resolves to REQUIRED_BY_EVENT — always outranking the
  * calendar — and only in the absence of trigger events is the decision
@@ -332,6 +355,11 @@ export function evaluateCalibrationVerificationSchedule(
   for (const event of triggerEvents) {
     if (Date.parse(event.occurredAt) < lastVerifiedAtMs) {
       return toResult(instrumentId, analyteId, asOf, 'trigger-event-before-last-verification', null);
+    }
+  }
+  for (const event of triggerEvents) {
+    if (Date.parse(event.occurredAt) > asOfMs) {
+      return toResult(instrumentId, analyteId, asOf, 'trigger-event-in-future', null);
     }
   }
 

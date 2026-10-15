@@ -88,6 +88,7 @@ export type SampleVolumeSufficiencyResult = {
 export type SampleVolumeErrorCode =
   | 'specimen-volume-invalid'
   | 'container-dead-volume-invalid'
+  | 'tests-not-array'
   | 'test-code-duplicate'
   | 'test-code-unknown'
   | 'test-required-volume-invalid'
@@ -98,6 +99,7 @@ const ERROR_MESSAGES: Record<SampleVolumeErrorCode, string> = {
   'specimen-volume-invalid': 'The specimen volume must be a finite number of milliliters that is not negative.',
   'container-dead-volume-invalid':
     'The container dead volume must be a finite number of milliliters that is not negative.',
+  'tests-not-array': 'The test panel must be an array.',
   'test-code-duplicate': 'More than one test was submitted with the same test code.',
   'test-code-unknown': 'A test code is not a recognized bounded value.',
   'test-required-volume-invalid': 'A test required volume must be a finite number of milliliters that is not negative.',
@@ -126,6 +128,10 @@ function isKnownPriority(value: string): value is SampleVolumeTestPriority {
 }
 
 function validateTests(tests: ReadonlyArray<SampleVolumeTestRequest>): void {
+  if (!Array.isArray(tests)) {
+    throw new SampleVolumeError('tests-not-array');
+  }
+
   const seenTestCodes = new Set<string>();
   for (const test of tests) {
     if (seenTestCodes.has(test.testCode)) {
@@ -149,6 +155,20 @@ function validateTests(tests: ReadonlyArray<SampleVolumeTestRequest>): void {
       throw new SampleVolumeError('test-sequence-invalid');
     }
   }
+}
+
+/**
+ * Number of floating-point ULPs (at the scale of the values being compared)
+ * treated as binary subtraction roundoff rather than a real volume
+ * difference. Scaled by the compared magnitudes rather than a fixed
+ * absolute epsilon, so it never grows large enough to paper over a genuine
+ * shortage on a very small required volume.
+ */
+const ROUNDOFF_TOLERANCE_ULPS = 8;
+
+function roundoffTolerance(a: number, b: number): number {
+  const scale = Math.max(Math.abs(a), Math.abs(b));
+  return ROUNDOFF_TOLERANCE_ULPS * Number.EPSILON * scale;
 }
 
 function comparePrecedence(a: SampleVolumeTestRequest, b: SampleVolumeTestRequest): number {
@@ -199,8 +219,15 @@ export function evaluateSampleVolumeSufficiency(
   let remainingVolumeMl = availableVolumeMl;
 
   for (const test of orderedTests) {
-    if (remainingVolumeMl >= test.requiredVolumeMl) {
-      remainingVolumeMl -= test.requiredVolumeMl;
+    const tolerance = roundoffTolerance(remainingVolumeMl, test.requiredVolumeMl);
+    const shortfallMl = test.requiredVolumeMl - remainingVolumeMl;
+
+    if (shortfallMl <= tolerance) {
+      let updatedRemainingVolumeMl = remainingVolumeMl - test.requiredVolumeMl;
+      if (updatedRemainingVolumeMl < 0 && updatedRemainingVolumeMl >= -tolerance) {
+        updatedRemainingVolumeMl = 0;
+      }
+      remainingVolumeMl = updatedRemainingVolumeMl;
       outcomes.push({
         testCode: test.testCode,
         status: 'runnable',
@@ -212,7 +239,7 @@ export function evaluateSampleVolumeSufficiency(
       outcomes.push({
         testCode: test.testCode,
         status: 'short',
-        shortfallMl: test.requiredVolumeMl - remainingVolumeMl,
+        shortfallMl,
         remainingVolumeAfterMl: remainingVolumeMl,
       });
       shortTestCodes.push(test.testCode);

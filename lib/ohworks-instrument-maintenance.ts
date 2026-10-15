@@ -110,6 +110,7 @@ export type MaintenanceGateInputErrorCode =
   | 'run-timestamp-malformed'
   | 'options-malformed'
   | 'schedule-malformed'
+  | 'schedule-instrument-mismatch'
   | 'task-entry-malformed'
   | 'duplicate-task-code';
 
@@ -119,6 +120,7 @@ const INPUT_ERROR_MESSAGES: Record<MaintenanceGateInputErrorCode, string> = {
   'run-timestamp-malformed': 'The supplied run timestamp is not a non-empty string.',
   'options-malformed': 'The maintenance gate options are invalid.',
   'schedule-malformed': 'The registry entry for this instrument is missing a required field or has the wrong shape.',
+  'schedule-instrument-mismatch': 'The registry entry instrument identifier does not match its lookup key.',
   'task-entry-malformed': 'A scheduled maintenance task entry is missing a required field or has the wrong shape.',
   'duplicate-task-code': 'The maintenance schedule lists the same task code more than once.',
 };
@@ -183,7 +185,26 @@ function isNonEmptyString(value: unknown): value is string {
 }
 
 function isUtcTimestamp(value: string): boolean {
-  return value.endsWith('Z') && Number.isFinite(Date.parse(value));
+  const fields = /^(\d{4}|[+-]\d{6})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.\d+)?Z$/.exec(value);
+  if (!fields) {
+    return false;
+  }
+  const [, yearText, monthText, dayText, hourText, minuteText, secondText] = fields;
+  const year = Number(yearText);
+  const month = Number(monthText);
+  const day = Number(dayText);
+  const isLeapYear = year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
+  const daysInMonth = [31, isLeapYear ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+
+  // Date.parse normalizes some impossible dates and accepts midnight as 24:00.
+  return (
+    month >= 1 && month <= 12 &&
+    day >= 1 && day <= daysInMonth[month - 1] &&
+    Number(hourText) <= 23 &&
+    Number(minuteText) <= 59 &&
+    Number(secondText) <= 59 &&
+    Number.isFinite(Date.parse(value))
+  );
 }
 
 function isStructurallyValidTaskEntry(raw: unknown): raw is MaintenanceTaskScheduleEntry {
@@ -298,9 +319,9 @@ function evaluateTask(entry: MaintenanceTaskScheduleEntry, runAtMs: number, dueS
  * one task is due soon resolves to `usable_with_flag`.
  *
  * Structurally unusable input (a malformed registry, instrument id, run
- * timestamp, options, schedule entry, task entry, or a schedule with a
- * duplicated task code) throws MaintenanceGateInputError instead of
- * guessing at a reason code.
+ * timestamp, options, schedule entry, schedule instrument mismatch, task
+ * entry, or a schedule with a duplicated task code) throws
+ * MaintenanceGateInputError instead of guessing at a reason code.
  */
 export function evaluateInstrumentMaintenanceGate(
   registry: InstrumentMaintenanceRegistry,
@@ -327,6 +348,9 @@ export function evaluateInstrumentMaintenanceGate(
   }
   if (!isStructurallyValidSchedule(raw)) {
     throw new MaintenanceGateInputError('schedule-malformed');
+  }
+  if (raw.instrumentId !== instrumentId) {
+    throw new MaintenanceGateInputError('schedule-instrument-mismatch');
   }
 
   const seenTaskCodes = new Set<string>();

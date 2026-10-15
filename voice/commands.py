@@ -175,7 +175,16 @@ def _handle_record_result(args: tuple, client: SenaiteClient) -> str:
         return "No current sample. Say 'log sample' first."
 
     try:
-        client.record_result(session.current_sample_id, test_name, value)
+        result = client.record_result(session.current_sample_id, test_name, value)
+        if (
+            not isinstance(result, dict)
+            or result.get("success") is not True
+            or result.get("error")
+        ):
+            return (
+                f"Recording result {value} for {test_name} on sample "
+                f"{session.current_sample_id} was not confirmed."
+            )
         return f"Result {value} recorded for {test_name} on sample {session.current_sample_id}."
     except ValueError as e:
         return str(e)
@@ -198,16 +207,33 @@ def _handle_mark_complete(args: tuple, client: SenaiteClient) -> str:
     if not session.current_sample_id:
         return "No current sample. Say 'log sample' first to set the active sample."
 
+    sample_id = session.current_sample_id
+    unconfirmed = (
+        f"Submission of sample {sample_id} was not confirmed. "
+        "Current sample unchanged."
+    )
     try:
-        client.transition_sample(session.current_sample_id, "submit")
-        completed_id = session.current_sample_id
-        session.clear()
-        return f"Sample {completed_id} marked complete and submitted for review."
-    except ValueError as e:
-        return str(e)
-    except Exception as e:
-        logger.error(f"Failed to mark complete: {e}")
-        return f"Could not mark sample complete: {e}"
+        result = client.transition_sample(sample_id, "submit")
+    except Exception:
+        # The request may have reached SENAITE; never retry it automatically.
+        logger.warning("Submission was not confirmed for sample %s", sample_id, exc_info=True)
+        return unconfirmed
+
+    if (
+        not isinstance(result, dict)
+        or result.get("success") is not True
+        or result.get("error")
+    ):
+        return unconfirmed
+
+    state = result.get("review_state")
+    if state is not None and state not in ("to_be_verified", "verified", "published"):
+        return unconfirmed
+
+    session.clear()
+    if state:
+        return f"Sample {sample_id} submitted for review. Observed state: {state}."
+    return f"Submission of sample {sample_id} confirmed by SENAITE."
 
 
 def _handle_print_label(args: tuple, client: SenaiteClient) -> str:
@@ -221,16 +247,23 @@ def _handle_print_label(args: tuple, client: SenaiteClient) -> str:
     if not sample.get("api_url") or not sample.get("uid"):
         return f"Label printing unavailable for sample {sample_id}: required sample metadata is missing."
 
-    # A successful API call confirms request acceptance, not physical printing.
+    # Only an explicit API acknowledgement confirms request acceptance, not printing.
     try:
-        client.post(
+        result = client.post(
             f"AnalysisRequest/{sample['uid']}/sticker",
             {"template": "Code_128_1x48mm.pt"},
         )
-        return f"Label print request accepted for sample {sample_id}."
     except Exception as e:
         logger.warning(f"Label print API call failed: {e}")
         return f"Label print request failed for sample {sample_id}."
+
+    if isinstance(result, dict):
+        if result.get("error") or result.get("success") is False:
+            return f"Label print request rejected for sample {sample_id}."
+        if result.get("success") is True:
+            return f"Label print request accepted for sample {sample_id}."
+
+    return f"Label print request was not confirmed for sample {sample_id}."
 
 
 # ── Helpers ──────────────────────────────────────────────────────────────────

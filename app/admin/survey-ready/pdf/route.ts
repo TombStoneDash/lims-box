@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { formatCalendarDate } from "@/lib/admin-calendar-date";
+import { competencyDisplayStatus } from "@/lib/competency-display-status";
 import PDFDocument from "pdfkit";
 
 export const dynamic = "force-dynamic";
@@ -9,6 +10,7 @@ function fmt(d: Date | null | undefined): string {
 }
 
 export async function GET() {
+  const now = new Date();
   const people = await prisma.person.findMany({
     where: { active: true },
     include: {
@@ -62,7 +64,8 @@ export async function GET() {
         doc.text("  —");
       } else {
         for (const c of p.competencies) {
-          doc.text(`  • ${c.type} — ${c.status}${c.expiresAt ? ` (expires ${fmt(c.expiresAt)})` : ""}`);
+          const status = competencyDisplayStatus(c, p.competencies, now);
+          doc.text(`  • ${c.type} — ${status}${c.expiresAt ? ` (expires ${fmt(c.expiresAt)})` : ""}`);
         }
       }
 

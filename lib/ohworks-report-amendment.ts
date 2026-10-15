@@ -28,6 +28,8 @@
  *                                   bounded reason code list
  *   5. an unauthorized author    — the author role is not on the bounded
  *                                   list of roles with amend authority
+ *   6. an out-of-order timestamp — the instant is not strictly later than
+ *                                   the previous accepted amendment
  *
  * Structurally unusable input (not an array, an amendment missing a
  * required field, or an invalid reference token) throws a typed error
@@ -85,7 +87,7 @@ export type ReportAmendment = {
   reasonCode: string;
   /** Raw author role string; may be unrecognized or lack amend authority. */
   authorRole: string;
-  /** Caller-supplied timestamp for this amendment, e.g. an ISO 8601 string. */
+  /** Caller-supplied ISO 8601 timestamp for this amendment. */
   timestamp: string;
 };
 
@@ -96,7 +98,8 @@ export type AmendmentChainReasonCode =
   | 'version-skipped'
   | 'version-retracted'
   | 'reason-code-unknown'
-  | 'author-role-unauthorized';
+  | 'author-role-unauthorized'
+  | 'timestamp-out-of-order';
 
 const REASON_MESSAGES: Record<AmendmentChainReasonCode, string> = {
   'version-reused': 'The declared version number already appears earlier in this amendment chain.',
@@ -104,6 +107,7 @@ const REASON_MESSAGES: Record<AmendmentChainReasonCode, string> = {
   'version-retracted': 'The declared superseded version is not the current effective version.',
   'reason-code-unknown': 'The reason code is not on the declared, bounded reason code list.',
   'author-role-unauthorized': 'The author role is not on the bounded list of roles with amend authority.',
+  'timestamp-out-of-order': 'The amendment timestamp is not strictly later than the previous accepted amendment.',
 };
 
 /** Deterministic, privacy-safe human-readable text for a reason code, suitable for UI display. */
@@ -117,6 +121,7 @@ const REASON_NEXT_ACTIONS: Record<AmendmentChainReasonCode, string> = {
   'version-retracted': 'Resupply a superseded version equal to the current effective version.',
   'reason-code-unknown': 'Resupply a reason code from the declared reason code list.',
   'author-role-unauthorized': 'Resubmit this amendment from a role with amend authority.',
+  'timestamp-out-of-order': 'Resupply a timestamp representing an instant strictly later than the previous accepted amendment.',
 };
 
 /** Deterministic, privacy-safe next corrective action for a reason code, suitable for UI display alongside the explanation. */
@@ -184,6 +189,40 @@ function isPositiveInteger(value: unknown): value is number {
   return typeof value === 'number' && Number.isInteger(value) && value > 0;
 }
 
+function isIso8601Timestamp(value: unknown): value is string {
+  if (typeof value !== 'string') {
+    return false;
+  }
+
+  const match = /^(\d{4})-(\d{2})-(\d{2})T(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z|[+-](?:[01]\d|2[0-3]):[0-5]\d)$/.exec(value);
+  if (!match) {
+    return false;
+  }
+
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+  const leapYear = year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
+  const daysInMonth = [31, leapYear ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+  return month >= 1 && month <= 12 && day >= 1 && day <= daysInMonth[month - 1];
+}
+
+/**
+ * The fractional-second digits beyond the millisecond place, as a value in
+ * [0, 1). Date.parse truncates to milliseconds, so two timestamps that share
+ * the same millisecond epoch are ordered by this remainder instead. Whole-
+ * minute UTC offsets only shift the whole-second portion, so this remainder
+ * is independent of the timestamp's offset.
+ */
+function subMillisecondRemainder(timestamp: string): number {
+  const match = /\.(\d+)(?:Z|[+-]\d{2}:\d{2})$/.exec(timestamp);
+  if (!match) {
+    return 0;
+  }
+  const remainder = match[1].slice(3);
+  return remainder.length === 0 ? 0 : Number(`0.${remainder}`);
+}
+
 function isStructurallyValidAmendment(raw: unknown): raw is ReportAmendment {
   if (!isPlainObject(raw)) {
     return false;
@@ -193,7 +232,7 @@ function isStructurallyValidAmendment(raw: unknown): raw is ReportAmendment {
     isPositiveInteger(raw.supersedesVersion) &&
     isNonEmptyString(raw.reasonCode) &&
     isNonEmptyString(raw.authorRole) &&
-    isNonEmptyString(raw.timestamp)
+    isIso8601Timestamp(raw.timestamp)
   );
 }
 
@@ -216,7 +255,7 @@ export function applyReportAmendments(reportReferenceToken: unknown, rawAmendmen
     fail('amendments-not-array');
   }
 
-  const amendments: ReportAmendment[] = rawAmendments.map((raw) => {
+  const amendments: ReportAmendment[] = Array.from(rawAmendments, (raw) => {
     if (!isStructurallyValidAmendment(raw)) {
       fail('amendment-malformed');
     }
@@ -225,6 +264,7 @@ export function applyReportAmendments(reportReferenceToken: unknown, rawAmendmen
 
   const usedVersionNumbers = new Set<number>([BASELINE_VERSION]);
   let currentEffectiveVersion = BASELINE_VERSION;
+  let previousAccepted: { epoch: number; subMs: number } | undefined;
   const supersedeChain: ReportVersionRecord[] = [];
 
   for (let index = 0; index < amendments.length; index += 1) {
@@ -253,8 +293,19 @@ export function applyReportAmendments(reportReferenceToken: unknown, rawAmendmen
       return invalid('author-role-unauthorized');
     }
 
+    const amendmentEpoch = Date.parse(amendment.timestamp);
+    const amendmentSubMs = subMillisecondRemainder(amendment.timestamp);
+    if (
+      previousAccepted !== undefined &&
+      (amendmentEpoch < previousAccepted.epoch ||
+        (amendmentEpoch === previousAccepted.epoch && amendmentSubMs <= previousAccepted.subMs))
+    ) {
+      return invalid('timestamp-out-of-order');
+    }
+
     usedVersionNumbers.add(amendment.versionNumber);
     currentEffectiveVersion = amendment.versionNumber;
+    previousAccepted = { epoch: amendmentEpoch, subMs: amendmentSubMs };
     supersedeChain.push({
       versionNumber: amendment.versionNumber,
       supersedesVersion: amendment.supersedesVersion,

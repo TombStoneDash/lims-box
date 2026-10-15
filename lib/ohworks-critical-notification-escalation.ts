@@ -48,6 +48,17 @@ export type PlanNextEscalationContactInput = {
 
 export type EscalationAction = 'contact_now' | 'wait' | 'escalation_chain_exhausted';
 
+/**
+ * Thrown when a caller-supplied timestamp (`now` or an attempt's
+ * `attemptedAt`) does not parse to a finite time. Deliberately generic: it
+ * must never echo the unparseable value or any contact detail back to the
+ * caller.
+ */
+const UNUSABLE_TIMESTAMP_MESSAGE = 'planNextEscalationContact: unusable timestamp input';
+
+// Deliberately generic: never echo attempt values or contact details.
+const UNUSABLE_REACHED_MESSAGE = 'planNextEscalationContact: unusable reached input';
+
 export type EscalationPlan = {
   action: EscalationAction;
   targetChainIndex: number | null;
@@ -70,7 +81,13 @@ export type EscalationPlan = {
 export function planNextEscalationContact(input: PlanNextEscalationContactInput): EscalationPlan {
   const { escalationChain, attemptsSoFar, maxAttemptsPerContact, now, minMinutesBetweenAttemptsToSameContact } = input;
 
-  if (attemptsSoFar.some((attempt) => attempt.reached)) {
+  for (const attempt of attemptsSoFar) {
+    if (attempt.reached !== true && attempt.reached !== false) {
+      throw new TypeError(UNUSABLE_REACHED_MESSAGE);
+    }
+  }
+
+  if (attemptsSoFar.some((attempt) => attempt.reached === true)) {
     return {
       action: 'contact_now',
       targetChainIndex: null,
@@ -81,11 +98,14 @@ export function planNextEscalationContact(input: PlanNextEscalationContactInput)
   }
 
   const nowTime = Date.parse(now);
+  if (!Number.isFinite(nowTime)) {
+    throw new RangeError(UNUSABLE_TIMESTAMP_MESSAGE);
+  }
 
   let targetIndex: number | null = null;
   for (let index = 0; index < escalationChain.length; index += 1) {
     const attemptsForContact = attemptsSoFar.filter((attempt) => attempt.chainIndex === index);
-    const failedAttemptCount = attemptsForContact.filter((attempt) => !attempt.reached).length;
+    const failedAttemptCount = attemptsForContact.filter((attempt) => attempt.reached === false).length;
     const exhausted = failedAttemptCount >= maxAttemptsPerContact;
     if (!exhausted) {
       targetIndex = index;
@@ -109,6 +129,12 @@ export function planNextEscalationContact(input: PlanNextEscalationContactInput)
   let mostRecentAttemptTime: number | null = null;
   for (const attempt of attemptsForTarget) {
     const attemptTime = Date.parse(attempt.attemptedAt);
+    if (!Number.isFinite(attemptTime)) {
+      throw new RangeError(UNUSABLE_TIMESTAMP_MESSAGE);
+    }
+    if (attemptTime > nowTime) {
+      throw new RangeError('planNextEscalationContact: attempt timestamp is after now');
+    }
     if (mostRecentAttemptTime === null || attemptTime > mostRecentAttemptTime) {
       mostRecentAttemptTime = attemptTime;
     }

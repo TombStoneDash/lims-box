@@ -69,6 +69,64 @@ test('accepts an empty amendment list as trivially valid at the baseline version
   assert.deepEqual(summary.supersedeChain, []);
 });
 
+for (const [label, timestamp] of [
+  ['earlier', '2026-01-01T00:00:00Z'],
+  ['simultaneous', '2026-01-02T00:00:00Z'],
+  ['simultaneous offset', '2026-01-01T19:00:00-05:00'],
+  ['earlier offset', '2026-01-02T01:00:00+02:00'],
+]) {
+  test(`rejects a later amendment with an ${label} instant and stops the accepted chain`, () => {
+    const chain = baselineChain();
+    chain[0].timestamp = '2026-01-02T00:00:00Z';
+    chain[1].timestamp = timestamp;
+    const summary = applyReportAmendments('report-synthetic-chronology', chain);
+    assert.equal(summary.status, 'INVALID');
+    assert.deepEqual(summary.failure, { amendmentIndex: 1, code: 'timestamp-out-of-order' });
+    assert.equal(summary.currentEffectiveVersion, 2);
+    assert.deepEqual(summary.supersedeChain, chain.slice(0, 1));
+  });
+}
+
+for (const timestamps of [
+  ['2026-01-02T00:00:00Z', '2026-01-02T01:00:00Z', '2026-01-03T00:00:00Z'],
+  ['2026-01-02T00:00:00Z', '2026-01-01T20:00:00-05:00', '2026-01-02T03:00:00+01:00'],
+  ['2026-01-02T00:00:00+02:00', '2026-01-02T00:00:00+01:00', '2026-01-02T00:00:00-01:00'],
+]) {
+  test(`accepts strictly chronological instants: ${timestamps.join(', ')}`, () => {
+    const chain = baselineChain().map((amendment, index) => ({ ...amendment, timestamp: timestamps[index] }));
+    const summary = applyReportAmendments('report-synthetic-chronology-valid', chain);
+    assert.equal(summary.status, 'VALID');
+    assert.equal(summary.failure, undefined);
+    assert.equal(summary.currentEffectiveVersion, 4);
+    assert.deepEqual(summary.supersedeChain, chain);
+  });
+}
+
+for (const [code, overrides] of [
+  ['version-reused', { versionNumber: 2 }],
+  ['version-skipped', { versionNumber: 5 }],
+  ['version-retracted', { supersedesVersion: 1 }],
+  ['reason-code-unknown', { reasonCode: 'MYSTERY_REASON' }],
+  ['author-role-unauthorized', { authorRole: 'FRONT_DESK' }],
+] as const) {
+  test(`checks ${code} before chronology`, () => {
+    const chain = baselineChain();
+    chain[1] = { ...chain[1], ...overrides, timestamp: chain[0].timestamp };
+    const summary = applyReportAmendments('report-synthetic-chronology-priority', chain);
+    assert.deepEqual(summary.failure, { amendmentIndex: 1, code });
+    assert.deepEqual(summary.supersedeChain, chain.slice(0, 1));
+  });
+}
+
+test('keeps malformed calendar timestamps as input errors before chronology', () => {
+  const chain = baselineChain();
+  chain[1].timestamp = '2026-02-30T00:00:00Z';
+  assert.throws(
+    () => applyReportAmendments('report-synthetic-chronology-malformed', chain),
+    (error: unknown) => error instanceof AmendmentChainInputError && error.code === 'amendment-malformed',
+  );
+});
+
 test('accepts a single valid amendment', () => {
   const summary = applyReportAmendments('report-synthetic-single', [baselineAmendment()]);
   assert.equal(summary.status, 'VALID');
@@ -268,6 +326,7 @@ test('explainAmendmentChainReason and explainAmendmentChainNextAction cover ever
     'version-retracted',
     'reason-code-unknown',
     'author-role-unauthorized',
+    'timestamp-out-of-order',
   ];
   for (const code of codes) {
     const reason = explainAmendmentChainReason(code);

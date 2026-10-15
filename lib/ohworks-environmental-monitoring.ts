@@ -256,13 +256,14 @@ type OpenExcursion = {
   endTimeMs: number;
   worstValue: number;
   worstDeviation: number;
+  severity: ExcursionSeverity;
 };
 
-function closeExcursion(open: OpenExcursion, limits: MetricLimits): EnvironmentalExcursion {
+function closeExcursion(open: OpenExcursion): EnvironmentalExcursion {
   return {
     roomId: open.roomId,
     metric: open.metric,
-    severity: classifySeverity(open.worstValue, limits),
+    severity: open.severity,
     startTimestamp: open.startTimestamp,
     endTimestamp: open.endTimestamp,
     durationMs: open.endTimeMs - open.startTimeMs,
@@ -372,6 +373,7 @@ export function evaluateEnvironmentalMonitoring(
           endTimeMs: timeMs,
           worstValue: reading.value,
           worstDeviation: deviation,
+          severity: classifySeverity(reading.value, limits),
         });
       } else {
         existing.endTimestamp = reading.timestamp;
@@ -380,17 +382,18 @@ export function evaluateEnvironmentalMonitoring(
           existing.worstValue = reading.value;
           existing.worstDeviation = deviation;
         }
+        if (classifySeverity(reading.value, limits) === 'critical') {
+          existing.severity = 'critical';
+        }
       }
     } else if (existing !== undefined) {
-      excursions.push(closeExcursion(existing, limits));
+      excursions.push(closeExcursion(existing));
       open.delete(key);
     }
   }
 
-  for (const [key, existing] of open) {
-    const roomId = key.slice(0, key.indexOf(' '));
-    const limits = (profilesByRoomId.get(roomId) as RoomEnvironmentalLimits).limits[existing.metric];
-    excursions.push(closeExcursion(existing, limits));
+  for (const [, existing] of open) {
+    excursions.push(closeExcursion(existing));
   }
 
   const roomSummaries: RoomDailySummary[] = [...profilesByRoomId.keys()].map((roomId) => {

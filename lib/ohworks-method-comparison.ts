@@ -133,7 +133,9 @@ export type MethodComparisonErrorCode =
   | 'candidate-unit-missing'
   | 'reference-unit-mismatched'
   | 'candidate-unit-mismatched'
-  | 'insufficient-reference-value-spread';
+  | 'insufficient-reference-value-spread'
+  | 'non-finite-statistics'
+  | 'percent-bias-unavailable';
 
 const ERROR_MESSAGES: Record<MethodComparisonErrorCode, string> = {
   'declaration-malformed': 'The declared comparison parameters are not structurally valid.',
@@ -149,6 +151,9 @@ const ERROR_MESSAGES: Record<MethodComparisonErrorCode, string> = {
   'candidate-unit-mismatched': 'A declared pair candidate-method unit does not match the declared comparison unit.',
   'insufficient-reference-value-spread':
     'Every declared reference-method value is identical, so no pairwise slope can be computed.',
+  'non-finite-statistics': 'The comparison cannot be evaluated because a calculated statistic is not finite.',
+  'percent-bias-unavailable':
+    'Percent bias cannot be evaluated because the mean reference-method value is zero and no absolute mean-difference limit is declared.',
 };
 
 /** Deterministic, human-readable text for a fail-closed error code. */
@@ -171,11 +176,21 @@ function toFiniteNumber(rawValue: unknown): number | undefined {
   if (typeof rawValue === 'number') {
     return Number.isFinite(rawValue) ? rawValue : undefined;
   }
-  if (typeof rawValue === 'string' && rawValue.trim().length > 0) {
-    const parsed = Number(rawValue);
+  if (typeof rawValue === 'string') {
+    const trimmed = rawValue.trim();
+    if (!/^[+-]?(?:\d+\.?\d*|\.\d+)(?:[eE][+-]?\d+)?$/.test(trimmed)) {
+      return undefined;
+    }
+    const parsed = Number(trimmed);
     return Number.isFinite(parsed) ? parsed : undefined;
   }
   return undefined;
+}
+
+function requireFiniteStatistics(...values: number[]): void {
+  if (!values.every((value) => Number.isFinite(value))) {
+    throw new MethodComparisonError('non-finite-statistics');
+  }
 }
 
 /** Canonicalize a unit for comparison only: trim outer whitespace and case-fold. Never infers or performs a unit conversion. */
@@ -259,6 +274,9 @@ function median(values: readonly number[]): number {
  * reference values with no spread all throw MethodComparisonError instead of
  * guessing at a decision. Structurally invalid declared parameters throw the
  * same way.
+ * A zero mean reference value also throws when percent bias is the sole
+ * declared acceptance axis, since that criterion cannot be evaluated.
+ * Non-finite calculated differences or statistics throw before acceptance.
  *
  * When both declared allowable-bias axes are exceeded at once, the
  * governing criterion is chosen by a fixed priority: mean difference, then
@@ -320,6 +338,8 @@ export function evaluateMethodComparison(
 
     const difference = candidateValue - referenceValue;
     const percentDifference = referenceValue !== 0 ? (difference / Math.abs(referenceValue)) * 100 : null;
+    requireFiniteStatistics(difference);
+    if (percentDifference !== null) requireFiniteStatistics(percentDifference);
 
     referenceValues.push(referenceValue);
     candidateValues.push(candidateValue);
@@ -340,6 +360,15 @@ export function evaluateMethodComparison(
 
   const meanReferenceValue = referenceValues.reduce((sum, value) => sum + value, 0) / pairCount;
   const percentBias = meanReferenceValue !== 0 ? (meanDifference / Math.abs(meanReferenceValue)) * 100 : null;
+  requireFiniteStatistics(
+    meanDifference,
+    sumOfSquaredDeviations,
+    standardDeviationOfDifferences,
+    limitsOfAgreement.lower,
+    limitsOfAgreement.upper,
+    meanReferenceValue,
+  );
+  if (percentBias !== null) requireFiniteStatistics(percentBias);
 
   const pairwiseSlopes: number[] = [];
   for (let i = 0; i < pairCount; i += 1) {
@@ -348,19 +377,37 @@ export function evaluateMethodComparison(
       if (referenceSpread === 0) {
         continue;
       }
-      pairwiseSlopes.push((candidateValues[j] - candidateValues[i]) / referenceSpread);
+      const candidateSpread = candidateValues[j] - candidateValues[i];
+      const pairwiseSlope = candidateSpread / referenceSpread;
+      requireFiniteStatistics(referenceSpread, candidateSpread, pairwiseSlope);
+      pairwiseSlopes.push(pairwiseSlope);
     }
   }
   if (pairwiseSlopes.length === 0) {
     throw new MethodComparisonError('insufficient-reference-value-spread');
   }
   const slope = median(pairwiseSlopes);
-  const intercept = median(candidateValues.map((candidateValue, index) => candidateValue - slope * referenceValues[index]));
+  requireFiniteStatistics(slope);
+  const intercepts = candidateValues.map((candidateValue, index) => {
+    const value = candidateValue - slope * referenceValues[index];
+    requireFiniteStatistics(value);
+    return value;
+  });
+  const intercept = median(intercepts);
+  requireFiniteStatistics(intercept);
   const passingBablok: MethodComparisonPassingBablok = Object.freeze({
     slope,
     intercept,
     pairwiseSlopeCount: pairwiseSlopes.length,
   });
+
+  if (
+    percentBias === null &&
+    declaration.allowableBias.maxPercentBias !== null &&
+    declaration.allowableBias.maxMeanDifference === null
+  ) {
+    throw new MethodComparisonError('percent-bias-unavailable');
+  }
 
   const meanDifferenceExceeded =
     declaration.allowableBias.maxMeanDifference !== null &&

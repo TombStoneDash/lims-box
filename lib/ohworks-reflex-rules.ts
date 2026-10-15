@@ -146,37 +146,55 @@ function detectCycleRuleIds(rules: ReflexRule[]): Set<string> {
     edges.set(rule.triggerAnalyte, list);
   }
 
-  const cycleRuleIds = new Set<string>();
-  const visited = new Set<string>();
-  const onStackAnalytes: string[] = [];
-  const onStackRuleIds: string[] = [];
+  // Tarjan's algorithm groups analytes that can all reach one another.
+  // Classify edges after the components are complete so cross-edges to
+  // previously visited analytes are included, independent of traversal order.
+  const indices = new Map<string, number>();
+  const lowLinks = new Map<string, number>();
+  const stack: string[] = [];
   const onStackSet = new Set<string>();
+  const componentIds = new Map<string, number>();
+  let nextIndex = 0;
+  let nextComponentId = 0;
 
   function visit(analyte: string): void {
-    if (onStackSet.has(analyte)) {
-      const startIndex = onStackAnalytes.indexOf(analyte);
-      for (let i = startIndex; i < onStackRuleIds.length; i++) {
-        cycleRuleIds.add(onStackRuleIds[i]);
-      }
-      return;
-    }
-    if (visited.has(analyte)) {
-      return;
-    }
-    visited.add(analyte);
-    onStackAnalytes.push(analyte);
+    const index = nextIndex++;
+    indices.set(analyte, index);
+    lowLinks.set(analyte, index);
+    stack.push(analyte);
     onStackSet.add(analyte);
     for (const edge of edges.get(analyte) ?? []) {
-      onStackRuleIds.push(edge.ruleId);
-      visit(edge.to);
-      onStackRuleIds.pop();
+      if (!indices.has(edge.to)) {
+        visit(edge.to);
+        lowLinks.set(analyte, Math.min(lowLinks.get(analyte)!, lowLinks.get(edge.to)!));
+      } else if (onStackSet.has(edge.to)) {
+        lowLinks.set(analyte, Math.min(lowLinks.get(analyte)!, indices.get(edge.to)!));
+      }
     }
-    onStackAnalytes.pop();
-    onStackSet.delete(analyte);
+    if (lowLinks.get(analyte) === index) {
+      let member: string;
+      do {
+        member = stack.pop()!;
+        onStackSet.delete(member);
+        componentIds.set(member, nextComponentId);
+      } while (member !== analyte);
+      nextComponentId++;
+    }
   }
 
   for (const analyte of edges.keys()) {
-    visit(analyte);
+    if (!indices.has(analyte)) visit(analyte);
+  }
+
+  const cycleRuleIds = new Set<string>();
+  for (const [from, outgoing] of edges) {
+    for (const edge of outgoing) {
+      // An internal edge has a return path; in a singleton component the
+      // only possible internal edge is a self-loop, which is also a cycle.
+      if (componentIds.get(from) === componentIds.get(edge.to)) {
+        cycleRuleIds.add(edge.ruleId);
+      }
+    }
   }
 
   return cycleRuleIds;

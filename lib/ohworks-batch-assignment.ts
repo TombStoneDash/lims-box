@@ -111,10 +111,12 @@ export type BatchAssignmentResult = {
 };
 
 export type BatchAssignmentErrorCode =
+  | 'batch-id-invalid'
   | 'batch-id-duplicate'
   | 'batch-capacity-invalid'
   | 'batch-permitted-analyte-unknown'
   | 'batch-permitted-matrix-unknown'
+  | 'specimen-id-invalid'
   | 'specimen-id-duplicate'
   | 'specimen-analyte-unknown'
   | 'specimen-matrix-unknown'
@@ -122,10 +124,12 @@ export type BatchAssignmentErrorCode =
   | 'specimen-accession-sequence-invalid';
 
 const ERROR_MESSAGES: Record<BatchAssignmentErrorCode, string> = {
+  'batch-id-invalid': 'A batch identifier must be a non-empty string.',
   'batch-id-duplicate': 'More than one batch definition was submitted with the same batch identifier.',
   'batch-capacity-invalid': 'A batch capacity must be a finite integer greater than zero.',
   'batch-permitted-analyte-unknown': 'A batch permits an analyte code that is not a recognized bounded value.',
   'batch-permitted-matrix-unknown': 'A batch permits a matrix code that is not a recognized bounded value.',
+  'specimen-id-invalid': 'A specimen identifier must be a non-empty string.',
   'specimen-id-duplicate': 'More than one specimen was submitted with the same specimen identifier.',
   'specimen-analyte-unknown': 'A specimen analyte code is not a recognized bounded value.',
   'specimen-matrix-unknown': 'A specimen matrix code is not a recognized bounded value.',
@@ -156,6 +160,10 @@ function isKnownPriority(value: string): value is BatchAssignmentPriority {
 function validateBatches(batches: ReadonlyArray<BatchDefinition>): void {
   const seenBatchIds = new Set<string>();
   for (const batch of batches) {
+    if (typeof batch.batchId !== 'string' || batch.batchId.trim() === '') {
+      throw new BatchAssignmentError('batch-id-invalid');
+    }
+
     if (seenBatchIds.has(batch.batchId)) {
       throw new BatchAssignmentError('batch-id-duplicate');
     }
@@ -182,6 +190,10 @@ function validateBatches(batches: ReadonlyArray<BatchDefinition>): void {
 function validateSpecimens(specimens: ReadonlyArray<BatchAssignmentSpecimen>): void {
   const seenSpecimenIds = new Set<string>();
   for (const specimen of specimens) {
+    if (typeof specimen.specimenId !== 'string' || specimen.specimenId.trim() === '') {
+      throw new BatchAssignmentError('specimen-id-invalid');
+    }
+
     if (seenSpecimenIds.has(specimen.specimenId)) {
       throw new BatchAssignmentError('specimen-id-duplicate');
     }

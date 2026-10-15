@@ -321,7 +321,7 @@ export function authorizeOrder(
     if (!cosignerId) {
       return { orderId: order.orderId, decision: 'NEEDS_COSIGN', rule: 'cosign-required' };
     }
-    if (cosignerId === credential.requesterId) {
+    if (cosignerId === credential.requesterId.trim()) {
       return refuse('cosigner-same-as-requester');
     }
     return { orderId: order.orderId, decision: 'AUTHORIZED', rule: 'authorized-with-cosign' };

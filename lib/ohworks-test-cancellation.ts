@@ -185,7 +185,7 @@ function validateRequest(rawRequest: unknown): { orderReferenceToken: string; st
 
   const { orderReferenceToken, stage, reasonCode, requesterRole } = rawRequest;
 
-  if (!isNonEmptyString(orderReferenceToken)) {
+  if (!isNonEmptyString(orderReferenceToken) || !/\S/.test(orderReferenceToken)) {
     fail('order-reference-token-invalid');
   }
   if (!isNonEmptyString(stage) || !KNOWN_STAGES.has(stage)) {

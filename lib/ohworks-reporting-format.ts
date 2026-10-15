@@ -174,6 +174,9 @@ function isStructurallyValidFormat(raw: unknown): raw is ReportingFormat {
   if (!isFiniteNumber(candidate.aboveQuantitationLimit)) {
     return false;
   }
+  if (candidate.belowDetectionLimit > candidate.aboveQuantitationLimit) {
+    return false;
+  }
   if (candidate.qualitativeThresholds !== null) {
     if (!Array.isArray(candidate.qualitativeThresholds) || !candidate.qualitativeThresholds.every(isStructurallyValidThreshold)) {
       return false;
@@ -249,6 +252,9 @@ export function formatReportedResult(request: ReportRequest): ReportOutcome {
 
   if (format.decimalPlaces < 0) {
     throw new ReportingFormatError('negative-decimal-places');
+  }
+  if (format.decimalPlaces > 100) {
+    throw new ReportingFormatError('formats-malformed');
   }
 
   let censoring: ReportCensoring = null;

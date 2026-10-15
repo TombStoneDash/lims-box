@@ -101,13 +101,16 @@ export const COMMERCIAL_CLAIM_RULES: readonly CommercialClaimRule[] = [
 
 /**
  * Deterministic normalization contract shared by every matcher in this
- * module: Unicode NFKC, lowercase, punctuation/hyphens replaced with
- * spaces, whitespace collapsed.
+ * module: Unicode NFKC, lowercase, all Unicode format characters (\p{Cf}, e.g. zero-width space/joiner/non-joiner,
+ * word joiner, BOM) stripped, punctuation/hyphens replaced with spaces,
+ * whitespace collapsed. Format characters are invisible on screen but would
+ * otherwise split or evade a forbidden phrase that reads as intact text.
  */
 export function normalizeClaimText(input: string): string {
   return input
     .normalize('NFKC')
     .toLowerCase()
+    .replace(/\p{Cf}/gu, '')
     .replace(/[\p{P}]/gu, ' ')
     .replace(/\s+/g, ' ')
     .trim();
@@ -124,17 +127,24 @@ export interface CommercialClaimMatch {
  * present. Unmatched language is not represented as proven-safe.
  */
 export function matchCommercialClaim(text: string): CommercialClaimMatch | null {
-  const normalized = normalizeClaimText(text);
+  // A format character can disguise a letter boundary or a word boundary. Check
+  // both readings through the same canonical rules, preserving rule priority.
+  const candidates = [normalizeClaimText(text)];
+  if (/\p{Cf}/u.test(text)) {
+    candidates.push(normalizeClaimText(text.replace(/\p{Cf}/gu, ' ')));
+  }
   for (const rule of COMMERCIAL_CLAIM_RULES) {
-    for (const literal of rule.literals) {
-      if (normalized.includes(literal)) {
-        return { category: rule.category, matchedPhrase: literal };
+    for (const normalized of candidates) {
+      for (const literal of rule.literals) {
+        if (normalized.includes(literal)) {
+          return { category: rule.category, matchedPhrase: literal };
+        }
       }
-    }
-    for (const pattern of rule.patterns) {
-      const match = pattern.exec(normalized);
-      if (match) {
-        return { category: rule.category, matchedPhrase: match[0] };
+      for (const pattern of rule.patterns) {
+        const match = pattern.exec(normalized);
+        if (match) {
+          return { category: rule.category, matchedPhrase: match[0] };
+        }
       }
     }
   }

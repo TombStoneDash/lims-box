@@ -77,6 +77,52 @@ test('is ready to contact now exactly at the minimum between-attempt boundary', 
   assert.equal(plan.waitMinutes, 0);
 });
 
+for (const attemptedAt of ['2026-01-01T12:00:00.001Z', '2026-01-01T13:00:00.000Z']) {
+  test(`rejects a future attempt at ${attemptedAt} with a sanitized deterministic error`, () => {
+    assert.throws(
+      () => planNextEscalationContact(baselineInput({
+        attemptsSoFar: [{ chainIndex: 0, attemptedAt, reached: false }],
+      })),
+      { name: 'RangeError', message: 'planNextEscalationContact: attempt timestamp is after now' },
+    );
+  });
+}
+
+for (const minimumWait of [15, 30]) {
+  test(`an attempt exactly at now waits the configured ${minimumWait} minutes`, () => {
+    const input = baselineInput({ minMinutesBetweenAttemptsToSameContact: minimumWait });
+    input.attemptsSoFar = [{ chainIndex: 0, attemptedAt: input.now, reached: false }];
+    const plan = planNextEscalationContact(input);
+    assert.equal(plan.action, 'wait');
+    assert.equal(plan.targetChainIndex, 0);
+    assert.equal(plan.waitMinutes, minimumWait);
+  });
+}
+
+for (const [attemptedAt, expectedWait] of [
+  ['2026-01-01T11:59:30.000Z', 14.5],
+  ['2026-01-01T11:50:00.000Z', 5],
+  ['2026-01-01T11:45:00.000Z', 0],
+  ['2026-01-01T11:00:00.000Z', 0],
+] as const) {
+  test(`preserves the exact wait for a past attempt at ${attemptedAt}`, () => {
+    const plan = planNextEscalationContact(baselineInput({
+      attemptsSoFar: [{ chainIndex: 0, attemptedAt, reached: false }],
+    }));
+    assert.equal(plan.action, expectedWait > 0 ? 'wait' : 'contact_now');
+    assert.equal(plan.waitMinutes, expectedWait);
+  });
+}
+
+test('preserves the sanitized error for an unparseable attempt timestamp', () => {
+  assert.throws(
+    () => planNextEscalationContact(baselineInput({
+      attemptsSoFar: [{ chainIndex: 0, attemptedAt: 'synthetic-invalid-timestamp', reached: false }],
+    })),
+    { name: 'RangeError', message: 'planNextEscalationContact: unusable timestamp input' },
+  );
+});
+
 test('signals full chain exhaustion as a hard alert when every contact is exhausted with none reached', () => {
   const plan = planNextEscalationContact(
     baselineInput({
@@ -113,3 +159,33 @@ test('short-circuits with the already-acknowledged sentinel once any attempt was
   assert.equal(plan.waitMinutes, 0);
   assert.equal(plan.reason, 'already acknowledged, no further escalation needed');
 });
+
+for (const reached of ['false', 'true', 0, 1, undefined, null, 'synthetic-contact-secret']) {
+  for (const alreadyAcknowledged of [false, true]) {
+    test(`rejects reached ${String(reached)} with sanitized error (acknowledged: ${alreadyAcknowledged})`, () => {
+      const invalidAttempt = {
+        chainIndex: 3,
+        attemptedAt: '2026-01-01T09:30:00.000Z',
+        ...(reached === undefined ? {} : { reached }),
+      };
+      const input = baselineInput({
+        attemptsSoFar: [
+          { chainIndex: 0, attemptedAt: '2026-01-01T09:00:00.000Z', reached: alreadyAcknowledged },
+          invalidAttempt as unknown as PlanNextEscalationContactInput['attemptsSoFar'][number],
+        ],
+      });
+
+      assert.throws(() => planNextEscalationContact(input), (error: unknown) => {
+        assert.ok(error instanceof TypeError);
+        assert.equal(error.message, 'planNextEscalationContact: unusable reached input');
+        for (const contact of input.escalationChain) {
+          assert.ok(!error.message.includes(contact.name));
+          assert.ok(!error.message.includes(contact.contactMethod));
+        }
+        assert.ok(!error.message.includes(invalidAttempt.attemptedAt));
+        assert.ok(!error.message.includes('synthetic-contact-secret'));
+        return true;
+      });
+    });
+  }
+}

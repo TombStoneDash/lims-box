@@ -155,7 +155,20 @@ function isNonEmptyString(value: unknown): value is string {
 }
 
 function isUtcTimestamp(value: string): boolean {
-  return value.endsWith('Z') && Number.isFinite(Date.parse(value));
+  const fields = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.\d+)?Z$/.exec(value);
+  if (!fields) {
+    return false;
+  }
+
+  const [, year, month, day, hour, minute, second] = fields.map(Number);
+  if (month < 1 || month > 12 || hour > 23 || minute > 59 || second > 59) {
+    return false;
+  }
+
+  // Check literal fields before Date.parse can normalize an impossible date.
+  const isLeapYear = year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
+  const daysInMonth = [31, isLeapYear ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+  return day >= 1 && day <= daysInMonth[month - 1] && Number.isFinite(Date.parse(value));
 }
 
 function isStructurallyValidMatrixList(raw: unknown): raw is string[] {

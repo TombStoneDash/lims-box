@@ -159,7 +159,7 @@ function fail(code: ReportDistributionInputErrorCode): never {
 }
 
 function isNonEmptyString(value: unknown): value is string {
-  return typeof value === 'string' && value.length > 0;
+  return typeof value === 'string' && value.trim().length > 0;
 }
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {
@@ -204,7 +204,7 @@ function validateMatrix(raw: unknown): DistributionRule[] {
     if (!isPlainObject(entry)) {
       fail('rule-malformed');
     }
-    if (!isNonEmptyString(entry.recipientRole)) {
+    if (!isNonEmptyString(entry.recipientRole) || entry.recipientRole.trim().length === 0) {
       fail('rule-malformed');
     }
     if (!isNonEmptyString(entry.channelType)) {

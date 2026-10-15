@@ -99,7 +99,7 @@ test('identifiers are synthetic; builders are deterministic and isolated from ca
 });
 
 test('one read-only section follows quality events and immediately precedes the real-data stop', () => {
-  const source = readFileSync(new URL('../../app/pilot/ohworks/audit/page.tsx', import.meta.url), 'utf8');
+  const source = readFileSync(new URL('../../app/demo/labs/[labType]/audit/page.tsx', import.meta.url), 'utf8');
   const title = 'Audit-chain integrity and record retention (fabricated)';
   assert.equal(source.split(title).length - 1, 1);
   assert.ok(source.indexOf(title) > source.indexOf('Quality events (fabricated)'));

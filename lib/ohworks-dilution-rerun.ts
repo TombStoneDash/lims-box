@@ -30,9 +30,12 @@
  *                           analyte has no declared measuring range (or the
  *                           declared range's unit does not match the
  *                           result's unit), the declared ladder is invalid
- *                           for this analyte, or a rerun would be required
+ *                           for this analyte, the applied dilution exceeds
+ *                           the declared maximum, a rerun would be required
  *                           but the declared maximum rerun count has already
- *                           been reached.
+ *                           been reached, or the derived reportable product
+ *                           (a corrected result or greater-than limit) is
+ *                           not representable as a finite number.
  *
  * It performs no I/O, reads no system clock, mutates no SENAITE or database
  * state, and touches no real specimen, instrument, or customer data. Every
@@ -49,11 +52,13 @@ export type DilutionRerunReasonCode =
   | 'unknown-analyte'
   | 'measuring-range-unit-mismatch'
   | 'invalid-ladder'
+  | 'applied-dilution-exceeds-maximum'
   | 'within-range'
   | 'below-range'
   | 'max-reruns-exceeded'
   | 'rerun-required'
-  | 'max-dilution-reached';
+  | 'max-dilution-reached'
+  | 'non-finite-result';
 
 export type DilutionRerunRawResult = {
   /** Fabricated analyte/parameter code. */
@@ -93,7 +98,7 @@ export type DilutionRerunRequest = {
   /** Declared measuring ranges for every known analyte. */
   measuringRanges: ReadonlyArray<MeasuringRange>;
   ladder: DilutionLadder;
-  /** Declared ceiling on dilution factor; no rerun may use a factor above this. */
+  /** Declared ceiling on both the already-applied and next rerun dilution factors. */
   maxDilutionFactor: number;
   rerunTracking: RerunTracking;
 };
@@ -115,22 +120,26 @@ const REASON_DECISIONS: Record<DilutionRerunReasonCode, DilutionRerunDecision> =
   'unknown-analyte': 'block',
   'measuring-range-unit-mismatch': 'block',
   'invalid-ladder': 'block',
+  'applied-dilution-exceeds-maximum': 'block',
   'within-range': 'report_as_is',
   'below-range': 'report_as_is',
   'max-reruns-exceeded': 'block',
   'rerun-required': 'rerun_with_dilution',
   'max-dilution-reached': 'report_as_greater_than',
+  'non-finite-result': 'block',
 };
 
 const REASON_MESSAGES: Record<DilutionRerunReasonCode, string> = {
   'unknown-analyte': 'No measuring range is declared for this analyte.',
   'measuring-range-unit-mismatch': 'The declared measuring range for this analyte uses a different unit than the result.',
   'invalid-ladder': 'The declared dilution ladder is not valid for this analyte.',
+  'applied-dilution-exceeds-maximum': 'The already-applied dilution factor exceeds the declared maximum dilution factor.',
   'within-range': 'The raw reading is within the analyte\'s measuring range at the currently applied dilution.',
   'below-range': 'The raw reading is below the analyte\'s measuring range; further dilution cannot raise it into range.',
   'max-reruns-exceeded': 'A rerun at a higher dilution is required, but the declared maximum rerun count has already been reached.',
   'rerun-required': 'The raw reading exceeds the analyte\'s measuring range; a rerun at the next declared dilution factor is required.',
   'max-dilution-reached': 'The raw reading exceeds the analyte\'s measuring range and no further declared dilution factor is available.',
+  'non-finite-result': 'The derived reportable result could not be represented as a finite number at the currently applied dilution.',
 };
 
 /** Deterministic, privacy-safe human-readable text for a dilution/rerun reason code, suitable for UI display. */
@@ -268,7 +277,8 @@ function outcome(
  * Fail-closed: an analyte with no declared measuring range, a declared range
  * whose unit does not match the result's unit, a dilution ladder that is not
  * declared for this analyte or is not a strictly increasing sequence of
- * factors greater than 1, or a required rerun that would exceed the declared
+ * factors greater than 1, an applied dilution above the declared maximum,
+ * or a required rerun that would exceed the declared
  * maximum rerun count all resolve to `block`. A reading within or below the
  * measuring range resolves to `report_as_is` with the corrected
  * (dilution-adjusted) result. A reading above the range resolves to
@@ -311,11 +321,23 @@ export function evaluateDilutionRerun(request: DilutionRerunRequest): DilutionRe
     return outcome('invalid-ladder', null, null, null);
   }
 
+  if (result.appliedDilutionFactor > request.maxDilutionFactor) {
+    return outcome('applied-dilution-exceeds-maximum', null, null, null);
+  }
+
   if (result.rawReading < range.lowerLimit) {
-    return outcome('below-range', result.rawReading * result.appliedDilutionFactor, null, null);
+    const correctedResult = result.rawReading * result.appliedDilutionFactor;
+    if (!Number.isFinite(correctedResult)) {
+      return outcome('non-finite-result', null, null, null);
+    }
+    return outcome('below-range', correctedResult, null, null);
   }
   if (result.rawReading <= range.upperLimit) {
-    return outcome('within-range', result.rawReading * result.appliedDilutionFactor, null, null);
+    const correctedResult = result.rawReading * result.appliedDilutionFactor;
+    if (!Number.isFinite(correctedResult)) {
+      return outcome('non-finite-result', null, null, null);
+    }
+    return outcome('within-range', correctedResult, null, null);
   }
 
   const maxDilutionFactor = request.maxDilutionFactor;
@@ -324,7 +346,11 @@ export function evaluateDilutionRerun(request: DilutionRerunRequest): DilutionRe
   );
 
   if (candidateFactors.length === 0) {
-    return outcome('max-dilution-reached', null, null, range.upperLimit * result.appliedDilutionFactor);
+    const greaterThanLimit = range.upperLimit * result.appliedDilutionFactor;
+    if (!Number.isFinite(greaterThanLimit)) {
+      return outcome('non-finite-result', null, null, null);
+    }
+    return outcome('max-dilution-reached', null, null, greaterThanLimit);
   }
 
   const nextDilutionFactor = candidateFactors.reduce((smallest, factor) => (factor < smallest ? factor : smallest));

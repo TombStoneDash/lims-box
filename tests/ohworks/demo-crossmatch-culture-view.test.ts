@@ -128,7 +128,7 @@ test('builder is deterministic and isolated from fixture mutation, without ambie
 });
 
 test('panel is a read-only server component that calls the builder and stays within copy rules', () => {
-  const source = readFileSync('app/pilot/ohworks/_components/crossmatch-culture-panel.tsx', 'utf8');
+  const source = readFileSync('app/demo/labs/[labType]/_components/crossmatch-culture-panel.tsx', 'utf8');
   assert.doesNotMatch(source, /use client/);
   assert.match(source, /fabricated/);
   assert.match(source, /buildPilotCrossmatchCultureView/);
@@ -138,8 +138,8 @@ test('panel is a read-only server component that calls the builder and stays wit
 });
 
 test('critical-results page imports and renders CrossmatchCulturePanel exactly once', () => {
-  const source = readFileSync('app/pilot/ohworks/critical-results/page.tsx', 'utf8');
+  const source = readFileSync('app/demo/labs/[labType]/critical-results/page.tsx', 'utf8');
   assert.equal((source.match(/CrossmatchCulturePanel/g) ?? []).length, 2);
-  assert.match(source, /import\s*\{\s*CrossmatchCulturePanel\s*\}\s*from\s*['"]@\/app\/pilot\/ohworks\/_components\/crossmatch-culture-panel['"]/);
+  assert.match(source, /import\s*\{\s*CrossmatchCulturePanel\s*\}\s*from\s*['"]..\/_components\/crossmatch-culture-panel['"]/);
   assert.match(source, /<CrossmatchCulturePanel\s*\/>/);
 });

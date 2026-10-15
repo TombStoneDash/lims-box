@@ -19,7 +19,7 @@ UNKNOWN means the repository does not establish the answer. Never copy secret va
   Only the reviewed ISO 15189 pack is mapped for automatic fulfillment (`lib/personnelPackFulfillment.ts`).
   Unsupported selections return 409. Missing or changed PDF bytes return 503. GET serves the reviewed PDF without an email gate.
 - `/bot` answers from a local corpus. `/demo/assistant` answers limited questions about fabricated JSON records.
-  `/pilot/ohworks/bot` answers from synthetic OHWorks fixtures. None calls a cloud model.
+  `/demo/labs/[labType]/bot` (formerly `/pilot/ohworks/bot`, now a 308) answers from synthetic fixtures. None calls a cloud model.
 - `/demo` is an interactive synthetic walkthrough. `/demo/operator` rehearses state changes in browser memory.
 - `/senaite-demo` shows mock lab dashboards. `/pilot/ohworks` shows synthetic accessions, QC, reports, personnel, and audit evidence.
 - `/admin` reads personnel, competencies, training, sign-offs, controlled documents, reviews, and authorizations.

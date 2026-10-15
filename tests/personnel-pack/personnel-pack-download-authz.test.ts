@@ -22,6 +22,71 @@ import { PERSONNEL_PACK_PUBLIC_ASSETS } from '../../lib/personnelPackFulfillment
 
 const CLAIM_SECRET = 'test-only-personnel-pack-download-claim-secret';
 
+async function assertRecoveryPage(response: Response, status: number, secret?: string) {
+  assert.equal(response.status, status);
+  assert.match(response.headers.get('content-type') ?? '', /^text\/html/);
+  assert.equal(response.headers.get('cache-control'), 'private, no-store');
+  assert.equal(response.headers.get('referrer-policy'), 'no-referrer');
+  assert.equal(response.headers.get('x-robots-tag'), 'noindex, nofollow');
+  assert.equal(response.headers.get('x-content-type-options'), 'nosniff');
+  assert.equal(response.headers.get('vary'), 'Accept');
+  const html = await response.text();
+  assert.match(html, /href="\/personnel-pack"/);
+  assert.match(html, /Request a new link/);
+  if (secret) assert.ok(!html.includes(secret), 'error page must not echo the submitted claim');
+}
+
+test('browser expired and hostile claim links show recovery pages without consuming a claim', async () => {
+  const store = new SyntheticDurableStore();
+  const { GET } = claimedGet(store);
+  for (const token of [validClaim({ exp: Date.now() - 1000 }), '<script>alert(1)</script>']) {
+    const request = downloadRequest(`?asset=iso15189&claim=${encodeURIComponent(token)}`);
+    request.headers.set('Accept', 'text/html,application/xhtml+xml');
+    await assertRecoveryPage(await GET(request), 401, token);
+  }
+  assert.equal(store.consumed.size, 0);
+});
+
+test('browser replay and unavailable claim service offer recovery while valid redemption stays PDF', async () => {
+  const store = new SyntheticDurableStore();
+  const { POST, service } = claimedGet(store);
+  const token = service.issue('iso15189');
+  const request = () => {
+    const value = redeemRequest('iso15189', token);
+    value.headers.set('Accept', 'text/html');
+    return value;
+  };
+  const first = await POST(request());
+  assert.equal(first.status, 200);
+  assert.equal(first.headers.get('content-type'), 'application/pdf');
+  await assertRecoveryPage(await POST(request()), 401, token);
+  await assertRecoveryPage(await createPersonnelPackClaimPostHandler(() => null)(request()), 503, token);
+  const next = service.issue('iso15189');
+  store.available = false;
+  const unavailable = redeemRequest('iso15189', next);
+  unavailable.headers.set('Accept', 'text/html');
+  await assertRecoveryPage(await POST(unavailable), 503, next);
+});
+
+test('API clients and explicitly excluded HTML retain JSON claim errors', async () => {
+  const { GET } = claimedGet();
+  for (const accept of ['', 'application/json', 'text/html;q=0, application/json']) {
+    const request = downloadRequest('?asset=iso15189&claim=invalid');
+    if (accept) request.headers.set('Accept', accept);
+    const response = await GET(request);
+    assert.equal(response.status, 401);
+    assert.equal(response.headers.get('content-type'), 'application/json');
+    assert.equal(response.headers.get('vary'), 'Accept');
+    assert.equal((await response.json()).code, 'download_claim_malformed');
+  }
+});
+
+test('browser GET without configured claims returns a readable 503', async () => {
+  const request = downloadRequest('?asset=iso15189&claim=invalid');
+  request.headers.set('Accept', 'text/html');
+  await assertRecoveryPage(await createPersonnelPackGetHandler(() => null)(request), 503, 'invalid');
+});
+
 class SyntheticDurableStore implements DownloadClaimStore {
   readonly consumed = new Set<string>();
   available = true;

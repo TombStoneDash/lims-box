@@ -340,11 +340,31 @@ test('a non-finite reported value throws reported-value-invalid', () => {
   assertThrowsCode(() => evaluatePtEvent(results, baselineConsensus(), baselineLimits()), 'reported-value-invalid');
 });
 
+for (const reportedValue of ['0x64', '0b1', '0o7', '1_000', 'Infinity', '']) {
+  test(`non-decimal reported value ${JSON.stringify(reportedValue)} throws reported-value-invalid`, () => {
+    const results = baselineResults();
+    results[0].reportedValue = reportedValue;
+    assertThrowsCode(() => evaluatePtEvent(results, baselineConsensus(), baselineLimits()), 'reported-value-invalid');
+  });
+}
+
 test('a numeric-looking string reported value is accepted as numeric', () => {
   const results = baselineResults();
   (results[0] as unknown as { reportedValue: unknown }).reportedValue = '100';
   const result = evaluatePtEvent(results, baselineConsensus(), baselineLimits());
   assert.equal(result.participantScores[0].reportedValue, 100);
+});
+
+test('decimal text and a finite numeric reported value score identically', () => {
+  const scores = ['100', ' 100 ', '1e2', 100].map((reportedValue) => {
+    const results = baselineResults();
+    results[0].reportedValue = reportedValue;
+    return evaluatePtEvent(results, baselineConsensus(), baselineLimits());
+  });
+
+  for (const score of scores.slice(1)) {
+    assert.deepEqual(score, scores[0]);
+  }
 });
 
 test('evaluation is pure: it does not mutate input results, consensus, or limits', () => {

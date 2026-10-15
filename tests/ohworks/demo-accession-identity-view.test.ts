@@ -166,7 +166,7 @@ test('view-model source has no ambient inputs', () => {
 });
 
 test('panel is a read-only server component with no forbidden copy', () => {
-  const source = readFileSync('app/pilot/ohworks/_components/accession-identity-panel.tsx', 'utf8');
+  const source = readFileSync('app/demo/labs/[labType]/_components/accession-identity-panel.tsx', 'utf8');
   assert.doesNotMatch(source, /['"]use client['"]/);
   assert.match(source, /fabricated/);
   assert.match(source, /import \{ buildPilotAccessionIdentityView \} from '@\/lib\/ohworks-demo-accession-identity-view';/);
@@ -177,7 +177,7 @@ test('panel is a read-only server component with no forbidden copy', () => {
 });
 
 test('accessions page imports and renders AccessionIdentityPanel exactly once', () => {
-  const source = readFileSync('app/pilot/ohworks/accessions/page.tsx', 'utf8');
-  assert.equal((source.match(/import \{ AccessionIdentityPanel \} from '@\/app\/pilot\/ohworks\/_components\/accession-identity-panel';/g) ?? []).length, 1);
+  const source = readFileSync('app/demo/labs/[labType]/accessions/page.tsx', 'utf8');
+  assert.equal((source.match(/import \{ AccessionIdentityPanel \} from '..\/_components\/accession-identity-panel';/g) ?? []).length, 1);
   assert.equal((source.match(/<AccessionIdentityPanel\s*\/>/g) ?? []).length, 1);
 });

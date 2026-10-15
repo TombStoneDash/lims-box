@@ -10,7 +10,7 @@ import { NextRequest } from 'next/server';
 import { askBot, classifyQuestionIntent, type QuestionIntent, EVIDENCE_MISSING_ANSWER } from '../lib/bot/engine';
 import { corpus, COMPLIANCE_POSITIONING } from '../lib/bot/corpus';
 import { FOUNDER_CITATION_PREFIX, loadFounderCorpus, loadFounderFactIndex } from '../lib/bot/founder-corpus';
-import { filterCommercialClaims } from '../lib/bot/output-claims-filter';
+import { filterCommercialClaims, OUTPUT_CLAIMS_FILTER_SAFE_RESPONSE } from '../lib/bot/output-claims-filter';
 import { COMMERCIAL_CLAIM_RULES } from '../lib/bot/commercial-claims';
 import { parseHistory, serializeHistory } from '../lib/bot/chat-history';
 import {
@@ -503,7 +503,6 @@ test('product compliance questions keep the locked positioning; founder-only reg
   for (const question of [
     'Who is the founder and is LIMS BOX HIPAA compliant?',
     "Given Hudson's background, is LIMS BOX HIPAA compliant?",
-    "Considering the founder's experience, does LIMS BOX support 21 CFR Part 11 workflows?",
   ]) {
     assert.equal(classifyQuestionIntent(question), 'mixed', question);
     const result = askBot(question);
@@ -512,6 +511,14 @@ test('product compliance questions keep the locked positioning; founder-only reg
     assert.equal(result.sources[0].path, '/compliance', question);
     assert.ok(result.sources.every((source) => !source.path.startsWith(FOUNDER_CITATION_PREFIX)), question);
   }
+  // Part 11's published disclaimer contains a canonical forbidden phrase.
+  // The output gate takes precedence over returning the cited FAQ verbatim.
+  const part11 = "Considering the founder's experience, does LIMS BOX support 21 CFR Part 11 workflows?";
+  assert.equal(classifyQuestionIntent(part11), 'mixed');
+  const filtered = askBot(part11);
+  assert.equal(filtered.answer, OUTPUT_CLAIMS_FILTER_SAFE_RESPONSE);
+  assert.equal(filtered.grounded, false);
+  assert.deepEqual(filtered.sources, []);
   // A person's regulatory history is not a product compliance question, and no
   // admitted excerpt covers it, so the bot says it has no approved material.
   for (const question of [

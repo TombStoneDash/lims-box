@@ -241,7 +241,59 @@ function sameEventContent(a: AccessionEventInput, b: AccessionEventInput): boole
 }
 
 function isUtcTimestamp(value: string): boolean {
-  return value.endsWith('Z') && Number.isFinite(Date.parse(value));
+  const match = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.\d+)?Z$/.exec(value);
+  if (!match) {
+    return false;
+  }
+
+  const [, yearText, monthText, dayText, hourText, minuteText, secondText] = match;
+  const year = Number(yearText);
+  const month = Number(monthText);
+  const day = Number(dayText);
+  const hour = Number(hourText);
+  const minute = Number(minuteText);
+  const second = Number(secondText);
+  const leapYear = year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
+  const daysInMonth = [31, leapYear ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+
+  return (
+    month >= 1 && month <= 12 &&
+    day >= 1 && day <= daysInMonth[month - 1] &&
+    hour <= 23 && minute <= 59 && second <= 59 &&
+    Number.isFinite(Date.parse(value))
+  );
+}
+
+/** The fraction-of-a-second digits beyond the third (i.e. beyond millisecond precision), or '' if none. */
+function subMillisecondDigits(value: string): string {
+  const match = /\.(\d+)Z$/.exec(value);
+  return match ? match[1].slice(3) : '';
+}
+
+/**
+ * Compare two already-validated UTC timestamps at full precision, not just
+ * at the millisecond precision Date.parse preserves. Date.parse truncates
+ * everything past milliseconds, so two timestamps that differ only in their
+ * fourth-or-later fractional-second digit (e.g. ".0001Z" vs ".0009Z")
+ * otherwise parse to the same instant and a later sub-ms event would be
+ * wrongly treated as simultaneous with, rather than after, an earlier one.
+ * Returns <0 if a is before b, 0 if equal, >0 if a is after b.
+ */
+function compareOccurredAt(a: string, b: string): number {
+  const msDiff = Date.parse(a) - Date.parse(b);
+  if (msDiff !== 0) {
+    return msDiff;
+  }
+
+  const fractionA = subMillisecondDigits(a);
+  const fractionB = subMillisecondDigits(b);
+  const length = Math.max(fractionA.length, fractionB.length);
+  const paddedA = fractionA.padEnd(length, '0');
+  const paddedB = fractionB.padEnd(length, '0');
+  if (paddedA === paddedB) {
+    return 0;
+  }
+  return paddedA < paddedB ? -1 : 1;
 }
 
 /**
@@ -294,7 +346,7 @@ export function applyAccessionEvent(
     return block('timestamp-invalid');
   }
   if (!isUtcTimestamp(rawEvent.occurredAt)) {
-    return block('timestamp-not-utc');
+    return block(rawEvent.occurredAt.endsWith('Z') ? 'timestamp-invalid' : 'timestamp-not-utc');
   }
 
   const duplicate = history.find((entry) => entry.eventId === rawEvent.eventId);
@@ -303,7 +355,7 @@ export function applyAccessionEvent(
   }
 
   const previous = history.at(-1);
-  if (previous && Date.parse(rawEvent.occurredAt) <= Date.parse(previous.occurredAt)) {
+  if (previous && compareOccurredAt(rawEvent.occurredAt, previous.occurredAt) <= 0) {
     return block('timestamp-backwards');
   }
 

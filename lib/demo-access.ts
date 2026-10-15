@@ -50,7 +50,9 @@ export function basicCredentialsMatch(
   if (scheme?.toLowerCase() !== "basic" || !token || extra.length > 0) return false;
 
   try {
-    const decoded = atob(token);
+    const binary = atob(token);
+    const bytes = Uint8Array.from(binary, (char) => char.charCodeAt(0));
+    const decoded = new TextDecoder("utf-8", { fatal: true }).decode(bytes);
     const separator = decoded.indexOf(":");
     if (separator < 0) return false;
     const suppliedUser = decoded.slice(0, separator);

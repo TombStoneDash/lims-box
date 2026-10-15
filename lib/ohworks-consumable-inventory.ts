@@ -99,7 +99,8 @@ export type ConsumableInventoryErrorCode =
   | 'duplicate-lot-id'
   | 'stock-invalid'
   | 'negative-stock'
-  | 'expiry-invalid';
+  | 'expiry-invalid'
+  | 'derived-value-invalid';
 
 const ERROR_MESSAGES: Record<ConsumableInventoryErrorCode, string> = {
   'consumables-not-array': 'The declared consumables are not a list.',
@@ -116,6 +117,7 @@ const ERROR_MESSAGES: Record<ConsumableInventoryErrorCode, string> = {
   'stock-invalid': 'A declared lot quantity on hand is not a finite number.',
   'negative-stock': 'A declared lot quantity on hand is negative.',
   'expiry-invalid': 'A declared lot expiry is not null or a non-negative whole number of days.',
+  'derived-value-invalid': 'A derived inventory value is not a finite number.',
 };
 
 /** Deterministic, human-readable text for a fail-closed error code. */
@@ -136,6 +138,12 @@ export class ConsumableInventoryError extends Error {
 
 function isNonEmptyString(value: unknown): value is string {
   return typeof value === 'string' && value.length > 0;
+}
+
+function requireFiniteDerivedValues(...values: number[]): void {
+  if (!values.every((value) => Number.isFinite(value))) {
+    throw new ConsumableInventoryError('derived-value-invalid');
+  }
 }
 
 function isNonNegativeFiniteNumber(value: unknown): value is number {
@@ -288,13 +296,13 @@ function computeExpiryFlags(
   averageDailyUsage: number,
 ): Map<string, ConsumableLotExpiryFlag> {
   const fefoOrder = [...lots].sort((a, b) => {
-    const left = a.daysUntilExpiry === null ? Number.POSITIVE_INFINITY : a.daysUntilExpiry;
-    const right = b.daysUntilExpiry === null ? Number.POSITIVE_INFINITY : b.daysUntilExpiry;
-    return left - right;
+    if (a.daysUntilExpiry === null) return b.daysUntilExpiry === null ? 0 : 1;
+    if (b.daysUntilExpiry === null) return -1;
+    return a.daysUntilExpiry - b.daysUntilExpiry;
   });
 
   const flagsByLotId = new Map<string, ConsumableLotExpiryFlag>();
-  let cumulativeBeforeLot = 0;
+  let cumulativeConsumed = 0;
 
   for (const lot of fefoOrder) {
     if (lot.daysUntilExpiry === null) {
@@ -305,16 +313,24 @@ function computeExpiryFlags(
         expiredQuantity: 0,
         willExpireUnused: false,
       });
-      cumulativeBeforeLot += lot.quantityOnHand;
       continue;
     }
 
     const quantityConsumableByExpiry = averageDailyUsage * lot.daysUntilExpiry;
+    const remainingDemand = quantityConsumableByExpiry - cumulativeConsumed;
     const consumedFromThisLot = Math.min(
       lot.quantityOnHand,
-      Math.max(0, quantityConsumableByExpiry - cumulativeBeforeLot),
+      Math.max(0, remainingDemand),
     );
     const expiredQuantity = lot.quantityOnHand - consumedFromThisLot;
+    const nextCumulativeConsumed = cumulativeConsumed + consumedFromThisLot;
+    requireFiniteDerivedValues(
+      quantityConsumableByExpiry,
+      remainingDemand,
+      consumedFromThisLot,
+      expiredQuantity,
+      nextCumulativeConsumed,
+    );
 
     flagsByLotId.set(lot.lotId, {
       lotId: lot.lotId,
@@ -324,7 +340,8 @@ function computeExpiryFlags(
       willExpireUnused: expiredQuantity > 0,
     });
 
-    cumulativeBeforeLot += lot.quantityOnHand;
+    // Discarded stock does not satisfy demand available to later lots.
+    cumulativeConsumed = nextCumulativeConsumed;
   }
 
   return flagsByLotId;
@@ -371,11 +388,14 @@ export function evaluateConsumableInventory(
     const reorderPoint = declaration.averageDailyUsage * declaration.leadTimeDays + declaration.safetyStock;
     const targetStockLevel = declaration.averageDailyUsage * declaration.targetCoverDays + declaration.safetyStock;
     const reorderQuantity = Math.max(0, targetStockLevel - stockOnHand);
-    const status: ConsumableInventoryStatus = stockOnHand <= reorderPoint ? 'reorder-needed' : 'ok';
+    requireFiniteDerivedValues(stockOnHand, reorderPoint, targetStockLevel, reorderQuantity);
+    if (daysOfCover !== null) requireFiniteDerivedValues(daysOfCover);
 
     const flagsByLotId = computeExpiryFlags(consumableLots, declaration.averageDailyUsage);
     const lotFlags = consumableLots.map((lot) => Object.freeze(flagsByLotId.get(lot.lotId) as ConsumableLotExpiryFlag));
     const expiredQuantityTotal = lotFlags.reduce((sum, flag) => sum + flag.expiredQuantity, 0);
+    requireFiniteDerivedValues(expiredQuantityTotal);
+    const status: ConsumableInventoryStatus = stockOnHand <= reorderPoint ? 'reorder-needed' : 'ok';
 
     results.push(
       Object.freeze({

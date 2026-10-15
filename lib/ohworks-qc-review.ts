@@ -114,11 +114,27 @@ function isValidControlRange(control: QCControlRange): boolean {
   );
 }
 
+function parseCalendarInstant(value: string): number {
+  const date = /^([+-]\d{6}|\d{4})-(\d{2})-(\d{2})(?=[Tt\s]|$)/.exec(value);
+  if (!date) return Date.parse(value);
+
+  // Validate the supplied calendar date, not the UTC date after applying an offset.
+  // Date.parse alone normalizes impossible dates such as February 30.
+  const year = Number(date[1]);
+  const month = Number(date[2]);
+  const day = Number(date[3]);
+  const leapYear = year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
+  const daysInMonth = [31, leapYear ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+  if (month < 1 || month > 12 || day < 1 || day > daysInMonth[month - 1]) return NaN;
+
+  return Date.parse(value);
+}
+
 function isReorderedEvidence(observations: QCControlObservation[]): boolean {
   let previousSequence = -Infinity;
   let previousTime = -Infinity;
   for (const observation of observations) {
-    const time = Date.parse(observation.observedAt);
+    const time = parseCalendarInstant(observation.observedAt);
     if (!Number.isFinite(observation.sequence) || observation.sequence <= previousSequence) {
       return true;
     }
@@ -192,8 +208,8 @@ export function evaluateQCReleaseDisposition(run: QCReviewRun): QCReleaseDisposi
       continue;
     }
 
-    const observedTime = Date.parse(observation.observedAt);
-    const referenceTime = Date.parse(run.referenceTime);
+    const observedTime = parseCalendarInstant(observation.observedAt);
+    const referenceTime = parseCalendarInstant(run.referenceTime);
     const age = referenceTime - observedTime;
     if (!Number.isFinite(observedTime) || !Number.isFinite(referenceTime) || age < 0 || age > control.maxAgeMs) {
       reasons.push({ code: 'control-stale', controlId: control.controlId });
