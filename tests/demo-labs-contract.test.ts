@@ -5,7 +5,7 @@ import { test } from 'node:test';
 import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 
-import { CLINICAL_LAB_PROFILE, getLabProfile, LAB_SLUGS, labDemoPath } from '../lib/demo-labs';
+import { CLINICAL_LAB_PROFILE, ENVIRONMENTAL_LAB_PROFILE, getLabProfile, LAB_SLUGS, labDemoPath } from '../lib/demo-labs';
 import {
   LEGACY_PILOT_BASE,
   LEGACY_PILOT_REDIRECTS,
@@ -115,7 +115,7 @@ test('no page under /demo/labs shows the retired pilot customer name', () => {
 });
 
 test('the clinical profile is fictional, frozen, and owns the synthetic brand tokens', () => {
-  assert.deepEqual([...LAB_SLUGS], ['clinical']);
+  assert.deepEqual([...LAB_SLUGS], ['clinical', 'environmental']);
   assert.equal(getLabProfile('clinical'), CLINICAL_LAB_PROFILE);
   assert.equal(getLabProfile('nope'), undefined);
   assert.equal(getLabProfile(undefined), undefined);
@@ -126,6 +126,32 @@ test('the clinical profile is fictional, frozen, and owns the synthetic brand to
   assert.equal(DEFAULT_SYNTHETIC_BRAND, CLINICAL_LAB_PROFILE.brand);
   assert.equal(labDemoPath('clinical'), '/demo/labs/clinical');
   assert.equal(labDemoPath('clinical', '/qc'), '/demo/labs/clinical/qc');
+});
+
+test('the environmental profile is fictional, frozen, and resolves at /demo/labs/environmental', () => {
+  assert.equal(getLabProfile('environmental'), ENVIRONMENTAL_LAB_PROFILE);
+  assert.equal(ENVIRONMENTAL_LAB_PROFILE.slug, 'environmental');
+  assert.equal(ENVIRONMENTAL_LAB_PROFILE.sector, 'environmental');
+  assert.doesNotMatch(ENVIRONMENTAL_LAB_PROFILE.displayName, /ohworks/i);
+  assert.equal(ENVIRONMENTAL_LAB_PROFILE.volumeRange.unit, 'samples/yr');
+  assert.ok(Object.isFrozen(ENVIRONMENTAL_LAB_PROFILE));
+  assert.equal(labDemoPath('environmental'), '/demo/labs/environmental');
+  assert.equal(labDemoPath('environmental', '/qc'), '/demo/labs/environmental/qc');
+});
+
+test('every slug in LAB_SLUGS resolves to a profile with a matching slug and unique test-menu codes', () => {
+  for (const slug of LAB_SLUGS) {
+    const profile = getLabProfile(slug);
+    assert.ok(profile, `${slug} must resolve via getLabProfile`);
+    assert.equal(profile.slug, slug, `${slug} profile.slug must match its own key`);
+    const codes = profile.testMenu.map((method) => method.code);
+    assert.equal(codes.length, new Set(codes).size, `${slug} test-menu codes must be unique within the profile`);
+    assert.match(profile.brand.labName, /^SYNTHETIC-/, `${slug} brand.labName must stay SYNTHETIC- prefixed`);
+    assert.match(profile.brand.legalName, /^SYNTHETIC-/, `${slug} brand.legalName must stay SYNTHETIC- prefixed`);
+    assert.match(profile.brand.supportEmail, /^SYNTHETIC-/, `${slug} brand.supportEmail must stay SYNTHETIC- prefixed`);
+  }
+  const allCodes = LAB_SLUGS.flatMap((slug) => getLabProfile(slug)?.testMenu.map((method) => method.code) ?? []);
+  assert.equal(allCodes.length, new Set(allCodes).size, 'test-menu codes must be unique across every profile');
 });
 
 test('/demo/labs/clinical renders every panel with the fictional profile name and no pilot name', async () => {
