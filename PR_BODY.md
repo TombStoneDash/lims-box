@@ -1,25 +1,68 @@
-Re-land #317: cover email-validation dependencies in Attribution CI
+## Demo: real-product walk-through recording script
 
-Supersedes #317 (`ohworks-ci-email-validation-trigger-r16`). Its final commit, `07ea045107e3d79690fb72d5a8ce41e7579ef517`, adds `lib/emailValidation.ts` to the Attribution CI pull-request and main-push path filters. This update also retains that branch's preceding dependency additions for `lib/earlyAccessApplication.ts` and `lib/earlyAccessHandler.ts`, which connect the early-access route to email validation.
+Adds a Playwright recording script and a page-by-page shot list for the LIMS BOX live product and the local Basic-auth SENAITE demonstration.
 
-The dedicated trigger changes are absent from current main (`ef1f4da1633e6d4e90348ea613055691f1131580`), so this is not a docs-only re-land. Main already has broader all-PR test coverage through `3c2b09743282a2d539b38feb62f3bd55b6fc656b`; that coverage does not add these paths to the separate Attribution CI workflow, which also builds the application.
+### Included
 
-Preserve the current self-hosted Daisy runner, concurrency control, tests, typecheck, and build. The stale branch includes an older customer-tenant/SENAITE rewrite; importing that historical implementation would replace the current OHWorks demo and generic read-only SENAITE adapter. This bounded change carries forward the named CI task's intent only.
+- `demos/SHOTLIST.md`: exact action, visible result, and one narration sentence for every shot.
+- `demos/record.mjs`: 1920×1080 Chromium capture with visible 75 ms/character typing, 2–3 second screen pauses, slow scrolling, URL logging, separate live/local output files, and delivery copies under `/tmp/product-demos/lims-box/`.
+- `demos/out/` is gitignored; recordings must never be committed.
+- Live forms use `.example.test` identities and are filled but not submitted. The current `/environmental/intake` and `/clinical/intake` implementations are prospect forms, and submitting them would create customer-visible records contrary to the recording brief.
+- The local capture uses only the throwaway `demo` / `demo` HTTP Basic credentials supplied at server startup.
 
-Full-suite result: `npm run test:all` discovered 299 files and ran 4,605 tests. With the four hash-checked founder fixtures temporarily restored to exact committed bytes, 4,602 passed and 3 failed (exit 1, zero skipped). All three failures are Windows `EPERM` from `symlinkSync` in `bot-founder-corpus`, `bot-founder-diagnostics`, and `bot-founder-loader`. The initial CRLF checkout run had 40 failures; the byte-correct rerun removed 37. Original fixture bytes were restored and verified afterward, with no founder changes in the final diff. A symlink-capable runner must supply the green full-suite result. Local logs are retained under ignored `node_modules/reland-317-*.log`.
+### Product-truth notes
 
-Local verification (Node 24.14.1):
-- `npm ci --cache .npm-cache --no-audit --no-fund`: exit 0; Prisma generated; lockfile unchanged.
-- YAML parse and assertions: exit 0; both events include all three dependencies; main-push branch, Daisy runner, and attribution/typecheck/build steps preserved.
-- `npm run test:attribution`: 11 passed, exit 0.
-- `npm run test:email-validation`: 14 passed, exit 0.
-- `npm run lint`: exit 0.
-- `npm run typecheck`: exit 0.
-- `npm run build`: exit 0; 86 static pages generated. Lint and typecheck were run independently because the existing Next configuration skips them during build.
+- The checked-in environmental and clinical intake pages do not contain the requested sample/patient accession fields. Their complete actual field set is name, email, lab name, lab size, accreditations, optional pain point, optional referral source, plus environmental field/bench split.
+- Environmental collection, analysis, chain of custody, QC, and final report screens are therefore shown through the site's read-only `/demo/walkthrough` synthetic workflow.
+- Clinical accession, specimen/panel, result review/sign-off, QC, and report screens are shown through the read-only `/demo/labs/clinical/*` workflow.
+- There is no `/senaite-demo/samples` index route. The implemented sample page is `/senaite-demo/samples/SA-2026-0847`, and the local recording uses it.
 
-Runner handoff:
-- Fetched `origin/main` and `pull/317/head` into `origin/pr-317`, and re-read #317's description and 14-commit history. No remote task branch or replacement PR existed at the time of checking.
-- `git merge --no-commit --no-ff origin/pr-317` was attempted but failed before starting: Git could not create the worktree's `ORIG_HEAD.lock` in its external common Git directory (Permission denied). This sandbox permits repository file edits but not that Git metadata write. The six-line workflow patch is prepared; no merge state or merge commit was created.
-- In the runner, preserve these prepared artifacts, perform the normal merge on `codex-lenovo/reland-lims-box-317`, and resolve the historical OHWorks changes to current main while retaining this workflow patch. Include a passing full-suite result before marking the re-land complete.
-- The runner owns committing and pushing. After that, check for an existing PR on this head and create exactly ONE draft PR against main using this body if none exists. Do not merge, deploy, close, comment on, or otherwise modify #317.
-- No commit, push, draft PR, deployment, or email was performed by this worker. Draft creation is pending the runner's commit/push; GitHub cannot open a PR from uncommitted local files.
+### Planned live URLs
+
+- `https://lims.bot/environmental`
+- `https://lims.bot/environmental/intake`
+- `https://lims.bot/demo/walkthrough`
+- `https://lims.bot/clinical`
+- `https://lims.bot/clinical/intake`
+- `https://lims.bot/demo/labs/clinical`
+- `https://lims.bot/demo/labs/clinical/accessions`
+- `https://lims.bot/demo/labs/clinical/samples`
+- `https://lims.bot/demo/labs/clinical/result-review`
+- `https://lims.bot/demo/labs/clinical/qc`
+- `https://lims.bot/demo/labs/clinical/reports`
+- `https://lims.bot/clia-tracker`
+- `https://lims.bot/demo/assistant`
+- `https://lims.bot/personnel-pack`
+- `https://lims.bot/survey-ready-export`
+- `https://lims.bot/compliance`
+- `https://lims.bot/pricing`
+
+### Planned local URLs
+
+- `http://localhost:3000/senaite-demo`
+- `http://localhost:3000/senaite-demo/samples/SA-2026-0847`
+- `http://localhost:3000/senaite-demo/qc`
+- `http://localhost:3000/senaite-demo/equipment`
+- `http://localhost:3000/senaite-demo/training`
+
+### Verification and exact capture blocker
+
+- `node --check demos/record.mjs`: pass.
+- `git diff --check`: pass.
+- `npm run lint -- --no-warn-ignored demos/record.mjs`: pass.
+- `npm i -D playwright`: blocked because the worker environment cannot resolve `registry.npmjs.org` (`ENOTFOUND`), and Playwright is not present in the offline npm cache (`ENOTCACHED`).
+- Live navigation is blocked because the same environment cannot resolve `lims.bot` (`curl: (6) Could not resolve host`).
+- Local capture is blocked because the managed sandbox refuses both `0.0.0.0:3000` and `127.0.0.1:3000` listeners (`listen EPERM`).
+
+No `.webm` could be produced in this worker, so file size is **not available** and nothing was copied to `/tmp/product-demos/lims-box/`. Once the runner has network and localhost-listener access, run:
+
+```sh
+npm i -D playwright
+npx playwright install chromium
+node demos/record.mjs live
+ADMIN_BASIC_USER=demo ADMIN_BASIC_PASS=demo npm run dev
+# In another shell after the local server is ready:
+node demos/record.mjs local
+```
+
+The runner owns committing and pushing. Open one draft PR titled `demo: real-product walk-through recording script` after both recordings exist, are 4–8 minutes where applicable, have been copied to `/tmp/product-demos/lims-box/`, and their measured sizes have replaced the unavailable-size note above.
