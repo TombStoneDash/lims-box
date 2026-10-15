@@ -53,6 +53,7 @@ const ALL_ERROR_CODES: LotComparisonErrorCode[] = [
   'new-unit-missing',
   'old-unit-mismatched',
   'new-unit-mismatched',
+  'percent-criterion-unavailable',
 ];
 
 const ALL_GOVERNING_CRITERIA: LotComparisonGoverningCriterion[] = [
@@ -89,9 +90,10 @@ test('mean difference is the signed mean of (new - old)', () => {
   assert.equal(result.meanDifference, 0);
 });
 
-test('percent bias is null when the mean old-lot value is zero', () => {
+test('percent bias is null when the mean old-lot value is zero and no percent-bias criterion is declared', () => {
   const limits = baselineLimits();
   limits.allowableDifference = { absolute: 5, percent: null };
+  limits.maxPercentBias = null;
   const pairs: LotComparisonPair[] = [
     { specimenId: 's1', oldValue: 0, oldUnit: 'mg/dL', newValue: 1, newUnit: 'mg/dL' },
     { specimenId: 's2', oldValue: 0, oldUnit: 'mg/dL', newValue: -1, newUnit: 'mg/dL' },
@@ -103,10 +105,12 @@ test('percent bias is null when the mean old-lot value is zero', () => {
   assert.equal(result.percentBias, null);
 });
 
-test('a per-pair percent difference is null when that pair old value is zero', () => {
+test('a per-pair percent difference is null when that pair old value is zero and no per-pair percent criterion is declared', () => {
+  const limits = baselineLimits();
+  limits.allowableDifference = { absolute: 5, percent: null };
   const pairs = baselinePairs();
   pairs[0] = { specimenId: 'spec-synthetic-1', oldValue: 0, oldUnit: 'mg/dL', newValue: 1, newUnit: 'mg/dL' };
-  const result = evaluateLotComparison(pairs, baselineLimits());
+  const result = evaluateLotComparison(pairs, limits);
   assert.equal(result.pairDifferences[0].percentDifference, null);
 });
 
