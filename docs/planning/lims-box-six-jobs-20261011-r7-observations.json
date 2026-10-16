@@ -1,0 +1,118 @@
+{
+  "verifiedDefects": 6,
+  "observations": [
+    {
+      "id": 1,
+      "input": "result=0x10; reference range 5..20",
+      "observed": {
+        "classification": "within_range",
+        "flag": "WITHIN REFERENCE RANGE",
+        "reasons": []
+      },
+      "expected": "invalid, not a converted decimal result"
+    },
+    {
+      "id": 2,
+      "input": "value=50; LOD=100; ULOQ=1",
+      "observed": {
+        "analyteCode": "SYNTH-A",
+        "reportString": "<100 mg/L",
+        "censoring": "below-detection",
+        "qualitativeLabel": null
+      },
+      "expected": "typed formats-malformed refusal for inverted limits"
+    },
+    {
+      "id": 3,
+      "input": "whitespace-only order reference",
+      "observed": {
+        "orderReferenceToken": "   ",
+        "outcome": "allowed",
+        "governingRule": "director-full-authority",
+        "creditNoteDue": true,
+        "amendedReportRequired": true
+      },
+      "expected": "order-reference-token-invalid"
+    },
+    {
+      "id": 4,
+      "input": {
+        "instrumentId": "SYNTH-I",
+        "analyteId": "SYNTH-A",
+        "lastVerifiedAt": "2026-01-01T00:00:00Z",
+        "maxIntervalDays": 30,
+        "triggerEvents": [
+          {
+            "kind": "reagent-lot-change",
+            "occurredAt": "2026-02-01T00:00:00Z"
+          }
+        ]
+      },
+      "asOf": "2026-01-10T00:00:00Z",
+      "observed": {
+        "instrumentId": "SYNTH-I",
+        "analyteId": "SYNTH-A",
+        "asOf": "2026-01-10T00:00:00Z",
+        "decision": "REQUIRED_BY_EVENT",
+        "reasonCode": "trigger-event-required",
+        "reason": "A trigger event recorded since the last verification requires re-verification regardless of the calendar interval.",
+        "dueAt": "2026-02-01T00:00:00.000Z",
+        "governingTriggerKind": "reagent-lot-change"
+      },
+      "expected": "reject future-dated recorded event, not a valid trigger-event-required finding"
+    },
+    {
+      "id": 5,
+      "input": {
+        "first": {
+          "subjectId": "SYNTH-S",
+          "analyteCode": "SYNTH-A",
+          "unit": "mmol/L",
+          "value": "0x10",
+          "capturedAt": "2026-01-02T12:00:00Z"
+        },
+        "repeats": [
+          {
+            "subjectId": "SYNTH-S",
+            "analyteCode": "SYNTH-A",
+            "unit": "mmol/L",
+            "value": 16,
+            "capturedAt": "2026-01-02T12:15:00Z"
+          }
+        ],
+        "policy": {
+          "analyteCode": "SYNTH-A",
+          "unit": "mmol/L",
+          "repeatRequired": true,
+          "tolerance": {
+            "absolute": 0.5,
+            "percent": 10
+          },
+          "maxRepeats": 2
+        }
+      },
+      "observed": {
+        "status": "confirmed",
+        "reasonCode": "repeat-confirmed",
+        "reportValue": 16,
+        "repeatsEvaluated": 1,
+        "notifyAllowed": true
+      },
+      "expected": "discordant first-result-value-invalid, no report value"
+    },
+    {
+      "id": 6,
+      "input": "empty mapping table, model=__proto__, no raw flags",
+      "observed": {
+        "instrumentModel": "__proto__",
+        "decision": "mapped",
+        "reasonCode": "no-raw-flags",
+        "reason": "The result carried no raw flags, so no canonical flag or action applies.",
+        "canonicalFlags": [],
+        "resolvedSeverity": null,
+        "requiredAction": "none"
+      },
+      "expected": "blocked unknown-instrument-model"
+    }
+  ]
+}

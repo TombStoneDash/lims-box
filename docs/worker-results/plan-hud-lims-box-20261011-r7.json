@@ -1,0 +1,58 @@
+{
+  "task_id": "plan-hud-lims-box-20261011-r7",
+  "run_id": "plan-hud-lims-box-20261011-r7-20261011T202428Z",
+  "host_id": "mac-mini-local",
+  "host_role": "main-daisy",
+  "repo": "TombStoneDash/lims-box",
+  "branch_or_worktree": "codex/plan-hud-lims-box-20261011-r7",
+  "base_revision": "ee19f22b5fb7d0683ff828883da370614647ecaf",
+  "objective": "Produce six verified user-visible jobs; exactly one existing source file and one existing lane test file each",
+  "constraints": [
+    "Read-only product/source/test inspection",
+    "Plan and verification artifacts only",
+    "No product edits, commits, pushes, production writes or external messages"
+  ],
+  "owner": "User-assigned planner; canonical running packet claimed by runner PID 77517 at 2026-10-11T20:24:28Z",
+  "inputs": [
+    "Repository docs, source and tests",
+    "All three open GitHub issues oldest first",
+    "12 open PR file lists and 97 merged PRs since 2026-10-09",
+    "Canonical running task, LIMS feeder, dispatch claims and Linear intake snapshot"
+  ],
+  "requested_model": "not-exposed",
+  "requested_reasoning_effort": "not-exposed",
+  "client_effective_model": "not-exposed",
+  "provider_returned_model_id": "not-exposed",
+  "model_evidence_source": "not-exposed",
+  "route_id": "acct-25f765e1",
+  "route_evidence": "Canonical running packet _claim.account_route; does not attest a provider-returned model",
+  "started_at": "2026-10-11T20:24:28Z",
+  "started_at_evidence": "Canonical runner claim timestamp",
+  "ended_at": "2026-10-11T20:31:45.905Z",
+  "terminal_state": "PASS",
+  "budget": "not-exposed",
+  "timeout": "15-minute planning bound",
+  "retry_cap": 1,
+  "verification": [
+    "Initial four existing suites: exit 0, 165 tests passed",
+    "Final 14 existing suites: exit 0, 357 passed; zero failed/skipped/cancelled/todo",
+    "Six isolated source reproductions with control assertions: exit 0; repeated from saved artifact with identical JSON output",
+    "Manifest validation: six unique existing source/test pairs; zero source overlap with all 12 open PRs",
+    "GitHub merged inventory: 97 PRs; nearby same-source patches inspected and distinguished",
+    "git diff --check: exit 0",
+    "git diff --name-only: empty; additions only under docs/planning and docs/worker-results"
+  ],
+  "artifacts": [
+    "docs/planning/lims-box-six-jobs-20261011-r7.md",
+    "docs/planning/lims-box-six-jobs-20261011-r7-github.json",
+    "docs/planning/lims-box-six-jobs-20261011-r7-repro.mjs",
+    "docs/planning/lims-box-six-jobs-20261011-r7-observations.json",
+    "docs/planning/lims-box-six-jobs-20261011-r7-tests.log"
+  ],
+  "usage_delta": "not-exposed",
+  "blocker": "none for requested planning and verification",
+  "rollback": "Remove only the planning artifacts and this receipt; no tracked product or test file was modified",
+  "next_safe_action": "Runner reviews and commits artifacts, forwards receipt, and rechecks PR overlap before any implementation claim",
+  "canonical_receipt_destination": "/Users/ops/Hermes/inbox/dispatch/30_WORKER_RESULTS",
+  "receipt_delivery": "Repository-local staging for runner forwarding. Canonical destination is outside the writable sandbox; no canonical delivery is claimed."
+}
