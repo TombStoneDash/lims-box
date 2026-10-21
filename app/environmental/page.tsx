@@ -51,6 +51,12 @@ export default function EnvironmentalLandingPage() {
 
       <section className="max-w-3xl mx-auto px-6 py-16 text-center">
         <Link
+          href="/demo/labs/environmental"
+          className="mb-6 block text-sm font-medium text-emerald-800 underline hover:text-emerald-900"
+        >
+          See the synthetic environmental lab demo →
+        </Link>
+        <Link
           href="/environmental/intake"
           className="inline-flex items-center rounded-md bg-emerald-700 text-white px-6 py-3 text-sm font-medium hover:bg-emerald-800"
         >
