@@ -11,6 +11,7 @@
 import { corpus, type CorpusEntry, COMPLIANCE_POSITIONING } from './corpus';
 import { filterCommercialClaims } from './output-claims-filter';
 import { safetyRefusal } from './safety';
+import { normalizeTokens } from './query-normalizer';
 
 export interface BotSource {
   title: string;
@@ -129,7 +130,11 @@ function answerQuestion(rawQuestion: unknown): BotResponse {
     }
   }
 
-  const tokens = tokenize(question);
+  // Typo/synonym correction runs on the query tokens only, after the exact
+  // regex/overview routes above have had first crack -- it never touches
+  // corpus text, so a correction can only route to an answer that already
+  // exists verbatim.
+  const tokens = normalizeTokens(tokenize(question));
   if (tokens.length === 0) return evidenceMissing();
 
   // The founder bio answers only founder questions; in product ranking its
@@ -346,7 +351,7 @@ function buildBotResponse(rawQuestion: unknown): BotResponse {
   if (response.grounded) return response;
 
   const tokens = typeof rawQuestion === 'string'
-    ? tokenize(rawQuestion.trim().slice(0, MAX_QUESTION_LENGTH))
+    ? normalizeTokens(tokenize(rawQuestion.trim().slice(0, MAX_QUESTION_LENGTH)))
     : [];
   const partialMatches = corpus
     .map((entry, index) => ({ entry, index, score: scoreEntry(entry, tokens) }))
