@@ -660,8 +660,8 @@ export default function DemoPage() {
               <p className="text-xs text-slate-500">Workflow context</p>
             </div>
             <div>
-              <p className="font-bold text-slate-900 dark:text-white">21 CFR Part 11</p>
-              <p className="text-xs text-slate-500">Validation support</p>
+              <p className="font-bold text-slate-900 dark:text-white">Audit trail</p>
+              <p className="text-xs text-slate-500">E-signature workflow context</p>
             </div>
             <div>
               <p className="font-bold text-slate-900 dark:text-white">Online Web Demo</p>

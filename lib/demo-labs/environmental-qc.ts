@@ -1,6 +1,6 @@
 /**
  * Synthetic batch QC and hold-time checks for the environmental demo profile.
- * Acceptance windows are demo values, not method-certified limits; the public
+ * Acceptance windows are demo values, not method-published limits; the public
  * method sources behind every number are listed in docs/demo-labs/METHODS_SOURCES.md.
  * A failing QC element never auto-releases a batch: it returns `needs_review`.
  */

@@ -13,6 +13,20 @@ export const metadata: Metadata = {
   },
 };
 
+const SYNTHETIC_DEMO_BANNER_TEXT =
+  'Synthetic demonstration data only. Fictional labs, samples, and people; no customer, patient, or production records.';
+
 export default function DemoLayout({ children }: { children: React.ReactNode }) {
-  return children;
+  return (
+    <>
+      <div
+        role="note"
+        data-synthetic-banner=""
+        className="bg-amber-100 px-4 py-1.5 text-center text-xs font-medium text-amber-900"
+      >
+        {SYNTHETIC_DEMO_BANNER_TEXT}
+      </div>
+      {children}
+    </>
+  );
 }

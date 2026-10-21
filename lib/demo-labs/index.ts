@@ -1,18 +1,21 @@
 import { CLINICAL_LAB_PROFILE } from './clinical';
+import { DIAGNOSTICS_LAB_PROFILE } from './diagnostics';
 import { ENVIRONMENTAL_LAB_PROFILE } from './environmental';
 import type { LabProfile } from './types';
 
 export type { InstrumentStub, LabBrand, LabProfile, LabSector, Method, VolumeRange } from './types';
 export { CLINICAL_LAB_PROFILE } from './clinical';
+export { DIAGNOSTICS_LAB_PROFILE } from './diagnostics';
 export { ENVIRONMENTAL_LAB_PROFILE } from './environmental';
 
-/** Slugs that resolve today. Diagnostics lands in a later PR. */
-export const LAB_SLUGS = ['clinical', 'environmental'] as const;
+/** Slugs that resolve today. */
+export const LAB_SLUGS = ['clinical', 'environmental', 'diagnostics'] as const;
 export type LabSlug = (typeof LAB_SLUGS)[number];
 
 const PROFILES: Readonly<Record<LabSlug, LabProfile>> = Object.freeze({
   clinical: CLINICAL_LAB_PROFILE,
   environmental: ENVIRONMENTAL_LAB_PROFILE,
+  diagnostics: DIAGNOSTICS_LAB_PROFILE,
 });
 
 export const DEMO_LABS_BASE = '/demo/labs';

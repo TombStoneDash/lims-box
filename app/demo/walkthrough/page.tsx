@@ -214,7 +214,7 @@ const walkthroughSteps: WalkthroughStep[] = [
     id: 'audit',
     title: 'Audit Trail',
     overlay: 'Every action. Logged. Timestamped. Tamper-evident.',
-    description: 'Complete chain of custody with electronic signatures, IP logging, and immutable timestamps. Built for ISO 17025 and 21 CFR Part 11.',
+    description: 'Complete chain of custody with electronic signatures, IP logging, and immutable timestamps. Designed around ISO 17025 workflow context.',
     icon: Shield,
     tileClass: 'bg-purple-500/20',
     iconClass: 'text-purple-500',

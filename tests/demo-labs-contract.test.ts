@@ -5,7 +5,7 @@ import { test } from 'node:test';
 import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 
-import { CLINICAL_LAB_PROFILE, ENVIRONMENTAL_LAB_PROFILE, getLabProfile, LAB_SLUGS, labDemoPath } from '../lib/demo-labs';
+import { CLINICAL_LAB_PROFILE, DIAGNOSTICS_LAB_PROFILE, ENVIRONMENTAL_LAB_PROFILE, getLabProfile, LAB_SLUGS, labDemoPath } from '../lib/demo-labs';
 import {
   LEGACY_PILOT_BASE,
   LEGACY_PILOT_REDIRECTS,
@@ -94,7 +94,7 @@ test('demo remains synthetic, supervised, and discovery-only in route copy', () 
   const combined = routeFiles.map((file) => readFileSync(resolve(root, file), 'utf8')).join('\n');
   assert.match(combined, /Synthetic demonstration data only/i);
   assert.match(combined, /Demo role simulator - not authentication/i);
-  assert.match(combined, /LIAISON XL.*Orchidlive.*hypothesis/i);
+  assert.match(combined, /synthetic analyzer.*Orchidlive.*hypothesis/i);
   assert.match(combined, /distinct authorized technical-review event/i);
   assert.doesNotMatch(combined, /production[- ]ready/i);
   assert.doesNotMatch(combined, /live integration is supported/i);
@@ -115,7 +115,7 @@ test('no page under /demo/labs shows the retired pilot customer name', () => {
 });
 
 test('the clinical profile is fictional, frozen, and owns the synthetic brand tokens', () => {
-  assert.deepEqual([...LAB_SLUGS], ['clinical', 'environmental']);
+  assert.deepEqual([...LAB_SLUGS], ['clinical', 'environmental', 'diagnostics']);
   assert.equal(getLabProfile('clinical'), CLINICAL_LAB_PROFILE);
   assert.equal(getLabProfile('nope'), undefined);
   assert.equal(getLabProfile(undefined), undefined);
@@ -137,6 +137,32 @@ test('the environmental profile is fictional, frozen, and resolves at /demo/labs
   assert.ok(Object.isFrozen(ENVIRONMENTAL_LAB_PROFILE));
   assert.equal(labDemoPath('environmental'), '/demo/labs/environmental');
   assert.equal(labDemoPath('environmental', '/qc'), '/demo/labs/environmental/qc');
+});
+
+test('the diagnostics profile is fictional, frozen, and has its own clinical panel menu', () => {
+  assert.equal(getLabProfile('diagnostics'), DIAGNOSTICS_LAB_PROFILE);
+  assert.equal(DIAGNOSTICS_LAB_PROFILE.slug, 'diagnostics');
+  assert.equal(DIAGNOSTICS_LAB_PROFILE.sector, 'diagnostics');
+  assert.ok(Object.isFrozen(DIAGNOSTICS_LAB_PROFILE));
+  const clinicalCodes = new Set(CLINICAL_LAB_PROFILE.testMenu.map((method) => method.code));
+  assert.ok(DIAGNOSTICS_LAB_PROFILE.testMenu.every((method) => !clinicalCodes.has(method.code)), 'diagnostics menu must differ from clinical');
+  for (const instrument of DIAGNOSTICS_LAB_PROFILE.instruments) {
+    for (const code of instrument.methods) {
+      assert.ok(DIAGNOSTICS_LAB_PROFILE.testMenu.some((method) => method.code === code), `${instrument.id} runs unknown method ${code}`);
+    }
+  }
+  assert.equal(labDemoPath('diagnostics'), '/demo/labs/diagnostics');
+});
+
+test('/demo/labs/diagnostics renders every panel with its own profile name', async () => {
+  for (const path of Object.keys(pageModules)) {
+    const markup = await renderPage(path, 'diagnostics');
+    assert.ok(markup.length > 500, `${path || '/'} should render for diagnostics`);
+    assert.match(markup, /[Ss]ynthetic/, `${path || '/'} must label synthetic data`);
+  }
+  const overview = await renderPage('', 'diagnostics');
+  assert.match(overview, new RegExp(DIAGNOSTICS_LAB_PROFILE.displayName));
+  assert.match(overview, /href="\/demo\/labs\/diagnostics\/samples\?role=reviewer"/);
 });
 
 test('every slug in LAB_SLUGS resolves to a profile with a matching slug and unique test-menu codes', () => {

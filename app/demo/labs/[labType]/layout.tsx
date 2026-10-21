@@ -52,7 +52,7 @@ export default async function DemoLabLayout({ children, params }: LayoutProps) {
           <div className="grid gap-2 text-right text-xs text-slate-200 sm:grid-cols-2">
             <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
               <p className="font-semibold uppercase tracking-[0.16em] text-teal-200">Boundary</p>
-              <p className="mt-1 leading-5">No deployment, no customer data, no live LIAISON XL or Orchidlive claim.</p>
+              <p className="mt-1 leading-5">No deployment, no customer data, no live analyzer or Orchidlive claim.</p>
             </div>
             <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
               <p className="font-semibold uppercase tracking-[0.16em] text-teal-200">Release rule</p>
@@ -88,7 +88,7 @@ export default async function DemoLabLayout({ children, params }: LayoutProps) {
       <footer className="mt-10 border-t border-slate-200 bg-white">
         <div className="mx-auto flex max-w-[1500px] flex-col gap-2 px-5 py-5 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between">
           <span>Synthetic demonstration data only. No patient, employee-health, or customer records are present.</span>
-          <span>LIAISON XL and Orchidlive are shown as discovery hypotheses only, not validated integrations.</span>
+          <span>The synthetic analyzer and Orchidlive are shown as discovery hypotheses only, not verified integrations.</span>
         </div>
       </footer>
     </div>

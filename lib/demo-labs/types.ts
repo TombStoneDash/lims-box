@@ -24,7 +24,7 @@ export type VolumeRange = Readonly<{
   label: 'planning range';
 }>;
 
-/** The seven brand tokens the pilot already validated; kept field-for-field. */
+/** The seven brand tokens the pilot already used; kept field-for-field. */
 export type LabBrand = Readonly<{
   labName: string;
   legalName: string;
