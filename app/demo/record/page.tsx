@@ -6,6 +6,8 @@ import {
   MessageSquare
 } from 'lucide-react';
 import { formatClock, advancePlayer } from '@/lib/demo-record-player';
+import type { LabProfile } from '@/lib/demo-labs';
+import { recordLabFromSearch } from '@/lib/demo-labs/record';
 
 const STEP_DURATION = 30;
 const TRANSITION_MS = 800;
@@ -171,6 +173,10 @@ export default function RecordPage() {
     typeof window !== 'undefined' && !!window.matchMedia
       && window.matchMedia('(prefers-reduced-motion: reduce)').matches
   );
+  // `?lab=<slug>` targets a demo-lab profile; read once, like the motion preference above.
+  const [lab] = useState<LabProfile | undefined>(
+    typeof window !== 'undefined' ? recordLabFromSearch(window.location.search) : undefined
+  );
 
   const totalElapsed = current * STEP_DURATION + elapsed;
   const totalTime = steps.length * STEP_DURATION;
@@ -212,6 +218,11 @@ export default function RecordPage() {
         <div className="text-center">
           <FlaskConical className="w-16 h-16 text-[#2E8B57] mx-auto mb-6" />
           <h1 className="text-4xl font-bold text-white mb-2 tracking-tight">LIMS BOX</h1>
+          {lab && (
+            <p data-record-lab={lab.slug} className="text-sm text-slate-300 mb-2">
+              {lab.displayName} (synthetic {lab.sector} profile)
+            </p>
+          )}
           <p className="text-slate-500 mb-8">Recording mode — click anywhere to start, or press Enter</p>
           <button
             type="button"
@@ -270,6 +281,7 @@ export default function RecordPage() {
           </h2>
           <p className="text-sm text-slate-300 mb-4 text-center">
             Synthetic demonstration — static example screens, not live lab operations.
+            {lab ? ` Profile: ${lab.displayName}. Test menu: ${lab.testMenu.map(m => m.code).join(', ')}.` : ''}
           </p>
 
           {/* Screen content */}

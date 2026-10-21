@@ -132,7 +132,7 @@ export function AssistantConsole({
                 <span className="font-semibold">Orchidlive discovery simulator</span>
               </div>
               <p className="mt-2 text-xs leading-5 text-slate-600">
-                Explicitly unverified LIAISON XL -&gt; Orchidlive -&gt; LIMS BOX hypothesis and supplier questions only.
+                Explicitly unverified synthetic analyzer -&gt; Orchidlive -&gt; LIMS BOX hypothesis and supplier questions only.
               </p>
             </button>
           </div>

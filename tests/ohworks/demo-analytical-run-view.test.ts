@@ -94,5 +94,5 @@ test('one read-only analytical section follows readiness and immediately precede
   assert.equal((source.slice(readinessEnd, panelEnd).match(/<section\b/g) ?? []).length, 1);
   assert.equal((source.slice(readinessEnd, panelEnd).match(/<table\b/g) ?? []).length, 2);
   assert.ok(source.slice(panelEnd, source.indexOf('</section>', panelEnd + 10)).includes('Supplier questions still open'));
-  assert.match(source, /fabricated examples, not LIAISON XL specifications, and no instrument is connected/);
+  assert.match(source, /fabricated examples, not vendor analyzer specifications, and no instrument is connected/);
 });

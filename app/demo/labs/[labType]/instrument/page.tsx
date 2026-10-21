@@ -27,10 +27,10 @@ export default async function OHWorksInstrumentWorkbench({ params: routeParams, 
     <div className="space-y-7">
       <div>
         <p className="text-xs font-semibold uppercase tracking-[0.2em] text-teal-700">Synthetic demonstration data only</p>
-        <h1 className="mt-2 text-3xl font-semibold tracking-tight">LIAISON XL and Orchidlive discovery simulator</h1>
+        <h1 className="mt-2 text-3xl font-semibold tracking-tight">Synthetic analyzer and Orchidlive discovery simulator</h1>
         <p className="mt-3 max-w-4xl text-sm leading-6 text-slate-600">
           {pilotMeta.instrumentCandidate}. The workbench shows safe adapter boundaries and unresolved supplier
-          questions only. It does not claim a validated customer interface, supported topology, or live transport.
+          questions only. It does not claim a verified customer interface, supported topology, or live transport.
         </p>
       </div>
 
@@ -76,7 +76,7 @@ export default async function OHWorksInstrumentWorkbench({ params: routeParams, 
           </p>
           <div className="mt-5 rounded-xl bg-white/70 p-4 ring-1 ring-amber-200">
             <p className="text-xs font-semibold uppercase tracking-wide text-amber-800">Unverified hypothesis only</p>
-            <p className="mt-2 text-sm font-semibold">LIAISON XL -&gt; Orchidlive -&gt; LIMS BOX</p>
+            <p className="mt-2 text-sm font-semibold">Synthetic analyzer -&gt; Orchidlive -&gt; LIMS BOX</p>
             <p className="mt-2 text-xs leading-5 text-slate-600">
               The simulator shows the chain as a discovery question, not a confirmed laboratory fact. Supplier documents
               and synthetic message samples remain required before any adapter code would be warranted.
@@ -187,7 +187,7 @@ export default async function OHWorksInstrumentWorkbench({ params: routeParams, 
         <h2 className="text-lg font-semibold text-teal-700">Analytical run checks — carryover and dilution (fabricated run)</h2>
         <p className="mt-2 text-sm leading-6 text-slate-600">
           A fabricated analyser run evaluated by the real rule modules. Thresholds, factors and ranges are
-          fabricated examples, not LIAISON XL specifications, and no instrument is connected.
+          fabricated examples, not vendor analyzer specifications, and no instrument is connected.
           Every value and outcome below is synthetic; no real SENAITE server or customer data is used.
         </p>
         <div className="mt-4 flex flex-wrap gap-3 text-sm font-semibold text-teal-800">

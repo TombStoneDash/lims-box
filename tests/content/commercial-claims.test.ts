@@ -204,3 +204,51 @@ test("recording labels its static report and avoids compliance and timing claims
   assert.match(recording, /Synthetic demonstration — static example screens, not live lab operations\./);
   assert.doesNotMatch(recording, /EPA-compliant|12 seconds|Ready in minutes|All QC data auto-included/i);
 });
+
+// F1 PR-3 (LIMS_BUILD_PLAN_DELTA_REGROUND_20261012 §3): demo pages get recorded and posted, so
+// no customer, contact, vendor, or compliance-claim word may appear in their source. Import lines
+// and code identifiers from the internal lib/ohworks-* modules (renamed in a later follow-up) are
+// excluded; a standalone word a visitor could read is not.
+const DEMO_FORBIDDEN_TERMS: RegExp[] = [
+  /(?<![A-Za-z_-])OHWorks(?![A-Za-z_-])/i,
+  /\bGary\b/i,
+  /\bRory\b/i,
+  /\bDiaSorin\b/i,
+  /\bLIAISON\b/i,
+  /\baccredited\b/i,
+  /\bcertified\b/i,
+  /\bvalidated\b/i,
+  /\bPart\s*11\b/i,
+  /\bHIPAA[\s-]+compliant\b/i,
+];
+
+const DEMO_SCAN_FILES = [
+  ...walk(path.join(ROOT, "app/demo"), [".tsx", ".ts"]),
+  ...walk(path.join(ROOT, "lib/demo-labs"), [".ts"]),
+].filter((file) => !file.endsWith(path.join("lib", "demo-labs", "redirects.ts")));
+
+function demoVisibleSource(file: string): string {
+  return readFileSync(file, "utf8")
+    // Drop whole import statements, including multi-line named-import lists.
+    .replace(/^\s*import\b[\s\S]*?from\s+['"][^'"]+['"];?\s*$/gm, " ")
+    .replace(/^\s*import\s+['"][^'"]+['"];?\s*$/gm, " ")
+    // Module specifiers such as '@/lib/ohworks-pilot' or fixture paths are not visible copy.
+    .replace(/['"`][@./][^'"`\s]*['"`]/g, " ");
+}
+
+test("demo pages and demo-lab profiles contain no forbidden customer, vendor, or compliance-claim terms", () => {
+  assert.ok(DEMO_SCAN_FILES.length > 20, "demo scan should cover the app/demo and lib/demo-labs trees");
+  for (const file of DEMO_SCAN_FILES) {
+    const text = demoVisibleSource(file);
+    for (const pattern of DEMO_FORBIDDEN_TERMS) {
+      assert.ok(!pattern.test(text), `Found forbidden demo term ${pattern} in ${path.relative(ROOT, file)}`);
+    }
+  }
+});
+
+test("every demo page renders under a synthetic-data banner", () => {
+  const layout = read("app/demo/layout.tsx");
+  assert.match(layout, /data-synthetic-banner/);
+  assert.match(layout, /Synthetic demonstration data only\./);
+  assert.match(layout, /\{children\}/);
+});

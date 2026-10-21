@@ -47,3 +47,12 @@ test('the page wires up the pure module, an honest end state, and reduced-motion
   assert.match(source, /prefers-reduced-motion/);
   assert.doesNotMatch(source, /\{totalTime \/ 60\}/);
 });
+
+test('record ?lab=<slug> selects any demo-lab profile and ignores unknown slugs', async () => {
+  const { recordLabFromSearch } = await import('../../lib/demo-labs/record');
+  assert.equal(recordLabFromSearch('?lab=diagnostics')?.slug, 'diagnostics');
+  assert.equal(recordLabFromSearch('?lab=environmental')?.slug, 'environmental');
+  assert.equal(recordLabFromSearch('?lab=clinical')?.slug, 'clinical');
+  assert.equal(recordLabFromSearch('?lab=nope'), undefined);
+  assert.equal(recordLabFromSearch(''), undefined);
+});
