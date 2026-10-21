@@ -47,18 +47,3 @@ jobs:
           git commit -m "chore(visual-check): refresh baselines"
           git push origin "$branch"
           gh pr create --title "chore(visual-check): refresh baselines" --body "Recaptured by the refresh-baselines job. Review the PNGs before merging."
-  temp-seed:
-    if: github.event_name == 'pull_request'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: ${{ github.head_ref }}
-      - uses: TombStoneDash/visual-check@1b6867f5d35fd0fc793c8d589f9dc5c2fb7522bb
-        with:
-          config: visual-check/visual-check.config.mjs
-          mode: refresh
-      - run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898299+github-actions[bot]@users.noreply.github.com"
-          git add visual-check/baselines && git commit -m "ci: seed baselines from ubuntu runner" && git push
