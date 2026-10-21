@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 import { FlaskConical, Send, CheckCircle2, Mail, Building2, Users, Phone, Calendar } from 'lucide-react';
 import { contactOutcome, contactMessage, type ContactOutcome } from '@/lib/contact-form-status';
+import { clearSubmittedFields } from '@/lib/contact-form-state';
 
 export default function ContactPage() {
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
@@ -27,16 +28,17 @@ export default function ContactPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setStatus('loading');
+    const submitted = form;
     try {
       const res = await fetch('/api/contact', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
+        body: JSON.stringify(submitted),
       });
       if (res.ok) {
         setOutcome(contactOutcome({ ok: true, status: res.status }));
         setStatus('success');
-        setForm({ name: '', labName: '', email: '', labSize: '', currentSystem: '', message: '' });
+        setForm(current => clearSubmittedFields(current, submitted));
       } else {
         setOutcome(contactOutcome({ ok: false, status: res.status }));
         setStatus('error');
