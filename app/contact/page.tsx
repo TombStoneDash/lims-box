@@ -150,6 +150,7 @@ export default function ContactPage() {
               </div>
             ) : (
               <form onSubmit={handleSubmit} className="bg-white dark:bg-white/5 rounded-2xl border border-black/5 dark:border-white/10 p-6 md:p-8 space-y-5">
+                <fieldset disabled={status === 'loading'} className="border-0 p-0 m-0 space-y-5">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label htmlFor="name" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
@@ -244,6 +245,7 @@ export default function ContactPage() {
                     className="w-full px-3 py-2.5 rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-lab-teal/50 resize-none"
                   />
                 </div>
+                </fieldset>
 
                 <button
                   type="submit"
