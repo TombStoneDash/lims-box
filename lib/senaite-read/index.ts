@@ -10,10 +10,12 @@ export type SenaiteSample = {
   reviewState: string | null;
 };
 
+export type SenaiteReadErrorCode = 'invalid-query' | 'unauthenticated' | 'request-failed' | 'invalid-response';
+
 export type SenaiteReadResult =
   | { status: 'ok'; samples: SenaiteSample[] }
   | { status: 'not_configured' }
-  | { status: 'error'; code: 'invalid-query' | 'request-failed' | 'invalid-response' };
+  | { status: 'error'; code: SenaiteReadErrorCode };
 
 export type SenaiteSampleQuery = {
   sampleId?: string;
@@ -28,8 +30,12 @@ function configuration(env: SenaiteReadEnvironment) {
     const url = new URL(rawUrl);
     // Credentials travel only over TLS, to this configured origin, without redirects.
     if (url.protocol !== 'https:' || url.username || url.password || url.search || url.hash) return null;
-    url.pathname = `${url.pathname.replace(/\/+$/, '')}/@@API/senaite/v1/AnalysisRequest`;
-    return { url, authorization: `Bearer ${token}` };
+    const api = (route: string) => {
+      const endpoint = new URL(url);
+      endpoint.pathname = `${url.pathname.replace(/\/+$/, '')}/@@API/senaite/v1/${route}`;
+      return endpoint;
+    };
+    return { identityUrl: api('users/current'), samplesUrl: api('AnalysisRequest'), authorization: `Bearer ${token}` };
   } catch {
     return null;
   }
@@ -37,6 +43,18 @@ function configuration(env: SenaiteReadEnvironment) {
 
 function record(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
+}
+
+/**
+ * SENAITE 2.6 answers a missing, invalid or expired token with HTTP 200 and
+ * treats the caller as Anonymous, who sees an empty sample list. Only an
+ * explicit `authenticated: true` from users/current proves the token worked.
+ * Nothing else from the identity record (names, emails, roles) is kept.
+ */
+function authenticatedFromPayload(payload: unknown): boolean | null {
+  if (!record(payload) || !Array.isArray(payload.items) || payload.items.length !== 1) return null;
+  const [identity] = payload.items;
+  return record(identity) && typeof identity.authenticated === 'boolean' ? identity.authenticated : null;
 }
 
 function samplesFromPayload(payload: unknown, limit: number): SenaiteSample[] | null {
@@ -57,7 +75,9 @@ function samplesFromPayload(payload: unknown, limit: number): SenaiteSample[] | 
   return samples;
 }
 
-/** Server-side only. Construction is inert; the sole operation is a bounded GET. */
+type JsonRead = { payload: unknown } | { code: 'request-failed' | 'invalid-response' };
+
+/** Server-side only. Construction is inert; the only operations are bounded GETs. */
 export function createSenaiteReadAdapter(
   env: SenaiteReadEnvironment = {
     SENAITE_BASE_URL: process.env.SENAITE_BASE_URL,
@@ -66,6 +86,29 @@ export function createSenaiteReadAdapter(
   transport: typeof fetch = globalThis.fetch,
 ) {
   const config = configuration(env);
+
+  async function getJson(url: URL, authorization: string): Promise<JsonRead> {
+    try {
+      const response = await transport(url, {
+        method: 'GET',
+        headers: { Accept: 'application/json', Authorization: authorization },
+        redirect: 'error',
+        cache: 'no-store',
+        credentials: 'omit',
+        signal: AbortSignal.timeout(10_000),
+      });
+      if (!response.ok) return { code: 'request-failed' };
+      try {
+        return { payload: await response.json() };
+      } catch {
+        return { code: 'invalid-response' };
+      }
+    } catch {
+      // Never expose upstream bodies, URLs, credentials, or transport exceptions.
+      return { code: 'request-failed' };
+    }
+  }
+
   return {
     enabled: config !== null,
     async listSamples(query: SenaiteSampleQuery = {}): Promise<SenaiteReadResult> {
@@ -77,34 +120,25 @@ export function createSenaiteReadAdapter(
             (typeof value !== 'string' || !value.trim() || value.length > 200))) {
         return { status: 'error', code: 'invalid-query' };
       }
-      const url = new URL(config.url);
+
+      // Prove the token is accepted before asking for samples, so a rejected
+      // token can never look like a lab with no samples.
+      const identity = await getJson(config.identityUrl, config.authorization);
+      if ('code' in identity) return { status: 'error', code: identity.code };
+      const authenticated = authenticatedFromPayload(identity.payload);
+      if (authenticated === null) return { status: 'error', code: 'invalid-response' };
+      if (!authenticated) return { status: 'error', code: 'unauthenticated' };
+
+      const url = new URL(config.samplesUrl);
       url.searchParams.set('limit', String(limit));
       url.searchParams.set('sort_on', 'created');
       url.searchParams.set('sort_order', 'descending');
       if (query.sampleId !== undefined) url.searchParams.set('getId', query.sampleId);
       if (query.reviewState !== undefined) url.searchParams.set('review_state', query.reviewState);
-      try {
-        const response = await transport(url, {
-          method: 'GET',
-          headers: { Accept: 'application/json', Authorization: config.authorization },
-          redirect: 'error',
-          cache: 'no-store',
-          credentials: 'omit',
-          signal: AbortSignal.timeout(10_000),
-        });
-        if (!response.ok) return { status: 'error', code: 'request-failed' };
-        let payload: unknown;
-        try {
-          payload = await response.json();
-        } catch {
-          return { status: 'error', code: 'invalid-response' };
-        }
-        const samples = samplesFromPayload(payload, limit);
-        return samples === null ? { status: 'error', code: 'invalid-response' } : { status: 'ok', samples };
-      } catch {
-        // Never expose upstream bodies, URLs, credentials, or transport exceptions.
-        return { status: 'error', code: 'request-failed' };
-      }
+      const listing = await getJson(url, config.authorization);
+      if ('code' in listing) return { status: 'error', code: listing.code };
+      const samples = samplesFromPayload(listing.payload, limit);
+      return samples === null ? { status: 'error', code: 'invalid-response' } : { status: 'ok', samples };
     },
   };
 }

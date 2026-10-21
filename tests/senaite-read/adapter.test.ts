@@ -10,7 +10,12 @@ const env = {
 
 // Every adapter gets an in-memory transport; no test can contact a SENAITE server.
 const forbiddenFetch: typeof fetch = async () => { assert.fail('Transport must not run'); };
-const jsonFetch = (payload: unknown): typeof fetch => async () => Response.json(payload);
+// Shape of senaite.jsonapi users/current for a signed-in caller (synthetic values).
+const signedIn = { items: [{ username: 'synthetic-reader', authenticated: true, roles: ['Authenticated'] }] };
+const isIdentity = (input: unknown) => new URL(String(input)).pathname.endsWith('/@@API/senaite/v1/users/current');
+// The identity check answers as signed in; the sample listing answers with `payload`.
+const labFetch = (payload: unknown): typeof fetch =>
+  async input => Response.json(isIdentity(input) ? signedIn : payload);
 
 test('all partial configurations fail closed without a request', async () => {
   const keys = Object.keys(env) as (keyof SenaiteReadEnvironment)[];
@@ -48,7 +53,7 @@ test('default environment is inert when unset and uses the generic token setting
     process.env.SENAITE_BASE_URL = env.SENAITE_BASE_URL;
     assert.deepEqual(await createSenaiteReadAdapter(undefined, forbiddenFetch).listSamples(), { status: 'not_configured' });
     process.env.SENAITE_API_TOKEN = env.SENAITE_API_TOKEN;
-    assert.deepEqual(await createSenaiteReadAdapter(undefined, jsonFetch({ items: [] })).listSamples(), { status: 'ok', samples: [] });
+    assert.deepEqual(await createSenaiteReadAdapter(undefined, labFetch({ items: [] })).listSamples(), { status: 'ok', samples: [] });
   } finally {
     keys.forEach((key, i) => {
       if (previous[i] === undefined) delete process.env[key];
@@ -57,12 +62,20 @@ test('default environment is inert when unset and uses the generic token setting
   }
 });
 
-test('construction is inert and GET maps only supported fields', async () => {
+test('construction is inert, the token is proven first, and GET maps only supported fields', async () => {
   let calls = 0;
   const transport: typeof fetch = async (input, init) => {
     calls++;
     const url = new URL(String(input));
     assert.equal(url.origin, 'https://lab.example.invalid');
+    const headers = new Headers(init?.headers);
+    assert.equal(headers.get('authorization'), 'Bearer synthetic-token');
+    assert.equal(init?.redirect, 'error');
+    if (calls === 1) {
+      assert.equal(url.pathname, '/site/@@API/senaite/v1/users/current');
+      assert.equal(url.search, '');
+      return Response.json(signedIn);
+    }
     assert.equal(url.pathname, '/site/@@API/senaite/v1/AnalysisRequest');
     assert.equal(url.searchParams.get('getId'), 'SYN &/?#=001');
     assert.equal(url.searchParams.get('review_state'), 'sample_received');
@@ -74,9 +87,7 @@ test('construction is inert and GET maps only supported fields', async () => {
     assert.equal(init?.cache, 'no-store');
     assert.equal(init?.credentials, 'omit');
     assert.ok(init?.signal instanceof AbortSignal);
-    const headers = new Headers(init?.headers);
     assert.equal(headers.get('accept'), 'application/json');
-    assert.equal(headers.get('authorization'), 'Bearer synthetic-token');
     return Response.json(fixture);
   };
   const adapter = createSenaiteReadAdapter(env, transport);
@@ -88,7 +99,7 @@ test('construction is inert and GET maps only supported fields', async () => {
       { uid: 'synthetic-uid-002', id: 'SYN-002', title: null, reviewState: null },
     ],
   });
-  assert.equal(calls, 1);
+  assert.equal(calls, 2);
   assert.deepEqual(Object.keys(adapter).sort(), ['enabled', 'listSamples']);
 });
 
@@ -101,13 +112,56 @@ test('invalid queries never call transport', async () => {
 });
 
 test('empty collection is valid; malformed payloads fail closed', async () => {
-  assert.deepEqual(await createSenaiteReadAdapter(env, jsonFetch({ items: [] })).listSamples(), { status: 'ok', samples: [] });
+  assert.deepEqual(await createSenaiteReadAdapter(env, labFetch({ items: [] })).listSamples(), { status: 'ok', samples: [] });
   for (const payload of [null, {}, [], { items: {} }, { items: [null] }, { items: [{ id: 'SYN-001' }] },
     { items: [{ uid: 'u', id: '' }] }, { items: [{ uid: 'u', id: 'i', title: 1 }] },
     { items: [{ uid: 'u', id: 'i', review_state: {} }] }]) {
-    assert.deepEqual(await createSenaiteReadAdapter(env, jsonFetch(payload)).listSamples(), { status: 'error', code: 'invalid-response' });
+    assert.deepEqual(await createSenaiteReadAdapter(env, labFetch(payload)).listSamples(), { status: 'error', code: 'invalid-response' });
   }
-  assert.deepEqual(await createSenaiteReadAdapter(env, jsonFetch(fixture)).listSamples({ limit: 1 }), { status: 'error', code: 'invalid-response' });
+  assert.deepEqual(await createSenaiteReadAdapter(env, labFetch(fixture)).listSamples({ limit: 1 }), { status: 'error', code: 'invalid-response' });
+});
+
+test('a token SENAITE does not accept is unauthenticated, never an empty lab', async () => {
+  const anonymous = { items: [{ username: 'Anonymous User', authenticated: false, roles: ['Anonymous'] }] };
+  let listed = 0;
+  const transport: typeof fetch = async input => {
+    if (isIdentity(input)) return Response.json(anonymous);
+    listed++;
+    return Response.json({ items: [] });
+  };
+  assert.deepEqual(await createSenaiteReadAdapter(env, transport).listSamples(), { status: 'error', code: 'unauthenticated' });
+  assert.equal(listed, 0, 'the sample query is never sent without a proven sign-in');
+});
+
+test('a malformed identity answer fails closed before any sample query', async () => {
+  for (const identity of [null, {}, [], { items: [] }, { items: {} }, { items: [null] }, { items: [{}] },
+    { items: [{ authenticated: 'true' }] }, { items: [{ authenticated: 1 }] },
+    { items: [{ authenticated: true }, { authenticated: true }] },
+    { success: false, message: '404 Not Found' }]) {
+    let listed = 0;
+    const transport: typeof fetch = async input => {
+      if (isIdentity(input)) return Response.json(identity);
+      listed++;
+      return Response.json(fixture);
+    };
+    assert.deepEqual(await createSenaiteReadAdapter(env, transport).listSamples(), { status: 'error', code: 'invalid-response' });
+    assert.equal(listed, 0);
+  }
+});
+
+test('failures on the sample query after a proven sign-in stay safe', async () => {
+  for (const status of [401, 500]) {
+    const transport: typeof fetch = async input =>
+      isIdentity(input) ? Response.json(signedIn) : new Response('private upstream body', { status });
+    assert.deepEqual(await createSenaiteReadAdapter(env, transport).listSamples(), { status: 'error', code: 'request-failed' });
+  }
+  const invalidJson: typeof fetch = async input => isIdentity(input) ? Response.json(signedIn) : new Response('not JSON');
+  assert.deepEqual(await createSenaiteReadAdapter(env, invalidJson).listSamples(), { status: 'error', code: 'invalid-response' });
+  const rejects: typeof fetch = async input => {
+    if (isIdentity(input)) return Response.json(signedIn);
+    throw new Error('private credentials');
+  };
+  assert.deepEqual(await createSenaiteReadAdapter(env, rejects).listSamples(), { status: 'error', code: 'request-failed' });
 });
 
 test('HTTP errors, redirects, transport failures and invalid JSON return safe errors without retries', async () => {
