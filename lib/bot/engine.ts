@@ -11,6 +11,7 @@
 import { corpus, type CorpusEntry, COMPLIANCE_POSITIONING } from './corpus';
 import { filterCommercialClaims } from './output-claims-filter';
 import { safetyRefusal } from './safety';
+import { PHRASE_SYNONYMS, expandTokens } from './query-normalizer';
 
 export interface BotSource {
   title: string;
@@ -66,6 +67,21 @@ export function tokenize(input: string): string[] {
     .split(/\s+/)
     .map((t) => t.replace(/^[./-]+/, '').replace(/[./-]+$/, ''))
     .filter((t) => t.length > 0 && !STOPWORDS.has(t));
+}
+
+const VOCABULARY = new Set(corpus.flatMap((entry) => entry.keywords));
+
+// Shared by every call site that tokenizes a user question for keyword
+// scoring, so a phone typo or a common synonym never routes differently
+// depending on which path handled the question. Corpus title/text tokenizing
+// inside scoreEntry stays on the plain tokenize() above — only user input goes
+// through normalization.
+function tokenizeQuery(input: string): string[] {
+  let normalized = input.toLowerCase();
+  for (const [pattern, replacement] of PHRASE_SYNONYMS) {
+    normalized = normalized.replace(pattern, replacement);
+  }
+  return expandTokens(tokenize(normalized), VOCABULARY);
 }
 
 function scoreEntry(entry: CorpusEntry, tokens: string[]): number {
@@ -129,7 +145,7 @@ function answerQuestion(rawQuestion: unknown): BotResponse {
     }
   }
 
-  const tokens = tokenize(question);
+  const tokens = tokenizeQuery(question);
   if (tokens.length === 0) return evidenceMissing();
 
   // The founder bio answers only founder questions; in product ranking its
@@ -346,7 +362,7 @@ function buildBotResponse(rawQuestion: unknown): BotResponse {
   if (response.grounded) return response;
 
   const tokens = typeof rawQuestion === 'string'
-    ? tokenize(rawQuestion.trim().slice(0, MAX_QUESTION_LENGTH))
+    ? tokenizeQuery(rawQuestion.trim().slice(0, MAX_QUESTION_LENGTH))
     : [];
   const partialMatches = corpus
     .map((entry, index) => ({ entry, index, score: scoreEntry(entry, tokens) }))
