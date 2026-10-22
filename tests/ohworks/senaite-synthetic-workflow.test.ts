@@ -39,6 +39,8 @@ function expectedSample(index, state = 'sample_received') {
 
 const identityUrl = 'https://synthetic-ohworks.invalid/senaite/@@API/senaite/v1/users/current';
 // The adapter proves the token with users/current before every sample query.
+// senaite.jsonapi listing envelope; `count` and `next` describe the whole match set.
+const listing = (items: unknown[]) => ({ count: items.length, pagesize: items.length, page: 1, pages: 1, next: null, items });
 const signedIn = { items: [{ username: 'SYNTHETIC-READER', authenticated: true, roles: ['Authenticated'] }] };
 
 function assertGetOptions(init: RequestInit) {
@@ -80,11 +82,11 @@ function transport(respond: () => Response) {
 
 test('synthetic HTTP summaries flow through the adapter on successive reads', async () => {
   let index = 1;
-  const http = transport(() => Response.json({ items: [syntheticSample(index)] }));
+  const http = transport(() => Response.json(listing([syntheticSample(index)])));
   const adapter = createSenaiteReadAdapter(env, http.fetchImpl);
   for (index = 1; index <= 2; index++) {
     assert.deepEqual(await adapter.listSamples({ reviewState: 'sample_received' }), {
-      status: 'ok', samples: [expectedSample(index)],
+      status: 'ok', samples: [expectedSample(index)], total: 1, hasMore: false,
     });
   }
   assert.equal(http.calls.length, 2);
@@ -93,9 +95,9 @@ test('synthetic HTTP summaries flow through the adapter on successive reads', as
 
 test('custom search encodes state and preserves all 60 summaries in order', async () => {
   const state = 'synthetic state&other=value';
-  const http = transport(() => Response.json({ items: Array.from({ length: 60 }, (_, i) => syntheticSample(i, state)) }));
+  const http = transport(() => Response.json(listing(Array.from({ length: 60 }, (_, i) => syntheticSample(i, state)))));
   assert.deepEqual(await createSenaiteReadAdapter(env, http.fetchImpl).listSamples({ reviewState: state, limit: 60 }), {
-    status: 'ok', samples: Array.from({ length: 60 }, (_, i) => expectedSample(i, state)),
+    status: 'ok', samples: Array.from({ length: 60 }, (_, i) => expectedSample(i, state)), total: 60, hasMore: false,
   });
   http.assertRequest(state, 60);
 });
@@ -107,19 +109,21 @@ test('recorded summary fields normalize without exposing client or analysis data
       { uid: 'synthetic-uid-001', id: 'SYN-001', title: 'Synthetic water sample', reviewState: 'sample_received' },
       { uid: 'synthetic-uid-002', id: 'SYN-002', title: null, reviewState: null },
     ],
+    // The page is honest about what it is not showing; the next link is never followed.
+    total: 27, hasMore: true,
   });
   http.assertRequest();
 });
 
 test('an empty HTTP response never falls back to demo samples', async () => {
-  const http = transport(() => Response.json({ items: [] }));
-  assert.deepEqual(await createSenaiteReadAdapter(env, http.fetchImpl).listSamples({ reviewState: 'sample_received' }), { status: 'ok', samples: [] });
+  const http = transport(() => Response.json(listing([])));
+  assert.deepEqual(await createSenaiteReadAdapter(env, http.fetchImpl).listSamples({ reviewState: 'sample_received' }), { status: 'ok', samples: [], total: 0, hasMore: false });
   http.assertRequest();
 });
 
 for (const [label, body] of [
   ['missing envelope', {}], ['wrong items type', { items: {} }],
-  ['mixed valid and malformed records', { items: [syntheticSample(1), { id: 'SYNTHETIC-BAD' }] }],
+  ['mixed valid and malformed records', listing([syntheticSample(1), { id: 'SYNTHETIC-BAD' }])],
 ] as const) {
   test(`${label} fails closed without partial or fixture data`, async () => {
     const http = transport(() => Response.json(body));
@@ -148,7 +152,7 @@ test('missing configuration performs no HTTP request', async () => {
 });
 
 test('a received specimen with a Westgard 1_3s failure is held before automatic result release', async () => {
-  const http = transport(() => Response.json({ items: [syntheticSample('QC-FAILURE')] }));
+  const http = transport(() => Response.json(listing([syntheticSample('QC-FAILURE')])));
   const received = await createSenaiteReadAdapter(env, http.fetchImpl).listSamples({ reviewState: 'sample_received' });
   http.assertRequest();
   assert.equal(received.status, 'ok');

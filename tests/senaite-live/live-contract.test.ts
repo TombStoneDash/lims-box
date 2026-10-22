@@ -75,6 +75,9 @@ test('a read-only token lists real sample summaries', {
   for (const sample of result.samples) {
     assert.deepEqual(Object.keys(sample).sort(), ['id', 'reviewState', 'title', 'uid']);
   }
+  // The real server's count and next must agree with the page it sent.
+  assert.ok(Number.isSafeInteger(result.total) && result.total! >= result.samples.length);
+  assert.equal(result.hasMore, result.total! > result.samples.length);
   assert.deepEqual(http.paths, [
     `${sitePath}/@@API/senaite/v1/users/current`, `${sitePath}/@@API/senaite/v1/AnalysisRequest`,
   ]);
