@@ -21,7 +21,7 @@ export function assertPreviewTarget(raw: string): URL {
   const url = new URL(raw);
   if (url.protocol !== 'https:') throw new Error('preview_url must be https');
   const host = url.hostname.toLowerCase();
-  if (!/^lims-box-(?:git-[a-z0-9]+(?:-[a-z0-9]+)*|[a-z0-9]{8,})-(?:tombstonedash|tombstone-dashs-projects)\.vercel\.app$/.test(host)) {
+  if (!/^lims-(?:[a-z0-9]{8,}|box-(?:git-[a-z0-9]+(?:-[a-z0-9]+)*-[a-z0-9]{6,}|[a-z0-9]{8,}))-tombstone-dashs-projects\.vercel\.app$/.test(host)) {
     throw new Error(`refusing non-preview target ${host}`);
   }
   return url;
@@ -42,8 +42,8 @@ async function redeem(base: URL, asset: string, claim: string) {
 
 test('preview guard accepts only LIMS Box branch and deployment previews', () => {
   for (const host of [
-    'lims-box-git-feat-x-tombstonedash.vercel.app',
-    'lims-box-a1b2c3d4e-tombstonedash.vercel.app',
+    'lims-c490lfv9s-tombstone-dashs-projects.vercel.app',
+    'lims-a1b2c3d4e-tombstone-dashs-projects.vercel.app',
     'lims-box-git-feat-f2-personnel-d1027c-tombstone-dashs-projects.vercel.app',
     'lims-box-a1b2c3d4e-tombstone-dashs-projects.vercel.app',
   ]) {
@@ -53,15 +53,21 @@ test('preview guard accepts only LIMS Box branch and deployment previews', () =>
 
 test('preview guard refuses production, unrelated, and non-https hosts', () => {
   for (const url of [
+    'https://lims.vercel.app',
     'https://lims-box.vercel.app',
+    'https://lims-tombstone-dashs-projects.vercel.app',
     'https://lims-box-tombstone-dashs-projects.vercel.app',
     'https://lims.bot',
     'https://www.lims.bot',
     'https://limsbox.com',
     'https://www.limsbox.com',
     'https://other-project-git-feat-x-tombstonedash.vercel.app',
+    'https://lims-box-git-feat-x-tombstonedash.vercel.app',
+    'https://lims-box-a1b2c3d4e-tombstonedash.vercel.app',
+    'https://lims-a1b2c3d4e-other-team.vercel.app',
     'https://lims-box-git-feat-x-other-team.vercel.app',
     'https://other-project-git-feat-x-tombstone-dashs-projects.vercel.app',
+    'https://other-project-a1b2c3d4e-tombstone-dashs-projects.vercel.app',
     'https://unrelated.vercel.app',
     'http://lims-box-git-feat-x-tombstonedash.vercel.app',
   ]) {
