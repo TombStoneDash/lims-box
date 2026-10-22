@@ -1,6 +1,12 @@
 name: Personnel Pack Fulfillment CI
 
 on:
+  workflow_dispatch:
+    inputs:
+      preview_url:
+        description: "Vercel PREVIEW deployment URL (https://*.vercel.app). Never production."
+        required: true
+        type: string
   pull_request:
     paths:
       - "app/api/personnel-pack-download/**"
@@ -15,6 +21,7 @@ on:
       - "lib/supabase.ts"
       - "public/personnel-pack-assets/**"
       - "tests/personnel-pack/**"
+      - "tests/e2e/personnel-pack-sandbox.test.ts"
       - "docs/personnel-pack-fulfillment-security.md"
       - ".env.example"
       - "package.json"
@@ -36,6 +43,7 @@ on:
       - "lib/supabase.ts"
       - "public/personnel-pack-assets/**"
       - "tests/personnel-pack/**"
+      - "tests/e2e/personnel-pack-sandbox.test.ts"
       - "docs/personnel-pack-fulfillment-security.md"
       - ".env.example"
       - "package.json"
@@ -51,6 +59,7 @@ concurrency:
 
 jobs:
   verify:
+    if: github.event_name != 'workflow_dispatch'
     runs-on: [self-hosted, daisy]
     timeout-minutes: 15
     env:
@@ -80,3 +89,30 @@ jobs:
 
       - name: Build application
         run: npm run build
+
+  sandbox-e2e:
+    # F2: manual proof of gate -> claim -> download -> replay refused on a preview.
+    # The gate request uses Resend's sink address delivered@resend.dev; no customer mail.
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: [self-hosted, daisy]
+    timeout-minutes: 10
+    env:
+      NEXT_TELEMETRY_DISABLED: "1"
+      PP_SANDBOX_PREVIEW_URL: ${{ inputs.preview_url }}
+      PP_SANDBOX_E2E_CONFIRM: preview
+      VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run Personnel Pack sandbox end-to-end proof
+        run: npm run test:personnel-pack-sandbox-e2e
