@@ -64,6 +64,7 @@ export const config = {
   matcher: [
     "/admin/:path*",
     "/senaite-demo/:path*",
+    "/senaite-live/:path*",
     "/demo/operator/:path*",
     "/api/admin/:path*",
     "/api/authorizations/:path*",

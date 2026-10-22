@@ -4,6 +4,7 @@ export const DEMO_OPERATOR_PASS_ENV = "ADMIN_BASIC_PASS";
 const PROTECTED_PREFIXES = [
   "/admin",
   "/senaite-demo",
+  "/senaite-live",
   "/demo/operator",
   "/api/admin",
   "/api/authorizations",

@@ -3,7 +3,8 @@
 `lib/senaite-read` exports `createSenaiteReadAdapter()` for server-side callers.
 It is inert until `listSamples()` is called, and not configured unless both
 environment values are nonblank: `SENAITE_BASE_URL` and
-`SENAITE_API_TOKEN`. No routes, UI, jobs, or existing integrations activate it.
+`SENAITE_API_TOKEN`. Its only caller is the `/senaite-live` page below; no jobs
+or other integrations activate it.
 
 The URL is the SENAITE **site root**, such as `https://lab.example.invalid/site`,
 not the API endpoint. HTTPS is required; embedded credentials, query strings,
@@ -51,3 +52,25 @@ in-memory transports; no live SENAITE access or credentials are needed. The
 recorded SENAITE 2.6.0 responses cover the anonymous and rejected-token paths
 only. A signed-in read against a real server, and whether its gateway accepts a
 Bearer token, are still unproven until a read-only token exists.
+
+## `/senaite-live` page
+
+`app/senaite-live/page.tsx` is the first page backed by the adapter. It is
+server-rendered on every request (`force-dynamic`, nothing prerendered at build
+time), behind the same operator Basic-auth middleware as `/senaite-demo`
+(`lib/demo-access.ts` and the `middleware.ts` matcher), and lists the 25 newest
+samples: ID, title and a readable review state (unknown states are shown as sent).
+The token never reaches the browser.
+
+`lib/senaite-read/view.ts` maps every adapter result to one explicit state with
+fixed wording: **not connected** (no configuration, no request), **sign-in
+rejected** (SENAITE answered as Anonymous; the page says this is not an empty
+lab), **unreachable**, **untrusted answer**, **no samples** (only after a proven
+sign-in), or the sample table. No upstream text other than sample fields is
+rendered, and there is no synthetic fallback.
+
+`tests/senaite-read/live-page.test.tsx` renders the real page with the recorded
+SENAITE 2.6.0 rejected-token answers and with in-memory signed-in answers.
+Swapping in the adapter from before the sign-in check (#766) makes two of its
+cases fail. With no `SENAITE_*` variables set, a deploy shows only the
+not-connected state.
