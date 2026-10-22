@@ -41,8 +41,21 @@ class RecordResultTargetSelectionTests(unittest.TestCase):
                     self.client.record_result("SA-001", "pH", "7")
                 self.post.assert_not_called()
 
+    def test_sole_match_from_another_sample_rejected_without_writing(self):
+        # What SENAITE returns if the sample filter is ignored and one other
+        # sample in the lab happens to carry the only matching analysis.
+        for parent_uid in ("other-sample-uid", None, "", "SAMPLE-UID", ["sample-uid"]):
+            with self.subTest(parent_uid=parent_uid):
+                target = {"uid": "analysis-1"}
+                if parent_uid is not None:
+                    target["parent_uid"] = parent_uid
+                self.get.return_value = {"items": [target]}
+                with self.assertRaisesRegex(ValueError, "does not belong to sample SA-001"):
+                    self.client.record_result("SA-001", "pH", "7")
+                self.post.assert_not_called()
+
     def test_one_valid_match_preserves_endpoint_and_result_body(self):
-        self.get.return_value = {"items": [{"uid": "analysis-1"}]}
+        self.get.return_value = {"items": [{"uid": "analysis-1", "parent_uid": "sample-uid"}]}
         value = "12.3 + & # µg/L"
         response = self.client.record_result("SA-001", "pH", value)
         self.get_sample.assert_called_once_with("SA-001")

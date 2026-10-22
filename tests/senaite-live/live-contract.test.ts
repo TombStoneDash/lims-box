@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { createSenaiteReadAdapter } from '../../lib/senaite-read';
+import { createSenaiteAnalysesReader } from '../../lib/senaite-read/analyses';
 
 // Opt-in acceptance test against a running SENAITE server. Skipped unless
 // SENAITE_LIVE_ORIGIN is set, for example to an SSH tunnel:
@@ -11,6 +12,8 @@ import { createSenaiteReadAdapter } from '../../lib/senaite-read';
 const origin = process.env.SENAITE_LIVE_ORIGIN?.trim();
 const sitePath = (process.env.SENAITE_LIVE_SITE_PATH?.trim() || '/senaite').replace(/\/+$/, '');
 const readToken = process.env.SENAITE_LIVE_READ_TOKEN?.trim();
+// SENAITE_LIVE_SAMPLE_UID, if set, is a synthetic sample whose analyses are read.
+const sampleUid = process.env.SENAITE_LIVE_SAMPLE_UID?.trim();
 const skipLive = origin ? false : 'set SENAITE_LIVE_ORIGIN to run against a real SENAITE';
 
 // The adapter only accepts an HTTPS site root. The harness keeps that rule and
@@ -76,4 +79,20 @@ test('a read-only token lists real sample summaries', {
   assert.deepEqual(http.paths, [
     `${sitePath}/@@API/senaite/v1/users/current`, `${sitePath}/@@API/senaite/v1/AnalysisRequest`,
   ]);
+});
+
+test('a read-only token lists one real sample\'s analyses, scoped to that sample', {
+  skip: skipLive || (readToken && sampleUid ? false : 'set SENAITE_LIVE_READ_TOKEN and SENAITE_LIVE_SAMPLE_UID'),
+}, async () => {
+  const http = forwarder();
+  const result = await createSenaiteAnalysesReader(
+    { SENAITE_BASE_URL: `${ADAPTER_ROOT}${sitePath}`, SENAITE_API_TOKEN: readToken }, http.fetchImpl,
+  ).listSampleAnalyses(sampleUid!);
+  assert.equal(result.status, 'ok');
+  if (result.status !== 'ok') return;
+  assert.ok(result.analyses.length > 0, 'the chosen synthetic sample should carry analyses');
+  for (const analysis of result.analyses) {
+    if (!['verified', 'published'].includes(String(analysis.reviewState))) assert.equal(analysis.reportableResult, null);
+  }
+  assert.deepEqual(http.paths, [`${sitePath}/@@API/senaite/v1/users/current`, `${sitePath}/@@API/senaite/v1/Analysis`]);
 });

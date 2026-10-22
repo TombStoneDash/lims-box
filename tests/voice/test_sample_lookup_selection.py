@@ -22,7 +22,7 @@ class SampleLookupSelectionTests(unittest.TestCase):
         self.client = SenaiteClient("https://example.invalid", "fixture", "fixture")
         for name, response in (
             ("search_samples", []),
-            ("get", {"items": [{"uid": "analysis-1"}]}),
+            ("get", {"items": [{"uid": "analysis-1", "parent_uid": "sample-1"}]}),
             ("post", {"success": True}),
         ):
             mock = patch.object(self.client, name, return_value=response)

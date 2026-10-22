@@ -52,7 +52,7 @@ class SenaiteQueryEncodingTests(unittest.TestCase):
             with self.subTest(literal=literal), patch.object(
                 self.client, "get", side_effect=[
                     {"items": [{"uid": literal}]},
-                    {"items": [{"uid": "chosen-analysis"}]},
+                    {"items": [{"uid": "chosen-analysis", "parent_uid": literal}]},
                 ]
             ) as get, patch.object(
                 self.client, "post", return_value=response

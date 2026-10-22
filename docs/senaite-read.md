@@ -51,3 +51,32 @@ in-memory transports; no live SENAITE access or credentials are needed. The
 recorded SENAITE 2.6.0 responses cover the anonymous and rejected-token paths
 only. A signed-in read against a real server, and whether its gateway accepts a
 Bearer token, are still unproven until a read-only token exists.
+
+## Sample analyses (results)
+
+`lib/senaite-read/analyses` exports `createSenaiteAnalysesReader()`, with the same
+environment, HTTPS, timeout, no-redirect and fixed-error rules as the sample
+adapter. `listSampleAnalyses(sampleUid)` takes a sample's Plone UID (32 lowercase
+hex characters; anything else returns `invalid-query` with no request), proves
+sign-in through `users/current`, then sends one GET to
+`@@API/senaite/v1/Analysis?getRequestUID=<uid>&complete=yes&limit=100`.
+
+- **Scope is checked per record.** senaite.jsonapi drops query keys that are not
+  catalog indexes. Every returned analysis must report `parent_uid` equal to the
+  requested sample; a foreign, missing or malformed parent fails the whole page
+  with `scope-mismatch`. A page of 100 or more analyses fails as `invalid-response`.
+- **Only reviewed results are values.** `reportableResult` is the SENAITE
+  `Result` only when `review_state` is `verified` or `published`. Unsubmitted,
+  to-be-verified, retracted, rejected and cancelled analyses are listed with
+  `reportableResult: null`, so a draft or withdrawn number is never shown as reported.
+- Records expose only `uid`, `keyword`, `title`, `reviewState`, `unit` and
+  `reportableResult`. Analyst, client and other fields are discarded.
+
+Run `node --import tsx --test tests/senaite-read/analyses.test.ts`. The field names
+`Keyword`, `Result`, `Unit` and `parent_uid` follow senaite.jsonapi's `complete=yes`
+object output and are unproven against a signed-in server until a read-only token
+exists; the opt-in live test checks them with `SENAITE_LIVE_SAMPLE_UID`.
+
+The voice client's `record_result` (`senaite/client.py`) now applies the same rule
+before writing: it refuses to post a result to an analysis whose `parent_uid` is
+not the sample it looked up.
