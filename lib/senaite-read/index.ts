@@ -10,7 +10,8 @@ export type SenaiteSample = {
   reviewState: string | null;
 };
 
-export type SenaiteReadErrorCode = 'invalid-query' | 'unauthenticated' | 'request-failed' | 'invalid-response';
+export type SenaiteReadErrorCode =
+  | 'invalid-query' | 'unauthenticated' | 'request-failed' | 'invalid-response' | 'tenant-mismatch';
 
 export type SenaiteReadResult =
   | { status: 'ok'; samples: SenaiteSample[] }
@@ -21,7 +22,12 @@ export type SenaiteSampleQuery = {
   sampleId?: string;
   reviewState?: string;
   limit?: number;
+  /** SENAITE Client UID. When set, every returned sample must belong to it. */
+  clientUid?: string;
 };
+
+// Plone/SENAITE UIDs are 32 lowercase hex characters.
+const CLIENT_UID = /^[0-9a-f]{32}$/;
 
 function configuration(env: SenaiteReadEnvironment) {
   const { SENAITE_BASE_URL: rawUrl, SENAITE_API_TOKEN: token } = env;
@@ -57,14 +63,20 @@ function authenticatedFromPayload(payload: unknown): boolean | null {
   return record(identity) && typeof identity.authenticated === 'boolean' ? identity.authenticated : null;
 }
 
-function samplesFromPayload(payload: unknown, limit: number): SenaiteSample[] | null {
-  if (!record(payload) || !Array.isArray(payload.items) || payload.items.length > limit) return null;
+function samplesFromPayload(
+  payload: unknown, limit: number, clientUid: string | undefined,
+): SenaiteSample[] | 'invalid-response' | 'tenant-mismatch' {
+  if (!record(payload) || !Array.isArray(payload.items) || payload.items.length > limit) return 'invalid-response';
   const samples: SenaiteSample[] = [];
   for (const item of payload.items) {
     if (!record(item) || typeof item.uid !== 'string' || !item.uid.trim() ||
         typeof item.id !== 'string' || !item.id.trim() ||
         (item.title != null && typeof item.title !== 'string') ||
-        (item.review_state != null && typeof item.review_state !== 'string')) return null;
+        (item.review_state != null && typeof item.review_state !== 'string')) return 'invalid-response';
+    // senaite.jsonapi drops query keys that are not catalog indexes, so the
+    // getClientUID filter alone cannot prove scoping. Each record must carry
+    // its own client UID, and one foreign or unproven record fails the page.
+    if (clientUid !== undefined && item.getClientUID !== clientUid) return 'tenant-mismatch';
     samples.push({
       uid: item.uid,
       id: item.id,
@@ -109,7 +121,7 @@ export function createSenaiteReadAdapter(
     }
   }
 
-  return {
+  const adapter = {
     enabled: config !== null,
     async listSamples(query: SenaiteSampleQuery = {}): Promise<SenaiteReadResult> {
       if (!config) return { status: 'not_configured' };
@@ -117,7 +129,8 @@ export function createSenaiteReadAdapter(
       const limit = query.limit ?? 25;
       if (!Number.isInteger(limit) || limit < 1 || limit > 100 ||
           [query.sampleId, query.reviewState].some(value => value !== undefined &&
-            (typeof value !== 'string' || !value.trim() || value.length > 200))) {
+            (typeof value !== 'string' || !value.trim() || value.length > 200)) ||
+          (query.clientUid !== undefined && (typeof query.clientUid !== 'string' || !CLIENT_UID.test(query.clientUid)))) {
         return { status: 'error', code: 'invalid-query' };
       }
 
@@ -135,10 +148,27 @@ export function createSenaiteReadAdapter(
       url.searchParams.set('sort_order', 'descending');
       if (query.sampleId !== undefined) url.searchParams.set('getId', query.sampleId);
       if (query.reviewState !== undefined) url.searchParams.set('review_state', query.reviewState);
+      if (query.clientUid !== undefined) url.searchParams.set('getClientUID', query.clientUid);
       const listing = await getJson(url, config.authorization);
       if ('code' in listing) return { status: 'error', code: listing.code };
-      const samples = samplesFromPayload(listing.payload, limit);
-      return samples === null ? { status: 'error', code: 'invalid-response' } : { status: 'ok', samples };
+      const samples = samplesFromPayload(listing.payload, limit, query.clientUid);
+      return typeof samples === 'string' ? { status: 'error', code: samples } : { status: 'ok', samples };
+    },
+  };
+
+  return {
+    ...adapter,
+    /**
+     * A reader bound to one SENAITE Client, for customer-tenant pages. The
+     * caller cannot widen or replace the client; an invalid UID makes every
+     * read `invalid-query` without a request.
+     */
+    forClient(clientUid: string) {
+      return {
+        enabled: adapter.enabled,
+        listSamples: (query: Omit<SenaiteSampleQuery, 'clientUid'> = {}): Promise<SenaiteReadResult> =>
+          adapter.listSamples(record(query) ? { ...query, clientUid } : query),
+      };
     },
   };
 }
