@@ -1,0 +1,58 @@
+{
+  "source": "Real SENAITE 2.6.0 JSON API (senaite.jsonapi v1): LIMS BOX environmental demo container, synthetic data only, read anonymously over loopback on the demo host.",
+  "capturedAt": "2026-10-21T18:16:57Z",
+  "credentialsUsed": false,
+  "edits": "Only the origin http://127.0.0.1:8099 is replaced with https://senaite.recorded.invalid. Bodies are otherwise byte-for-byte as served.",
+  "responses": {
+    "version": {
+      "request": {
+        "method": "GET",
+        "path": "/senaite/@@API/senaite/v1/version",
+        "authorization": "none"
+      },
+      "status": 200,
+      "contentType": "application/json",
+      "bodyText": "{\"url\": \"https://senaite.recorded.invalid/senaite/@@API/senaite/v1/version\", \"date\": \"2025-04-04\", \"version\": \"2.6.0\", \"_runtime\": 0.00034308433532714844}"
+    },
+    "users-current-no-auth": {
+      "request": {
+        "method": "GET",
+        "path": "/senaite/@@API/senaite/v1/users/current",
+        "authorization": "none"
+      },
+      "status": 200,
+      "contentType": "application/json",
+      "bodyText": "{\"count\": 1, \"pagesize\": 25, \"items\": [{\"username\": \"Anonymous User\", \"authenticated\": false, \"api_url\": \"https://senaite.recorded.invalid/senaite/@@API/senaite/v1/users/current\", \"roles\": [\"Anonymous\"]}], \"page\": 1, \"_runtime\": 0.0008780956268310547, \"next\": null, \"pages\": 1, \"previous\": null}"
+    },
+    "users-current-invalid-bearer": {
+      "request": {
+        "method": "GET",
+        "path": "/senaite/@@API/senaite/v1/users/current",
+        "authorization": "Bearer recorded-invalid-token"
+      },
+      "status": 200,
+      "contentType": "application/json",
+      "bodyText": "{\"count\": 1, \"pagesize\": 25, \"items\": [{\"username\": \"Anonymous User\", \"authenticated\": false, \"api_url\": \"https://senaite.recorded.invalid/senaite/@@API/senaite/v1/users/current\", \"roles\": [\"Anonymous\"]}], \"page\": 1, \"_runtime\": 0.0007379055023193359, \"next\": null, \"pages\": 1, \"previous\": null}"
+    },
+    "analysisrequest-invalid-bearer": {
+      "request": {
+        "method": "GET",
+        "path": "/senaite/@@API/senaite/v1/AnalysisRequest?limit=25&sort_on=created&sort_order=descending",
+        "authorization": "Bearer recorded-invalid-token"
+      },
+      "status": 200,
+      "contentType": "application/json",
+      "bodyText": "{\"count\": 0, \"pagesize\": 25, \"items\": [], \"page\": 1, \"_runtime\": 0.003962993621826172, \"next\": null, \"pages\": 1, \"previous\": null}"
+    },
+    "analysisrequest-unknown-path-no-auth": {
+      "request": {
+        "method": "GET",
+        "path": "/senaite/@@API/senaite/v1/AnalysisRequest/recorded-missing-id",
+        "authorization": "none"
+      },
+      "status": 200,
+      "contentType": "application/json",
+      "bodyText": "{\"_runtime\": 0.0006170272827148438, \"message\": \"404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.\", \"success\": false}"
+    }
+  }
+}

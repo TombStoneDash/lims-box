@@ -37,27 +37,43 @@ function expectedSample(index, state = 'sample_received') {
   };
 }
 
+const identityUrl = 'https://synthetic-ohworks.invalid/senaite/@@API/senaite/v1/users/current';
+// The adapter proves the token with users/current before every sample query.
+const signedIn = { items: [{ username: 'SYNTHETIC-READER', authenticated: true, roles: ['Authenticated'] }] };
+
+function assertGetOptions(init: RequestInit) {
+  assert.ok(init.signal instanceof AbortSignal);
+  assert.equal(init.signal.aborted, false);
+  assert.deepEqual(init, {
+    method: 'GET', headers: { Accept: 'application/json', Authorization: 'Bearer SYNTHETIC-NOT-A-REAL-TOKEN' },
+    redirect: 'error', cache: 'no-store', credentials: 'omit', signal: init.signal,
+  });
+}
+
 // Assert requests outside the adapter catch block, including failure cases.
+// `respond` answers the sample query; the identity check always answers signed in.
 function transport(respond: () => Response) {
   const calls: { url: string; init: RequestInit }[] = [];
+  const identityCalls: { url: string; init: RequestInit }[] = [];
   const fetchImpl: typeof fetch = async (url, init) => {
+    if (String(url) === identityUrl) {
+      identityCalls.push({ url: String(url), init });
+      return Response.json(signedIn);
+    }
     calls.push({ url: String(url), init });
     return respond();
   };
   return {
-    calls, fetchImpl,
+    calls, identityCalls, fetchImpl,
     assertRequest(state = 'sample_received', limit = 25) {
+      assert.equal(identityCalls.length, 1);
+      assertGetOptions(identityCalls[0].init);
       assert.equal(calls.length, 1);
       const { url, init } = calls[0];
       const expected = new URL('https://synthetic-ohworks.invalid/senaite/@@API/senaite/v1/AnalysisRequest');
       expected.search = new URLSearchParams({ limit: String(limit), sort_on: 'created', sort_order: 'descending', review_state: state }).toString();
       assert.equal(url, expected.href);
-      assert.ok(init.signal instanceof AbortSignal);
-      assert.equal(init.signal.aborted, false);
-      assert.deepEqual(init, {
-        method: 'GET', headers: { Accept: 'application/json', Authorization: 'Bearer SYNTHETIC-NOT-A-REAL-TOKEN' },
-        redirect: 'error', cache: 'no-store', credentials: 'omit', signal: init.signal,
-      });
+      assertGetOptions(init);
     },
   };
 }
@@ -72,6 +88,7 @@ test('synthetic HTTP summaries flow through the adapter on successive reads', as
     });
   }
   assert.equal(http.calls.length, 2);
+  assert.equal(http.identityCalls.length, 2);
 });
 
 test('custom search encodes state and preserves all 60 summaries in order', async () => {
@@ -127,6 +144,7 @@ test('missing configuration performs no HTTP request', async () => {
   const http = transport(() => Response.json(fixture));
   assert.deepEqual(await createSenaiteReadAdapter({}, http.fetchImpl).listSamples(), { status: 'not_configured' });
   assert.deepEqual(http.calls, []);
+  assert.deepEqual(http.identityCalls, []);
 });
 
 test('a received specimen with a Westgard 1_3s failure is held before automatic result release', async () => {
