@@ -136,3 +136,99 @@ export function normalizeToken(token: string): string {
 export function normalizeTokens(tokens: string[]): string[] {
   return tokens.map(normalizeToken);
 }
+
+// --- Hard-coded synonym + single-edit-typo helper ---------------------
+// A small, fixed table of common rewrites meant to run on the raw query
+// string *before* the corpus-vocabulary-driven matching above. Unlike
+// normalizeToken's correction (which is derived from `corpus` and therefore
+// shifts whenever the corpus does), this table is hand-curated and tiny on
+// purpose: it fixes a handful of very common phrasings regardless of corpus
+// content, and has no dependency on `corpus` or VOCABULARY at all.
+const MIN_SYNONYM_TYPO_LENGTH = 5;
+
+export const HARDCODED_SYNONYMS: Readonly<Record<string, string>> = Object.freeze({
+  price: 'pricing',
+  prices: 'pricing',
+  cost: 'pricing',
+  costs: 'pricing',
+  'sign up': 'signup',
+  lis: 'lims',
+});
+
+// Multi-word entries are rewritten as whole phrases before word-splitting.
+const PHRASE_SYNONYMS: ReadonlyArray<readonly [string, string]> = Object.freeze(
+  Object.entries(HARDCODED_SYNONYMS).filter(([key]) => key.includes(' ')),
+);
+
+// Single-word keys and values (deduplicated) long enough to safely tolerate
+// a one-character edit. Multi-word phrases are excluded: edit distance on
+// strings containing spaces is not a meaningful comparison here.
+const SYNONYM_TYPO_TARGETS: ReadonlyArray<readonly [string, string]> = Object.freeze(
+  (() => {
+    const pairs: Array<readonly [string, string]> = [];
+    const seenValues = new Set<string>();
+    for (const [key, value] of Object.entries(HARDCODED_SYNONYMS)) {
+      if (key.includes(' ') || key.length < MIN_SYNONYM_TYPO_LENGTH) continue;
+      pairs.push([key, value]);
+    }
+    for (const value of Object.values(HARDCODED_SYNONYMS)) {
+      if (value.includes(' ') || value.length < MIN_SYNONYM_TYPO_LENGTH || seenValues.has(value)) continue;
+      seenValues.add(value);
+      pairs.push([value, value]);
+    }
+    return pairs;
+  })(),
+);
+
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+// Resolves one whitespace-delimited word against the hard-coded table: an
+// exact synonym match wins outright; otherwise, words of 5+ letters may be
+// corrected to the single closest table entry within edit distance 1. A tie
+// between two different targets is left uncorrected rather than guessed,
+// mirroring findUniqueCorrection's own ambiguity handling above.
+function correctHardcodedWord(rawWord: string): string {
+  const word = rawWord.toLowerCase();
+  const exact = HARDCODED_SYNONYMS[word];
+  if (exact) return exact;
+  if (word.length < MIN_SYNONYM_TYPO_LENGTH) return rawWord;
+  let bestTarget: string | undefined;
+  let bestDistance = Infinity;
+  let ambiguous = false;
+  for (const [candidate, target] of SYNONYM_TYPO_TARGETS) {
+    if (Math.abs(candidate.length - word.length) > 1) continue;
+    const distance = levenshtein(word, candidate);
+    if (distance > 1) continue;
+    if (distance < bestDistance) {
+      bestDistance = distance;
+      bestTarget = target;
+      ambiguous = false;
+    } else if (distance === bestDistance && target !== bestTarget) {
+      ambiguous = true;
+    }
+  }
+  return bestTarget !== undefined && !ambiguous ? bestTarget : rawWord;
+}
+
+/**
+ * Pure, hard-coded synonym + single-edit-typo helper for a raw query
+ * string. Intended to run before the corpus-driven matching in
+ * normalizeToken/normalizeTokens above: it only ever rewrites text to
+ * another plain-English phrasing (e.g. "sign up" -> "signup", "pricng" ->
+ * "pricing"), never to a corpus-specific token, so it carries no dependency
+ * on `corpus` and cannot introduce ambiguity with the vocabulary-driven
+ * correction. Non-whitespace runs that aren't a recognized synonym or an
+ * unambiguous single-edit typo of one are left unchanged.
+ */
+export function applyHardcodedSynonyms(query: string): string {
+  let result = query;
+  for (const [phrase, replacement] of PHRASE_SYNONYMS) {
+    result = result.replace(new RegExp(`\\b${escapeRegExp(phrase)}\\b`, 'gi'), replacement);
+  }
+  return result
+    .split(/(\s+)/)
+    .map((part) => (/^\s*$/.test(part) ? part : correctHardcodedWord(part)))
+    .join('');
+}
