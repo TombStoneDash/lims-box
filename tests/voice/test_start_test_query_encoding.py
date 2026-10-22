@@ -19,7 +19,7 @@ class FakeClient:
 
     def get(self, endpoint):
         self.queries.append(endpoint)
-        return {"items": [{"review_state": "sample_received"}]}
+        return {"items": [{"parent_uid": self.uid, "review_state": "sample_received"}]}
 
 
 class StartTestQueryEncodingTests(unittest.TestCase):

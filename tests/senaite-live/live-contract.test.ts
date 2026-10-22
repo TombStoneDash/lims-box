@@ -77,3 +77,21 @@ test('a read-only token lists real sample summaries', {
     `${sitePath}/@@API/senaite/v1/users/current`, `${sitePath}/@@API/senaite/v1/AnalysisRequest`,
   ]);
 });
+
+test('the real server honours the getId and review_state filters', {
+  skip: skipLive || (readToken ? false : 'set SENAITE_LIVE_READ_TOKEN to run the signed-in read'),
+}, async (t) => {
+  const adapter = createSenaiteReadAdapter(
+    { SENAITE_BASE_URL: `${ADAPTER_ROOT}${sitePath}`, SENAITE_API_TOKEN: readToken }, forwarder().fetchImpl,
+  );
+  // If SENAITE dropped getId, this would come back as filter-mismatch, not not_found.
+  assert.deepEqual(await adapter.getSample('LIMSBOX-LIVE-CHECK-NO-SUCH-SAMPLE'), { status: 'not_found' });
+  const newest = await adapter.listSamples({ limit: 1 });
+  assert.equal(newest.status, 'ok');
+  if (newest.status !== 'ok' || newest.samples.length === 0) return t.skip('the server has no samples to look up');
+  const [sample] = newest.samples;
+  assert.deepEqual(await adapter.getSample(sample.id), { status: 'ok', sample });
+  if (sample.reviewState === null) return;
+  const sameState = await adapter.listSamples({ reviewState: sample.reviewState, limit: 100 });
+  assert.equal(sameState.status, 'ok');
+});

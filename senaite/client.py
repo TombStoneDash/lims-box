@@ -165,6 +165,10 @@ class SenaiteClient:
                     raise ValueError("Pending sample has an invalid UID")
                 if uid in seen_uids:
                     raise ValueError("Repeated pending sample in pagination")
+                # senaite.jsonapi silently drops query keys that are not catalog
+                # indexes; a dropped state filter would list every sample as pending.
+                if sample.get("review_state") != params["review_state"]:
+                    raise ValueError("Pending sample is not in the requested state")
                 seen_uids.add(uid)
             items.extend(batch)
             if len(items) > total:

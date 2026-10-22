@@ -27,9 +27,26 @@ and accepts integers from 1 through 100. It reads one page; it never follows
 pagination links, redirects, or upstream URLs. Requests disable caching, time out
 after 10 seconds each, and have no retries. There is no arbitrary endpoint or write API.
 
+senaite.jsonapi builds catalog queries only from keys that are catalog indexes
+and silently drops the rest, still answering HTTP 200. So every returned record
+must echo each filter that was sent: its `id` must equal `sampleId` exactly and
+its `reviewState` must equal `reviewState`. One record that does not match fails
+the whole page with `filter-mismatch`; a dropped filter can never return the
+newest samples in the lab as if they matched.
+
+`getSample(sampleId)` reads exactly one sample by its SENAITE ID (`getId`,
+`limit=2`). It returns `ok` with that sample, `not_found` only after a proven
+sign-in and an empty answer, or an error. Two records with the same ID are
+`invalid-response`, never a choice; a non-string ID is `invalid-query` and sends
+no request.
+
 Results distinguish `not_configured`, `ok` (including an empty collection, only
 after a proven sign-in), and `error` (`invalid-query`, `unauthenticated`,
-`request-failed`, `invalid-response`).
+`request-failed`, `invalid-response`, `filter-mismatch`).
+
+The Python voice client applies the same rule: `get_pending_samples()` rejects a
+page containing a sample outside `sample_received`, and `start test` refuses to
+report an analysis whose `parent_uid` is not the current sample.
 Successful records expose only `uid`, `id`, nullable `title`, and nullable
 `reviewState`. Missing identities, malformed collections, malformed identity answers, SENAITE's
 HTTP-200 `success: false` errors, and oversized pages fail closed. Errors expose fixed codes only, without raw server bodies or credentials.

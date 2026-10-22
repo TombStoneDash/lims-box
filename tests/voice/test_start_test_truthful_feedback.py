@@ -46,11 +46,11 @@ class StartTestTruthfulFeedbackTests(unittest.TestCase):
 
     def test_lookup_reports_observed_state_without_claiming_a_change(self):
         for analysis, expected_state in (
-            ({"review_state": "sample_received"}, "sample_received"),
-            ({"review_state": "to_be_verified"}, "to_be_verified"),
-            ({}, "unknown"),
-            ({"review_state": None}, "unknown"),
-            ({"review_state": ""}, "unknown"),
+            ({"parent_uid": "sample-uid", "review_state": "sample_received"}, "sample_received"),
+            ({"parent_uid": "sample-uid", "review_state": "to_be_verified"}, "to_be_verified"),
+            ({"parent_uid": "sample-uid"}, "unknown"),
+            ({"parent_uid": "sample-uid", "review_state": None}, "unknown"),
+            ({"parent_uid": "sample-uid", "review_state": ""}, "unknown"),
         ):
             with self.subTest(analysis=analysis):
                 client = FakeClient(analysis)
