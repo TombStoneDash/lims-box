@@ -43,6 +43,17 @@ foreign, missing or malformed client UID on any record fails the whole page with
 exposed: the public sample shape is unchanged. Unscoped `listSamples()` stays
 for lab-staff callers and does not require client fields.
 
+Every listing must carry senaite.jsonapi's `count` (all matching samples) and
+`next` (null on the last page), and they must agree with the page: more pages
+exactly when `next` is set, and `count` never below the records received. An `ok`
+result reports them as `total` and `hasMore`, so a page can say "showing 25 of
+300" instead of presenting one page as the whole lab. A listing without them, or
+with values that disagree, fails closed as `invalid-response`. `next` is checked
+but never followed. For a client-scoped read with more pages, `total` is `null`:
+those uncounted records cannot be checked against the client, and if SENAITE had
+dropped the client filter the count would be the whole lab's. `hasMore` is still
+reported.
+
 Results distinguish `not_configured`, `ok` (including an empty collection, only
 after a proven sign-in), and `error` (`invalid-query`, `unauthenticated`,
 `request-failed`, `invalid-response`, `tenant-mismatch`).

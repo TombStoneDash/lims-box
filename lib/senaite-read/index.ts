@@ -14,7 +14,14 @@ export type SenaiteReadErrorCode =
   | 'invalid-query' | 'unauthenticated' | 'request-failed' | 'invalid-response' | 'tenant-mismatch';
 
 export type SenaiteReadResult =
-  | { status: 'ok'; samples: SenaiteSample[] }
+  /**
+   * One page, never more. `hasMore` is true when SENAITE holds matching samples
+   * beyond this page, so a page must not present `samples` as the whole list.
+   * `total` is SENAITE's count of matching samples. It is `null` only for a
+   * client-scoped read that has more pages: those uncounted records cannot be
+   * checked against the client, so their number is not reported.
+   */
+  | { status: 'ok'; samples: SenaiteSample[]; total: number | null; hasMore: boolean }
   | { status: 'not_configured' }
   | { status: 'error'; code: SenaiteReadErrorCode };
 
@@ -63,10 +70,28 @@ function authenticatedFromPayload(payload: unknown): boolean | null {
   return record(identity) && typeof identity.authenticated === 'boolean' ? identity.authenticated : null;
 }
 
+type SamplePage = { samples: SenaiteSample[]; total: number | null; hasMore: boolean };
+
+/**
+ * senaite.jsonapi sends `count` (all matches) and `next` (null on the last
+ * page) with every listing. The adapter reads one page, so without them a lab
+ * with 300 samples would look like a lab with 25. Both must be present and
+ * agree with the page; `next` is checked but never followed.
+ */
+function pageFromPayload(payload: Record<string, unknown>, received: number) {
+  const { count, next } = payload;
+  if (typeof count !== 'number' || !Number.isSafeInteger(count) || count < received) return null;
+  if (next !== null && (typeof next !== 'string' || !next)) return null;
+  const hasMore = count > received;
+  return hasMore === (next !== null) ? { count, hasMore } : null;
+}
+
 function samplesFromPayload(
   payload: unknown, limit: number, clientUid: string | undefined,
-): SenaiteSample[] | 'invalid-response' | 'tenant-mismatch' {
+): SamplePage | 'invalid-response' | 'tenant-mismatch' {
   if (!record(payload) || !Array.isArray(payload.items) || payload.items.length > limit) return 'invalid-response';
+  const page = pageFromPayload(payload, payload.items.length);
+  if (!page) return 'invalid-response';
   const samples: SenaiteSample[] = [];
   for (const item of payload.items) {
     if (!record(item) || typeof item.uid !== 'string' || !item.uid.trim() ||
@@ -84,7 +109,10 @@ function samplesFromPayload(
       reviewState: typeof item.review_state === 'string' ? item.review_state : null,
     });
   }
-  return samples;
+  // A tenant page can vouch for its count only when every counted record was
+  // checked above; otherwise a dropped client filter could reveal the lab total.
+  const total = clientUid !== undefined && page.hasMore ? null : page.count;
+  return { samples, total, hasMore: page.hasMore };
 }
 
 type JsonRead = { payload: unknown } | { code: 'request-failed' | 'invalid-response' };
@@ -151,8 +179,8 @@ export function createSenaiteReadAdapter(
       if (query.clientUid !== undefined) url.searchParams.set('getClientUID', query.clientUid);
       const listing = await getJson(url, config.authorization);
       if ('code' in listing) return { status: 'error', code: listing.code };
-      const samples = samplesFromPayload(listing.payload, limit, query.clientUid);
-      return typeof samples === 'string' ? { status: 'error', code: samples } : { status: 'ok', samples };
+      const page = samplesFromPayload(listing.payload, limit, query.clientUid);
+      return typeof page === 'string' ? { status: 'error', code: page } : { status: 'ok', ...page };
     },
   };
 

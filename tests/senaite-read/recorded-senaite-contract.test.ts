@@ -77,3 +77,17 @@ test('a client-scoped read with the recorded invalid token is unauthenticated be
   assert.deepEqual(await reader.listSamples(), { status: 'error', code: 'unauthenticated' });
   assert.deepEqual(http.paths, [IDENTITY]);
 });
+
+test('the real SENAITE listing envelope carries the count and next the adapter relies on', async () => {
+  const body = recorded.responses['analysisrequest-invalid-bearer'].bodyText;
+  const envelope = JSON.parse(body);
+  assert.deepEqual([envelope.count, envelope.next, envelope.page, envelope.pages], [0, null, 1, 1]);
+  // Only the identity answer is synthetic here; the recording has no signed-in
+  // caller. The listing body is the one real SENAITE 2.6.0 served.
+  const fetchImpl: typeof fetch = async input => new URL(String(input)).pathname === IDENTITY
+    ? Response.json({ items: [{ authenticated: true }] })
+    : new Response(body, { headers: { 'content-type': 'application/json' } });
+  assert.deepEqual(await createSenaiteReadAdapter(env, fetchImpl).listSamples(), {
+    status: 'ok', samples: [], total: 0, hasMore: false,
+  });
+});
