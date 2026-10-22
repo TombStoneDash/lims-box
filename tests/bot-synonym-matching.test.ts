@@ -1,6 +1,10 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { applyHardcodedSynonyms, HARDCODED_SYNONYMS } from '../lib/bot/query-normalizer';
+import {
+  applyHardcodedSynonyms,
+  HARDCODED_SYNONYMS,
+  normalizeTokens,
+} from '../lib/bot/query-normalizer';
 
 test('every hard-coded single-word synonym resolves to its canonical form', () => {
   assert.equal(applyHardcodedSynonyms('price'), 'pricing');
@@ -19,6 +23,11 @@ test('a single-character typo of a hard-coded synonym key still resolves', () =>
   // "pricng" is "pricing" missing one letter -- within edit distance 1 of
   // the "price"/"cost" target "pricing" itself.
   assert.equal(applyHardcodedSynonyms('pricng'), 'pricing');
+});
+
+test('the live token normalization path applies hard-coded words and phrases', () => {
+  assert.deepEqual(normalizeTokens(['price', 'pricng', 'LIS']), ['pricing', 'pricing', 'lims']);
+  assert.deepEqual(normalizeTokens(['sign', 'up']), ['signup']);
 });
 
 test('an unrelated word of the same length is not falsely corrected', () => {

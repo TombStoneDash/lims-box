@@ -125,6 +125,10 @@ function findUniqueCorrection(token: string): string | undefined {
  * unambiguous close typo is corrected. All other tokens pass through as-is.
  */
 export function normalizeToken(token: string): string {
+  // Canonical hard-coded targets must stay canonical. In particular, `lims`
+  // is intentionally absent from the corpus correction vocabulary and would
+  // otherwise be typo-corrected back to the nearby corpus word `lis`.
+  if (Object.values(HARDCODED_SYNONYMS).includes(token)) return token;
   if (VOCABULARY.has(token)) return token;
   const synonym = SYNONYMS[token];
   if (synonym) return synonym;
@@ -134,7 +138,14 @@ export function normalizeToken(token: string): string {
 
 /** Normalize a full array of already-tokenized query tokens, in order. */
 export function normalizeTokens(tokens: string[]): string[] {
-  return tokens.map(normalizeToken);
+  // Engine callers pass tokenized queries here, so this is the integration
+  // point for both single-word and multi-word hard-coded synonyms. Rejoining
+  // first lets phrases such as "sign up" collapse to the corpus token
+  // "signup" before the existing vocabulary-driven normalization runs.
+  return applyHardcodedSynonyms(tokens.join(' '))
+    .split(/\s+/)
+    .filter(Boolean)
+    .map(normalizeToken);
 }
 
 // --- Hard-coded synonym + single-edit-typo helper ---------------------
