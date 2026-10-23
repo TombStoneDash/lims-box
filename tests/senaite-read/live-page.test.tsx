@@ -152,7 +152,7 @@ test('sample text from SENAITE is escaped, not rendered as markup', async () => 
 });
 
 test('every adapter outcome maps to an explicit view', () => {
-  for (const code of ['invalid-query', 'unauthenticated', 'request-failed', 'invalid-response'] as const) {
+  for (const code of ['invalid-query', 'unauthenticated', 'request-failed', 'invalid-response', 'tenant-mismatch'] as const) {
     const view = senaiteLiveView({ status: 'error', code });
     assert.equal(view.tone, 'error');
     assert.ok(view.heading && view.detail, code);

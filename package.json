@@ -19,6 +19,7 @@
     "test:email-validation": "node --import tsx --test tests/email-validation.test.ts",
     "test:person-detail": "node --import tsx --test tests/admin/person-detail-server-boundary.test.ts",
     "test:personnel-pack": "node --import tsx --test tests/personnel-pack/*.test.ts tests/personnel-pack-fulfillment.test.ts tests/personnel-pack-fulfillment-state.test.ts tests/security/route-exposure-inventory.test.ts",
+    "test:personnel-pack-sandbox-e2e": "node --import tsx --test tests/e2e/personnel-pack-sandbox.test.ts",
     "test:commercial-claims": "node --import tsx --test tests/content/commercial-claims.test.ts",
     "test:unsubscribe": "node --import tsx --test tests/unsubscribe/contract.test.ts",
     "test:attribution": "node --import tsx --test tests/attribution/lead-source.test.ts",

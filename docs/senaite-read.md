@@ -28,9 +28,25 @@ and accepts integers from 1 through 100. It reads one page; it never follows
 pagination links, redirects, or upstream URLs. Requests disable caching, time out
 after 10 seconds each, and have no retries. There is no arbitrary endpoint or write API.
 
+## Customer-tenant reads
+
+A customer page must read through `adapter.forClient(clientUid)`, which binds
+one SENAITE Client UID (32 lowercase hex characters) to every `listSamples()`
+call. The caller cannot widen, replace or drop it. An invalid UID returns
+`invalid-query` without a request. The scoped query adds `getClientUID`.
+
+That filter alone is not trusted. senaite.jsonapi builds catalog queries only
+from keys that are catalog indexes and silently drops the rest. If the index is
+missing or renamed, SENAITE would answer HTTP 200 with every client's samples.
+So every returned record must carry `getClientUID` equal to the bound client. A
+foreign, missing or malformed client UID on any record fails the whole page with
+`tenant-mismatch`; no partial list is returned. The client UID is checked, not
+exposed: the public sample shape is unchanged. Unscoped `listSamples()` stays
+for lab-staff callers and does not require client fields.
+
 Results distinguish `not_configured`, `ok` (including an empty collection, only
 after a proven sign-in), and `error` (`invalid-query`, `unauthenticated`,
-`request-failed`, `invalid-response`).
+`request-failed`, `invalid-response`, `tenant-mismatch`).
 Successful records expose only `uid`, `id`, nullable `title`, and nullable
 `reviewState`. Missing identities, malformed collections, malformed identity answers, SENAITE's
 HTTP-200 `success: false` errors, and oversized pages fail closed. Errors expose fixed codes only, without raw server bodies or credentials.
@@ -43,15 +59,19 @@ Run `npm run test:senaite-read` and `npm run typecheck`.
 from a real SENAITE 2.6.0 server (see `tests/senaite-read/fixtures/README.md`).
 `npm run test:senaite-live` is an opt-in acceptance test against a running
 SENAITE; it is skipped unless `SENAITE_LIVE_ORIGIN` is set and runs the signed-in
-read only when `SENAITE_LIVE_READ_TOKEN` is also set (see the test header). The existing CI command
+read only when `SENAITE_LIVE_READ_TOKEN` is also set (see the test header). With
+`SENAITE_LIVE_CLIENT_UID` as well, it runs the tenant read and cross-checks each
+returned sample's `parent_uid` (its Client folder) against the bound client. The existing CI command
 `npm run test:all` recursively discovers `tests/senaite-read/adapter.test.ts`.
 The full suite also discovers all 12 migrated checks in
 `tests/ohworks/senaite-synthetic-workflow.test.ts`. They now use this adapter
 instead of the missing module from closed, unmerged PR #103. The CI tests inject
 in-memory transports; no live SENAITE access or credentials are needed. The
 recorded SENAITE 2.6.0 responses cover the anonymous and rejected-token paths
-only. A signed-in read against a real server, and whether its gateway accepts a
-Bearer token, are still unproven until a read-only token exists.
+only. A signed-in read against a real server, whether its gateway accepts a
+Bearer token, and whether its listing carries `getClientUID`, are still unproven
+until a read-only token exists. If the listing lacks that field, tenant reads
+fail closed with `tenant-mismatch` rather than showing unscoped data.
 
 ## `/senaite-live` page
 

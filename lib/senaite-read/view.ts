@@ -58,6 +58,10 @@ const ERROR_COPY: Record<SenaiteReadErrorCode, { heading: string; detail: string
     heading: 'The sample request was not valid',
     detail: 'The page asked for samples in a form the adapter refuses. Nothing was sent to SENAITE.',
   },
+  'tenant-mismatch': {
+    heading: 'SENAITE returned samples from another client',
+    detail: 'At least one sample did not belong to this client, so the whole page was withheld. No samples are shown.',
+  },
 };
 
 function row(sample: SenaiteSample): SenaiteLiveRow {
