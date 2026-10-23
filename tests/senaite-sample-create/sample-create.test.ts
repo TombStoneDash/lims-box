@@ -161,10 +161,11 @@ test('the contract reports a lost create answer as a rejected adapter error, wit
 
 test('an unmapped tenant, matrix or analysis sends no request', async () => {
   for (const change of [{ tenantId: 'tenant-b' }, { matrixCode: 'air-ambient' }, { analyses: ['lead', 'mercury'] },
-    { analyses: ['constructor'] }, { tenantId: 'toString' }]) {
+    { analyses: ['constructor'] }, { tenantId: 'toString' }, { analyses: 'lead' }, { analyses: [7] }, { sampleId: 7 },
+    { dateSampled: null }]) {
     const server = senaite();
     const adapter = createSenaiteSampleCreateAdapter(mapping, env, server.fetchImpl);
-    assert.equal(await codeOf(adapter.createSample({ ...request, ...change })), 'unmapped', JSON.stringify(change));
+    assert.equal(await codeOf(adapter.createSample({ ...request, ...change } as never)), 'unmapped', JSON.stringify(change));
     assert.deepEqual(server.calls, []);
   }
 });

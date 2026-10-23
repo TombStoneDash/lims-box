@@ -167,6 +167,11 @@ export function createSenaiteSampleCreateAdapter(
     enabled: config !== null,
     async createSample(request: OHWorksSampleCreateRequest): Promise<SenaiteSampleCreateOutcome[]> {
       if (!config) throw new SenaiteSampleCreateError('not-configured');
+      // The contract validates requests first; direct callers still get a fixed code, not a TypeError.
+      if (!record(request) || typeof request.sampleId !== 'string' || typeof request.dateSampled !== 'string' ||
+          !Array.isArray(request.analyses) || request.analyses.some(code => typeof code !== 'string')) {
+        throw new SenaiteSampleCreateError('unmapped');
+      }
       const tenant = own(config.mapping.tenants, request.tenantId);
       const sampleTypeUid = own(config.mapping.sampleTypes, request.matrixCode);
       const serviceUids = [...new Set(request.analyses.map(code => own(config.mapping.services, code)))];
