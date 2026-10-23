@@ -73,7 +73,13 @@ recorded real SENAITE 2.6.0 rejected-token answer from
 `tests/senaite-read/fixtures/recorded`. `npm run test:all` discovers the file.
 
 No create has run against a real server: that needs a write-capable SENAITE
-account on a sandbox site. Whether the real sample catalog returns
+account on a sandbox site. `npm run test:senaite-sample-create-live` is the
+opt-in acceptance test for that. With only `SENAITE_LIVE_ORIGIN` set it checks
+that a rejected token stops at `users/current`. With `SENAITE_LIVE_CREATE_TOKEN`,
+`SENAITE_LIVE_CREATE_MAPPING` and `SENAITE_LIVE_CREATE_CONFIRM=synthetic-sandbox`
+as well, it creates one `LIMSBOX-LIVE-*` sample, retries the same request to
+prove no second sample is created, and cross-checks the stored sample's
+`parent_uid` against the mapped Client (see the test header). Whether the real sample catalog returns
 `getClientSampleID` and `getSampleTypeUID` in listings, and analyses return
 `getServiceUID` and `parent_uid`, is unproven. If a field is missing the create
 fails closed as `write-unconfirmed` or `scope-mismatch`; it never reports a
