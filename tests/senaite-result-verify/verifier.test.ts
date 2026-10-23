@@ -5,7 +5,9 @@ import { createSenaiteResultVerifier } from '../../lib/senaite-result-verify';
 
 // Acceptance suite against an in-memory senaite.jsonapi stand-in. Every record is
 // synthetic. The stand-in applies only the query keys SENAITE indexes, so tests
-// can also make it drop a filter the way the real catalog silently does.
+// can also make it drop a filter the way the real catalog silently does. Its
+// `update` refuses `verify` unless the analysis is `to_be_verified`, like
+// SENAITE's workflow guard.
 
 const ROOT = 'https://senaite.test.invalid/senaite';
 const API = '/senaite/@@API/senaite/v1/';
@@ -21,17 +23,19 @@ const FT4_UID = 'b'.repeat(32);
 type Sample = { uid: string; id: string; getClientUID: string };
 type Analysis = {
   uid: string; parent_uid: string; Keyword: string; review_state: string;
-  Result?: string | null; getSubmittedBy?: string | null;
+  Result?: string | null; DetectionLimitOperand?: string | null; getSubmittedBy?: string | null;
 };
 
 type Options = {
+  /** The token's service account. */
   username?: string;
+  userId?: string;
   authenticated?: boolean;
   samples?: Sample[];
   analyses?: Analysis[];
   dropFilters?: string[];
   /** What happens on POST update. */
-  write?: 'apply' | 'lose-answer' | 'refuse' | 'ignore' | 'apply-and-lose' | 'change-result';
+  write?: 'apply' | 'lose-answer' | 'http-error' | 'ignore' | 'apply-and-lose' | 'change-result' | 'someone-else-first';
 };
 
 function senaite(options: Options = {}) {
@@ -56,7 +60,9 @@ function senaite(options: Options = {}) {
 
     if (route === 'users/current') {
       const authenticated = options.authenticated ?? true;
-      return json({ count: 1, items: [{ username: authenticated ? options.username ?? 'reviewer-b' : 'Anonymous User', authenticated }] });
+      const username = authenticated ? options.username ?? 'ohworks-verify-svc' : 'Anonymous User';
+      const userId = authenticated ? options.userId ?? username : 'current';
+      return json({ count: 1, items: [{ username, authenticated, api_url: `${ROOT}/@@API/senaite/v1/users/${userId}` }] });
     }
     const filter = <T extends Record<string, unknown>>(rows: T[], keys: Record<string, string>) =>
       rows.filter(row => Object.entries(keys).every(([k, field]) => !query[k] || dropped.has(k) || row[field] === query[k]));
@@ -69,9 +75,13 @@ function senaite(options: Options = {}) {
     if (route === 'update' && init?.method === 'POST') {
       const target = analyses.find(a => a.uid === body.uid);
       const mode = options.write ?? 'apply';
-      if (mode === 'refuse') return json({ success: false, message: 'synthetic refusal' });
       if (mode === 'lose-answer') throw new TypeError('socket hang up');
-      if (target && body.transition === 'verify' && mode !== 'ignore') {
+      if (mode === 'http-error') return json({ message: 'synthetic' }, 500);
+      if (mode === 'someone-else-first' && target) target.review_state = 'verified';
+      if (!target || body.transition !== 'verify' || target.review_state !== 'to_be_verified') {
+        return json({ success: false, message: 'Transition verify not allowed' });
+      }
+      if (mode !== 'ignore') {
         target.review_state = 'verified';
         if (mode === 'change-result') target.Result = '9.99';
       }
@@ -83,7 +93,13 @@ function senaite(options: Options = {}) {
   return { fetchImpl, calls, analyses, posts: () => calls.filter(c => c.method === 'POST') };
 }
 
-const REQUEST = { clientUid: CLIENT, sampleId: 'WB-0001', keyword: 'TSH' };
+const REQUEST = {
+  clientUid: CLIENT, sampleId: 'WB-0001', analysisUid: TSH_UID, keyword: 'TSH',
+  expectedResult: '2.41', reviewerUserId: 'reviewer-b',
+};
+
+const verify = (server: ReturnType<typeof senaite>, request: object = REQUEST) =>
+  createSenaiteResultVerifier(env, server.fetchImpl).verify(request as typeof REQUEST);
 
 test('stays inert without its own token; the read-only and import tokens never enable it', async () => {
   const server = senaite();
@@ -104,25 +120,27 @@ test('stays inert without its own token; the read-only and import tokens never e
 
 test('malformed requests are refused before any request', async () => {
   const server = senaite();
-  const verifier = createSenaiteResultVerifier(env, server.fetchImpl);
   for (const request of [
     null,
     { ...REQUEST, clientUid: 'C'.repeat(32) },
     { ...REQUEST, sampleId: '../WB-0001' },
+    { ...REQUEST, analysisUid: 'not-a-uid' },
     { ...REQUEST, keyword: 'TSH&review_state=verified' },
-    { clientUid: CLIENT, sampleId: 'WB-0001' },
+    { ...REQUEST, expectedResult: '  ' },
+    { ...REQUEST, expectedOperand: '<=' },
+    { ...REQUEST, reviewerUserId: '' },
+    { ...REQUEST, reviewerUserId: undefined },
   ]) {
-    assert.deepEqual(await verifier.verify(request as never), { status: 'error', code: 'invalid-request' });
+    assert.deepEqual(await verify(server, request as never), { status: 'error', code: 'invalid-request' });
   }
   assert.equal(server.calls.length, 0);
 });
 
-test('verifies a submitted result after a read-back, sending only the verify transition', async () => {
+test('verifies the reviewed result after a read-back, sending only the verify transition', async () => {
   const server = senaite();
-  const result = await createSenaiteResultVerifier(env, server.fetchImpl).verify(REQUEST);
+  const result = await verify(server);
   assert.deepEqual(result, {
-    status: 'verified', transitioned: true,
-    analysis: { uid: TSH_UID, sampleId: 'WB-0001', keyword: 'TSH', result: '2.41' },
+    status: 'verified', analysis: { uid: TSH_UID, sampleId: 'WB-0001', keyword: 'TSH', result: '2.41' },
   });
   assert.deepEqual(server.calls.map(c => `${c.method} ${c.path}`), [
     'GET users/current', 'GET AnalysisRequest', 'GET Analysis', 'POST update', 'GET Analysis',
@@ -135,61 +153,76 @@ test('verifies a submitted result after a read-back, sending only the verify tra
     assert.equal(call.init?.redirect, 'error');
     assert.equal(call.init?.credentials, 'omit');
   }
-  // The verifier's and submitter's usernames are compared, never returned.
-  assert.doesNotMatch(JSON.stringify(result), /analyst-a|reviewer-b|synthetic-verify-token/);
+  // Submitter, reviewer and service-account names are compared, never returned.
+  assert.doesNotMatch(JSON.stringify(result), /analyst-a|reviewer-b|ohworks-verify-svc|synthetic-verify-token/);
 });
 
-test('a result already verified is reported without writing again', async () => {
+test('a result already verified makes no four-eyes claim and writes nothing', async () => {
   const server = senaite();
   server.analyses[0].review_state = 'verified';
-  const result = await createSenaiteResultVerifier(env, server.fetchImpl).verify(REQUEST);
-  assert.equal(result.status, 'verified');
-  assert.equal(result.status === 'verified' && result.transitioned, false);
+  assert.deepEqual(await verify(server), {
+    status: 'already_verified', analysis: { uid: TSH_UID, sampleId: 'WB-0001', keyword: 'TSH', result: '2.41' },
+  });
   assert.equal(server.posts().length, 0);
 });
 
-test('four-eyes: the submitter can never verify their own result', async () => {
-  const server = senaite({ username: 'analyst-a' });
-  assert.deepEqual(await createSenaiteResultVerifier(env, server.fetchImpl).verify(REQUEST),
-    { status: 'error', code: 'self-verification' });
-  assert.equal(server.posts().length, 0);
+test('four-eyes: the submitter can never approve their own result through the service token', async () => {
+  for (const reviewerUserId of ['analyst-a', 'Analyst-A']) {
+    const server = senaite();
+    assert.deepEqual(await verify(server, { ...REQUEST, reviewerUserId }), { status: 'error', code: 'self-verification' });
+    assert.equal(server.posts().length, 0);
+  }
 });
 
-test('four-eyes: a submitter id differing only in case is still the same person', async () => {
-  const server = senaite({ username: 'Analyst-A' });
-  assert.deepEqual(await createSenaiteResultVerifier(env, server.fetchImpl).verify(REQUEST),
-    { status: 'error', code: 'self-verification' });
-  assert.equal(server.posts().length, 0);
-});
-
-test('four-eyes: an email login cannot be compared with a submitter id, so nothing is verified', async () => {
-  const server = senaite({ username: 'reviewer@lab.example.invalid' });
-  assert.deepEqual(await createSenaiteResultVerifier(env, server.fetchImpl).verify(REQUEST),
-    { status: 'error', code: 'verifier-unknown' });
-  assert.equal(server.posts().length, 0);
+test('four-eyes: the token account is refused when it is the submitter, by login name or user id', async () => {
+  for (const account of [{ username: 'analyst-a' }, { username: 'a.person@lab.example.invalid', userId: 'analyst-a' }]) {
+    const server = senaite(account);
+    assert.deepEqual(await verify(server), { status: 'error', code: 'self-verification' });
+    assert.equal(server.posts().length, 0);
+  }
 });
 
 test('four-eyes: a result with no recorded submitter is never verified', async () => {
   for (const getSubmittedBy of [undefined, null, '', '  ']) {
     const server = senaite();
     server.analyses[0].getSubmittedBy = getSubmittedBy;
-    assert.deepEqual(await createSenaiteResultVerifier(env, server.fetchImpl).verify(REQUEST),
-      { status: 'error', code: 'submitter-unknown' });
+    assert.deepEqual(await verify(server), { status: 'error', code: 'submitter-unknown' });
     assert.equal(server.posts().length, 0);
   }
 });
 
-test('an unsubmitted or empty result is not verifiable', async () => {
-  const unsubmitted = senaite();
+test('only the exact result the reviewer saw is verified', async () => {
+  const changed = senaite();
+  changed.analyses[0].Result = '7.0';
+  assert.deepEqual(await verify(changed), { status: 'error', code: 'result-mismatch' });
+
+  const belowLimit = senaite();
+  belowLimit.analyses[0].DetectionLimitOperand = '<';
+  assert.deepEqual(await verify(belowLimit), { status: 'error', code: 'result-mismatch' });
+  assert.equal(changed.posts().length + belowLimit.posts().length, 0);
+
+  assert.equal((await verify(belowLimit, { ...REQUEST, expectedOperand: '<' })).status, 'verified');
+});
+
+test('a retest is a different analysis: the reviewed original is never swapped for it', async () => {
+  const server = senaite();
+  server.analyses[0].review_state = 'retracted';
+  server.analyses.push({
+    uid: '9'.repeat(32), parent_uid: SAMPLE_UID, Keyword: 'TSH', review_state: 'to_be_verified',
+    Result: '7.0', getSubmittedBy: 'analyst-c',
+  });
+  assert.deepEqual(await verify(server), { status: 'error', code: 'not-verifiable', reviewState: 'retracted' });
+  assert.equal(server.posts().length, 0);
+});
+
+test('an unsubmitted result is not verifiable', async () => {
+  const server = senaite();
+  server.analyses[1].Result = '1.1';
   assert.deepEqual(
-    await createSenaiteResultVerifier(env, unsubmitted.fetchImpl).verify({ ...REQUEST, keyword: 'FT4' }),
+    await verify(server, { ...REQUEST, analysisUid: FT4_UID, keyword: 'FT4', expectedResult: '1.1' }),
     { status: 'error', code: 'not-verifiable', reviewState: 'unassigned' },
   );
-  const empty = senaite();
-  empty.analyses[0].Result = '';
-  assert.deepEqual(await createSenaiteResultVerifier(env, empty.fetchImpl).verify(REQUEST),
-    { status: 'error', code: 'no-result' });
-  assert.equal(unsubmitted.posts().length + empty.posts().length, 0);
+  assert.equal(server.posts().length, 0);
 });
 
 test('the real SENAITE 2.6.0 rejected-token answer stops before any sample query', async () => {
@@ -209,8 +242,7 @@ test('a dropped client filter that lists a foreign sample fails closed before an
     dropFilters: ['getClientUID'],
     samples: [{ uid: SAMPLE_UID, id: 'WB-0001', getClientUID: OTHER_CLIENT }],
   });
-  assert.deepEqual(await createSenaiteResultVerifier(env, server.fetchImpl).verify(REQUEST),
-    { status: 'error', code: 'scope-mismatch' });
+  assert.deepEqual(await verify(server), { status: 'error', code: 'scope-mismatch' });
   assert.equal(server.posts().length, 0);
 });
 
@@ -220,49 +252,31 @@ test('a dropped sample filter that lists foreign analyses fails closed before an
     uid: 'e'.repeat(32), parent_uid: '2'.repeat(32), Keyword: 'TSH', review_state: 'to_be_verified',
     Result: '7.0', getSubmittedBy: 'analyst-c',
   });
-  assert.deepEqual(await createSenaiteResultVerifier(env, server.fetchImpl).verify(REQUEST),
-    { status: 'error', code: 'scope-mismatch' });
+  assert.deepEqual(await verify(server), { status: 'error', code: 'scope-mismatch' });
   assert.equal(server.posts().length, 0);
 });
 
-test('missing and duplicate samples or analyses are refused', async () => {
-  const missing = senaite({ samples: [] });
-  assert.deepEqual(await createSenaiteResultVerifier(env, missing.fetchImpl).verify(REQUEST),
-    { status: 'error', code: 'sample-not-found' });
-  const twoSamples = senaite({ samples: [
+test('an analysis from another sample, or under a different keyword, is refused', async () => {
+  const elsewhere = senaite();
+  assert.deepEqual(await verify(elsewhere, { ...REQUEST, analysisUid: 'e'.repeat(32) }),
+    { status: 'error', code: 'analysis-not-found' });
+  const relabelled = senaite();
+  assert.deepEqual(await verify(relabelled, { ...REQUEST, keyword: 'FT4' }), { status: 'error', code: 'scope-mismatch' });
+  assert.equal(elsewhere.posts().length + relabelled.posts().length, 0);
+});
+
+test('missing and duplicate samples are refused', async () => {
+  assert.deepEqual(await verify(senaite({ samples: [] })), { status: 'error', code: 'sample-not-found' });
+  assert.deepEqual(await verify(senaite({ samples: [
     { uid: SAMPLE_UID, id: 'WB-0001', getClientUID: CLIENT },
     { uid: '3'.repeat(32), id: 'WB-0001', getClientUID: CLIENT },
-  ] });
-  assert.deepEqual(await createSenaiteResultVerifier(env, twoSamples.fetchImpl).verify(REQUEST),
-    { status: 'error', code: 'ambiguous-sample' });
-  const noAnalysis = senaite();
-  assert.deepEqual(
-    await createSenaiteResultVerifier(env, noAnalysis.fetchImpl).verify({ ...REQUEST, keyword: 'HCG' }),
-    { status: 'error', code: 'analysis-not-found' });
-  const twoAnalyses = senaite();
-  twoAnalyses.analyses.push({ ...twoAnalyses.analyses[0], uid: 'f'.repeat(32) });
-  assert.deepEqual(await createSenaiteResultVerifier(env, twoAnalyses.fetchImpl).verify(REQUEST),
-    { status: 'error', code: 'ambiguous-analysis' });
+  ] })), { status: 'error', code: 'ambiguous-sample' });
 });
 
-test('a retest is verified, not the retracted original with the same keyword', async () => {
-  const retestUid = '9'.repeat(32);
+test('a paged analysis listing is not trusted as the whole sample', async () => {
   const server = senaite();
-  server.analyses[0].review_state = 'retracted';
-  server.analyses.push({
-    uid: retestUid, parent_uid: SAMPLE_UID, Keyword: 'TSH', review_state: 'to_be_verified',
-    Result: '2.38', getSubmittedBy: 'analyst-a',
-  });
-  const result = await createSenaiteResultVerifier(env, server.fetchImpl).verify(REQUEST);
-  assert.equal(result.status === 'verified' && result.analysis.uid, retestUid);
-  assert.deepEqual(server.posts().map(c => c.body), [{ uid: retestUid, transition: 'verify' }]);
-});
-
-test('a paged or oversized analysis listing is not trusted as the whole sample', async () => {
-  const server = senaite();
-  const original = server.fetchImpl;
   const paged: typeof fetch = async (input, init) => {
-    const response = await original(input, init);
+    const response = await server.fetchImpl(input, init);
     if (!String(input).includes('/Analysis?')) return response;
     return new Response(JSON.stringify({ ...(await response.json()), next: `${ROOT}/@@API/senaite/v1/Analysis?b_start=100` }));
   };
@@ -271,30 +285,40 @@ test('a paged or oversized analysis listing is not trusted as the whole sample',
   assert.equal(server.posts().length, 0);
 });
 
-test('the read-back decides: a lost answer that verified succeeds, one that did not is unconfirmed', async () => {
-  const lostButApplied = senaite({ write: 'apply-and-lose' });
-  const applied = await createSenaiteResultVerifier(env, lostButApplied.fetchImpl).verify(REQUEST);
-  assert.equal(applied.status === 'verified' && applied.transitioned, true);
+test('an oversized analysis listing is not trusted', async () => {
+  const server = senaite();
+  for (let i = 0; i < 100; i += 1) {
+    server.analyses.push({
+      uid: i.toString(16).padStart(32, 'f'), parent_uid: SAMPLE_UID, Keyword: `K${i}`, review_state: 'unassigned',
+    });
+  }
+  assert.deepEqual(await verify(server), { status: 'error', code: 'invalid-response' });
+  assert.equal(server.posts().length, 0);
+});
 
-  const lost = senaite({ write: 'lose-answer' });
-  assert.deepEqual(await createSenaiteResultVerifier(env, lost.fetchImpl).verify(REQUEST),
-    { status: 'error', code: 'write-unconfirmed' });
-  const ignored = senaite({ write: 'ignore' });
-  assert.deepEqual(await createSenaiteResultVerifier(env, ignored.fetchImpl).verify(REQUEST),
-    { status: 'error', code: 'write-unconfirmed' });
+test('without an accepted write answer a verified read-back is never claimed', async () => {
+  // The write landed but its answer was lost: unconfirmed now, already_verified on retry.
+  const lostButApplied = senaite({ write: 'apply-and-lose' });
+  assert.deepEqual(await verify(lostButApplied), { status: 'error', code: 'write-unconfirmed' });
+  assert.equal((await verify(lostButApplied)).status, 'already_verified');
+
+  // Someone else verified first; SENAITE refuses ours. That verify is not ours to report.
+  const raced = senaite({ write: 'someone-else-first' });
+  assert.deepEqual(await verify(raced), { status: 'error', code: 'write-unconfirmed' });
+
+  for (const write of ['lose-answer', 'ignore'] as const) {
+    assert.deepEqual(await verify(senaite({ write })), { status: 'error', code: 'write-unconfirmed' });
+  }
 });
 
 test('an explicit refusal that left the result unverified is write-failed', async () => {
-  const server = senaite({ write: 'refuse' });
-  assert.deepEqual(await createSenaiteResultVerifier(env, server.fetchImpl).verify(REQUEST),
-    { status: 'error', code: 'write-failed' });
-  assert.equal(server.analyses[0].review_state, 'to_be_verified');
+  const http = senaite({ write: 'http-error' });
+  assert.deepEqual(await verify(http), { status: 'error', code: 'write-failed' });
+  assert.equal(http.analyses[0].review_state, 'to_be_verified');
 });
 
 test('a verified read-back with a different result is not reported as the reviewed result', async () => {
-  const server = senaite({ write: 'change-result' });
-  assert.deepEqual(await createSenaiteResultVerifier(env, server.fetchImpl).verify(REQUEST),
-    { status: 'error', code: 'write-unconfirmed' });
+  assert.deepEqual(await verify(senaite({ write: 'change-result' })), { status: 'error', code: 'write-unconfirmed' });
 });
 
 test('transport, HTTP and JSON failures return fixed codes without upstream bodies', async () => {
