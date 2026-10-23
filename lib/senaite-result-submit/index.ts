@@ -89,15 +89,14 @@ function record(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
 }
 
-const same = (a: string, b: string) => a.toLowerCase() === b.toLowerCase();
-
 /**
  * SENAITE 2.6 answers a rejected token with HTTP 200 as Anonymous; only
- * `authenticated: true` with a username counts. The login name and, when
- * `api_url` names it, the user id are kept only to match the analyst and the
- * recorded submitter, and are never returned.
+ * `authenticated: true` with a username counts. The user id named by `api_url`
+ * is kept only to match the analyst and the recorded submitter, and is never
+ * returned. Plone user ids are case-sensitive, and one user's login name can
+ * be another user's id, so only the exact user id is used.
  */
-function tokenAccountFromPayload(payload: unknown): { authenticated: false } | { authenticated: true; names: string[] } | null {
+function tokenAccountFromPayload(payload: unknown): { authenticated: false } | { authenticated: true; userId: string | null } | null {
   if (!record(payload) || payload.success === false || !Array.isArray(payload.items) || payload.items.length !== 1) {
     return null;
   }
@@ -105,16 +104,13 @@ function tokenAccountFromPayload(payload: unknown): { authenticated: false } | {
   if (!record(identity) || typeof identity.authenticated !== 'boolean') return null;
   if (!identity.authenticated) return { authenticated: false };
   if (typeof identity.username !== 'string' || !identity.username.trim()) return null;
-  const names = [identity.username.trim()];
   const idFromUrl = typeof identity.api_url === 'string' ? /\/users\/([^/?#]+)$/.exec(identity.api_url)?.[1] : undefined;
-  if (idFromUrl && idFromUrl !== 'current') {
-    try {
-      names.push(decodeURIComponent(idFromUrl));
-    } catch {
-      return null;
-    }
+  if (!idFromUrl || idFromUrl === 'current') return { authenticated: true, userId: null };
+  try {
+    return { authenticated: true, userId: decodeURIComponent(idFromUrl) };
+  } catch {
+    return null;
   }
-  return { authenticated: true, names };
 }
 
 type ListedSample = { uid: string; id: string; clientUid: string; reviewState: string };
@@ -227,7 +223,9 @@ export function createSenaiteResultSubmitter(
       // Lost answers: the request may or may not have reached SENAITE.
       return { code: 'request-failed', rejected: false };
     }
-    if (!response.ok) return { code: 'request-failed', rejected: true };
+    // A 4xx is SENAITE refusing. A 5xx may come from a gateway while SENAITE
+    // is still committing, so it is not proof that nothing was written.
+    if (!response.ok) return { code: 'request-failed', rejected: response.status < 500 };
     try {
       return { payload: await response.json() };
     } catch {
@@ -268,8 +266,9 @@ export function createSenaiteResultSubmitter(
       if (account === null) return { status: 'error', code: 'invalid-response' };
       if (!account.authenticated) return { status: 'error', code: 'unauthenticated' };
       // A token that signs in as anyone else, including a service account, would
-      // record the wrong submitter and hollow out four-eyes verification.
-      if (!account.names.some(name => same(name, request.analystUserId))) {
+      // record the wrong submitter and hollow out four-eyes verification. An
+      // identity that does not name its user id cannot be matched at all.
+      if (account.userId !== request.analystUserId) {
         return { status: 'error', code: 'analyst-mismatch' };
       }
 
@@ -320,7 +319,7 @@ export function createSenaiteResultSubmitter(
       if ('code' in after) return { status: 'error', code: 'write-unconfirmed' };
       const landed = after.analysis;
       if (accepted && landed.reviewState === SUBMITTED && seen(landed)) {
-        if (account.names.some(name => same(name, landed.submittedBy))) {
+        if (landed.submittedBy === request.analystUserId) {
           return { status: 'submitted', analysis: submitted };
         }
         // Submitted, but SENAITE does not name this analyst, so verification

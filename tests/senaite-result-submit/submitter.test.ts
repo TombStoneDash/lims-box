@@ -31,13 +31,13 @@ type Analysis = {
 type Options = {
   /** Who the token signs in as. */
   username?: string;
-  userId?: string;
+  userId?: string | null;
   authenticated?: boolean;
   samples?: Sample[];
   analyses?: Analysis[];
   dropFilters?: string[];
   /** What happens on POST update. */
-  write?: 'apply' | 'lose-answer' | 'http-error' | 'ignore' | 'apply-and-lose' | 'change-result'
+  write?: 'apply' | 'lose-answer' | 'http-error' | 'gateway-error' | 'refuse' | 'ignore' | 'apply-and-lose' | 'change-result'
     | 'someone-else-first' | 'record-other-submitter';
 };
 
@@ -50,7 +50,8 @@ function senaite(options: Options = {}) {
   ];
   const authenticated = options.authenticated ?? true;
   const username = authenticated ? options.username ?? 'analyst-a' : 'Anonymous User';
-  const userId = authenticated ? options.userId ?? username : 'current';
+  // `null`: an identity whose api_url names no user id.
+  const userId = authenticated ? (options.userId === undefined ? username : options.userId) : 'current';
   const calls: { method: string; path: string; query: Record<string, string>; body?: unknown; headers: Headers; init?: RequestInit }[] = [];
   const dropped = new Set(options.dropFilters ?? []);
 
@@ -66,7 +67,9 @@ function senaite(options: Options = {}) {
     calls.push({ method: init?.method ?? 'GET', path: route, query, body, headers: new Headers(init?.headers), init });
 
     if (route === 'users/current') {
-      return json({ count: 1, items: [{ username, authenticated, api_url: `${ROOT}/@@API/senaite/v1/users/${userId}` }] });
+      return json({ count: 1, items: [{
+        username, authenticated, ...(userId === null ? {} : { api_url: `${ROOT}/@@API/senaite/v1/users/${userId}` }),
+      }] });
     }
     const filter = <T extends Record<string, unknown>>(rows: T[], keys: Record<string, string>) =>
       rows.filter(row => Object.entries(keys).every(([k, field]) => !query[k] || dropped.has(k) || row[field] === query[k]));
@@ -81,7 +84,10 @@ function senaite(options: Options = {}) {
       const sample = samples.find(s => s.uid === target?.parent_uid);
       const mode = options.write ?? 'apply';
       if (mode === 'lose-answer') throw new TypeError('socket hang up');
-      if (mode === 'http-error') return json({ message: 'synthetic' }, 500);
+      if (mode === 'http-error') return json({ message: 'synthetic' }, 403);
+      // SENAITE has not committed yet when the gateway gives up, so the read-back still shows it open.
+      if (mode === 'gateway-error') return json({ message: 'Bad Gateway' }, 502);
+      if (mode === 'refuse') return json({ success: false, message: 'Transition submit not allowed' });
       if (mode === 'someone-else-first' && target) {
         target.review_state = 'to_be_verified';
         target.getSubmittedBy = 'analyst-c';
@@ -182,16 +188,23 @@ test('an assigned analysis and a below-limit result submit too', async () => {
   assert.equal((await submit(server, { ...REQUEST, expectedOperand: '<' })).status, 'submitted');
 });
 
-test('the analyst is matched by login name or user id, case-insensitively', async () => {
+test('the analyst is matched by exact SENAITE user id, not login name', async () => {
   const byId = senaite({ username: 'a.person@lab.example.invalid', userId: 'analyst-a' });
   assert.equal((await submit(byId)).status, 'submitted');
   assert.equal(byId.analyses[0].getSubmittedBy, 'analyst-a');
-  const byCase = senaite({ username: 'Analyst-A' });
-  assert.equal((await submit(byCase)).status, 'submitted');
 });
 
 test('a token that signs in as anyone but the analyst never submits, service accounts included', async () => {
-  for (const account of [{ username: 'ohworks-import-svc' }, { username: 'analyst-c' }]) {
+  for (const account of [
+    { username: 'ohworks-import-svc' },
+    { username: 'analyst-c' },
+    // Plone user ids are case-sensitive.
+    { username: 'Analyst-A' },
+    // Another user whose login name is the analyst's user id.
+    { username: 'analyst-a', userId: 'analyst-c' },
+    // No user id in the identity: it cannot be matched.
+    { username: 'analyst-a', userId: null },
+  ]) {
     const server = senaite(account);
     assert.deepEqual(await submit(server), { status: 'error', code: 'analyst-mismatch' });
     assert.deepEqual(server.calls.map(c => c.path), ['users/current']);
@@ -262,6 +275,18 @@ test('a dropped client filter that lists a foreign sample fails closed before an
   assert.equal(server.posts().length, 0);
 });
 
+test('a dropped sample ID filter that lists other samples of the client fails closed', async () => {
+  const server = senaite({
+    dropFilters: ['getId'],
+    samples: [
+      { uid: SAMPLE_UID, id: 'WB-0001', getClientUID: CLIENT, review_state: 'sample_received' },
+      { uid: '4'.repeat(32), id: 'WB-0002', getClientUID: CLIENT, review_state: 'sample_received' },
+    ],
+  });
+  assert.deepEqual(await submit(server), { status: 'error', code: 'scope-mismatch' });
+  assert.equal(server.posts().length, 0);
+});
+
 test('a dropped sample filter that lists foreign analyses fails closed before any write', async () => {
   const server = senaite({ dropFilters: ['getRequestUID'] });
   server.analyses.push({
@@ -324,9 +349,16 @@ test('without an accepted write answer a submitted read-back is never claimed', 
 });
 
 test('an explicit refusal that left the result unsubmitted is write-failed', async () => {
-  const http = senaite({ write: 'http-error' });
-  assert.deepEqual(await submit(http), { status: 'error', code: 'write-failed' });
-  assert.equal(http.analyses[0].review_state, 'unassigned');
+  for (const write of ['http-error', 'refuse'] as const) {
+    const server = senaite({ write });
+    assert.deepEqual(await submit(server), { status: 'error', code: 'write-failed' });
+    assert.equal(server.analyses[0].review_state, 'unassigned');
+  }
+});
+
+test('a gateway 5xx is never taken as proof that nothing was written', async () => {
+  const server = senaite({ write: 'gateway-error' });
+  assert.deepEqual(await submit(server), { status: 'error', code: 'write-unconfirmed' });
 });
 
 test('a submitted read-back with a different result is not reported as the seen result', async () => {

@@ -21,9 +21,11 @@ SENAITE records whoever the token signs in as as the submitter
 that record. A shared service token would record the service account, so the
 same person could submit and then verify their own result. This module
 therefore has **no environment token**. Each call carries the analyst's own
-SENAITE token, held server-side, and the token must sign in as `analystUserId`
-(login name or user id, case-insensitive). A token for anyone else, including a
-service account, is refused as `analyst-mismatch` before any sample is read.
+SENAITE token, held server-side, and the token must sign in as `analystUserId`:
+the user id named by `users/current`'s `api_url`, matched exactly (Plone user ids
+are case-sensitive, and a login name can equal another user's id). A token for
+anyone else, including a service account, or an identity with no user id, is
+refused as `analyst-mismatch` before any sample is read.
 `analystUserId` comes from the signed-in OHWorks session, never from browser
 input. The read-only, import and verify tokens never enable it.
 
@@ -49,11 +51,13 @@ invalid URL sends no request.
    `rejected`, …) is `not-submittable`. The sample must be `sample_received`.
 6. Sends only `{ uid, transition: "submit" }`. It reports `submitted` only when
    SENAITE accepted the write **and** the read-back shows the same value as
-   `to_be_verified` with `getSubmittedBy` naming this analyst. If SENAITE names
+   `to_be_verified` with `getSubmittedBy` equal to `analystUserId`. If SENAITE names
    someone else, the answer is `submitter-unattributed`. A read-back without an
    accepted answer (lost answer, or another user got there first) is
-   `write-unconfirmed`, never `submitted`. An explicit refusal that left the
-   analysis open is `write-failed`.
+   `write-unconfirmed`, never `submitted`. An explicit refusal (HTTP 4xx or
+   `success: false`) that left the analysis open is `write-failed`. A 5xx may
+   come from a gateway while SENAITE is still committing, so it is
+   `write-unconfirmed`.
 
 Errors are fixed codes. User names, upstream bodies and tokens are never returned.
 
