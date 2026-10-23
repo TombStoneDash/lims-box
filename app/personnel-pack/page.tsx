@@ -159,6 +159,11 @@ export default function PersonnelPackPage() {
               Ask LIMS BOT about this
             </Link>
           </p>
+          {/* Issue #789. Only what LabLogs' own site lists (lablogs.co, checked 2026-10-23); no claims about what it lacks. */}
+          <p data-testid="lablogs-comparison" className="mt-6 text-sm text-slate-400 max-w-2xl mx-auto">
+            Equipment and QC logs such as LabLogs track maintenance, QC records, lots and reagents.
+            Personnel Pack covers the people side: competency, training and authorizations.
+          </p>
         </div>
       </section>
 
