@@ -34,9 +34,12 @@ account that submits results.
    written. Any state other than `to_be_verified` is `not-verifiable` (with the
    state). An empty `Result` is `no-result`.
 5. **Four-eyes.** The analysis `getSubmittedBy` must be present
-   (`submitter-unknown` otherwise) and differ from the signed-in username
-   (`self-verification` otherwise). This holds even if SENAITE's own "allow
-   self-verification" setting is on. Usernames are compared, never returned.
+   (`submitter-unknown` otherwise) and differ from the signed-in username,
+   ignoring case (`self-verification` otherwise). This holds even if SENAITE's
+   own "allow self-verification" setting is on. `getSubmittedBy` is a user id
+   and `users/current` gives the login name; they match on a default SENAITE,
+   but not when the site logs in by email, so an email-shaped login is refused
+   as `verifier-unknown`. Usernames are compared, never returned.
 6. **Write.** `POST update` with exactly `{ uid, transition: "verify" }`.
 7. **Read-back.** The same analysis listing must show that analysis
    `verified`, with the same keyword and the same `Result` that was reviewed.

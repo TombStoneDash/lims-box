@@ -155,6 +155,20 @@ test('four-eyes: the submitter can never verify their own result', async () => {
   assert.equal(server.posts().length, 0);
 });
 
+test('four-eyes: a submitter id differing only in case is still the same person', async () => {
+  const server = senaite({ username: 'Analyst-A' });
+  assert.deepEqual(await createSenaiteResultVerifier(env, server.fetchImpl).verify(REQUEST),
+    { status: 'error', code: 'self-verification' });
+  assert.equal(server.posts().length, 0);
+});
+
+test('four-eyes: an email login cannot be compared with a submitter id, so nothing is verified', async () => {
+  const server = senaite({ username: 'reviewer@lab.example.invalid' });
+  assert.deepEqual(await createSenaiteResultVerifier(env, server.fetchImpl).verify(REQUEST),
+    { status: 'error', code: 'verifier-unknown' });
+  assert.equal(server.posts().length, 0);
+});
+
 test('four-eyes: a result with no recorded submitter is never verified', async () => {
   for (const getSubmittedBy of [undefined, null, '', '  ']) {
     const server = senaite();

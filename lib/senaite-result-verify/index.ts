@@ -17,7 +17,7 @@ export type SenaiteResultVerifyErrorCode =
   | 'invalid-request' | 'unauthenticated' | 'request-failed' | 'invalid-response'
   | 'sample-not-found' | 'ambiguous-sample' | 'scope-mismatch'
   | 'analysis-not-found' | 'ambiguous-analysis' | 'not-verifiable' | 'no-result'
-  | 'submitter-unknown' | 'self-verification' | 'write-failed' | 'write-unconfirmed';
+  | 'submitter-unknown' | 'verifier-unknown' | 'self-verification' | 'write-failed' | 'write-unconfirmed';
 
 export type VerifiedResult = { uid: string; sampleId: string; keyword: string; result: string };
 
@@ -235,7 +235,13 @@ export function createSenaiteResultVerifier(
       }
       if (!analysis.result) return { status: 'error', code: 'no-result' };
       if (!analysis.submittedBy) return { status: 'error', code: 'submitter-unknown' };
-      if (analysis.submittedBy === verifier.username) return { status: 'error', code: 'self-verification' };
+      // `getSubmittedBy` is a user id; `users/current` gives the login name. They
+      // match unless the site logs in by email, where the comparison would prove
+      // nothing, so an email-shaped login is never trusted as a distinct verifier.
+      if (verifier.username.includes('@')) return { status: 'error', code: 'verifier-unknown' };
+      if (analysis.submittedBy.toLowerCase() === verifier.username.toLowerCase()) {
+        return { status: 'error', code: 'self-verification' };
+      }
 
       // senaite.jsonapi `update` runs the named workflow transition; nothing else is sent.
       const write = await call(config, config.api('update'), {
