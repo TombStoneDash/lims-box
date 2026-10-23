@@ -78,3 +78,10 @@ test('SENAITE errors sent with HTTP 200 and success:false fail closed', async ()
   });
   assert.deepEqual(http.paths, [IDENTITY]);
 });
+
+test('a client-scoped read with the recorded invalid token is unauthenticated before any tenant query', async () => {
+  const http = replay({ [IDENTITY]: 'users-current-invalid-bearer', [SAMPLES]: 'analysisrequest-invalid-bearer' });
+  const reader = createSenaiteReadAdapter(env, http.fetchImpl).forClient('a1b2c3d4e5f60718293a4b5c6d7e8f90');
+  assert.deepEqual(await reader.listSamples(), { status: 'error', code: 'unauthenticated' });
+  assert.deepEqual(http.paths, [IDENTITY]);
+});
