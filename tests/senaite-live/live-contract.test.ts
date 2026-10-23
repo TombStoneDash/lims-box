@@ -9,11 +9,13 @@ import { createSenaiteAnalysesReader } from '../../lib/senaite-read/analyses';
 //   SENAITE_LIVE_ORIGIN=http://127.0.0.1:18099 npm run test:senaite-live
 // SENAITE_LIVE_SITE_PATH defaults to /senaite. SENAITE_LIVE_READ_TOKEN, if set,
 // must be a read-only token for a synthetic-data server; it is never printed.
+// SENAITE_LIVE_CLIENT_UID, with the token, runs the client-scoped (tenant) read.
 const origin = process.env.SENAITE_LIVE_ORIGIN?.trim();
 const sitePath = (process.env.SENAITE_LIVE_SITE_PATH?.trim() || '/senaite').replace(/\/+$/, '');
 const readToken = process.env.SENAITE_LIVE_READ_TOKEN?.trim();
 // SENAITE_LIVE_SAMPLE_UID, if set, is a synthetic sample whose analyses are read.
 const sampleUid = process.env.SENAITE_LIVE_SAMPLE_UID?.trim();
+const clientUid = process.env.SENAITE_LIVE_CLIENT_UID?.trim();
 const skipLive = origin ? false : 'set SENAITE_LIVE_ORIGIN to run against a real SENAITE';
 
 // The adapter only accepts an HTTPS site root. The harness keeps that rule and
@@ -95,4 +97,24 @@ test('a read-only token lists one real sample\'s analyses, scoped to that sample
     if (!['verified', 'published'].includes(String(analysis.reviewState))) assert.equal(analysis.reportableResult, null);
   }
   assert.deepEqual(http.paths, [`${sitePath}/@@API/senaite/v1/users/current`, `${sitePath}/@@API/senaite/v1/Analysis`]);
+});
+
+test('a client-scoped read returns only that client\'s samples from the real server', {
+  skip: skipLive || (readToken && clientUid ? false
+    : 'set SENAITE_LIVE_READ_TOKEN and SENAITE_LIVE_CLIENT_UID to run the tenant read'),
+}, async () => {
+  const http = forwarder();
+  const result = await createSenaiteReadAdapter(
+    { SENAITE_BASE_URL: `${ADAPTER_ROOT}${sitePath}`, SENAITE_API_TOKEN: readToken }, http.fetchImpl,
+  ).forClient(clientUid!).listSamples({ limit: 5 });
+  // `tenant-mismatch` here means this server ignored getClientUID; the adapter refused to show the page.
+  assert.equal(result.status, 'ok', JSON.stringify(result));
+  if (result.status !== 'ok') return;
+  // Cross-check independently of catalog metadata: a SENAITE sample is stored
+  // inside its Client folder, so the object's parent must be that client.
+  for (const sample of result.samples) {
+    const { status, body } = await apiGet(`AnalysisRequest/${encodeURIComponent(sample.uid)}`, readToken!);
+    assert.equal(status, 200);
+    assert.equal(body?.items?.[0]?.parent_uid, clientUid);
+  }
 });

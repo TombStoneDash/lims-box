@@ -100,7 +100,7 @@ test('construction is inert, the token is proven first, and GET maps only suppor
     ],
   });
   assert.equal(calls, 2);
-  assert.deepEqual(Object.keys(adapter).sort(), ['enabled', 'listSamples']);
+  assert.deepEqual(Object.keys(adapter).sort(), ['enabled', 'forClient', 'listSamples']);
 });
 
 test('invalid queries never call transport', async () => {
@@ -177,4 +177,92 @@ test('HTTP errors, redirects, transport failures and invalid JSON return safe er
   }
   const invalidJson: typeof fetch = async () => new Response('not JSON');
   assert.deepEqual(await createSenaiteReadAdapter(env, invalidJson).listSamples(), { status: 'error', code: 'invalid-response' });
+});
+
+// Synthetic SENAITE Client UIDs (32 lowercase hex, the Plone UID format).
+const TENANT = 'a1b2c3d4e5f60718293a4b5c6d7e8f90';
+const OTHER_TENANT = '0f9e8d7c6b5a49382716f5e4d3c2b1a0';
+const tenantSample = (id: string, client: unknown = TENANT) =>
+  ({ uid: `uid-${id}`, id, title: null, review_state: 'sample_received', getClientUID: client, getClientTitle: 'Synthetic client' });
+
+test('a client-scoped read filters by getClientUID and keeps the public shape', async () => {
+  const urls: URL[] = [];
+  const transport: typeof fetch = async input => {
+    const url = new URL(String(input));
+    urls.push(url);
+    return Response.json(isIdentity(input) ? signedIn : { items: [tenantSample('SYN-101'), tenantSample('SYN-102')] });
+  };
+  assert.deepEqual(await createSenaiteReadAdapter(env, transport).listSamples({ clientUid: TENANT, limit: 2 }), {
+    status: 'ok', samples: [
+      { uid: 'uid-SYN-101', id: 'SYN-101', title: null, reviewState: 'sample_received' },
+      { uid: 'uid-SYN-102', id: 'SYN-102', title: null, reviewState: 'sample_received' },
+    ],
+  });
+  assert.equal(urls.length, 2);
+  assert.equal(urls[1].searchParams.get('getClientUID'), TENANT);
+  assert.equal(urls[1].searchParams.get('limit'), '2');
+});
+
+test('one sample from another client, or with no client, fails the whole tenant page', async () => {
+  // senaite.jsonapi drops a query key that is not a catalog index, so a dropped
+  // filter returns every client's samples with HTTP 200. That must never render.
+  const { getClientUID: _omitted, ...clientless } = tenantSample('SYN-202');
+  for (const foreign of [clientless, ...[OTHER_TENANT, null, '', TENANT.toUpperCase(), [TENANT], { uid: TENANT }]
+    .map(client => tenantSample('SYN-202', client))]) {
+    const payload = { items: [tenantSample('SYN-201'), foreign] };
+    assert.deepEqual(await createSenaiteReadAdapter(env, labFetch(payload)).listSamples({ clientUid: TENANT }), {
+      status: 'error', code: 'tenant-mismatch',
+    });
+  }
+  // A malformed record is still invalid-response, whatever its client.
+  assert.deepEqual(await createSenaiteReadAdapter(env, labFetch({ items: [{ id: 'SYN-203', getClientUID: TENANT }] }))
+    .listSamples({ clientUid: TENANT }), { status: 'error', code: 'invalid-response' });
+  // Unscoped (lab-staff) reads do not require client fields.
+  assert.deepEqual(await createSenaiteReadAdapter(env, labFetch({ items: [tenantSample('SYN-204', OTHER_TENANT)] })).listSamples(), {
+    status: 'ok', samples: [{ uid: 'uid-SYN-204', id: 'SYN-204', title: null, reviewState: 'sample_received' }],
+  });
+});
+
+test('client UIDs that are not Plone UIDs are invalid queries and send nothing', async () => {
+  const adapter = createSenaiteReadAdapter(env, forbiddenFetch);
+  for (const clientUid of ['', ' ', 'client-1', TENANT.toUpperCase(), `${TENANT}0`, TENANT.slice(1),
+    `${TENANT.slice(0, 31)}g`, `${TENANT}\n`, 42, null, ['x']]) {
+    assert.deepEqual(await adapter.listSamples({ clientUid } as never), { status: 'error', code: 'invalid-query' });
+    assert.deepEqual(await adapter.forClient(clientUid as never).listSamples(), { status: 'error', code: 'invalid-query' });
+  }
+});
+
+test('forClient binds the tenant: callers cannot widen, replace or drop it', async () => {
+  const sent: (string | null)[] = [];
+  const transport: typeof fetch = async input => {
+    if (isIdentity(input)) return Response.json(signedIn);
+    sent.push(new URL(String(input)).searchParams.get('getClientUID'));
+    return Response.json({ items: [tenantSample('SYN-301')] });
+  };
+  const reader = createSenaiteReadAdapter(env, transport).forClient(TENANT);
+  assert.equal(reader.enabled, true);
+  assert.deepEqual(Object.keys(reader).sort(), ['enabled', 'listSamples']);
+  for (const query of [undefined, {}, { reviewState: 'sample_received' }, { clientUid: OTHER_TENANT } as never,
+    { clientUid: undefined } as never]) {
+    assert.equal((await reader.listSamples(query)).status, 'ok');
+  }
+  assert.deepEqual(sent, [TENANT, TENANT, TENANT, TENANT, TENANT]);
+  assert.deepEqual(await reader.listSamples(null as never), { status: 'error', code: 'invalid-query' });
+  const unconfigured = createSenaiteReadAdapter({}, forbiddenFetch).forClient(TENANT);
+  assert.equal(unconfigured.enabled, false);
+  assert.deepEqual(await unconfigured.listSamples(), { status: 'not_configured' });
+});
+
+test('a tenant read with a token SENAITE does not accept never sends the sample query', async () => {
+  const anonymous = { items: [{ username: 'Anonymous User', authenticated: false, roles: ['Anonymous'] }] };
+  let listed = 0;
+  const transport: typeof fetch = async input => {
+    if (isIdentity(input)) return Response.json(anonymous);
+    listed++;
+    return Response.json({ items: [] });
+  };
+  assert.deepEqual(await createSenaiteReadAdapter(env, transport).forClient(TENANT).listSamples(), {
+    status: 'error', code: 'unauthenticated',
+  });
+  assert.equal(listed, 0);
 });
