@@ -36,7 +36,7 @@ export type SenaiteSampleQuery = {
 // Plone/SENAITE UIDs are 32 lowercase hex characters.
 const CLIENT_UID = /^[0-9a-f]{32}$/;
 
-function configuration(env: SenaiteReadEnvironment) {
+export function configuration(env: SenaiteReadEnvironment) {
   const { SENAITE_BASE_URL: rawUrl, SENAITE_API_TOKEN: token } = env;
   if (!rawUrl?.trim() || !token?.trim() || /[\s\x00-\x1f\x7f]/.test(token)) return null;
   try {
@@ -48,13 +48,17 @@ function configuration(env: SenaiteReadEnvironment) {
       endpoint.pathname = `${url.pathname.replace(/\/+$/, '')}/@@API/senaite/v1/${route}`;
       return endpoint;
     };
-    return { identityUrl: api('users/current'), samplesUrl: api('AnalysisRequest'), authorization: `Bearer ${token}` };
+    return {
+      identityUrl: api('users/current'),
+      samplesUrl: api('AnalysisRequest'),
+      analysesUrl: api('Analysis'),
+      authorization: `Bearer ${token}` };
   } catch {
     return null;
   }
 }
 
-function record(value: unknown): value is Record<string, unknown> {
+export function record(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
 }
 
@@ -64,7 +68,7 @@ function record(value: unknown): value is Record<string, unknown> {
  * explicit `authenticated: true` from users/current proves the token worked.
  * Nothing else from the identity record (names, emails, roles) is kept.
  */
-function authenticatedFromPayload(payload: unknown): boolean | null {
+export function authenticatedFromPayload(payload: unknown): boolean | null {
   if (!record(payload) || !Array.isArray(payload.items) || payload.items.length !== 1) return null;
   const [identity] = payload.items;
   return record(identity) && typeof identity.authenticated === 'boolean' ? identity.authenticated : null;

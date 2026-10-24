@@ -225,7 +225,9 @@ class SenaiteClient:
         if not sample:
             raise ValueError(f"Sample {sample_id} not found")
 
-        # Find the analysis matching the test name
+        # Find the analysis matching the test name. senaite.jsonapi silently
+        # drops query keys that are not catalog indexes, so the sample filter
+        # alone does not prove the target; it is re-checked below.
         params = {"getParentUID": sample["uid"], "getKeyword": test_name}
         analyses = self.get(f"Analysis?{urlencode(params)}")
         items = analyses.get("items", [])
@@ -242,6 +244,11 @@ class SenaiteClient:
         if not isinstance(analysis_uid, str) or not analysis_uid.strip():
             raise ValueError(
                 f"Analysis for test '{test_name}' on sample {sample_id} has an invalid UID"
+            )
+        # Never write a result into an analysis stored in a different sample.
+        if target.get("parent_uid") != sample["uid"]:
+            raise ValueError(
+                f"Analysis for test '{test_name}' does not belong to sample {sample_id}"
             )
         return self.post(f"Analysis/{analysis_uid}", {"Result": value})
 
