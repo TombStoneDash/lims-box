@@ -31,6 +31,7 @@
     "test:all": "node scripts/run-all-tests.mjs",
     "test:senaite-read": "node --import tsx --test tests/senaite-read/adapter.test.ts tests/senaite-read/recorded-senaite-contract.test.ts",
     "test:senaite-receive": "node --import tsx --test tests/senaite-sample-receive/receiver.test.ts",
+    "test:senaite-import": "node --import tsx --test tests/senaite-result-import/*.test.ts",
     "test:senaite-live": "node --import tsx --test tests/senaite-live/live-contract.test.ts",
     "postinstall": "prisma generate",
     "seed": "tsx prisma/seed.ts",
