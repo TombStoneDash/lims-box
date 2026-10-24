@@ -55,7 +55,7 @@ class StartTestTargetSelectionTests(unittest.TestCase):
 
     def test_one_match_preserves_observed_state_feedback(self):
         self.assertEqual(
-            self.execute([{"review_state": "sample_received"}]),
+            self.execute([{"parent_uid": "sample-uid", "review_state": "sample_received"}]),
             "Test pH found on sample SA-2026-001. "
             "Observed state: sample_received. No workflow change was made.",
         )
@@ -64,13 +64,13 @@ class StartTestTargetSelectionTests(unittest.TestCase):
         for state in ("verified", "published"):
             with self.subTest(state=state):
                 self.assertEqual(
-                    self.execute([{"review_state": state}]),
+                    self.execute([{"parent_uid": "sample-uid", "review_state": state}]),
                     f"Test pH is already {state}.",
                 )
 
     def test_one_match_without_review_state_is_unknown(self):
         self.assertEqual(
-            self.execute([{}]),
+            self.execute([{"parent_uid": "sample-uid"}]),
             "Test pH found on sample SA-2026-001. "
             "Observed state: unknown. No workflow change was made.",
         )
@@ -80,6 +80,19 @@ class StartTestTargetSelectionTests(unittest.TestCase):
             self.execute([]),
             "Test 'pH' is not configured on sample SA-2026-001.",
         )
+
+    def test_analysis_from_another_sample_is_never_reported(self):
+        # senaite.jsonapi drops unknown query keys, so getParentUID may be ignored.
+        for analysis in ({"parent_uid": "other-sample-uid", "review_state": "verified"},
+                         {"review_state": "verified"}, {"parent_uid": None}, "analysis-1"):
+            with self.subTest(analysis=analysis):
+                feedback = self.execute([analysis])
+                self.assertEqual(
+                    feedback,
+                    "Test 'pH' could not be confirmed on sample SA-2026-001. "
+                    "No workflow change was made.",
+                )
+                self.assertNotIn("verified", feedback)
 
 
 if __name__ == "__main__":

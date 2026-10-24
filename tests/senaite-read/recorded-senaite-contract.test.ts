@@ -55,6 +55,14 @@ test('an invalid token is reported as unauthenticated, never as a lab with no sa
   assert.deepEqual(http.paths, [IDENTITY], 'the sample query is not sent');
 });
 
+test('a single-sample lookup with an invalid token is unauthenticated, never not_found', async () => {
+  const http = replay({ [IDENTITY]: 'users-current-invalid-bearer', [SAMPLES]: 'analysisrequest-invalid-bearer' });
+  assert.deepEqual(await createSenaiteReadAdapter(env, http.fetchImpl).getSample('SYN-001'), {
+    status: 'error', code: 'unauthenticated',
+  });
+  assert.deepEqual(http.paths, [IDENTITY], 'the sample query is not sent');
+});
+
 test('the same holds for the anonymous identity answer recorded without any header', async () => {
   const http = replay({ [IDENTITY]: 'users-current-no-auth' });
   assert.deepEqual(await createSenaiteReadAdapter(env, http.fetchImpl).listSamples({ reviewState: 'sample_received' }), {

@@ -11,7 +11,8 @@ from senaite.client import SenaiteClient
 class PendingSamplesPaginationTests(unittest.TestCase):
     def setUp(self):
         self.client = SenaiteClient("https://example.invalid/senaite", "test", "test")
-        self.records = [{"uid": f"sample-{i}"} for i in range(60)]
+        self.records = [{"uid": f"sample-{i}", "review_state": "sample_received"}
+                        for i in range(60)]
 
     def page(self, start, stop, count, next_start=None):
         return {
@@ -50,6 +51,17 @@ class PendingSamplesPaginationTests(unittest.TestCase):
                 self.assertEqual(result, self.records[:count])
                 self.assertEqual(len({item["uid"] for item in result}), count)
                 self.assertEqual(offsets, list(range(0, count, 25)) or [0])
+
+    def test_sample_outside_the_pending_state_is_rejected(self):
+        # A dropped review_state filter must not list every sample as pending.
+        for state in ("verified", "published", None):
+            with self.subTest(state=state):
+                self.records[1] = {"uid": "sample-1", "review_state": state}
+                if state is None:
+                    self.records[1] = {"uid": "sample-1"}
+                with patch.object(self.client, "get", return_value=self.page(0, 3, 3)):
+                    with self.assertRaises(ValueError):
+                        self.client.get_pending_samples()
 
     def test_repeated_or_skipped_cursor_is_rejected(self):
         for offset in (0, 24, 26):

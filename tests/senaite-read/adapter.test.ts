@@ -88,19 +88,105 @@ test('construction is inert, the token is proven first, and GET maps only suppor
     assert.equal(init?.credentials, 'omit');
     assert.ok(init?.signal instanceof AbortSignal);
     assert.equal(headers.get('accept'), 'application/json');
-    return Response.json(fixture);
+    return Response.json({ ...fixture, items: [{ ...fixture.items[0], id: 'SYN &/?#=001' }] });
   };
   const adapter = createSenaiteReadAdapter(env, transport);
   assert.equal(adapter.enabled, true);
   assert.equal(calls, 0);
   assert.deepEqual(await adapter.listSamples({ sampleId: 'SYN &/?#=001', reviewState: 'sample_received' }), {
     status: 'ok', samples: [
+      { uid: 'synthetic-uid-001', id: 'SYN &/?#=001', title: 'Synthetic water sample', reviewState: 'sample_received' },
+    ],
+  });
+  assert.equal(calls, 2);
+  assert.deepEqual(Object.keys(adapter).sort(), ['enabled', 'forClient', 'getSample', 'listSamples']);
+});
+
+test('unfiltered reads map every supported record, including missing title and state', async () => {
+  assert.deepEqual(await createSenaiteReadAdapter(env, labFetch(fixture)).listSamples(), {
+    status: 'ok', samples: [
       { uid: 'synthetic-uid-001', id: 'SYN-001', title: 'Synthetic water sample', reviewState: 'sample_received' },
       { uid: 'synthetic-uid-002', id: 'SYN-002', title: null, reviewState: null },
     ],
   });
-  assert.equal(calls, 2);
-  assert.deepEqual(Object.keys(adapter).sort(), ['enabled', 'forClient', 'listSamples']);
+});
+
+test('a filter SENAITE ignored fails the whole page instead of returning other samples', async () => {
+  // senaite.jsonapi drops query keys that are not catalog indexes and still
+  // answers 200 with the newest samples; these replies model that.
+  const received = (id: string, state: string | null = 'sample_received') =>
+    ({ uid: `synthetic-uid-${id}`, id, review_state: state });
+  for (const [query, items] of [
+    [{ sampleId: 'SYN-404' }, fixture.items],
+    [{ sampleId: 'SYN-001' }, fixture.items],
+    [{ sampleId: 'syn-001' }, [received('SYN-001')]],
+    [{ sampleId: 'SYN-001 ' }, [received('SYN-001')]],
+    [{ reviewState: 'sample_received' }, fixture.items],
+    [{ reviewState: 'verified' }, [received('SYN-001', 'verified'), received('SYN-002')]],
+    [{ sampleId: 'SYN-001', reviewState: 'verified' }, [received('SYN-001')]],
+  ] as const) {
+    assert.deepEqual(await createSenaiteReadAdapter(env, labFetch({ items })).listSamples(query),
+      { status: 'error', code: 'filter-mismatch' }, JSON.stringify(query));
+  }
+  assert.deepEqual(await createSenaiteReadAdapter(env, labFetch({ items: [received('SYN-001'), received('SYN-002')] }))
+    .listSamples({ reviewState: 'sample_received' }), {
+    status: 'ok', samples: [
+      { uid: 'synthetic-uid-SYN-001', id: 'SYN-001', title: null, reviewState: 'sample_received' },
+      { uid: 'synthetic-uid-SYN-002', id: 'SYN-002', title: null, reviewState: 'sample_received' },
+    ],
+  });
+});
+
+test('getSample returns exactly the requested sample', async () => {
+  const urls: URL[] = [];
+  const transport: typeof fetch = async input => {
+    const url = new URL(String(input));
+    urls.push(url);
+    return Response.json(isIdentity(input) ? signedIn : { items: [fixture.items[0]] });
+  };
+  assert.deepEqual(await createSenaiteReadAdapter(env, transport).getSample('SYN-001'), {
+    status: 'ok', sample: { uid: 'synthetic-uid-001', id: 'SYN-001', title: 'Synthetic water sample', reviewState: 'sample_received' },
+  });
+  assert.equal(urls.length, 2);
+  assert.equal(urls[1].searchParams.get('getId'), 'SYN-001');
+  assert.equal(urls[1].searchParams.get('limit'), '2');
+  assert.equal(urls[1].searchParams.has('review_state'), false);
+});
+
+test('getSample reports not_found only for an empty answer after a proven sign-in', async () => {
+  assert.deepEqual(await createSenaiteReadAdapter(env, labFetch({ items: [] })).getSample('SYN-404'), { status: 'not_found' });
+  // The recorded hazard: a rejected token gets 200 and an empty list.
+  const anonymous = { items: [{ username: 'Anonymous User', authenticated: false, roles: ['Anonymous'] }] };
+  let listed = 0;
+  const transport: typeof fetch = async input => {
+    if (isIdentity(input)) return Response.json(anonymous);
+    listed++;
+    return Response.json({ items: [] });
+  };
+  assert.deepEqual(await createSenaiteReadAdapter(env, transport).getSample('SYN-001'), { status: 'error', code: 'unauthenticated' });
+  assert.equal(listed, 0);
+});
+
+test('getSample never substitutes another sample or picks between duplicates', async () => {
+  // Filter ignored: the newest samples come back and none, or not only, is the one asked for.
+  assert.deepEqual(await createSenaiteReadAdapter(env, labFetch({ items: [fixture.items[1]] })).getSample('SYN-001'),
+    { status: 'error', code: 'filter-mismatch' });
+  assert.deepEqual(await createSenaiteReadAdapter(env, labFetch(fixture)).getSample('SYN-001'),
+    { status: 'error', code: 'filter-mismatch' });
+  const twin = { ...fixture.items[0], uid: 'synthetic-uid-001-copy' };
+  assert.deepEqual(await createSenaiteReadAdapter(env, labFetch({ items: [fixture.items[0], twin] })).getSample('SYN-001'),
+    { status: 'error', code: 'invalid-response' });
+  // More than the two records asked for is an oversized page.
+  assert.deepEqual(await createSenaiteReadAdapter(env, labFetch({ items: [fixture.items[0], twin, twin] })).getSample('SYN-001'),
+    { status: 'error', code: 'invalid-response' });
+});
+
+test('getSample validates input and configuration before any request', async () => {
+  assert.deepEqual(await createSenaiteReadAdapter({}, forbiddenFetch).getSample('SYN-001'), { status: 'not_configured' });
+  const adapter = createSenaiteReadAdapter(env, forbiddenFetch);
+  for (const id of ['', '  ', 'x'.repeat(201), undefined, null, 7, ['SYN-001']]) {
+    assert.deepEqual(await adapter.getSample(id as string), { status: 'error', code: 'invalid-query' });
+  }
 });
 
 test('invalid queries never call transport', async () => {

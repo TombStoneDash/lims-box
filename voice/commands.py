@@ -153,6 +153,13 @@ def _handle_start_test(args: tuple, client: SenaiteClient) -> str:
             )
 
         analysis = items[0]
+        # The sample filter may be dropped by SENAITE; never report the state
+        # of an analysis stored in a different sample.
+        if not isinstance(analysis, dict) or analysis.get("parent_uid") != sample["uid"]:
+            return (
+                f"Test '{test_name}' could not be confirmed on sample {session.current_sample_id}. "
+                "No workflow change was made."
+            )
         current_state = analysis.get("review_state") or "unknown"
         if current_state in ("verified", "published"):
             return f"Test {test_name} is already {current_state}."
