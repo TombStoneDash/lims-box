@@ -28,6 +28,10 @@ class PendingSamplesPaginationTests(unittest.TestCase):
                 offsets = []
 
                 def server(endpoint):
+                    if endpoint == "users/current":
+                        # Asked only to prove an empty collection is not a rejected login.
+                        self.assertEqual(count, 0)
+                        return {"items": [{"authenticated": True}]}
                     url = urlsplit(endpoint)
                     self.assertEqual(url.path, "AnalysisRequest")
                     query = parse_qs(url.query)

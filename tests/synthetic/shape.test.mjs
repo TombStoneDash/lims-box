@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { mkdtemp, readFile, readdir, rm, symlink, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
 import { basename, join, resolve } from 'node:path';
 import test from 'node:test';
 import { fileURLToPath } from 'node:url';
@@ -84,11 +85,11 @@ test('generator rejects unsafe recursive-delete targets and preserves sentinels'
   let symlinkPath;
 
   try {
-    outside = await mkdtemp('/tmp/lims-synthetic-unsafe-');
+    outside = await mkdtemp(join(tmpdir(), 'lims-synthetic-unsafe-'));
     const outsideSentinel = join(outside, 'sentinel.txt');
     unsafeNamed = await mkdtemp(join(repoRoot, '.synthetic-data-unowned-'));
     const unsafeNamedSentinel = join(unsafeNamed, 'sentinel.txt');
-    symlinkTarget = await mkdtemp('/tmp/lims-synthetic-symlink-target-');
+    symlinkTarget = await mkdtemp(join(tmpdir(), 'lims-synthetic-symlink-target-'));
     const symlinkSentinel = join(symlinkTarget, 'sentinel.txt');
     symlinkPath = join(repoRoot, `.synthetic-data-symlink-${process.pid}`);
 

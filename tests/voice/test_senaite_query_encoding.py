@@ -38,12 +38,14 @@ class SenaiteQueryEncodingTests(unittest.TestCase):
                 })
 
     def test_search_defaults_and_missing_items(self):
-        with patch.object(self.client, "get", return_value={}) as get:
+        signed_in = {"items": [{"authenticated": True}]}
+        with patch.object(self.client, "get", side_effect=[{}, signed_in]) as get:
             self.assertEqual(self.client.search_samples(), [])
-            get.assert_called_once_with(
+            self.assertEqual([call.args[0] for call in get.call_args_list], [
                 "AnalysisRequest?review_state=sample_received"
-                "&sort_on=created&sort_order=descending&limit=25"
-            )
+                "&sort_on=created&sort_order=descending&limit=25",
+                "users/current",
+            ])
 
     def test_record_result_round_trips_and_preserves_payload(self):
         value = "12.3 + & # µg/L"
@@ -70,7 +72,7 @@ class SenaiteQueryEncodingTests(unittest.TestCase):
 
     def test_record_result_missing_sample_or_analysis(self):
         for responses, message in (
-            ([{}], "Sample SA-001 not found"),
+            ([{}, {"items": [{"authenticated": True}]}], "Sample SA-001 not found"),
             ([{"items": [{"uid": "sample-uid"}]}, {}],
              "Test 'pH' not found on sample SA-001"),
         ):
