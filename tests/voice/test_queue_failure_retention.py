@@ -163,7 +163,7 @@ class QueueFailureRetentionTests(unittest.TestCase):
         self.context.set_sample("SA-001", "uid")
         self.client.get_sample.return_value = {"uid": "uid", "api_url": "synthetic"}
         self.client.get_pending_samples.return_value = []
-        self.client.get.return_value = {"items": [{"review_state": "verified"}]}
+        self.client.get.return_value = {"items": [{"parent_uid": "uid", "review_state": "verified"}]}
         # Writes succeed only when SENAITE explicitly acknowledges them.
         self.client.record_result.return_value = {"success": True}
         self.client.post.return_value = {"success": True}

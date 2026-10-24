@@ -69,9 +69,9 @@ class SenaiteSignInTests(unittest.TestCase):
                     self.client.get_pending_samples()
 
     def test_nonempty_reads_need_no_identity_call(self):
-        page = {"items": [{"uid": "u-1"}], "count": 1, "next": None}
+        page = {"items": [{"uid": "u-1", "review_state": "sample_received"}], "count": 1, "next": None}
         with patch.object(self.client, "get", return_value=page) as get:
-            self.assertEqual(self.client.get_pending_samples(), [{"uid": "u-1"}])
+            self.assertEqual(self.client.get_pending_samples(), [{"uid": "u-1", "review_state": "sample_received"}])
         get.assert_called_once()
 
     def test_voice_never_says_no_pending_samples_after_a_rejected_login(self):
