@@ -78,6 +78,7 @@ test("all personnel/admin data prefixes are protected", () => {
   for (const pathname of [
     "/admin",
     "/senaite-demo",
+    "/senaite-live",
     "/demo/operator",
     "/api/admin/personnel-pack/survey-export",
     "/api/authorizations/x/revoke",
@@ -103,6 +104,7 @@ test("middleware matcher names every protected data prefix", () => {
   for (const prefix of [
     "admin",
     "senaite-demo",
+    "senaite-live",
     "demo/operator",
     "api/admin",
     "api/authorizations",

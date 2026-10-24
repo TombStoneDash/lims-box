@@ -29,7 +29,7 @@
     "test:ohworks": "node --import tsx --test tests/demo-labs-contract.test.ts tests/demo-labs-environmental-qc.test.ts tests/ohworks/result-review-state.test.ts",
     "test:ohworks-nav-coverage": "node --import tsx --test tests/ohworks/pilot-nav-coverage.test.ts",
     "test:all": "node scripts/run-all-tests.mjs",
-    "test:senaite-read": "node --import tsx --test tests/senaite-read/adapter.test.ts tests/senaite-read/recorded-senaite-contract.test.ts",
+    "test:senaite-read": "node --import tsx --test tests/senaite-read/adapter.test.ts tests/senaite-read/recorded-senaite-contract.test.ts tests/senaite-read/live-page.test.tsx",
     "test:senaite-import": "node --import tsx --test tests/senaite-result-import/*.test.ts",
     "test:senaite-live": "node --import tsx --test tests/senaite-live/live-contract.test.ts",
     "postinstall": "prisma generate",
