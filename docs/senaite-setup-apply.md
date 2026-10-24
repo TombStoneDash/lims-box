@@ -75,4 +75,4 @@ least one test fail.
 Still unproven on a real server: the senaite.jsonapi 2.6 `create` field names
 above, the setup folder paths, and which extra fields SENAITE requires. A wrong
 assumption fails as `write-failed` or `write-unconfirmed`; it is never reported
-as applied. Proving it needs a synthetic-data SENAITE and a setup token.
+as applied. Proving it needs a synthetic-data SENAITE and a setup token: `npm run test:senaite-live` with `SENAITE_LIVE_ORIGIN`, `SENAITE_LIVE_SETUP_TOKEN` and `SENAITE_LIVE_SETUP_CONTAINERS` runs the dry run; adding `SENAITE_LIVE_SETUP_APPLY=yes` creates the records, prints a status-only receipt, and checks that a re-run writes nothing.
