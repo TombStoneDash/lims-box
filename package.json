@@ -31,6 +31,7 @@
     "test:senaite-sample-create": "node --import tsx --test tests/senaite-sample-create/sample-create.test.ts tests/ohworks/senaite-create-contract.test.ts",
     "test:senaite-sample-create-live": "node --import tsx --test tests/senaite-live/sample-create-live.test.ts",
     "test:all": "node scripts/run-all-tests.mjs",
+    "test:senaite-brand-apply": "node --import tsx --test tests/senaite-brand-apply/brand-apply.test.ts",
     "test:senaite-read": "node --import tsx --test tests/senaite-read/adapter.test.ts tests/senaite-read/recorded-senaite-contract.test.ts",
     "test:senaite-import": "node --import tsx --test tests/senaite-result-import/*.test.ts",
     "test:senaite-live": "node --import tsx --test tests/senaite-live/live-contract.test.ts",
