@@ -30,7 +30,10 @@ def _confirmed_success(cmd_name: str, response: str) -> bool:
             r"Sample \S+ already exists\. Status: \S+\. Set as current sample\.",
         ),
         "record_result": (r"Result .+ recorded for .+ on sample \S+\.",),
-        "mark_complete": (r"Sample \S+ marked complete and submitted for review\.",),
+        "mark_complete": (
+            r"Sample \S+ submitted for review\. Observed state: (?:to_be_verified|verified|published)\.",
+            r"Submission of sample \S+ confirmed by SENAITE\.",
+        ),
         "print_label": (r"Label print request accepted for sample \S+\.",),
         "show_pending": (r"No pending samples\.", r"[1-9][0-9]* pending samples\. .+\."),
         "start_test": (r"Test .+ is already (?:verified|published)\.",),

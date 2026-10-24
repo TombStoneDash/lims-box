@@ -164,6 +164,10 @@ class QueueFailureRetentionTests(unittest.TestCase):
         self.client.get_sample.return_value = {"uid": "uid", "api_url": "synthetic"}
         self.client.get_pending_samples.return_value = []
         self.client.get.return_value = {"items": [{"review_state": "verified"}]}
+        # Writes succeed only when SENAITE explicitly acknowledges them.
+        self.client.record_result.return_value = {"success": True}
+        self.client.post.return_value = {"success": True}
+        self.client.transition_sample.return_value = {"success": True, "review_state": "to_be_verified"}
         for name, args in [
             ("log_sample", ("SA-001",)), ("record_result", ("7", "pH")),
             ("print_label", ("SA-001",)), ("show_pending", ()),
@@ -174,6 +178,24 @@ class QueueFailureRetentionTests(unittest.TestCase):
         self.assertEqual(executor.call_count, 6)
         self.assertEqual(self.queue.count(), 0)
         self.assertIn("All queued commands have been processed.", spoken)
+
+    def test_confirmed_submission_leaves_the_queue_in_either_wording(self):
+        for answer in ({"success": True, "review_state": "verified"}, {"success": True}):
+            with self.subTest(answer=answer):
+                self.context.set_sample("SA-001", "uid")
+                self.client.transition_sample.return_value = answer
+                self.queue.enqueue("mark_complete", ())
+                executor, spoken = self.drain()
+                executor.assert_called_once()
+                self.assertEqual(self.queue.count(), 0)
+                self.assertIn("All queued commands have been processed.", spoken)
+
+    def test_unexpected_submission_state_stays_queued(self):
+        self.context.set_sample("SA-001", "uid")
+        self.client.transition_sample.return_value = {"success": True, "review_state": "sample_received"}
+        self.queue.enqueue("mark_complete", ())
+        executor, spoken = self.drain()
+        self.assert_held(executor, spoken)
 
     def test_mixed_success_and_failure_never_announces_all_processed(self):
         self.queue.enqueue("record_result", ("7", "pH"))

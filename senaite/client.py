@@ -73,6 +73,21 @@ class SenaiteClient:
         except Exception:
             return False
 
+    def require_authenticated(self) -> None:
+        """Raise unless SENAITE confirms these credentials are signed in.
+
+        SENAITE 2.6 answers rejected credentials with HTTP 200 as Anonymous,
+        who sees no samples, so an empty sample read is trusted only after this.
+        """
+        result = self.get("users/current")
+        items = result.get("items") if isinstance(result, Mapping) else None
+        if (not isinstance(items, list) or len(items) != 1
+                or not isinstance(items[0], Mapping)
+                or type(items[0].get("authenticated")) is not bool):
+            raise ValueError("Invalid SENAITE identity response")
+        if not items[0]["authenticated"]:
+            raise PermissionError("SENAITE did not accept the configured credentials")
+
     # ── Sample operations ────────────────────────────────────────────────
 
     def search_samples(
@@ -92,7 +107,10 @@ class SenaiteClient:
             params["getId"] = query
         endpoint = f"AnalysisRequest?{urlencode(params)}"
         result = self.get(endpoint)
-        return result.get("items", [])
+        items = result.get("items", [])
+        if not items:
+            self.require_authenticated()
+        return items
 
     def get_sample(self, sample_id: str) -> Optional[dict]:
         """Get one sample, returning None if absent; reject ambiguous or invalid targets."""
@@ -174,6 +192,8 @@ class SenaiteClient:
             if next_url is None:
                 if len(items) != total:
                     raise ValueError("Incomplete pending samples pagination")
+                if not items:
+                    self.require_authenticated()
                 return items
             if not batch or len(items) == total:
                 raise ValueError("Pending samples pagination made no progress")
