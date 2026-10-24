@@ -30,6 +30,7 @@ const fixturePath = path.join(
   "tests/fixtures/survey-export.golden.json",
 );
 const fixture = JSON.parse(readFileSync(fixturePath, "utf8")) as GoldenFixture;
+const GOLDEN_NODE_MAJOR = "22";
 
 const dateFields = new Set([
   "authorizedAt",
@@ -184,10 +185,21 @@ test("survey export matches the deterministic fictional golden bundle", async (t
     response.headers.get("cache-control"),
     fixture.expected.cacheControl,
   );
-  assert.equal(
-    createHash("sha256").update(zipBytes).digest("hex"),
-    fixture.expected.zipSha256,
-  );
+  // pdfkit compresses PDF streams with Node's bundled zlib, so the archive
+  // bytes change between Node majors even when every entry reads the same.
+  // The byte-for-byte hash is pinned to the Node major CI runs
+  // (survey-export-golden-ci.yml); the manifest and PDF text below are
+  // checked on every version.
+  if (process.versions.node.split(".")[0] === GOLDEN_NODE_MAJOR) {
+    assert.equal(
+      createHash("sha256").update(zipBytes).digest("hex"),
+      fixture.expected.zipSha256,
+    );
+  } else {
+    t.diagnostic(
+      `zip hash not compared on Node ${process.versions.node}; golden bytes are for Node ${GOLDEN_NODE_MAJOR}`,
+    );
+  }
   assert.deepEqual(Object.keys(entries).sort(), fixture.expected.entryNames);
   assert.equal(
     strFromU8(entries["MANIFEST.txt"]),
