@@ -32,6 +32,8 @@
     "test:senaite-read": "node --import tsx --test tests/senaite-read/adapter.test.ts tests/senaite-read/recorded-senaite-contract.test.ts",
     "test:senaite-import": "node --import tsx --test tests/senaite-result-import/*.test.ts",
     "test:senaite-live": "node --import tsx --test tests/senaite-live/live-contract.test.ts",
+    "test:senaite-submit": "node --import tsx --test tests/senaite-result-submit/submitter.test.ts",
+    "test:senaite-submit-live": "node --import tsx --test tests/senaite-live/result-submit-live.test.ts",
     "postinstall": "prisma generate",
     "seed": "tsx prisma/seed.ts",
     "db:reset": "prisma migrate reset --force && tsx prisma/seed.ts",
