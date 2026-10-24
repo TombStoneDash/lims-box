@@ -65,13 +65,15 @@ function transport(respond: () => Response) {
   };
   return {
     calls, identityCalls, fetchImpl,
-    assertRequest(state = 'sample_received', limit = 25) {
+    assertRequest(state: string | null = 'sample_received', limit = 25) {
       assert.equal(identityCalls.length, 1);
       assertGetOptions(identityCalls[0].init);
       assert.equal(calls.length, 1);
       const { url, init } = calls[0];
       const expected = new URL('https://synthetic-ohworks.invalid/senaite/@@API/senaite/v1/AnalysisRequest');
-      expected.search = new URLSearchParams({ limit: String(limit), sort_on: 'created', sort_order: 'descending', review_state: state }).toString();
+      expected.search = new URLSearchParams({
+        limit: String(limit), sort_on: 'created', sort_order: 'descending', ...(state === null ? {} : { review_state: state }),
+      }).toString();
       assert.equal(url, expected.href);
       assertGetOptions(init);
     },
@@ -102,12 +104,19 @@ test('custom search encodes state and preserves all 60 summaries in order', asyn
 
 test('recorded summary fields normalize without exposing client or analysis data', async () => {
   const http = transport(() => Response.json(fixture));
-  assert.deepEqual(await createSenaiteReadAdapter(env, http.fetchImpl).listSamples({ reviewState: 'sample_received' }), {
+  assert.deepEqual(await createSenaiteReadAdapter(env, http.fetchImpl).listSamples(), {
     status: 'ok', samples: [
       { uid: 'synthetic-uid-001', id: 'SYN-001', title: 'Synthetic water sample', reviewState: 'sample_received' },
       { uid: 'synthetic-uid-002', id: 'SYN-002', title: null, reviewState: null },
     ],
   });
+  http.assertRequest(null);
+});
+
+test('a received-samples read never shows a sample in another state', async () => {
+  const http = transport(() => Response.json({ items: [syntheticSample(1), syntheticSample(2, 'verified')] }));
+  assert.deepEqual(await createSenaiteReadAdapter(env, http.fetchImpl).listSamples({ reviewState: 'sample_received' }),
+    { status: 'error', code: 'filter-mismatch' });
   http.assertRequest();
 });
 

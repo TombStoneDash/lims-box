@@ -11,10 +11,17 @@ export type SenaiteSample = {
 };
 
 export type SenaiteReadErrorCode =
-  | 'invalid-query' | 'unauthenticated' | 'request-failed' | 'invalid-response' | 'tenant-mismatch';
+  | 'invalid-query' | 'unauthenticated' | 'request-failed' | 'invalid-response' | 'filter-mismatch'
+  | 'tenant-mismatch';
 
 export type SenaiteReadResult =
   | { status: 'ok'; samples: SenaiteSample[] }
+  | { status: 'not_configured' }
+  | { status: 'error'; code: SenaiteReadErrorCode };
+
+export type SenaiteSampleLookupResult =
+  | { status: 'ok'; sample: SenaiteSample }
+  | { status: 'not_found' }
   | { status: 'not_configured' }
   | { status: 'error'; code: SenaiteReadErrorCode };
 
@@ -61,6 +68,17 @@ function authenticatedFromPayload(payload: unknown): boolean | null {
   if (!record(payload) || !Array.isArray(payload.items) || payload.items.length !== 1) return null;
   const [identity] = payload.items;
   return record(identity) && typeof identity.authenticated === 'boolean' ? identity.authenticated : null;
+}
+
+/**
+ * senaite.jsonapi builds catalog queries only from keys that are catalog
+ * indexes and silently drops the rest, still answering HTTP 200. A dropped
+ * `getId` or `review_state` filter would return the newest samples in the lab
+ * as if they matched, so every record must echo each filter that was sent.
+ */
+function matchesQuery(sample: SenaiteSample, query: SenaiteSampleQuery): boolean {
+  return (query.sampleId === undefined || sample.id === query.sampleId) &&
+    (query.reviewState === undefined || sample.reviewState === query.reviewState);
 }
 
 function samplesFromPayload(
@@ -152,7 +170,25 @@ export function createSenaiteReadAdapter(
       const listing = await getJson(url, config.authorization);
       if ('code' in listing) return { status: 'error', code: listing.code };
       const samples = samplesFromPayload(listing.payload, limit, query.clientUid);
-      return typeof samples === 'string' ? { status: 'error', code: samples } : { status: 'ok', samples };
+      if (typeof samples === 'string') return { status: 'error', code: samples };
+      // A partial list would hide the ignored filter, so the whole page fails.
+      if (!samples.every(sample => matchesQuery(sample, query))) return { status: 'error', code: 'filter-mismatch' };
+      return { status: 'ok', samples };
+    },
+    /**
+     * Exactly one sample whose SENAITE ID equals `sampleId`. `not_found` is
+     * only reported after a proven sign-in, and two records with the same ID
+     * are a malformed answer, never a choice.
+     */
+    async getSample(sampleId: string): Promise<SenaiteSampleLookupResult> {
+      if (!config) return { status: 'not_configured' };
+      // A missing ID would otherwise become an unfiltered read of the newest sample.
+      if (typeof sampleId !== 'string') return { status: 'error', code: 'invalid-query' };
+      const result = await adapter.listSamples({ sampleId, limit: 2 });
+      if (result.status !== 'ok') return result;
+      if (result.samples.length === 0) return { status: 'not_found' };
+      if (result.samples.length !== 1) return { status: 'error', code: 'invalid-response' };
+      return { status: 'ok', sample: result.samples[0] };
     },
   };
 

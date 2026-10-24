@@ -65,7 +65,7 @@ class StartTestFailureFeedbackTests(unittest.TestCase):
         )
 
     def test_successful_lookup_reports_observed_state(self):
-        client = FakeClient(items=[{"review_state": "sample_received"}])
+        client = FakeClient(items=[{"parent_uid": "sample-uid", "review_state": "sample_received"}])
         self.assertEqual(
             self.execute(client),
             "Test pH found on sample SA-2026-001. "
@@ -81,7 +81,7 @@ class StartTestFailureFeedbackTests(unittest.TestCase):
     def test_verified_and_published_preserve_feedback(self):
         for state in ("verified", "published"):
             with self.subTest(state=state):
-                client = FakeClient(items=[{"review_state": state}])
+                client = FakeClient(items=[{"parent_uid": "sample-uid", "review_state": state}])
                 self.assertEqual(
                     self.execute(client), f"Test pH is already {state}."
                 )
